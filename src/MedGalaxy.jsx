@@ -16,7 +16,6 @@ const CAT_LABELS = {
   neurological:'Neurological', respiratory:'Respiratory', autoimmune:'Autoimmune',
   metabolic:'Metabolic', infectious:'Infectious', genetic:'Genetic', mental:'Mental Health',
 };
-const NODE_SCALE = 1.8;
 const TIER_CFG = {
   HIGH:  { dprCap:99, particles:400, glowAll:true, edgesAll:true, pulse:true },
   MEDIUM:{ dprCap:1.5, particles:150, glowAll:false, edgesAll:true, pulse:true },
@@ -27,8 +26,12 @@ function detectTier() {
   if (matchMedia('(pointer:coarse)').matches || window.innerWidth<768) return 'LOW';
   return window.innerWidth<1200 ? 'MEDIUM' : 'HIGH';
 }
-function nR(papers) { return Math.log10(Math.max(papers,10))*NODE_SCALE; }
-function nRM(mortality) { return Math.log10(Math.max(mortality,1)+1)*NODE_SCALE; }
+// Node sizing: log scale mapped to [MIN_R, MAX_R] for visible size differences
+const MIN_R = 2, MAX_R = 14;
+const LOG_MIN = Math.log10(500), LOG_MAX = Math.log10(450000); // paper count range
+const LOG_MMIN = Math.log10(2), LOG_MMAX = Math.log10(1400000); // mortality range
+function nR(papers) { const t = (Math.log10(Math.max(papers,10)) - LOG_MIN) / (LOG_MAX - LOG_MIN); return MIN_R + Math.max(0, Math.min(1, t)) * (MAX_R - MIN_R); }
+function nRM(mortality) { if (mortality <= 0) return MIN_R * 0.6; const t = (Math.log10(mortality) - LOG_MMIN) / (LOG_MMAX - LOG_MMIN); return MIN_R + Math.max(0, Math.min(1, t)) * (MAX_R - MIN_R); }
 function fmt(n) { if(n>=1e6) return (n/1e6).toFixed(1)+'M'; if(n>=10000) return Math.round(n/1000)+'K'; if(n>=1000) return (n/1000).toFixed(1)+'K'; return String(n); }
 
 // ─── Data Processing ─────────────────────────────────────────────────────────
