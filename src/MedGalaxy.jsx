@@ -238,7 +238,7 @@ export default function MedGalaxy() {
       const r=nR(diseases[i].papers)*3;sp.scale.set(r,r,1);
       glowGroup.add(sp);glowSprites.push(sp);
     }
-    scene.add(glowGroup);glowSpritesRef.current=glowSprites;
+    glowGroup.renderOrder=-2;scene.add(glowGroup);glowSpritesRef.current=glowSprites;
 
     // Proxies
     const pGeo=new THREE.SphereGeometry(1,8,8),pMat=new THREE.MeshBasicMaterial({visible:false});
@@ -251,8 +251,8 @@ export default function MedGalaxy() {
     for(let i=0;i<eC;i++){const e=displayEdges[i],s=catPos[e.si],t=catPos[e.ti],o=i*6;eBuf[o]=s[0];eBuf[o+1]=s[1];eBuf[o+2]=s[2];eBuf[o+3]=t[0];eBuf[o+4]=t[1];eBuf[o+5]=t[2];}
     const eGeo=new THREE.BufferGeometry();eGeo.setAttribute('position',new THREE.BufferAttribute(eBuf,3));
     const eClr=new Float32Array(eC*6).fill(1.0);eGeo.setAttribute('color',new THREE.BufferAttribute(eClr,3));
-    const eMat=new THREE.LineBasicMaterial({vertexColors:true,transparent:true,opacity:0});
-    const eMesh=new THREE.LineSegments(eGeo,eMat);scene.add(eMesh);edgeMeshRef.current=eMesh;
+    const eMat=new THREE.LineBasicMaterial({vertexColors:true,transparent:true,opacity:0,depthWrite:false});
+    const eMesh=new THREE.LineSegments(eGeo,eMat);eMesh.renderOrder=-1;scene.add(eMesh);edgeMeshRef.current=eMesh;
 
     // Background particles
     if(cfg.particles>0){
