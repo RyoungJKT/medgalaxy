@@ -178,8 +178,8 @@ class OrbitControls {
   }
   _d(e) { if (!this.enabled) return; if (e.button===2) this._pan=true; else if (e.button===0) this._drag=true; this._lx=e.clientX; this._ly=e.clientY; }
   _m(e) { const dx=e.clientX-this._lx, dy=e.clientY-this._ly; this._lx=e.clientX; this._ly=e.clientY;
-    if (this._drag&&this.enabled) { this.thetaV-=dx*0.005; this.phiV-=dy*0.005; }
-    if (this._pan&&this.enabled) { const s=this.radius*0.001; this.panVX-=dx*s; this.panVY+=dy*s; } }
+    if (this._drag&&this.enabled) { this.thetaV-=dx*0.0045; this.phiV-=dy*0.0045; }
+    if (this._pan&&this.enabled) { const s=this.radius*0.0009; this.panVX-=dx*s; this.panVY+=dy*s; } }
   _u() { this._drag=false; this._pan=false; }
   _w(e) { if (!this.enabled) return; e.preventDefault(); this.radius=Math.max(50,Math.min(3000,this.radius+e.deltaY*0.001*this.radius)); }
 
@@ -372,7 +372,6 @@ export default function MedGalaxy() {
     const data = dataRef.current;
     if (!data) return;
     setSelectedNode({ index: idx, disease: data.diseases[idx] });
-    setHoveredNode(null);
     // Fly-to
     const p = catPosRef.current[idx];
     const ctrl = controlsRef.current;
@@ -518,19 +517,20 @@ export default function MedGalaxy() {
       controls.update();
       ptLight.position.copy(camera.position);
 
-      // Raycast every 2 frames
+      // Raycast every 2 frames — only update state when index changes
       if (frame % 2 === 0) {
         raycaster.setFromCamera(mouse, camera);
         const hits = raycaster.intersectObjects(proxies);
-        if (hits.length > 0) {
-          const idx = hits[0].object.userData.idx;
-          hoverIdxRef.current = idx;
-          setHoveredNode({ index:idx, disease:diseases[idx] });
-          setCursor('pointer');
-        } else {
-          hoverIdxRef.current = -1;
-          setHoveredNode(null);
-          setCursor(controls._drag ? 'grabbing' : 'default');
+        const newIdx = hits.length > 0 ? hits[0].object.userData.idx : -1;
+        if (newIdx !== hoverIdxRef.current) {
+          hoverIdxRef.current = newIdx;
+          if (newIdx >= 0) {
+            setHoveredNode({ index: newIdx, disease: diseases[newIdx] });
+            setCursor('pointer');
+          } else {
+            setHoveredNode(null);
+            setCursor('default');
+          }
         }
       }
 
@@ -597,7 +597,7 @@ export default function MedGalaxy() {
 
   return (
     <div ref={containerRef} style={{ width:'100%', height:'100%', position:'relative', overflow:'hidden', cursor }}>
-      {hoveredNode && !selectedNode && (
+      {hoveredNode && (!selectedNode || hoveredNode.index !== selectedNode.index) && (
         <Tooltip disease={hoveredNode.disease} connCount={dataRef.current?.connCounts.get(hoveredNode.index)||0} x={tipPos.x} y={tipPos.y}/>
       )}
       {selectedNode && dataRef.current && (
