@@ -1,0 +1,25 @@
+{
+  "name": "medgalaxy",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "MedGalaxy — Interactive 3D visualization of global disease research from PubMed",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "d3": "^7.9.0",
+    "lodash": "^4.17.21",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "three": "^0.128.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "vite": "^6.0.0"
+  }
+}

@@ -1,0 +1,4214 @@
+[
+  {
+    "source": "breast-cancer",
+    "target": "lung-cancer",
+    "sharedPapers": 8500,
+    "trend": "up"
+  },
+  {
+    "source": "breast-cancer",
+    "target": "ovarian-cancer",
+    "sharedPapers": 7200,
+    "trend": "up"
+  },
+  {
+    "source": "breast-cancer",
+    "target": "colon-cancer",
+    "sharedPapers": 4500,
+    "trend": "stable"
+  },
+  {
+    "source": "breast-cancer",
+    "target": "prostate-cancer",
+    "sharedPapers": 3800,
+    "trend": "down"
+  },
+  {
+    "source": "breast-cancer",
+    "target": "cervical-cancer",
+    "sharedPapers": 3200,
+    "trend": "up"
+  },
+  {
+    "source": "breast-cancer",
+    "target": "melanoma",
+    "sharedPapers": 3500,
+    "trend": "up"
+  },
+  {
+    "source": "breast-cancer",
+    "target": "endometrial-cancer",
+    "sharedPapers": 4800,
+    "trend": "up"
+  },
+  {
+    "source": "breast-cancer",
+    "target": "pancreatic-cancer",
+    "sharedPapers": 2800,
+    "trend": "up"
+  },
+  {
+    "source": "breast-cancer",
+    "target": "leukemia",
+    "sharedPapers": 3200,
+    "trend": "stable"
+  },
+  {
+    "source": "breast-cancer",
+    "target": "lymphoma",
+    "sharedPapers": 3000,
+    "trend": "stable"
+  },
+  {
+    "source": "breast-cancer",
+    "target": "liver-cancer",
+    "sharedPapers": 2500,
+    "trend": "up"
+  },
+  {
+    "source": "breast-cancer",
+    "target": "stomach-cancer",
+    "sharedPapers": 2200,
+    "trend": "down"
+  },
+  {
+    "source": "bladder-cancer",
+    "target": "breast-cancer",
+    "sharedPapers": 1800,
+    "trend": "down"
+  },
+  {
+    "source": "brain-cancer",
+    "target": "breast-cancer",
+    "sharedPapers": 2600,
+    "trend": "up"
+  },
+  {
+    "source": "breast-cancer",
+    "target": "kidney-cancer",
+    "sharedPapers": 2000,
+    "trend": "down"
+  },
+  {
+    "source": "breast-cancer",
+    "target": "thyroid-cancer",
+    "sharedPapers": 2200,
+    "trend": "up"
+  },
+  {
+    "source": "colon-cancer",
+    "target": "lung-cancer",
+    "sharedPapers": 4200,
+    "trend": "down"
+  },
+  {
+    "source": "lung-cancer",
+    "target": "pancreatic-cancer",
+    "sharedPapers": 3500,
+    "trend": "up"
+  },
+  {
+    "source": "liver-cancer",
+    "target": "lung-cancer",
+    "sharedPapers": 3800,
+    "trend": "up"
+  },
+  {
+    "source": "lung-cancer",
+    "target": "stomach-cancer",
+    "sharedPapers": 3200,
+    "trend": "down"
+  },
+  {
+    "source": "bladder-cancer",
+    "target": "lung-cancer",
+    "sharedPapers": 2800,
+    "trend": "up"
+  },
+  {
+    "source": "brain-cancer",
+    "target": "lung-cancer",
+    "sharedPapers": 3500,
+    "trend": "up"
+  },
+  {
+    "source": "esophageal-cancer",
+    "target": "lung-cancer",
+    "sharedPapers": 3800,
+    "trend": "stable"
+  },
+  {
+    "source": "lung-cancer",
+    "target": "melanoma",
+    "sharedPapers": 3200,
+    "trend": "up"
+  },
+  {
+    "source": "kidney-cancer",
+    "target": "lung-cancer",
+    "sharedPapers": 2500,
+    "trend": "stable"
+  },
+  {
+    "source": "lung-cancer",
+    "target": "prostate-cancer",
+    "sharedPapers": 3500,
+    "trend": "down"
+  },
+  {
+    "source": "leukemia",
+    "target": "lung-cancer",
+    "sharedPapers": 2800,
+    "trend": "down"
+  },
+  {
+    "source": "lung-cancer",
+    "target": "lymphoma",
+    "sharedPapers": 2500,
+    "trend": "stable"
+  },
+  {
+    "source": "colon-cancer",
+    "target": "stomach-cancer",
+    "sharedPapers": 6500,
+    "trend": "stable"
+  },
+  {
+    "source": "colon-cancer",
+    "target": "liver-cancer",
+    "sharedPapers": 5200,
+    "trend": "up"
+  },
+  {
+    "source": "colon-cancer",
+    "target": "pancreatic-cancer",
+    "sharedPapers": 4000,
+    "trend": "up"
+  },
+  {
+    "source": "colon-cancer",
+    "target": "esophageal-cancer",
+    "sharedPapers": 2500,
+    "trend": "down"
+  },
+  {
+    "source": "colon-cancer",
+    "target": "prostate-cancer",
+    "sharedPapers": 2400,
+    "trend": "stable"
+  },
+  {
+    "source": "leukemia",
+    "target": "lymphoma",
+    "sharedPapers": 8500,
+    "trend": "stable"
+  },
+  {
+    "source": "leukemia",
+    "target": "multiple-myeloma",
+    "sharedPapers": 4200,
+    "trend": "up"
+  },
+  {
+    "source": "lymphoma",
+    "target": "multiple-myeloma",
+    "sharedPapers": 3500,
+    "trend": "up"
+  },
+  {
+    "source": "liver-cancer",
+    "target": "stomach-cancer",
+    "sharedPapers": 3500,
+    "trend": "stable"
+  },
+  {
+    "source": "liver-cancer",
+    "target": "pancreatic-cancer",
+    "sharedPapers": 3200,
+    "trend": "up"
+  },
+  {
+    "source": "kidney-cancer",
+    "target": "prostate-cancer",
+    "sharedPapers": 2800,
+    "trend": "stable"
+  },
+  {
+    "source": "bladder-cancer",
+    "target": "prostate-cancer",
+    "sharedPapers": 3200,
+    "trend": "up"
+  },
+  {
+    "source": "endometrial-cancer",
+    "target": "ovarian-cancer",
+    "sharedPapers": 5500,
+    "trend": "up"
+  },
+  {
+    "source": "cervical-cancer",
+    "target": "ovarian-cancer",
+    "sharedPapers": 4800,
+    "trend": "up"
+  },
+  {
+    "source": "colon-cancer",
+    "target": "ovarian-cancer",
+    "sharedPapers": 1800,
+    "trend": "stable"
+  },
+  {
+    "source": "cervical-cancer",
+    "target": "endometrial-cancer",
+    "sharedPapers": 3800,
+    "trend": "up"
+  },
+  {
+    "source": "brain-cancer",
+    "target": "melanoma",
+    "sharedPapers": 2200,
+    "trend": "up"
+  },
+  {
+    "source": "kidney-cancer",
+    "target": "melanoma",
+    "sharedPapers": 1800,
+    "trend": "up"
+  },
+  {
+    "source": "brain-cancer",
+    "target": "pancreatic-cancer",
+    "sharedPapers": 1200,
+    "trend": "stable"
+  },
+  {
+    "source": "endometrial-cancer",
+    "target": "thyroid-cancer",
+    "sharedPapers": 900,
+    "trend": "up"
+  },
+  {
+    "source": "esophageal-cancer",
+    "target": "stomach-cancer",
+    "sharedPapers": 4500,
+    "trend": "down"
+  },
+  {
+    "source": "pancreatic-cancer",
+    "target": "stomach-cancer",
+    "sharedPapers": 2800,
+    "trend": "down"
+  },
+  {
+    "source": "bladder-cancer",
+    "target": "kidney-cancer",
+    "sharedPapers": 3500,
+    "trend": "up"
+  },
+  {
+    "source": "colon-cancer",
+    "target": "endometrial-cancer",
+    "sharedPapers": 1500,
+    "trend": "up"
+  },
+  {
+    "source": "kidney-cancer",
+    "target": "multiple-myeloma",
+    "sharedPapers": 600,
+    "trend": "stable"
+  },
+  {
+    "source": "ovarian-cancer",
+    "target": "pancreatic-cancer",
+    "sharedPapers": 1200,
+    "trend": "stable"
+  },
+  {
+    "source": "dengue",
+    "target": "malaria",
+    "sharedPapers": 4200,
+    "trend": "stable"
+  },
+  {
+    "source": "chikungunya",
+    "target": "dengue",
+    "sharedPapers": 2500,
+    "trend": "up"
+  },
+  {
+    "source": "dengue",
+    "target": "zika",
+    "sharedPapers": 3000,
+    "trend": "up"
+  },
+  {
+    "source": "dengue",
+    "target": "leptospirosis",
+    "sharedPapers": 800,
+    "trend": "up"
+  },
+  {
+    "source": "dengue",
+    "target": "dengue-hemorrhagic-fever",
+    "sharedPapers": 6500,
+    "trend": "up"
+  },
+  {
+    "source": "dengue",
+    "target": "west-nile-virus",
+    "sharedPapers": 600,
+    "trend": "up"
+  },
+  {
+    "source": "dengue",
+    "target": "leishmaniasis",
+    "sharedPapers": 450,
+    "trend": "stable"
+  },
+  {
+    "source": "dengue",
+    "target": "schistosomiasis",
+    "sharedPapers": 350,
+    "trend": "down"
+  },
+  {
+    "source": "chagas",
+    "target": "dengue",
+    "sharedPapers": 300,
+    "trend": "down"
+  },
+  {
+    "source": "dengue",
+    "target": "lymphatic-filariasis",
+    "sharedPapers": 350,
+    "trend": "up"
+  },
+  {
+    "source": "malaria",
+    "target": "schistosomiasis",
+    "sharedPapers": 2800,
+    "trend": "stable"
+  },
+  {
+    "source": "leishmaniasis",
+    "target": "malaria",
+    "sharedPapers": 1500,
+    "trend": "down"
+  },
+  {
+    "source": "chagas",
+    "target": "malaria",
+    "sharedPapers": 800,
+    "trend": "down"
+  },
+  {
+    "source": "malaria",
+    "target": "sleeping-sickness",
+    "sharedPapers": 650,
+    "trend": "down"
+  },
+  {
+    "source": "lymphatic-filariasis",
+    "target": "malaria",
+    "sharedPapers": 700,
+    "trend": "stable"
+  },
+  {
+    "source": "malaria",
+    "target": "soil-transmitted-helminths",
+    "sharedPapers": 1200,
+    "trend": "down"
+  },
+  {
+    "source": "malaria",
+    "target": "river-blindness",
+    "sharedPapers": 500,
+    "trend": "down"
+  },
+  {
+    "source": "leptospirosis",
+    "target": "malaria",
+    "sharedPapers": 350,
+    "trend": "stable"
+  },
+  {
+    "source": "buruli-ulcer",
+    "target": "malaria",
+    "sharedPapers": 150,
+    "trend": "down"
+  },
+  {
+    "source": "guinea-worm",
+    "target": "malaria",
+    "sharedPapers": 120,
+    "trend": "down"
+  },
+  {
+    "source": "malaria",
+    "target": "trachoma",
+    "sharedPapers": 250,
+    "trend": "down"
+  },
+  {
+    "source": "echinococcosis",
+    "target": "malaria",
+    "sharedPapers": 200,
+    "trend": "stable"
+  },
+  {
+    "source": "chikungunya",
+    "target": "zika",
+    "sharedPapers": 2200,
+    "trend": "up"
+  },
+  {
+    "source": "chikungunya",
+    "target": "malaria",
+    "sharedPapers": 700,
+    "trend": "stable"
+  },
+  {
+    "source": "chikungunya",
+    "target": "leptospirosis",
+    "sharedPapers": 350,
+    "trend": "up"
+  },
+  {
+    "source": "chikungunya",
+    "target": "west-nile-virus",
+    "sharedPapers": 400,
+    "trend": "stable"
+  },
+  {
+    "source": "chikungunya",
+    "target": "dengue-hemorrhagic-fever",
+    "sharedPapers": 600,
+    "trend": "up"
+  },
+  {
+    "source": "malaria",
+    "target": "zika",
+    "sharedPapers": 500,
+    "trend": "down"
+  },
+  {
+    "source": "west-nile-virus",
+    "target": "zika",
+    "sharedPapers": 450,
+    "trend": "up"
+  },
+  {
+    "source": "schistosomiasis",
+    "target": "soil-transmitted-helminths",
+    "sharedPapers": 2200,
+    "trend": "stable"
+  },
+  {
+    "source": "leishmaniasis",
+    "target": "schistosomiasis",
+    "sharedPapers": 700,
+    "trend": "down"
+  },
+  {
+    "source": "lymphatic-filariasis",
+    "target": "schistosomiasis",
+    "sharedPapers": 800,
+    "trend": "stable"
+  },
+  {
+    "source": "river-blindness",
+    "target": "schistosomiasis",
+    "sharedPapers": 600,
+    "trend": "down"
+  },
+  {
+    "source": "fascioliasis",
+    "target": "schistosomiasis",
+    "sharedPapers": 650,
+    "trend": "down"
+  },
+  {
+    "source": "chagas",
+    "target": "leishmaniasis",
+    "sharedPapers": 1200,
+    "trend": "stable"
+  },
+  {
+    "source": "leishmaniasis",
+    "target": "sleeping-sickness",
+    "sharedPapers": 900,
+    "trend": "stable"
+  },
+  {
+    "source": "leishmaniasis",
+    "target": "leptospirosis",
+    "sharedPapers": 250,
+    "trend": "down"
+  },
+  {
+    "source": "chagas",
+    "target": "sleeping-sickness",
+    "sharedPapers": 800,
+    "trend": "down"
+  },
+  {
+    "source": "lymphatic-filariasis",
+    "target": "river-blindness",
+    "sharedPapers": 1200,
+    "trend": "stable"
+  },
+  {
+    "source": "river-blindness",
+    "target": "trachoma",
+    "sharedPapers": 500,
+    "trend": "down"
+  },
+  {
+    "source": "river-blindness",
+    "target": "soil-transmitted-helminths",
+    "sharedPapers": 600,
+    "trend": "stable"
+  },
+  {
+    "source": "lymphatic-filariasis",
+    "target": "soil-transmitted-helminths",
+    "sharedPapers": 900,
+    "trend": "stable"
+  },
+  {
+    "source": "lymphatic-filariasis",
+    "target": "trachoma",
+    "sharedPapers": 350,
+    "trend": "down"
+  },
+  {
+    "source": "buruli-ulcer",
+    "target": "leprosy",
+    "sharedPapers": 250,
+    "trend": "down"
+  },
+  {
+    "source": "leprosy",
+    "target": "yaws",
+    "sharedPapers": 200,
+    "trend": "down"
+  },
+  {
+    "source": "leishmaniasis",
+    "target": "leprosy",
+    "sharedPapers": 300,
+    "trend": "down"
+  },
+  {
+    "source": "buruli-ulcer",
+    "target": "mycetoma",
+    "sharedPapers": 150,
+    "trend": "up"
+  },
+  {
+    "source": "echinococcosis",
+    "target": "fascioliasis",
+    "sharedPapers": 500,
+    "trend": "stable"
+  },
+  {
+    "source": "echinococcosis",
+    "target": "soil-transmitted-helminths",
+    "sharedPapers": 350,
+    "trend": "stable"
+  },
+  {
+    "source": "fascioliasis",
+    "target": "soil-transmitted-helminths",
+    "sharedPapers": 400,
+    "trend": "stable"
+  },
+  {
+    "source": "leptospirosis",
+    "target": "rabies",
+    "sharedPapers": 300,
+    "trend": "stable"
+  },
+  {
+    "source": "guinea-worm",
+    "target": "schistosomiasis",
+    "sharedPapers": 120,
+    "trend": "down"
+  },
+  {
+    "source": "guinea-worm",
+    "target": "soil-transmitted-helminths",
+    "sharedPapers": 100,
+    "trend": "down"
+  },
+  {
+    "source": "guinea-worm",
+    "target": "river-blindness",
+    "sharedPapers": 80,
+    "trend": "down"
+  },
+  {
+    "source": "leprosy",
+    "target": "trachoma",
+    "sharedPapers": 300,
+    "trend": "down"
+  },
+  {
+    "source": "trachoma",
+    "target": "yaws",
+    "sharedPapers": 100,
+    "trend": "down"
+  },
+  {
+    "source": "leprosy",
+    "target": "mycetoma",
+    "sharedPapers": 180,
+    "trend": "stable"
+  },
+  {
+    "source": "echinococcosis",
+    "target": "mycetoma",
+    "sharedPapers": 100,
+    "trend": "down"
+  },
+  {
+    "source": "dengue-hemorrhagic-fever",
+    "target": "zika",
+    "sharedPapers": 500,
+    "trend": "up"
+  },
+  {
+    "source": "heart-disease",
+    "target": "stroke",
+    "sharedPapers": 18000,
+    "trend": "stable"
+  },
+  {
+    "source": "heart-disease",
+    "target": "hypertension",
+    "sharedPapers": 22000,
+    "trend": "stable"
+  },
+  {
+    "source": "heart-disease",
+    "target": "heart-failure",
+    "sharedPapers": 25000,
+    "trend": "stable"
+  },
+  {
+    "source": "atherosclerosis",
+    "target": "heart-disease",
+    "sharedPapers": 12000,
+    "trend": "stable"
+  },
+  {
+    "source": "arrhythmia",
+    "target": "heart-disease",
+    "sharedPapers": 8500,
+    "trend": "stable"
+  },
+  {
+    "source": "cardiomyopathy",
+    "target": "heart-disease",
+    "sharedPapers": 7500,
+    "trend": "stable"
+  },
+  {
+    "source": "heart-disease",
+    "target": "peripheral-artery-disease",
+    "sharedPapers": 4500,
+    "trend": "down"
+  },
+  {
+    "source": "aortic-aneurysm",
+    "target": "heart-disease",
+    "sharedPapers": 4200,
+    "trend": "down"
+  },
+  {
+    "source": "deep-vein-thrombosis",
+    "target": "heart-disease",
+    "sharedPapers": 3500,
+    "trend": "stable"
+  },
+  {
+    "source": "heart-disease",
+    "target": "pulmonary-embolism",
+    "sharedPapers": 3800,
+    "trend": "stable"
+  },
+  {
+    "source": "endocarditis",
+    "target": "heart-disease",
+    "sharedPapers": 3200,
+    "trend": "stable"
+  },
+  {
+    "source": "heart-disease",
+    "target": "myocarditis",
+    "sharedPapers": 3000,
+    "trend": "up"
+  },
+  {
+    "source": "heart-disease",
+    "target": "rheumatic-heart-disease",
+    "sharedPapers": 3500,
+    "trend": "down"
+  },
+  {
+    "source": "congenital-heart-defects",
+    "target": "heart-disease",
+    "sharedPapers": 5500,
+    "trend": "stable"
+  },
+  {
+    "source": "hypertension",
+    "target": "stroke",
+    "sharedPapers": 12000,
+    "trend": "stable"
+  },
+  {
+    "source": "heart-failure",
+    "target": "hypertension",
+    "sharedPapers": 10000,
+    "trend": "down"
+  },
+  {
+    "source": "atherosclerosis",
+    "target": "hypertension",
+    "sharedPapers": 8500,
+    "trend": "stable"
+  },
+  {
+    "source": "arrhythmia",
+    "target": "hypertension",
+    "sharedPapers": 5500,
+    "trend": "stable"
+  },
+  {
+    "source": "hypertension",
+    "target": "peripheral-artery-disease",
+    "sharedPapers": 3200,
+    "trend": "stable"
+  },
+  {
+    "source": "aortic-aneurysm",
+    "target": "hypertension",
+    "sharedPapers": 2800,
+    "trend": "down"
+  },
+  {
+    "source": "cardiomyopathy",
+    "target": "hypertension",
+    "sharedPapers": 3500,
+    "trend": "stable"
+  },
+  {
+    "source": "heart-failure",
+    "target": "stroke",
+    "sharedPapers": 6500,
+    "trend": "stable"
+  },
+  {
+    "source": "atherosclerosis",
+    "target": "stroke",
+    "sharedPapers": 5500,
+    "trend": "stable"
+  },
+  {
+    "source": "arrhythmia",
+    "target": "stroke",
+    "sharedPapers": 5000,
+    "trend": "up"
+  },
+  {
+    "source": "deep-vein-thrombosis",
+    "target": "stroke",
+    "sharedPapers": 2500,
+    "trend": "up"
+  },
+  {
+    "source": "arrhythmia",
+    "target": "heart-failure",
+    "sharedPapers": 6000,
+    "trend": "stable"
+  },
+  {
+    "source": "cardiomyopathy",
+    "target": "heart-failure",
+    "sharedPapers": 8500,
+    "trend": "up"
+  },
+  {
+    "source": "heart-failure",
+    "target": "pulmonary-hypertension",
+    "sharedPapers": 3500,
+    "trend": "up"
+  },
+  {
+    "source": "heart-failure",
+    "target": "myocarditis",
+    "sharedPapers": 2500,
+    "trend": "up"
+  },
+  {
+    "source": "congenital-heart-defects",
+    "target": "heart-failure",
+    "sharedPapers": 3000,
+    "trend": "stable"
+  },
+  {
+    "source": "atherosclerosis",
+    "target": "peripheral-artery-disease",
+    "sharedPapers": 4500,
+    "trend": "stable"
+  },
+  {
+    "source": "aortic-aneurysm",
+    "target": "atherosclerosis",
+    "sharedPapers": 3200,
+    "trend": "down"
+  },
+  {
+    "source": "arrhythmia",
+    "target": "cardiomyopathy",
+    "sharedPapers": 4200,
+    "trend": "stable"
+  },
+  {
+    "source": "arrhythmia",
+    "target": "congenital-heart-defects",
+    "sharedPapers": 2200,
+    "trend": "down"
+  },
+  {
+    "source": "arrhythmia",
+    "target": "myocarditis",
+    "sharedPapers": 1800,
+    "trend": "up"
+  },
+  {
+    "source": "deep-vein-thrombosis",
+    "target": "pulmonary-embolism",
+    "sharedPapers": 8000,
+    "trend": "stable"
+  },
+  {
+    "source": "cardiomyopathy",
+    "target": "myocarditis",
+    "sharedPapers": 2200,
+    "trend": "up"
+  },
+  {
+    "source": "endocarditis",
+    "target": "rheumatic-heart-disease",
+    "sharedPapers": 1800,
+    "trend": "down"
+  },
+  {
+    "source": "congenital-heart-defects",
+    "target": "endocarditis",
+    "sharedPapers": 1200,
+    "trend": "stable"
+  },
+  {
+    "source": "pulmonary-embolism",
+    "target": "pulmonary-hypertension",
+    "sharedPapers": 2500,
+    "trend": "stable"
+  },
+  {
+    "source": "congenital-heart-defects",
+    "target": "rheumatic-heart-disease",
+    "sharedPapers": 800,
+    "trend": "down"
+  },
+  {
+    "source": "congenital-heart-defects",
+    "target": "pulmonary-hypertension",
+    "sharedPapers": 1200,
+    "trend": "up"
+  },
+  {
+    "source": "alzheimers-disease",
+    "target": "parkinsons-disease",
+    "sharedPapers": 8500,
+    "trend": "up"
+  },
+  {
+    "source": "alzheimers-disease",
+    "target": "epilepsy",
+    "sharedPapers": 2500,
+    "trend": "up"
+  },
+  {
+    "source": "alzheimers-disease",
+    "target": "multiple-sclerosis",
+    "sharedPapers": 2000,
+    "trend": "stable"
+  },
+  {
+    "source": "alzheimers-disease",
+    "target": "huntingtons-disease",
+    "sharedPapers": 2200,
+    "trend": "up"
+  },
+  {
+    "source": "als",
+    "target": "alzheimers-disease",
+    "sharedPapers": 1800,
+    "trend": "down"
+  },
+  {
+    "source": "alzheimers-disease",
+    "target": "prion-disease",
+    "sharedPapers": 1500,
+    "trend": "stable"
+  },
+  {
+    "source": "alzheimers-disease",
+    "target": "traumatic-brain-injury",
+    "sharedPapers": 2800,
+    "trend": "up"
+  },
+  {
+    "source": "epilepsy",
+    "target": "parkinsons-disease",
+    "sharedPapers": 1800,
+    "trend": "stable"
+  },
+  {
+    "source": "huntingtons-disease",
+    "target": "parkinsons-disease",
+    "sharedPapers": 2500,
+    "trend": "stable"
+  },
+  {
+    "source": "als",
+    "target": "parkinsons-disease",
+    "sharedPapers": 2200,
+    "trend": "down"
+  },
+  {
+    "source": "essential-tremor",
+    "target": "parkinsons-disease",
+    "sharedPapers": 1800,
+    "trend": "stable"
+  },
+  {
+    "source": "parkinsons-disease",
+    "target": "prion-disease",
+    "sharedPapers": 800,
+    "trend": "stable"
+  },
+  {
+    "source": "neuropathy",
+    "target": "parkinsons-disease",
+    "sharedPapers": 1200,
+    "trend": "down"
+  },
+  {
+    "source": "brain-cancer",
+    "target": "epilepsy",
+    "sharedPapers": 2500,
+    "trend": "up"
+  },
+  {
+    "source": "epilepsy",
+    "target": "meningitis",
+    "sharedPapers": 1500,
+    "trend": "down"
+  },
+  {
+    "source": "epilepsy",
+    "target": "traumatic-brain-injury",
+    "sharedPapers": 3500,
+    "trend": "up"
+  },
+  {
+    "source": "cerebral-palsy",
+    "target": "epilepsy",
+    "sharedPapers": 2000,
+    "trend": "stable"
+  },
+  {
+    "source": "epilepsy",
+    "target": "multiple-sclerosis",
+    "sharedPapers": 1200,
+    "trend": "down"
+  },
+  {
+    "source": "multiple-sclerosis",
+    "target": "neuropathy",
+    "sharedPapers": 2200,
+    "trend": "up"
+  },
+  {
+    "source": "als",
+    "target": "multiple-sclerosis",
+    "sharedPapers": 1200,
+    "trend": "down"
+  },
+  {
+    "source": "als",
+    "target": "huntingtons-disease",
+    "sharedPapers": 1000,
+    "trend": "stable"
+  },
+  {
+    "source": "als",
+    "target": "spinal-cord-injury",
+    "sharedPapers": 800,
+    "trend": "down"
+  },
+  {
+    "source": "epilepsy",
+    "target": "migraine",
+    "sharedPapers": 2200,
+    "trend": "up"
+  },
+  {
+    "source": "meningitis",
+    "target": "traumatic-brain-injury",
+    "sharedPapers": 1200,
+    "trend": "up"
+  },
+  {
+    "source": "cerebral-palsy",
+    "target": "meningitis",
+    "sharedPapers": 800,
+    "trend": "stable"
+  },
+  {
+    "source": "spinal-cord-injury",
+    "target": "traumatic-brain-injury",
+    "sharedPapers": 3500,
+    "trend": "up"
+  },
+  {
+    "source": "neuropathy",
+    "target": "spinal-cord-injury",
+    "sharedPapers": 1200,
+    "trend": "stable"
+  },
+  {
+    "source": "epilepsy",
+    "target": "narcolepsy",
+    "sharedPapers": 500,
+    "trend": "up"
+  },
+  {
+    "source": "multiple-sclerosis",
+    "target": "narcolepsy",
+    "sharedPapers": 350,
+    "trend": "stable"
+  },
+  {
+    "source": "essential-tremor",
+    "target": "huntingtons-disease",
+    "sharedPapers": 400,
+    "trend": "down"
+  },
+  {
+    "source": "als",
+    "target": "essential-tremor",
+    "sharedPapers": 250,
+    "trend": "down"
+  },
+  {
+    "source": "neuropathy",
+    "target": "traumatic-brain-injury",
+    "sharedPapers": 800,
+    "trend": "up"
+  },
+  {
+    "source": "huntingtons-disease",
+    "target": "prion-disease",
+    "sharedPapers": 500,
+    "trend": "stable"
+  },
+  {
+    "source": "cerebral-palsy",
+    "target": "spinal-cord-injury",
+    "sharedPapers": 600,
+    "trend": "stable"
+  },
+  {
+    "source": "asthma",
+    "target": "copd",
+    "sharedPapers": 7500,
+    "trend": "stable"
+  },
+  {
+    "source": "asthma",
+    "target": "pneumonia",
+    "sharedPapers": 4000,
+    "trend": "stable"
+  },
+  {
+    "source": "asthma",
+    "target": "bronchiectasis",
+    "sharedPapers": 1800,
+    "trend": "up"
+  },
+  {
+    "source": "asthma",
+    "target": "sleep-apnea",
+    "sharedPapers": 2200,
+    "trend": "up"
+  },
+  {
+    "source": "asthma",
+    "target": "pulmonary-hypertension",
+    "sharedPapers": 1200,
+    "trend": "up"
+  },
+  {
+    "source": "copd",
+    "target": "pneumonia",
+    "sharedPapers": 5500,
+    "trend": "down"
+  },
+  {
+    "source": "copd",
+    "target": "lung-fibrosis",
+    "sharedPapers": 3000,
+    "trend": "up"
+  },
+  {
+    "source": "copd",
+    "target": "sleep-apnea",
+    "sharedPapers": 2500,
+    "trend": "up"
+  },
+  {
+    "source": "bronchiectasis",
+    "target": "copd",
+    "sharedPapers": 2200,
+    "trend": "up"
+  },
+  {
+    "source": "copd",
+    "target": "pulmonary-hypertension",
+    "sharedPapers": 2800,
+    "trend": "up"
+  },
+  {
+    "source": "acute-respiratory-distress",
+    "target": "copd",
+    "sharedPapers": 2000,
+    "trend": "up"
+  },
+  {
+    "source": "pneumonia",
+    "target": "tuberculosis",
+    "sharedPapers": 4000,
+    "trend": "stable"
+  },
+  {
+    "source": "bronchiectasis",
+    "target": "tuberculosis",
+    "sharedPapers": 1500,
+    "trend": "up"
+  },
+  {
+    "source": "sarcoidosis",
+    "target": "tuberculosis",
+    "sharedPapers": 1200,
+    "trend": "down"
+  },
+  {
+    "source": "lung-fibrosis",
+    "target": "tuberculosis",
+    "sharedPapers": 1800,
+    "trend": "up"
+  },
+  {
+    "source": "pleural-effusion",
+    "target": "tuberculosis",
+    "sharedPapers": 2500,
+    "trend": "stable"
+  },
+  {
+    "source": "acute-respiratory-distress",
+    "target": "pneumonia",
+    "sharedPapers": 4500,
+    "trend": "up"
+  },
+  {
+    "source": "pleural-effusion",
+    "target": "pneumonia",
+    "sharedPapers": 2800,
+    "trend": "stable"
+  },
+  {
+    "source": "bronchiectasis",
+    "target": "pneumonia",
+    "sharedPapers": 1200,
+    "trend": "down"
+  },
+  {
+    "source": "pertussis",
+    "target": "pneumonia",
+    "sharedPapers": 1500,
+    "trend": "down"
+  },
+  {
+    "source": "lung-fibrosis",
+    "target": "pulmonary-hypertension",
+    "sharedPapers": 2800,
+    "trend": "up"
+  },
+  {
+    "source": "lung-fibrosis",
+    "target": "sarcoidosis",
+    "sharedPapers": 1500,
+    "trend": "down"
+  },
+  {
+    "source": "acute-respiratory-distress",
+    "target": "lung-fibrosis",
+    "sharedPapers": 2000,
+    "trend": "up"
+  },
+  {
+    "source": "pulmonary-hypertension",
+    "target": "sleep-apnea",
+    "sharedPapers": 1200,
+    "trend": "up"
+  },
+  {
+    "source": "acute-respiratory-distress",
+    "target": "sepsis",
+    "sharedPapers": 5000,
+    "trend": "up"
+  },
+  {
+    "source": "lupus",
+    "target": "rheumatoid-arthritis",
+    "sharedPapers": 4500,
+    "trend": "stable"
+  },
+  {
+    "source": "lupus",
+    "target": "sjogrens-syndrome",
+    "sharedPapers": 2800,
+    "trend": "up"
+  },
+  {
+    "source": "lupus",
+    "target": "scleroderma",
+    "sharedPapers": 2200,
+    "trend": "stable"
+  },
+  {
+    "source": "lupus",
+    "target": "vasculitis",
+    "sharedPapers": 2000,
+    "trend": "up"
+  },
+  {
+    "source": "lupus",
+    "target": "psoriasis",
+    "sharedPapers": 1200,
+    "trend": "stable"
+  },
+  {
+    "source": "lupus",
+    "target": "myasthenia-gravis",
+    "sharedPapers": 600,
+    "trend": "stable"
+  },
+  {
+    "source": "psoriasis",
+    "target": "rheumatoid-arthritis",
+    "sharedPapers": 3200,
+    "trend": "up"
+  },
+  {
+    "source": "rheumatoid-arthritis",
+    "target": "sjogrens-syndrome",
+    "sharedPapers": 2000,
+    "trend": "stable"
+  },
+  {
+    "source": "rheumatoid-arthritis",
+    "target": "scleroderma",
+    "sharedPapers": 1500,
+    "trend": "stable"
+  },
+  {
+    "source": "ankylosing-spondylitis",
+    "target": "rheumatoid-arthritis",
+    "sharedPapers": 3000,
+    "trend": "stable"
+  },
+  {
+    "source": "rheumatoid-arthritis",
+    "target": "vasculitis",
+    "sharedPapers": 1800,
+    "trend": "stable"
+  },
+  {
+    "source": "crohns-disease",
+    "target": "rheumatoid-arthritis",
+    "sharedPapers": 1200,
+    "trend": "stable"
+  },
+  {
+    "source": "crohns-disease",
+    "target": "ulcerative-colitis",
+    "sharedPapers": 8500,
+    "trend": "down"
+  },
+  {
+    "source": "celiac-disease",
+    "target": "crohns-disease",
+    "sharedPapers": 1800,
+    "trend": "up"
+  },
+  {
+    "source": "crohns-disease",
+    "target": "psoriasis",
+    "sharedPapers": 1200,
+    "trend": "up"
+  },
+  {
+    "source": "ankylosing-spondylitis",
+    "target": "crohns-disease",
+    "sharedPapers": 1500,
+    "trend": "stable"
+  },
+  {
+    "source": "celiac-disease",
+    "target": "ulcerative-colitis",
+    "sharedPapers": 1200,
+    "trend": "stable"
+  },
+  {
+    "source": "psoriasis",
+    "target": "ulcerative-colitis",
+    "sharedPapers": 800,
+    "trend": "up"
+  },
+  {
+    "source": "ankylosing-spondylitis",
+    "target": "ulcerative-colitis",
+    "sharedPapers": 900,
+    "trend": "stable"
+  },
+  {
+    "source": "celiac-disease",
+    "target": "type-1-diabetes",
+    "sharedPapers": 2500,
+    "trend": "up"
+  },
+  {
+    "source": "rheumatoid-arthritis",
+    "target": "type-1-diabetes",
+    "sharedPapers": 1500,
+    "trend": "stable"
+  },
+  {
+    "source": "multiple-sclerosis",
+    "target": "type-1-diabetes",
+    "sharedPapers": 1200,
+    "trend": "up"
+  },
+  {
+    "source": "ankylosing-spondylitis",
+    "target": "psoriasis",
+    "sharedPapers": 2200,
+    "trend": "up"
+  },
+  {
+    "source": "scleroderma",
+    "target": "sjogrens-syndrome",
+    "sharedPapers": 1500,
+    "trend": "down"
+  },
+  {
+    "source": "sjogrens-syndrome",
+    "target": "vasculitis",
+    "sharedPapers": 800,
+    "trend": "up"
+  },
+  {
+    "source": "scleroderma",
+    "target": "vasculitis",
+    "sharedPapers": 800,
+    "trend": "stable"
+  },
+  {
+    "source": "obesity",
+    "target": "type-2-diabetes",
+    "sharedPapers": 20000,
+    "trend": "up"
+  },
+  {
+    "source": "metabolic-syndrome",
+    "target": "type-2-diabetes",
+    "sharedPapers": 12000,
+    "trend": "up"
+  },
+  {
+    "source": "hyperlipidemia",
+    "target": "type-2-diabetes",
+    "sharedPapers": 8500,
+    "trend": "up"
+  },
+  {
+    "source": "nafld",
+    "target": "type-2-diabetes",
+    "sharedPapers": 7500,
+    "trend": "up"
+  },
+  {
+    "source": "gout",
+    "target": "type-2-diabetes",
+    "sharedPapers": 2200,
+    "trend": "up"
+  },
+  {
+    "source": "osteoporosis",
+    "target": "type-2-diabetes",
+    "sharedPapers": 3500,
+    "trend": "up"
+  },
+  {
+    "source": "hypothyroidism",
+    "target": "type-2-diabetes",
+    "sharedPapers": 2800,
+    "trend": "down"
+  },
+  {
+    "source": "metabolic-syndrome",
+    "target": "obesity",
+    "sharedPapers": 10000,
+    "trend": "up"
+  },
+  {
+    "source": "nafld",
+    "target": "obesity",
+    "sharedPapers": 8000,
+    "trend": "up"
+  },
+  {
+    "source": "hyperlipidemia",
+    "target": "obesity",
+    "sharedPapers": 6000,
+    "trend": "up"
+  },
+  {
+    "source": "gout",
+    "target": "obesity",
+    "sharedPapers": 2000,
+    "trend": "up"
+  },
+  {
+    "source": "obesity",
+    "target": "osteoporosis",
+    "sharedPapers": 2500,
+    "trend": "down"
+  },
+  {
+    "source": "hypothyroidism",
+    "target": "obesity",
+    "sharedPapers": 2200,
+    "trend": "up"
+  },
+  {
+    "source": "metabolic-syndrome",
+    "target": "nafld",
+    "sharedPapers": 5500,
+    "trend": "up"
+  },
+  {
+    "source": "hyperlipidemia",
+    "target": "metabolic-syndrome",
+    "sharedPapers": 6500,
+    "trend": "up"
+  },
+  {
+    "source": "gout",
+    "target": "metabolic-syndrome",
+    "sharedPapers": 2500,
+    "trend": "up"
+  },
+  {
+    "source": "hyperlipidemia",
+    "target": "nafld",
+    "sharedPapers": 3000,
+    "trend": "up"
+  },
+  {
+    "source": "hyperlipidemia",
+    "target": "hypothyroidism",
+    "sharedPapers": 1500,
+    "trend": "stable"
+  },
+  {
+    "source": "hyperthyroidism",
+    "target": "hypothyroidism",
+    "sharedPapers": 4500,
+    "trend": "stable"
+  },
+  {
+    "source": "hypothyroidism",
+    "target": "osteoporosis",
+    "sharedPapers": 2000,
+    "trend": "stable"
+  },
+  {
+    "source": "hyperthyroidism",
+    "target": "osteoporosis",
+    "sharedPapers": 1800,
+    "trend": "down"
+  },
+  {
+    "source": "phenylketonuria",
+    "target": "wilsons-disease",
+    "sharedPapers": 200,
+    "trend": "stable"
+  },
+  {
+    "source": "porphyria",
+    "target": "wilsons-disease",
+    "sharedPapers": 180,
+    "trend": "stable"
+  },
+  {
+    "source": "phenylketonuria",
+    "target": "porphyria",
+    "sharedPapers": 150,
+    "trend": "stable"
+  },
+  {
+    "source": "hiv-aids",
+    "target": "tuberculosis",
+    "sharedPapers": 18000,
+    "trend": "down"
+  },
+  {
+    "source": "hepatitis-b",
+    "target": "hiv-aids",
+    "sharedPapers": 6500,
+    "trend": "stable"
+  },
+  {
+    "source": "hepatitis-c",
+    "target": "hiv-aids",
+    "sharedPapers": 6000,
+    "trend": "down"
+  },
+  {
+    "source": "hiv-aids",
+    "target": "malaria",
+    "sharedPapers": 5000,
+    "trend": "stable"
+  },
+  {
+    "source": "hiv-aids",
+    "target": "pneumonia",
+    "sharedPapers": 5500,
+    "trend": "up"
+  },
+  {
+    "source": "covid-19",
+    "target": "hiv-aids",
+    "sharedPapers": 4500,
+    "trend": "up"
+  },
+  {
+    "source": "hiv-aids",
+    "target": "influenza",
+    "sharedPapers": 3500,
+    "trend": "stable"
+  },
+  {
+    "source": "hiv-aids",
+    "target": "sepsis",
+    "sharedPapers": 3200,
+    "trend": "stable"
+  },
+  {
+    "source": "hiv-aids",
+    "target": "hpv",
+    "sharedPapers": 3800,
+    "trend": "stable"
+  },
+  {
+    "source": "ebola",
+    "target": "hiv-aids",
+    "sharedPapers": 800,
+    "trend": "down"
+  },
+  {
+    "source": "hiv-aids",
+    "target": "measles",
+    "sharedPapers": 1500,
+    "trend": "down"
+  },
+  {
+    "source": "hiv-aids",
+    "target": "mrsa",
+    "sharedPapers": 1200,
+    "trend": "stable"
+  },
+  {
+    "source": "hiv-aids",
+    "target": "zika",
+    "sharedPapers": 500,
+    "trend": "down"
+  },
+  {
+    "source": "covid-19",
+    "target": "influenza",
+    "sharedPapers": 8000,
+    "trend": "up"
+  },
+  {
+    "source": "covid-19",
+    "target": "pneumonia",
+    "sharedPapers": 12000,
+    "trend": "up"
+  },
+  {
+    "source": "covid-19",
+    "target": "sepsis",
+    "sharedPapers": 5500,
+    "trend": "up"
+  },
+  {
+    "source": "acute-respiratory-distress",
+    "target": "covid-19",
+    "sharedPapers": 8500,
+    "trend": "up"
+  },
+  {
+    "source": "covid-19",
+    "target": "mrsa",
+    "sharedPapers": 1200,
+    "trend": "up"
+  },
+  {
+    "source": "covid-19",
+    "target": "measles",
+    "sharedPapers": 800,
+    "trend": "up"
+  },
+  {
+    "source": "covid-19",
+    "target": "hepatitis-b",
+    "sharedPapers": 1200,
+    "trend": "up"
+  },
+  {
+    "source": "covid-19",
+    "target": "tuberculosis",
+    "sharedPapers": 3500,
+    "trend": "up"
+  },
+  {
+    "source": "hepatitis-b",
+    "target": "hepatitis-c",
+    "sharedPapers": 8500,
+    "trend": "down"
+  },
+  {
+    "source": "hepatitis-b",
+    "target": "hpv",
+    "sharedPapers": 1200,
+    "trend": "stable"
+  },
+  {
+    "source": "influenza",
+    "target": "pneumonia",
+    "sharedPapers": 6500,
+    "trend": "stable"
+  },
+  {
+    "source": "influenza",
+    "target": "measles",
+    "sharedPapers": 1500,
+    "trend": "down"
+  },
+  {
+    "source": "influenza",
+    "target": "sepsis",
+    "sharedPapers": 2500,
+    "trend": "stable"
+  },
+  {
+    "source": "acute-respiratory-distress",
+    "target": "influenza",
+    "sharedPapers": 2000,
+    "trend": "up"
+  },
+  {
+    "source": "influenza",
+    "target": "pertussis",
+    "sharedPapers": 1000,
+    "trend": "down"
+  },
+  {
+    "source": "measles",
+    "target": "pertussis",
+    "sharedPapers": 1200,
+    "trend": "down"
+  },
+  {
+    "source": "cholera",
+    "target": "measles",
+    "sharedPapers": 500,
+    "trend": "down"
+  },
+  {
+    "source": "measles",
+    "target": "typhoid",
+    "sharedPapers": 400,
+    "trend": "down"
+  },
+  {
+    "source": "measles",
+    "target": "pneumonia",
+    "sharedPapers": 1500,
+    "trend": "down"
+  },
+  {
+    "source": "cholera",
+    "target": "typhoid",
+    "sharedPapers": 2000,
+    "trend": "stable"
+  },
+  {
+    "source": "cholera",
+    "target": "norovirus",
+    "sharedPapers": 600,
+    "trend": "stable"
+  },
+  {
+    "source": "c-difficile",
+    "target": "mrsa",
+    "sharedPapers": 2200,
+    "trend": "up"
+  },
+  {
+    "source": "mrsa",
+    "target": "sepsis",
+    "sharedPapers": 3500,
+    "trend": "up"
+  },
+  {
+    "source": "c-difficile",
+    "target": "sepsis",
+    "sharedPapers": 1500,
+    "trend": "up"
+  },
+  {
+    "source": "cholera",
+    "target": "plague",
+    "sharedPapers": 400,
+    "trend": "down"
+  },
+  {
+    "source": "plague",
+    "target": "typhoid",
+    "sharedPapers": 300,
+    "trend": "down"
+  },
+  {
+    "source": "c-difficile",
+    "target": "norovirus",
+    "sharedPapers": 800,
+    "trend": "up"
+  },
+  {
+    "source": "sickle-cell-disease",
+    "target": "thalassemia",
+    "sharedPapers": 3500,
+    "trend": "stable"
+  },
+  {
+    "source": "hemophilia",
+    "target": "sickle-cell-disease",
+    "sharedPapers": 800,
+    "trend": "stable"
+  },
+  {
+    "source": "bronchiectasis",
+    "target": "cystic-fibrosis",
+    "sharedPapers": 3000,
+    "trend": "up"
+  },
+  {
+    "source": "cystic-fibrosis",
+    "target": "sickle-cell-disease",
+    "sharedPapers": 600,
+    "trend": "down"
+  },
+  {
+    "source": "hemophilia",
+    "target": "thalassemia",
+    "sharedPapers": 800,
+    "trend": "stable"
+  },
+  {
+    "source": "congenital-heart-defects",
+    "target": "down-syndrome",
+    "sharedPapers": 2500,
+    "trend": "stable"
+  },
+  {
+    "source": "down-syndrome",
+    "target": "epilepsy",
+    "sharedPapers": 800,
+    "trend": "up"
+  },
+  {
+    "source": "ehlers-danlos-syndrome",
+    "target": "marfan-syndrome",
+    "sharedPapers": 800,
+    "trend": "up"
+  },
+  {
+    "source": "aortic-aneurysm",
+    "target": "marfan-syndrome",
+    "sharedPapers": 1200,
+    "trend": "stable"
+  },
+  {
+    "source": "congenital-heart-defects",
+    "target": "marfan-syndrome",
+    "sharedPapers": 700,
+    "trend": "down"
+  },
+  {
+    "source": "congenital-heart-defects",
+    "target": "turner-syndrome",
+    "sharedPapers": 800,
+    "trend": "stable"
+  },
+  {
+    "source": "down-syndrome",
+    "target": "turner-syndrome",
+    "sharedPapers": 600,
+    "trend": "stable"
+  },
+  {
+    "source": "osteoporosis",
+    "target": "turner-syndrome",
+    "sharedPapers": 500,
+    "trend": "down"
+  },
+  {
+    "source": "als",
+    "target": "duchenne-muscular-dystrophy",
+    "sharedPapers": 600,
+    "trend": "stable"
+  },
+  {
+    "source": "cardiomyopathy",
+    "target": "duchenne-muscular-dystrophy",
+    "sharedPapers": 800,
+    "trend": "up"
+  },
+  {
+    "source": "autism-spectrum-disorder",
+    "target": "fragile-x-syndrome",
+    "sharedPapers": 1200,
+    "trend": "up"
+  },
+  {
+    "source": "down-syndrome",
+    "target": "fragile-x-syndrome",
+    "sharedPapers": 500,
+    "trend": "stable"
+  },
+  {
+    "source": "epilepsy",
+    "target": "fragile-x-syndrome",
+    "sharedPapers": 400,
+    "trend": "up"
+  },
+  {
+    "source": "gaucher-disease",
+    "target": "tay-sachs-disease",
+    "sharedPapers": 500,
+    "trend": "stable"
+  },
+  {
+    "source": "gaucher-disease",
+    "target": "thalassemia",
+    "sharedPapers": 250,
+    "trend": "down"
+  },
+  {
+    "source": "kidney-cancer",
+    "target": "polycystic-kidney-disease",
+    "sharedPapers": 600,
+    "trend": "up"
+  },
+  {
+    "source": "aortic-aneurysm",
+    "target": "ehlers-danlos-syndrome",
+    "sharedPapers": 400,
+    "trend": "up"
+  },
+  {
+    "source": "anxiety-disorders",
+    "target": "depression",
+    "sharedPapers": 15000,
+    "trend": "up"
+  },
+  {
+    "source": "depression",
+    "target": "ptsd",
+    "sharedPapers": 6000,
+    "trend": "up"
+  },
+  {
+    "source": "bipolar-disorder",
+    "target": "depression",
+    "sharedPapers": 6500,
+    "trend": "up"
+  },
+  {
+    "source": "depression",
+    "target": "schizophrenia",
+    "sharedPapers": 5000,
+    "trend": "down"
+  },
+  {
+    "source": "depression",
+    "target": "substance-use-disorder",
+    "sharedPapers": 6000,
+    "trend": "up"
+  },
+  {
+    "source": "depression",
+    "target": "ocd",
+    "sharedPapers": 2500,
+    "trend": "up"
+  },
+  {
+    "source": "depression",
+    "target": "insomnia",
+    "sharedPapers": 4500,
+    "trend": "up"
+  },
+  {
+    "source": "adhd",
+    "target": "depression",
+    "sharedPapers": 2800,
+    "trend": "up"
+  },
+  {
+    "source": "anorexia-nervosa",
+    "target": "depression",
+    "sharedPapers": 2200,
+    "trend": "up"
+  },
+  {
+    "source": "borderline-personality-disorder",
+    "target": "depression",
+    "sharedPapers": 2500,
+    "trend": "up"
+  },
+  {
+    "source": "autism-spectrum-disorder",
+    "target": "depression",
+    "sharedPapers": 2000,
+    "trend": "up"
+  },
+  {
+    "source": "anxiety-disorders",
+    "target": "ptsd",
+    "sharedPapers": 5500,
+    "trend": "up"
+  },
+  {
+    "source": "anxiety-disorders",
+    "target": "ocd",
+    "sharedPapers": 3500,
+    "trend": "up"
+  },
+  {
+    "source": "anxiety-disorders",
+    "target": "insomnia",
+    "sharedPapers": 3800,
+    "trend": "up"
+  },
+  {
+    "source": "anxiety-disorders",
+    "target": "substance-use-disorder",
+    "sharedPapers": 4500,
+    "trend": "up"
+  },
+  {
+    "source": "adhd",
+    "target": "anxiety-disorders",
+    "sharedPapers": 3200,
+    "trend": "up"
+  },
+  {
+    "source": "anorexia-nervosa",
+    "target": "anxiety-disorders",
+    "sharedPapers": 1800,
+    "trend": "stable"
+  },
+  {
+    "source": "anxiety-disorders",
+    "target": "borderline-personality-disorder",
+    "sharedPapers": 2000,
+    "trend": "up"
+  },
+  {
+    "source": "anxiety-disorders",
+    "target": "autism-spectrum-disorder",
+    "sharedPapers": 2500,
+    "trend": "up"
+  },
+  {
+    "source": "bipolar-disorder",
+    "target": "schizophrenia",
+    "sharedPapers": 6000,
+    "trend": "up"
+  },
+  {
+    "source": "schizophrenia",
+    "target": "substance-use-disorder",
+    "sharedPapers": 3500,
+    "trend": "up"
+  },
+  {
+    "source": "autism-spectrum-disorder",
+    "target": "schizophrenia",
+    "sharedPapers": 2000,
+    "trend": "up"
+  },
+  {
+    "source": "bipolar-disorder",
+    "target": "substance-use-disorder",
+    "sharedPapers": 3000,
+    "trend": "up"
+  },
+  {
+    "source": "bipolar-disorder",
+    "target": "ptsd",
+    "sharedPapers": 2200,
+    "trend": "up"
+  },
+  {
+    "source": "adhd",
+    "target": "bipolar-disorder",
+    "sharedPapers": 1800,
+    "trend": "up"
+  },
+  {
+    "source": "bipolar-disorder",
+    "target": "borderline-personality-disorder",
+    "sharedPapers": 2000,
+    "trend": "up"
+  },
+  {
+    "source": "ptsd",
+    "target": "substance-use-disorder",
+    "sharedPapers": 4000,
+    "trend": "up"
+  },
+  {
+    "source": "insomnia",
+    "target": "ptsd",
+    "sharedPapers": 2800,
+    "trend": "up"
+  },
+  {
+    "source": "adhd",
+    "target": "ocd",
+    "sharedPapers": 1200,
+    "trend": "up"
+  },
+  {
+    "source": "autism-spectrum-disorder",
+    "target": "ocd",
+    "sharedPapers": 1800,
+    "trend": "up"
+  },
+  {
+    "source": "adhd",
+    "target": "autism-spectrum-disorder",
+    "sharedPapers": 4000,
+    "trend": "up"
+  },
+  {
+    "source": "anorexia-nervosa",
+    "target": "ocd",
+    "sharedPapers": 1500,
+    "trend": "up"
+  },
+  {
+    "source": "insomnia",
+    "target": "substance-use-disorder",
+    "sharedPapers": 2200,
+    "trend": "up"
+  },
+  {
+    "source": "heart-disease",
+    "target": "type-2-diabetes",
+    "sharedPapers": 15000,
+    "trend": "up"
+  },
+  {
+    "source": "stroke",
+    "target": "type-2-diabetes",
+    "sharedPapers": 8000,
+    "trend": "up"
+  },
+  {
+    "source": "hypertension",
+    "target": "type-2-diabetes",
+    "sharedPapers": 12000,
+    "trend": "stable"
+  },
+  {
+    "source": "heart-failure",
+    "target": "type-2-diabetes",
+    "sharedPapers": 6000,
+    "trend": "up"
+  },
+  {
+    "source": "atherosclerosis",
+    "target": "type-2-diabetes",
+    "sharedPapers": 5000,
+    "trend": "up"
+  },
+  {
+    "source": "peripheral-artery-disease",
+    "target": "type-2-diabetes",
+    "sharedPapers": 3500,
+    "trend": "up"
+  },
+  {
+    "source": "neuropathy",
+    "target": "type-2-diabetes",
+    "sharedPapers": 8000,
+    "trend": "up"
+  },
+  {
+    "source": "heart-disease",
+    "target": "type-1-diabetes",
+    "sharedPapers": 4000,
+    "trend": "stable"
+  },
+  {
+    "source": "neuropathy",
+    "target": "type-1-diabetes",
+    "sharedPapers": 3500,
+    "trend": "up"
+  },
+  {
+    "source": "type-1-diabetes",
+    "target": "type-2-diabetes",
+    "sharedPapers": 12000,
+    "trend": "stable"
+  },
+  {
+    "source": "heart-disease",
+    "target": "obesity",
+    "sharedPapers": 10000,
+    "trend": "up"
+  },
+  {
+    "source": "obesity",
+    "target": "stroke",
+    "sharedPapers": 5000,
+    "trend": "up"
+  },
+  {
+    "source": "hypertension",
+    "target": "obesity",
+    "sharedPapers": 12000,
+    "trend": "up"
+  },
+  {
+    "source": "heart-failure",
+    "target": "obesity",
+    "sharedPapers": 4500,
+    "trend": "up"
+  },
+  {
+    "source": "obesity",
+    "target": "sleep-apnea",
+    "sharedPapers": 6000,
+    "trend": "up"
+  },
+  {
+    "source": "depression",
+    "target": "obesity",
+    "sharedPapers": 4000,
+    "trend": "up"
+  },
+  {
+    "source": "breast-cancer",
+    "target": "obesity",
+    "sharedPapers": 3500,
+    "trend": "up"
+  },
+  {
+    "source": "colon-cancer",
+    "target": "obesity",
+    "sharedPapers": 2500,
+    "trend": "up"
+  },
+  {
+    "source": "endometrial-cancer",
+    "target": "obesity",
+    "sharedPapers": 2800,
+    "trend": "up"
+  },
+  {
+    "source": "kidney-cancer",
+    "target": "obesity",
+    "sharedPapers": 1500,
+    "trend": "up"
+  },
+  {
+    "source": "asthma",
+    "target": "obesity",
+    "sharedPapers": 3000,
+    "trend": "up"
+  },
+  {
+    "source": "hiv-aids",
+    "target": "lymphoma",
+    "sharedPapers": 4500,
+    "trend": "stable"
+  },
+  {
+    "source": "cervical-cancer",
+    "target": "hiv-aids",
+    "sharedPapers": 3200,
+    "trend": "stable"
+  },
+  {
+    "source": "depression",
+    "target": "hiv-aids",
+    "sharedPapers": 4000,
+    "trend": "up"
+  },
+  {
+    "source": "hiv-aids",
+    "target": "substance-use-disorder",
+    "sharedPapers": 5500,
+    "trend": "up"
+  },
+  {
+    "source": "hiv-aids",
+    "target": "neuropathy",
+    "sharedPapers": 2500,
+    "trend": "stable"
+  },
+  {
+    "source": "hiv-aids",
+    "target": "meningitis",
+    "sharedPapers": 3000,
+    "trend": "stable"
+  },
+  {
+    "source": "hiv-aids",
+    "target": "leishmaniasis",
+    "sharedPapers": 1200,
+    "trend": "stable"
+  },
+  {
+    "source": "hiv-aids",
+    "target": "leprosy",
+    "sharedPapers": 600,
+    "trend": "down"
+  },
+  {
+    "source": "covid-19",
+    "target": "obesity",
+    "sharedPapers": 5500,
+    "trend": "up"
+  },
+  {
+    "source": "covid-19",
+    "target": "type-2-diabetes",
+    "sharedPapers": 6000,
+    "trend": "up"
+  },
+  {
+    "source": "covid-19",
+    "target": "heart-disease",
+    "sharedPapers": 5000,
+    "trend": "up"
+  },
+  {
+    "source": "covid-19",
+    "target": "hypertension",
+    "sharedPapers": 4500,
+    "trend": "up"
+  },
+  {
+    "source": "covid-19",
+    "target": "stroke",
+    "sharedPapers": 3000,
+    "trend": "up"
+  },
+  {
+    "source": "covid-19",
+    "target": "depression",
+    "sharedPapers": 4000,
+    "trend": "up"
+  },
+  {
+    "source": "anxiety-disorders",
+    "target": "covid-19",
+    "sharedPapers": 3500,
+    "trend": "up"
+  },
+  {
+    "source": "asthma",
+    "target": "covid-19",
+    "sharedPapers": 2800,
+    "trend": "up"
+  },
+  {
+    "source": "copd",
+    "target": "covid-19",
+    "sharedPapers": 2500,
+    "trend": "up"
+  },
+  {
+    "source": "covid-19",
+    "target": "myocarditis",
+    "sharedPapers": 3500,
+    "trend": "up"
+  },
+  {
+    "source": "covid-19",
+    "target": "deep-vein-thrombosis",
+    "sharedPapers": 2500,
+    "trend": "up"
+  },
+  {
+    "source": "covid-19",
+    "target": "pulmonary-embolism",
+    "sharedPapers": 2800,
+    "trend": "up"
+  },
+  {
+    "source": "covid-19",
+    "target": "lung-fibrosis",
+    "sharedPapers": 3000,
+    "trend": "up"
+  },
+  {
+    "source": "covid-19",
+    "target": "neuropathy",
+    "sharedPapers": 1500,
+    "trend": "up"
+  },
+  {
+    "source": "covid-19",
+    "target": "insomnia",
+    "sharedPapers": 1200,
+    "trend": "up"
+  },
+  {
+    "source": "hepatitis-b",
+    "target": "liver-cancer",
+    "sharedPapers": 6000,
+    "trend": "up"
+  },
+  {
+    "source": "hepatitis-c",
+    "target": "liver-cancer",
+    "sharedPapers": 5000,
+    "trend": "up"
+  },
+  {
+    "source": "cervical-cancer",
+    "target": "hpv",
+    "sharedPapers": 8000,
+    "trend": "up"
+  },
+  {
+    "source": "esophageal-cancer",
+    "target": "hpv",
+    "sharedPapers": 1200,
+    "trend": "up"
+  },
+  {
+    "source": "copd",
+    "target": "lung-cancer",
+    "sharedPapers": 7000,
+    "trend": "up"
+  },
+  {
+    "source": "lung-cancer",
+    "target": "lung-fibrosis",
+    "sharedPapers": 2500,
+    "trend": "up"
+  },
+  {
+    "source": "lung-cancer",
+    "target": "pleural-effusion",
+    "sharedPapers": 2800,
+    "trend": "up"
+  },
+  {
+    "source": "lung-cancer",
+    "target": "tuberculosis",
+    "sharedPapers": 2000,
+    "trend": "down"
+  },
+  {
+    "source": "lung-cancer",
+    "target": "pneumonia",
+    "sharedPapers": 2500,
+    "trend": "stable"
+  },
+  {
+    "source": "alzheimers-disease",
+    "target": "depression",
+    "sharedPapers": 5000,
+    "trend": "up"
+  },
+  {
+    "source": "depression",
+    "target": "parkinsons-disease",
+    "sharedPapers": 3500,
+    "trend": "up"
+  },
+  {
+    "source": "breast-cancer",
+    "target": "depression",
+    "sharedPapers": 3000,
+    "trend": "up"
+  },
+  {
+    "source": "depression",
+    "target": "heart-disease",
+    "sharedPapers": 5000,
+    "trend": "up"
+  },
+  {
+    "source": "depression",
+    "target": "stroke",
+    "sharedPapers": 3500,
+    "trend": "up"
+  },
+  {
+    "source": "depression",
+    "target": "epilepsy",
+    "sharedPapers": 2200,
+    "trend": "up"
+  },
+  {
+    "source": "depression",
+    "target": "type-2-diabetes",
+    "sharedPapers": 4500,
+    "trend": "up"
+  },
+  {
+    "source": "copd",
+    "target": "depression",
+    "sharedPapers": 2000,
+    "trend": "down"
+  },
+  {
+    "source": "depression",
+    "target": "multiple-sclerosis",
+    "sharedPapers": 2200,
+    "trend": "up"
+  },
+  {
+    "source": "depression",
+    "target": "rheumatoid-arthritis",
+    "sharedPapers": 1800,
+    "trend": "stable"
+  },
+  {
+    "source": "depression",
+    "target": "lupus",
+    "sharedPapers": 1500,
+    "trend": "up"
+  },
+  {
+    "source": "depression",
+    "target": "migraine",
+    "sharedPapers": 2500,
+    "trend": "up"
+  },
+  {
+    "source": "hypertension",
+    "target": "kidney-cancer",
+    "sharedPapers": 2000,
+    "trend": "stable"
+  },
+  {
+    "source": "hypertension",
+    "target": "metabolic-syndrome",
+    "sharedPapers": 8000,
+    "trend": "down"
+  },
+  {
+    "source": "alzheimers-disease",
+    "target": "hypertension",
+    "sharedPapers": 2500,
+    "trend": "up"
+  },
+  {
+    "source": "hypertension",
+    "target": "sleep-apnea",
+    "sharedPapers": 3500,
+    "trend": "up"
+  },
+  {
+    "source": "hypertension",
+    "target": "migraine",
+    "sharedPapers": 1800,
+    "trend": "stable"
+  },
+  {
+    "source": "malaria",
+    "target": "sickle-cell-disease",
+    "sharedPapers": 3500,
+    "trend": "stable"
+  },
+  {
+    "source": "malaria",
+    "target": "pneumonia",
+    "sharedPapers": 1800,
+    "trend": "stable"
+  },
+  {
+    "source": "malaria",
+    "target": "meningitis",
+    "sharedPapers": 800,
+    "trend": "down"
+  },
+  {
+    "source": "epilepsy",
+    "target": "malaria",
+    "sharedPapers": 600,
+    "trend": "down"
+  },
+  {
+    "source": "malaria",
+    "target": "tuberculosis",
+    "sharedPapers": 2500,
+    "trend": "stable"
+  },
+  {
+    "source": "malaria",
+    "target": "thalassemia",
+    "sharedPapers": 2000,
+    "trend": "stable"
+  },
+  {
+    "source": "acute-respiratory-distress",
+    "target": "malaria",
+    "sharedPapers": 800,
+    "trend": "stable"
+  },
+  {
+    "source": "tuberculosis",
+    "target": "type-2-diabetes",
+    "sharedPapers": 3500,
+    "trend": "up"
+  },
+  {
+    "source": "meningitis",
+    "target": "tuberculosis",
+    "sharedPapers": 2500,
+    "trend": "stable"
+  },
+  {
+    "source": "sepsis",
+    "target": "tuberculosis",
+    "sharedPapers": 2200,
+    "trend": "up"
+  },
+  {
+    "source": "leprosy",
+    "target": "tuberculosis",
+    "sharedPapers": 1200,
+    "trend": "down"
+  },
+  {
+    "source": "leishmaniasis",
+    "target": "tuberculosis",
+    "sharedPapers": 500,
+    "trend": "stable"
+  },
+  {
+    "source": "lupus",
+    "target": "lymphoma",
+    "sharedPapers": 1200,
+    "trend": "up"
+  },
+  {
+    "source": "lymphoma",
+    "target": "rheumatoid-arthritis",
+    "sharedPapers": 1500,
+    "trend": "stable"
+  },
+  {
+    "source": "celiac-disease",
+    "target": "lymphoma",
+    "sharedPapers": 800,
+    "trend": "up"
+  },
+  {
+    "source": "lymphoma",
+    "target": "sjogrens-syndrome",
+    "sharedPapers": 800,
+    "trend": "up"
+  },
+  {
+    "source": "colon-cancer",
+    "target": "crohns-disease",
+    "sharedPapers": 2200,
+    "trend": "up"
+  },
+  {
+    "source": "colon-cancer",
+    "target": "ulcerative-colitis",
+    "sharedPapers": 2500,
+    "trend": "up"
+  },
+  {
+    "source": "epilepsy",
+    "target": "stroke",
+    "sharedPapers": 2500,
+    "trend": "up"
+  },
+  {
+    "source": "migraine",
+    "target": "stroke",
+    "sharedPapers": 2500,
+    "trend": "up"
+  },
+  {
+    "source": "sickle-cell-disease",
+    "target": "stroke",
+    "sharedPapers": 1200,
+    "trend": "up"
+  },
+  {
+    "source": "hepatitis-b",
+    "target": "pancreatic-cancer",
+    "sharedPapers": 800,
+    "trend": "stable"
+  },
+  {
+    "source": "hepatitis-c",
+    "target": "lymphoma",
+    "sharedPapers": 1500,
+    "trend": "up"
+  },
+  {
+    "source": "hiv-aids",
+    "target": "liver-cancer",
+    "sharedPapers": 1800,
+    "trend": "up"
+  },
+  {
+    "source": "liver-cancer",
+    "target": "nafld",
+    "sharedPapers": 3500,
+    "trend": "up"
+  },
+  {
+    "source": "obesity",
+    "target": "pancreatic-cancer",
+    "sharedPapers": 1500,
+    "trend": "up"
+  },
+  {
+    "source": "pancreatic-cancer",
+    "target": "type-2-diabetes",
+    "sharedPapers": 4500,
+    "trend": "up"
+  },
+  {
+    "source": "colon-cancer",
+    "target": "type-2-diabetes",
+    "sharedPapers": 3000,
+    "trend": "up"
+  },
+  {
+    "source": "breast-cancer",
+    "target": "type-2-diabetes",
+    "sharedPapers": 3200,
+    "trend": "up"
+  },
+  {
+    "source": "liver-cancer",
+    "target": "type-2-diabetes",
+    "sharedPapers": 2500,
+    "trend": "up"
+  },
+  {
+    "source": "endometrial-cancer",
+    "target": "type-2-diabetes",
+    "sharedPapers": 2200,
+    "trend": "up"
+  },
+  {
+    "source": "breast-cancer",
+    "target": "metabolic-syndrome",
+    "sharedPapers": 1500,
+    "trend": "up"
+  },
+  {
+    "source": "heart-disease",
+    "target": "lung-cancer",
+    "sharedPapers": 2500,
+    "trend": "stable"
+  },
+  {
+    "source": "breast-cancer",
+    "target": "heart-disease",
+    "sharedPapers": 2000,
+    "trend": "stable"
+  },
+  {
+    "source": "brain-cancer",
+    "target": "meningitis",
+    "sharedPapers": 800,
+    "trend": "up"
+  },
+  {
+    "source": "alzheimers-disease",
+    "target": "brain-cancer",
+    "sharedPapers": 600,
+    "trend": "down"
+  },
+  {
+    "source": "heart-disease",
+    "target": "sleep-apnea",
+    "sharedPapers": 3000,
+    "trend": "up"
+  },
+  {
+    "source": "sleep-apnea",
+    "target": "stroke",
+    "sharedPapers": 1800,
+    "trend": "up"
+  },
+  {
+    "source": "arrhythmia",
+    "target": "sleep-apnea",
+    "sharedPapers": 1500,
+    "trend": "up"
+  },
+  {
+    "source": "sleep-apnea",
+    "target": "type-2-diabetes",
+    "sharedPapers": 2500,
+    "trend": "up"
+  },
+  {
+    "source": "depression",
+    "target": "sleep-apnea",
+    "sharedPapers": 1800,
+    "trend": "up"
+  },
+  {
+    "source": "insomnia",
+    "target": "migraine",
+    "sharedPapers": 1200,
+    "trend": "up"
+  },
+  {
+    "source": "heart-disease",
+    "target": "insomnia",
+    "sharedPapers": 1500,
+    "trend": "up"
+  },
+  {
+    "source": "hypertension",
+    "target": "insomnia",
+    "sharedPapers": 1500,
+    "trend": "up"
+  },
+  {
+    "source": "insomnia",
+    "target": "type-2-diabetes",
+    "sharedPapers": 1500,
+    "trend": "up"
+  },
+  {
+    "source": "lupus",
+    "target": "multiple-sclerosis",
+    "sharedPapers": 1200,
+    "trend": "stable"
+  },
+  {
+    "source": "metabolic-syndrome",
+    "target": "psoriasis",
+    "sharedPapers": 1500,
+    "trend": "up"
+  },
+  {
+    "source": "obesity",
+    "target": "psoriasis",
+    "sharedPapers": 1800,
+    "trend": "up"
+  },
+  {
+    "source": "psoriasis",
+    "target": "type-2-diabetes",
+    "sharedPapers": 1500,
+    "trend": "up"
+  },
+  {
+    "source": "rheumatoid-arthritis",
+    "target": "type-2-diabetes",
+    "sharedPapers": 1800,
+    "trend": "down"
+  },
+  {
+    "source": "lupus",
+    "target": "osteoporosis",
+    "sharedPapers": 1200,
+    "trend": "stable"
+  },
+  {
+    "source": "osteoporosis",
+    "target": "rheumatoid-arthritis",
+    "sharedPapers": 3200,
+    "trend": "stable"
+  },
+  {
+    "source": "celiac-disease",
+    "target": "osteoporosis",
+    "sharedPapers": 800,
+    "trend": "down"
+  },
+  {
+    "source": "celiac-disease",
+    "target": "depression",
+    "sharedPapers": 600,
+    "trend": "up"
+  },
+  {
+    "source": "arrhythmia",
+    "target": "hyperthyroidism",
+    "sharedPapers": 1800,
+    "trend": "up"
+  },
+  {
+    "source": "atherosclerosis",
+    "target": "hyperlipidemia",
+    "sharedPapers": 5000,
+    "trend": "stable"
+  },
+  {
+    "source": "atherosclerosis",
+    "target": "obesity",
+    "sharedPapers": 3000,
+    "trend": "down"
+  },
+  {
+    "source": "heart-disease",
+    "target": "nafld",
+    "sharedPapers": 2500,
+    "trend": "up"
+  },
+  {
+    "source": "heart-disease",
+    "target": "metabolic-syndrome",
+    "sharedPapers": 5000,
+    "trend": "stable"
+  },
+  {
+    "source": "metabolic-syndrome",
+    "target": "stroke",
+    "sharedPapers": 3000,
+    "trend": "stable"
+  },
+  {
+    "source": "heart-disease",
+    "target": "hyperlipidemia",
+    "sharedPapers": 8000,
+    "trend": "stable"
+  },
+  {
+    "source": "hyperlipidemia",
+    "target": "stroke",
+    "sharedPapers": 4000,
+    "trend": "stable"
+  },
+  {
+    "source": "gout",
+    "target": "heart-disease",
+    "sharedPapers": 2000,
+    "trend": "up"
+  },
+  {
+    "source": "gout",
+    "target": "hypertension",
+    "sharedPapers": 1800,
+    "trend": "stable"
+  },
+  {
+    "source": "breast-cancer",
+    "target": "osteoporosis",
+    "sharedPapers": 1500,
+    "trend": "down"
+  },
+  {
+    "source": "depression",
+    "target": "hypothyroidism",
+    "sharedPapers": 2000,
+    "trend": "stable"
+  },
+  {
+    "source": "heart-disease",
+    "target": "hypothyroidism",
+    "sharedPapers": 1500,
+    "trend": "down"
+  },
+  {
+    "source": "heart-failure",
+    "target": "hyperthyroidism",
+    "sharedPapers": 800,
+    "trend": "up"
+  },
+  {
+    "source": "hypothyroidism",
+    "target": "thyroid-cancer",
+    "sharedPapers": 2200,
+    "trend": "up"
+  },
+  {
+    "source": "hyperthyroidism",
+    "target": "thyroid-cancer",
+    "sharedPapers": 1500,
+    "trend": "up"
+  },
+  {
+    "source": "copd",
+    "target": "heart-failure",
+    "sharedPapers": 4500,
+    "trend": "stable"
+  },
+  {
+    "source": "heart-failure",
+    "target": "pneumonia",
+    "sharedPapers": 3500,
+    "trend": "up"
+  },
+  {
+    "source": "acute-respiratory-distress",
+    "target": "heart-failure",
+    "sharedPapers": 2500,
+    "trend": "up"
+  },
+  {
+    "source": "acute-respiratory-distress",
+    "target": "pulmonary-embolism",
+    "sharedPapers": 1500,
+    "trend": "up"
+  },
+  {
+    "source": "copd",
+    "target": "heart-disease",
+    "sharedPapers": 4500,
+    "trend": "stable"
+  },
+  {
+    "source": "heart-failure",
+    "target": "pleural-effusion",
+    "sharedPapers": 2500,
+    "trend": "stable"
+  },
+  {
+    "source": "endocarditis",
+    "target": "mrsa",
+    "sharedPapers": 1500,
+    "trend": "up"
+  },
+  {
+    "source": "endocarditis",
+    "target": "sepsis",
+    "sharedPapers": 2500,
+    "trend": "up"
+  },
+  {
+    "source": "influenza",
+    "target": "myocarditis",
+    "sharedPapers": 800,
+    "trend": "stable"
+  },
+  {
+    "source": "myocarditis",
+    "target": "sepsis",
+    "sharedPapers": 800,
+    "trend": "up"
+  },
+  {
+    "source": "rheumatic-heart-disease",
+    "target": "tuberculosis",
+    "sharedPapers": 500,
+    "trend": "down"
+  },
+  {
+    "source": "rheumatic-heart-disease",
+    "target": "stroke",
+    "sharedPapers": 800,
+    "trend": "down"
+  },
+  {
+    "source": "heart-failure",
+    "target": "rheumatic-heart-disease",
+    "sharedPapers": 1200,
+    "trend": "stable"
+  },
+  {
+    "source": "liver-cancer",
+    "target": "schistosomiasis",
+    "sharedPapers": 800,
+    "trend": "stable"
+  },
+  {
+    "source": "bladder-cancer",
+    "target": "schistosomiasis",
+    "sharedPapers": 600,
+    "trend": "up"
+  },
+  {
+    "source": "echinococcosis",
+    "target": "liver-cancer",
+    "sharedPapers": 600,
+    "trend": "stable"
+  },
+  {
+    "source": "chagas",
+    "target": "heart-disease",
+    "sharedPapers": 1800,
+    "trend": "up"
+  },
+  {
+    "source": "chagas",
+    "target": "heart-failure",
+    "sharedPapers": 1200,
+    "trend": "up"
+  },
+  {
+    "source": "cardiomyopathy",
+    "target": "chagas",
+    "sharedPapers": 1500,
+    "trend": "up"
+  },
+  {
+    "source": "arrhythmia",
+    "target": "chagas",
+    "sharedPapers": 800,
+    "trend": "up"
+  },
+  {
+    "source": "alzheimers-disease",
+    "target": "down-syndrome",
+    "sharedPapers": 2200,
+    "trend": "up"
+  },
+  {
+    "source": "down-syndrome",
+    "target": "leukemia",
+    "sharedPapers": 1500,
+    "trend": "stable"
+  },
+  {
+    "source": "down-syndrome",
+    "target": "hypothyroidism",
+    "sharedPapers": 800,
+    "trend": "stable"
+  },
+  {
+    "source": "celiac-disease",
+    "target": "down-syndrome",
+    "sharedPapers": 600,
+    "trend": "up"
+  },
+  {
+    "source": "down-syndrome",
+    "target": "type-1-diabetes",
+    "sharedPapers": 500,
+    "trend": "stable"
+  },
+  {
+    "source": "duchenne-muscular-dystrophy",
+    "target": "heart-failure",
+    "sharedPapers": 500,
+    "trend": "up"
+  },
+  {
+    "source": "duchenne-muscular-dystrophy",
+    "target": "spinal-cord-injury",
+    "sharedPapers": 300,
+    "trend": "stable"
+  },
+  {
+    "source": "hemophilia",
+    "target": "hiv-aids",
+    "sharedPapers": 1200,
+    "trend": "down"
+  },
+  {
+    "source": "hemophilia",
+    "target": "hepatitis-c",
+    "sharedPapers": 1200,
+    "trend": "down"
+  },
+  {
+    "source": "pneumonia",
+    "target": "sickle-cell-disease",
+    "sharedPapers": 800,
+    "trend": "stable"
+  },
+  {
+    "source": "sepsis",
+    "target": "sickle-cell-disease",
+    "sharedPapers": 600,
+    "trend": "stable"
+  },
+  {
+    "source": "heart-failure",
+    "target": "thalassemia",
+    "sharedPapers": 500,
+    "trend": "down"
+  },
+  {
+    "source": "osteoporosis",
+    "target": "thalassemia",
+    "sharedPapers": 400,
+    "trend": "stable"
+  },
+  {
+    "source": "cystic-fibrosis",
+    "target": "pneumonia",
+    "sharedPapers": 2500,
+    "trend": "stable"
+  },
+  {
+    "source": "cystic-fibrosis",
+    "target": "type-2-diabetes",
+    "sharedPapers": 800,
+    "trend": "up"
+  },
+  {
+    "source": "asthma",
+    "target": "cystic-fibrosis",
+    "sharedPapers": 1500,
+    "trend": "stable"
+  },
+  {
+    "source": "hypertension",
+    "target": "polycystic-kidney-disease",
+    "sharedPapers": 1200,
+    "trend": "up"
+  },
+  {
+    "source": "heart-disease",
+    "target": "polycystic-kidney-disease",
+    "sharedPapers": 500,
+    "trend": "stable"
+  },
+  {
+    "source": "hypothyroidism",
+    "target": "turner-syndrome",
+    "sharedPapers": 500,
+    "trend": "up"
+  },
+  {
+    "source": "aortic-aneurysm",
+    "target": "turner-syndrome",
+    "sharedPapers": 400,
+    "trend": "stable"
+  },
+  {
+    "source": "gaucher-disease",
+    "target": "parkinsons-disease",
+    "sharedPapers": 600,
+    "trend": "up"
+  },
+  {
+    "source": "gaucher-disease",
+    "target": "osteoporosis",
+    "sharedPapers": 250,
+    "trend": "down"
+  },
+  {
+    "source": "depression",
+    "target": "traumatic-brain-injury",
+    "sharedPapers": 2800,
+    "trend": "up"
+  },
+  {
+    "source": "anxiety-disorders",
+    "target": "epilepsy",
+    "sharedPapers": 2000,
+    "trend": "up"
+  },
+  {
+    "source": "anxiety-disorders",
+    "target": "migraine",
+    "sharedPapers": 2200,
+    "trend": "up"
+  },
+  {
+    "source": "anxiety-disorders",
+    "target": "multiple-sclerosis",
+    "sharedPapers": 1500,
+    "trend": "up"
+  },
+  {
+    "source": "ptsd",
+    "target": "traumatic-brain-injury",
+    "sharedPapers": 3000,
+    "trend": "up"
+  },
+  {
+    "source": "substance-use-disorder",
+    "target": "traumatic-brain-injury",
+    "sharedPapers": 2000,
+    "trend": "up"
+  },
+  {
+    "source": "epilepsy",
+    "target": "substance-use-disorder",
+    "sharedPapers": 1200,
+    "trend": "stable"
+  },
+  {
+    "source": "hepatitis-c",
+    "target": "substance-use-disorder",
+    "sharedPapers": 3500,
+    "trend": "stable"
+  },
+  {
+    "source": "hepatitis-b",
+    "target": "substance-use-disorder",
+    "sharedPapers": 1500,
+    "trend": "up"
+  },
+  {
+    "source": "epilepsy",
+    "target": "schizophrenia",
+    "sharedPapers": 1500,
+    "trend": "down"
+  },
+  {
+    "source": "bipolar-disorder",
+    "target": "epilepsy",
+    "sharedPapers": 1200,
+    "trend": "up"
+  },
+  {
+    "source": "adhd",
+    "target": "epilepsy",
+    "sharedPapers": 800,
+    "trend": "up"
+  },
+  {
+    "source": "autism-spectrum-disorder",
+    "target": "epilepsy",
+    "sharedPapers": 2800,
+    "trend": "up"
+  },
+  {
+    "source": "alzheimers-disease",
+    "target": "stroke",
+    "sharedPapers": 3500,
+    "trend": "up"
+  },
+  {
+    "source": "parkinsons-disease",
+    "target": "stroke",
+    "sharedPapers": 1800,
+    "trend": "stable"
+  },
+  {
+    "source": "alzheimers-disease",
+    "target": "heart-failure",
+    "sharedPapers": 1500,
+    "trend": "up"
+  },
+  {
+    "source": "alzheimers-disease",
+    "target": "type-2-diabetes",
+    "sharedPapers": 5000,
+    "trend": "up"
+  },
+  {
+    "source": "parkinsons-disease",
+    "target": "type-2-diabetes",
+    "sharedPapers": 2000,
+    "trend": "up"
+  },
+  {
+    "source": "alzheimers-disease",
+    "target": "obesity",
+    "sharedPapers": 1500,
+    "trend": "up"
+  },
+  {
+    "source": "alzheimers-disease",
+    "target": "metabolic-syndrome",
+    "sharedPapers": 1200,
+    "trend": "up"
+  },
+  {
+    "source": "schizophrenia",
+    "target": "type-2-diabetes",
+    "sharedPapers": 2500,
+    "trend": "up"
+  },
+  {
+    "source": "obesity",
+    "target": "schizophrenia",
+    "sharedPapers": 2000,
+    "trend": "up"
+  },
+  {
+    "source": "metabolic-syndrome",
+    "target": "schizophrenia",
+    "sharedPapers": 1800,
+    "trend": "up"
+  },
+  {
+    "source": "bipolar-disorder",
+    "target": "obesity",
+    "sharedPapers": 1500,
+    "trend": "up"
+  },
+  {
+    "source": "bipolar-disorder",
+    "target": "type-2-diabetes",
+    "sharedPapers": 1200,
+    "trend": "up"
+  },
+  {
+    "source": "anorexia-nervosa",
+    "target": "osteoporosis",
+    "sharedPapers": 1200,
+    "trend": "up"
+  },
+  {
+    "source": "liver-cancer",
+    "target": "substance-use-disorder",
+    "sharedPapers": 1500,
+    "trend": "up"
+  },
+  {
+    "source": "heart-disease",
+    "target": "substance-use-disorder",
+    "sharedPapers": 2000,
+    "trend": "up"
+  },
+  {
+    "source": "lung-cancer",
+    "target": "substance-use-disorder",
+    "sharedPapers": 1500,
+    "trend": "up"
+  },
+  {
+    "source": "anxiety-disorders",
+    "target": "type-2-diabetes",
+    "sharedPapers": 2000,
+    "trend": "up"
+  },
+  {
+    "source": "anxiety-disorders",
+    "target": "obesity",
+    "sharedPapers": 2000,
+    "trend": "up"
+  },
+  {
+    "source": "anxiety-disorders",
+    "target": "heart-disease",
+    "sharedPapers": 2500,
+    "trend": "up"
+  },
+  {
+    "source": "anxiety-disorders",
+    "target": "asthma",
+    "sharedPapers": 1800,
+    "trend": "up"
+  },
+  {
+    "source": "depression",
+    "target": "psoriasis",
+    "sharedPapers": 1200,
+    "trend": "up"
+  },
+  {
+    "source": "crohns-disease",
+    "target": "depression",
+    "sharedPapers": 1000,
+    "trend": "up"
+  },
+  {
+    "source": "anxiety-disorders",
+    "target": "lupus",
+    "sharedPapers": 800,
+    "trend": "up"
+  },
+  {
+    "source": "depression",
+    "target": "lung-cancer",
+    "sharedPapers": 2000,
+    "trend": "up"
+  },
+  {
+    "source": "depression",
+    "target": "prostate-cancer",
+    "sharedPapers": 1500,
+    "trend": "stable"
+  },
+  {
+    "source": "anxiety-disorders",
+    "target": "breast-cancer",
+    "sharedPapers": 1500,
+    "trend": "up"
+  },
+  {
+    "source": "asthma",
+    "target": "influenza",
+    "sharedPapers": 2500,
+    "trend": "stable"
+  },
+  {
+    "source": "copd",
+    "target": "influenza",
+    "sharedPapers": 2200,
+    "trend": "down"
+  },
+  {
+    "source": "copd",
+    "target": "tuberculosis",
+    "sharedPapers": 2500,
+    "trend": "down"
+  },
+  {
+    "source": "asthma",
+    "target": "lung-cancer",
+    "sharedPapers": 2200,
+    "trend": "down"
+  },
+  {
+    "source": "asthma",
+    "target": "type-2-diabetes",
+    "sharedPapers": 1800,
+    "trend": "down"
+  },
+  {
+    "source": "copd",
+    "target": "type-2-diabetes",
+    "sharedPapers": 2200,
+    "trend": "down"
+  },
+  {
+    "source": "copd",
+    "target": "osteoporosis",
+    "sharedPapers": 1500,
+    "trend": "down"
+  },
+  {
+    "source": "lung-fibrosis",
+    "target": "scleroderma",
+    "sharedPapers": 2200,
+    "trend": "up"
+  },
+  {
+    "source": "lung-fibrosis",
+    "target": "lupus",
+    "sharedPapers": 800,
+    "trend": "up"
+  },
+  {
+    "source": "lung-fibrosis",
+    "target": "rheumatoid-arthritis",
+    "sharedPapers": 900,
+    "trend": "up"
+  },
+  {
+    "source": "pulmonary-hypertension",
+    "target": "scleroderma",
+    "sharedPapers": 1500,
+    "trend": "up"
+  },
+  {
+    "source": "lupus",
+    "target": "sarcoidosis",
+    "sharedPapers": 800,
+    "trend": "down"
+  },
+  {
+    "source": "sarcoidosis",
+    "target": "vasculitis",
+    "sharedPapers": 500,
+    "trend": "stable"
+  },
+  {
+    "source": "pneumonia",
+    "target": "sepsis",
+    "sharedPapers": 5500,
+    "trend": "up"
+  },
+  {
+    "source": "meningitis",
+    "target": "pneumonia",
+    "sharedPapers": 1800,
+    "trend": "down"
+  },
+  {
+    "source": "meningitis",
+    "target": "sepsis",
+    "sharedPapers": 2200,
+    "trend": "up"
+  },
+  {
+    "source": "leptospirosis",
+    "target": "sepsis",
+    "sharedPapers": 800,
+    "trend": "up"
+  },
+  {
+    "source": "leptospirosis",
+    "target": "meningitis",
+    "sharedPapers": 500,
+    "trend": "stable"
+  },
+  {
+    "source": "dengue-hemorrhagic-fever",
+    "target": "sepsis",
+    "sharedPapers": 300,
+    "trend": "up"
+  },
+  {
+    "source": "mrsa",
+    "target": "pneumonia",
+    "sharedPapers": 2200,
+    "trend": "up"
+  },
+  {
+    "source": "c-difficile",
+    "target": "crohns-disease",
+    "sharedPapers": 600,
+    "trend": "up"
+  },
+  {
+    "source": "c-difficile",
+    "target": "ulcerative-colitis",
+    "sharedPapers": 500,
+    "trend": "up"
+  },
+  {
+    "source": "measles",
+    "target": "meningitis",
+    "sharedPapers": 800,
+    "trend": "down"
+  },
+  {
+    "source": "acute-respiratory-distress",
+    "target": "ebola",
+    "sharedPapers": 300,
+    "trend": "up"
+  },
+  {
+    "source": "ebola",
+    "target": "sepsis",
+    "sharedPapers": 400,
+    "trend": "up"
+  },
+  {
+    "source": "cholera",
+    "target": "sepsis",
+    "sharedPapers": 500,
+    "trend": "down"
+  },
+  {
+    "source": "sepsis",
+    "target": "typhoid",
+    "sharedPapers": 800,
+    "trend": "down"
+  },
+  {
+    "source": "pneumonia",
+    "target": "typhoid",
+    "sharedPapers": 500,
+    "trend": "down"
+  },
+  {
+    "source": "norovirus",
+    "target": "sepsis",
+    "sharedPapers": 400,
+    "trend": "stable"
+  },
+  {
+    "source": "norovirus",
+    "target": "typhoid",
+    "sharedPapers": 350,
+    "trend": "stable"
+  },
+  {
+    "source": "meningitis",
+    "target": "west-nile-virus",
+    "sharedPapers": 600,
+    "trend": "stable"
+  },
+  {
+    "source": "epilepsy",
+    "target": "west-nile-virus",
+    "sharedPapers": 350,
+    "trend": "up"
+  },
+  {
+    "source": "plague",
+    "target": "sepsis",
+    "sharedPapers": 350,
+    "trend": "down"
+  },
+  {
+    "source": "cholera",
+    "target": "ebola",
+    "sharedPapers": 200,
+    "trend": "down"
+  },
+  {
+    "source": "dengue",
+    "target": "influenza",
+    "sharedPapers": 400,
+    "trend": "stable"
+  },
+  {
+    "source": "dengue",
+    "target": "tuberculosis",
+    "sharedPapers": 300,
+    "trend": "down"
+  },
+  {
+    "source": "dengue",
+    "target": "pneumonia",
+    "sharedPapers": 400,
+    "trend": "stable"
+  },
+  {
+    "source": "epilepsy",
+    "target": "zika",
+    "sharedPapers": 250,
+    "trend": "up"
+  },
+  {
+    "source": "cerebral-palsy",
+    "target": "zika",
+    "sharedPapers": 300,
+    "trend": "up"
+  },
+  {
+    "source": "hiv-aids",
+    "target": "soil-transmitted-helminths",
+    "sharedPapers": 400,
+    "trend": "down"
+  },
+  {
+    "source": "hiv-aids",
+    "target": "lymphatic-filariasis",
+    "sharedPapers": 300,
+    "trend": "down"
+  },
+  {
+    "source": "meningitis",
+    "target": "rabies",
+    "sharedPapers": 400,
+    "trend": "stable"
+  },
+  {
+    "source": "ebola",
+    "target": "rabies",
+    "sharedPapers": 150,
+    "trend": "down"
+  },
+  {
+    "source": "buruli-ulcer",
+    "target": "tuberculosis",
+    "sharedPapers": 200,
+    "trend": "down"
+  },
+  {
+    "source": "echinococcosis",
+    "target": "tuberculosis",
+    "sharedPapers": 300,
+    "trend": "down"
+  },
+  {
+    "source": "hepatitis-b",
+    "target": "leptospirosis",
+    "sharedPapers": 300,
+    "trend": "stable"
+  },
+  {
+    "source": "schistosomiasis",
+    "target": "yaws",
+    "sharedPapers": 80,
+    "trend": "down"
+  },
+  {
+    "source": "mycetoma",
+    "target": "soil-transmitted-helminths",
+    "sharedPapers": 100,
+    "trend": "stable"
+  },
+  {
+    "source": "fascioliasis",
+    "target": "liver-cancer",
+    "sharedPapers": 200,
+    "trend": "stable"
+  },
+  {
+    "source": "fascioliasis",
+    "target": "leishmaniasis",
+    "sharedPapers": 250,
+    "trend": "stable"
+  },
+  {
+    "source": "liver-cancer",
+    "target": "porphyria",
+    "sharedPapers": 300,
+    "trend": "down"
+  },
+  {
+    "source": "neuropathy",
+    "target": "porphyria",
+    "sharedPapers": 250,
+    "trend": "stable"
+  },
+  {
+    "source": "depression",
+    "target": "porphyria",
+    "sharedPapers": 200,
+    "trend": "stable"
+  },
+  {
+    "source": "liver-cancer",
+    "target": "wilsons-disease",
+    "sharedPapers": 400,
+    "trend": "up"
+  },
+  {
+    "source": "parkinsons-disease",
+    "target": "wilsons-disease",
+    "sharedPapers": 300,
+    "trend": "up"
+  },
+  {
+    "source": "hepatitis-b",
+    "target": "wilsons-disease",
+    "sharedPapers": 250,
+    "trend": "stable"
+  },
+  {
+    "source": "autism-spectrum-disorder",
+    "target": "phenylketonuria",
+    "sharedPapers": 300,
+    "trend": "up"
+  },
+  {
+    "source": "epilepsy",
+    "target": "phenylketonuria",
+    "sharedPapers": 250,
+    "trend": "stable"
+  },
+  {
+    "source": "epilepsy",
+    "target": "tay-sachs-disease",
+    "sharedPapers": 200,
+    "trend": "stable"
+  },
+  {
+    "source": "alzheimers-disease",
+    "target": "tay-sachs-disease",
+    "sharedPapers": 150,
+    "trend": "stable"
+  },
+  {
+    "source": "down-syndrome",
+    "target": "tay-sachs-disease",
+    "sharedPapers": 200,
+    "trend": "stable"
+  },
+  {
+    "source": "cardiomyopathy",
+    "target": "ehlers-danlos-syndrome",
+    "sharedPapers": 250,
+    "trend": "up"
+  },
+  {
+    "source": "ehlers-danlos-syndrome",
+    "target": "osteoporosis",
+    "sharedPapers": 200,
+    "trend": "up"
+  },
+  {
+    "source": "depression",
+    "target": "narcolepsy",
+    "sharedPapers": 500,
+    "trend": "up"
+  },
+  {
+    "source": "adhd",
+    "target": "narcolepsy",
+    "sharedPapers": 350,
+    "trend": "up"
+  },
+  {
+    "source": "narcolepsy",
+    "target": "sleep-apnea",
+    "sharedPapers": 400,
+    "trend": "down"
+  },
+  {
+    "source": "narcolepsy",
+    "target": "obesity",
+    "sharedPapers": 400,
+    "trend": "up"
+  },
+  {
+    "source": "essential-tremor",
+    "target": "migraine",
+    "sharedPapers": 300,
+    "trend": "stable"
+  },
+  {
+    "source": "depression",
+    "target": "essential-tremor",
+    "sharedPapers": 350,
+    "trend": "down"
+  },
+  {
+    "source": "alzheimers-disease",
+    "target": "essential-tremor",
+    "sharedPapers": 400,
+    "trend": "down"
+  },
+  {
+    "source": "cerebral-palsy",
+    "target": "depression",
+    "sharedPapers": 400,
+    "trend": "up"
+  },
+  {
+    "source": "autism-spectrum-disorder",
+    "target": "cerebral-palsy",
+    "sharedPapers": 600,
+    "trend": "up"
+  },
+  {
+    "source": "depression",
+    "target": "spinal-cord-injury",
+    "sharedPapers": 1200,
+    "trend": "up"
+  },
+  {
+    "source": "deep-vein-thrombosis",
+    "target": "spinal-cord-injury",
+    "sharedPapers": 800,
+    "trend": "up"
+  },
+  {
+    "source": "pulmonary-embolism",
+    "target": "spinal-cord-injury",
+    "sharedPapers": 600,
+    "trend": "stable"
+  },
+  {
+    "source": "meningitis",
+    "target": "prion-disease",
+    "sharedPapers": 250,
+    "trend": "stable"
+  },
+  {
+    "source": "epilepsy",
+    "target": "prion-disease",
+    "sharedPapers": 300,
+    "trend": "stable"
+  },
+  {
+    "source": "neuropathy",
+    "target": "peripheral-artery-disease",
+    "sharedPapers": 1500,
+    "trend": "down"
+  },
+  {
+    "source": "neuropathy",
+    "target": "rheumatoid-arthritis",
+    "sharedPapers": 1200,
+    "trend": "down"
+  },
+  {
+    "source": "lupus",
+    "target": "neuropathy",
+    "sharedPapers": 800,
+    "trend": "stable"
+  },
+  {
+    "source": "multiple-myeloma",
+    "target": "osteoporosis",
+    "sharedPapers": 1500,
+    "trend": "up"
+  },
+  {
+    "source": "breast-cancer",
+    "target": "pleural-effusion",
+    "sharedPapers": 800,
+    "trend": "stable"
+  },
+  {
+    "source": "pleural-effusion",
+    "target": "sepsis",
+    "sharedPapers": 700,
+    "trend": "up"
+  },
+  {
+    "source": "covid-19",
+    "target": "pleural-effusion",
+    "sharedPapers": 600,
+    "trend": "up"
+  },
+  {
+    "source": "heart-disease",
+    "target": "sarcoidosis",
+    "sharedPapers": 600,
+    "trend": "down"
+  },
+  {
+    "source": "depression",
+    "target": "sarcoidosis",
+    "sharedPapers": 400,
+    "trend": "up"
+  },
+  {
+    "source": "acute-respiratory-distress",
+    "target": "pertussis",
+    "sharedPapers": 300,
+    "trend": "down"
+  },
+  {
+    "source": "pertussis",
+    "target": "sepsis",
+    "sharedPapers": 300,
+    "trend": "stable"
+  },
+  {
+    "source": "bronchiectasis",
+    "target": "pertussis",
+    "sharedPapers": 400,
+    "trend": "down"
+  },
+  {
+    "source": "bronchiectasis",
+    "target": "sarcoidosis",
+    "sharedPapers": 500,
+    "trend": "down"
+  },
+  {
+    "source": "congenital-heart-defects",
+    "target": "epilepsy",
+    "sharedPapers": 600,
+    "trend": "stable"
+  },
+  {
+    "source": "endocarditis",
+    "target": "hiv-aids",
+    "sharedPapers": 600,
+    "trend": "stable"
+  },
+  {
+    "source": "c-difficile",
+    "target": "endocarditis",
+    "sharedPapers": 400,
+    "trend": "stable"
+  },
+  {
+    "source": "heart-failure",
+    "target": "sepsis",
+    "sharedPapers": 2500,
+    "trend": "up"
+  },
+  {
+    "source": "hpv",
+    "target": "lymphoma",
+    "sharedPapers": 600,
+    "trend": "up"
+  },
+  {
+    "source": "borderline-personality-disorder",
+    "target": "ptsd",
+    "sharedPapers": 1800,
+    "trend": "up"
+  },
+  {
+    "source": "bipolar-disorder",
+    "target": "migraine",
+    "sharedPapers": 1000,
+    "trend": "up"
+  },
+  {
+    "source": "depression",
+    "target": "huntingtons-disease",
+    "sharedPapers": 800,
+    "trend": "up"
+  },
+  {
+    "source": "epilepsy",
+    "target": "huntingtons-disease",
+    "sharedPapers": 500,
+    "trend": "stable"
+  },
+  {
+    "source": "stroke",
+    "target": "vasculitis",
+    "sharedPapers": 800,
+    "trend": "up"
+  },
+  {
+    "source": "kidney-cancer",
+    "target": "vasculitis",
+    "sharedPapers": 400,
+    "trend": "stable"
+  },
+  {
+    "source": "heart-failure",
+    "target": "scleroderma",
+    "sharedPapers": 500,
+    "trend": "up"
+  },
+  {
+    "source": "ankylosing-spondylitis",
+    "target": "heart-disease",
+    "sharedPapers": 500,
+    "trend": "stable"
+  },
+  {
+    "source": "myasthenia-gravis",
+    "target": "rheumatoid-arthritis",
+    "sharedPapers": 400,
+    "trend": "down"
+  },
+  {
+    "source": "myasthenia-gravis",
+    "target": "thyroid-cancer",
+    "sharedPapers": 300,
+    "trend": "up"
+  },
+  {
+    "source": "prostate-cancer",
+    "target": "type-2-diabetes",
+    "sharedPapers": 1800,
+    "trend": "stable"
+  },
+  {
+    "source": "obesity",
+    "target": "prostate-cancer",
+    "sharedPapers": 1500,
+    "trend": "stable"
+  },
+  {
+    "source": "celiac-disease",
+    "target": "type-2-diabetes",
+    "sharedPapers": 800,
+    "trend": "up"
+  },
+  {
+    "source": "deep-vein-thrombosis",
+    "target": "lung-cancer",
+    "sharedPapers": 1500,
+    "trend": "up"
+  },
+  {
+    "source": "deep-vein-thrombosis",
+    "target": "obesity",
+    "sharedPapers": 1200,
+    "trend": "up"
+  },
+  {
+    "source": "lung-cancer",
+    "target": "pulmonary-embolism",
+    "sharedPapers": 1800,
+    "trend": "down"
+  },
+  {
+    "source": "obesity",
+    "target": "pulmonary-embolism",
+    "sharedPapers": 1000,
+    "trend": "up"
+  },
+  {
+    "source": "heart-disease",
+    "target": "migraine",
+    "sharedPapers": 1500,
+    "trend": "stable"
+  },
+  {
+    "source": "heart-disease",
+    "target": "schizophrenia",
+    "sharedPapers": 1500,
+    "trend": "up"
+  },
+  {
+    "source": "heart-disease",
+    "target": "ptsd",
+    "sharedPapers": 1500,
+    "trend": "up"
+  },
+  {
+    "source": "hypertension",
+    "target": "ptsd",
+    "sharedPapers": 1200,
+    "trend": "up"
+  },
+  {
+    "source": "peripheral-artery-disease",
+    "target": "stroke",
+    "sharedPapers": 2000,
+    "trend": "stable"
+  },
+  {
+    "source": "dengue",
+    "target": "hiv-aids",
+    "sharedPapers": 500,
+    "trend": "down"
+  },
+  {
+    "source": "chikungunya",
+    "target": "hiv-aids",
+    "sharedPapers": 250,
+    "trend": "down"
+  },
+  {
+    "source": "chagas",
+    "target": "stroke",
+    "sharedPapers": 500,
+    "trend": "up"
+  },
+  {
+    "source": "influenza",
+    "target": "west-nile-virus",
+    "sharedPapers": 400,
+    "trend": "down"
+  },
+  {
+    "source": "hpv",
+    "target": "ovarian-cancer",
+    "sharedPapers": 400,
+    "trend": "up"
+  }
+]
