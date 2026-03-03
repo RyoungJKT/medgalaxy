@@ -5,11 +5,11 @@ import diseasesData from '../data/diseases.json';
 import connectionsData from '../data/connections.json';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
-// Desaturated ~20% for premium data-viz feel (originals preserved in comments)
+// Vibrant saturated palette
 const CC = {
-  tropical:'#3dba6a', cancer:'#d95a5a', cardiovascular:'#d9863a',
-  neurological:'#9b6dd4', respiratory:'#5a8fd4', autoimmune:'#d46a9b',
-  metabolic:'#c9a832', infectious:'#2faa98', genetic:'#d4729b', mental:'#7e6bc9',
+  tropical:'#00ff6a', cancer:'#ff3333', cardiovascular:'#ff8c1a',
+  neurological:'#b44dff', respiratory:'#3399ff', autoimmune:'#ff3d8e',
+  metabolic:'#ffd500', infectious:'#00e6b8', genetic:'#ff5cbf', mental:'#7c3aed',
 };
 const CATS = Object.keys(CC);
 const CL = {
@@ -28,7 +28,7 @@ function dTier() {
   return window.innerWidth<1200 ? 'MEDIUM' : 'HIGH';
 }
 // Node sizing: log + gamma curve, capped radius for composition
-const MN=0.7, MX=6.5, GAMMA=0.7;
+const MN=0.3, MX=14, GAMMA=0.6;
 const LN=Math.log10(500), LX=Math.log10(450000), LMN=Math.log10(2), LMX=Math.log10(1400000);
 function nR(p){const t=Math.max(0,Math.min(1,(Math.log10(Math.max(p,10))-LN)/(LX-LN)));return MN+Math.pow(t,GAMMA)*(MX-MN);}
 function nRM(m){if(m<=0)return MN*0.5;const t=Math.max(0,Math.min(1,(Math.log10(m)-LMN)/(LMX-LMN)));return MN+Math.pow(t,GAMMA)*(MX-MN);}
@@ -49,14 +49,21 @@ function processData(diseases, connections) {
 
 // ─── Force Layout ────────────────────────────────────────────────────────────
 function computeLayouts(diseases, layoutEdges) {
-  // Tight dense cluster — compress spread, increase collide padding
-  const xy={},zz={};CATS.forEach((c,i)=>{const a=(i/CATS.length)*Math.PI*2;xy[c]={x:Math.cos(a)*80,y:Math.sin(a)*80};zz[c]=((i/CATS.length)-0.5)*90;});
+  // Spherical cluster — distribute category centers on a sphere surface
+  const xy={},zz={};CATS.forEach((c,i)=>{
+    // Fibonacci sphere for even distribution of 10 points on a sphere
+    const phi=Math.acos(1-2*(i+0.5)/CATS.length);
+    const theta=Math.PI*(1+Math.sqrt(5))*i;
+    const R=90;
+    xy[c]={x:R*Math.sin(phi)*Math.cos(theta),y:R*Math.sin(phi)*Math.sin(theta)};
+    zz[c]=R*Math.cos(phi);
+  });
   const ms=Math.max(...layoutEdges.map(e=>e.score),0.001);
   const ml=es=>es.map(e=>({source:e.si,target:e.ti,score:e.score}));
   function zR(ns){for(let a=0;a<ns.length;a++)for(let b=a+1;b<ns.length;b++){const na=ns[a],nb=ns[b],dx=na.x-nb.x,dy=na.y-nb.y,dz=na.z-nb.z,d=Math.sqrt(dx*dx+dy*dy+dz*dz);if(d<20&&d>0){const f=(dz/d)*0.3;na.z+=f;nb.z-=f;}}}
 
   // ── Category View: weaker anchors, stronger center, collide with radius ──
-  const cn=diseases.map((d,i)=>({index:i,r:nR(d.papers),category:d.category,papers:d.papers,x:xy[d.category].x+(Math.random()-0.5)*40,y:xy[d.category].y+(Math.random()-0.5)*40,z:zz[d.category]+(Math.random()-0.5)*20}));
+  const cn=diseases.map((d,i)=>({index:i,r:nR(d.papers),category:d.category,papers:d.papers,x:xy[d.category].x+(Math.random()-0.5)*40,y:xy[d.category].y+(Math.random()-0.5)*40,z:zz[d.category]+(Math.random()-0.5)*40}));
   d3.forceSimulation(cn)
     .force('charge',d3.forceManyBody().strength(-30))
     .force('link',d3.forceLink(ml(layoutEdges)).id(d=>d.index).distance(50).strength(d=>(d.score/ms)*0.6))
@@ -75,7 +82,7 @@ function computeLayouts(diseases, layoutEdges) {
     .force('cy',d3.forceY(d=>xy[d.category].y).strength(0.08))
     .force('collide',d3.forceCollide(d=>d.r+1.2).strength(0.8))
     .stop();
-  for(let i=0;i<300;i++){cs.tick();cn.forEach(n=>{n.z+=(zz[n.category]-n.z)*0.015;});zR(cn);}
+  for(let i=0;i<300;i++){cs.tick();cn.forEach(n=>{n.z+=(zz[n.category]-n.z)*0.04;});zR(cn);}
 
   // ── Network View: purely link-driven, no category forces ──
   const nn=diseases.map((d,i)=>({index:i,r:nR(d.papers),category:d.category,papers:d.papers,x:(Math.random()-0.5)*300,y:(Math.random()-0.5)*300,z:(Math.random()-0.5)*100}));
@@ -91,7 +98,7 @@ function computeLayouts(diseases, layoutEdges) {
 
 // ─── Orbit Controls ──────────────────────────────────────────────────────────
 class OC{
-  constructor(cam,el){this.cam=cam;this.el=el;this.target=new THREE.Vector3();this.theta=0;this.phi=Math.PI/2;this.radius=800;this.tV=0;this.pV=0;this.pnX=0;this.pnY=0;this._dr=false;this._pn=false;this._lx=0;this._ly=0;this.enabled=true;
+  constructor(cam,el){this.cam=cam;this.el=el;this.target=new THREE.Vector3();this.theta=0;this.phi=Math.PI/2;this.radius=500;this.defaultTheta=0;this.defaultPhi=Math.PI/2;this.defaultRadius=500;this.tV=0;this.pV=0;this.pnX=0;this.pnY=0;this._dr=false;this._pn=false;this._lx=0;this._ly=0;this.enabled=true;
     this._d=this._d.bind(this);this._m=this._m.bind(this);this._u=this._u.bind(this);this._w=this._w.bind(this);this._c=e=>e.preventDefault();
     el.addEventListener('mousedown',this._d);el.addEventListener('mousemove',this._m);el.addEventListener('mouseup',this._u);el.addEventListener('mouseleave',this._u);el.addEventListener('wheel',this._w,{passive:false});el.addEventListener('contextmenu',this._c);}
   _d(e){if(!this.enabled)return;if(e.button===2)this._pn=true;else if(e.button===0)this._dr=true;this._lx=e.clientX;this._ly=e.clientY;}
@@ -108,10 +115,55 @@ class OC{
 function makeGlowTexture() {
   const c=document.createElement('canvas');c.width=64;c.height=64;
   const ctx=c.getContext('2d'),g=ctx.createRadialGradient(32,32,0,32,32,32);
-  g.addColorStop(0,'rgba(255,255,255,0.25)');g.addColorStop(0.4,'rgba(255,255,255,0.08)');g.addColorStop(1,'rgba(255,255,255,0)');
+  g.addColorStop(0,'rgba(255,255,255,0.3)');g.addColorStop(0.3,'rgba(255,255,255,0.1)');g.addColorStop(0.6,'rgba(255,255,255,0.02)');g.addColorStop(1,'rgba(255,255,255,0)');
   ctx.fillStyle=g;ctx.fillRect(0,0,64,64);
   return new THREE.CanvasTexture(c);
 }
+
+// ─── Plasma Shader ──────────────────────────────────────────────────────────
+const PLASMA_VERT = `
+attribute float aPhase;
+varying vec3 vNormal,vWorldPos,vColor;
+varying float vPhase,vFogDepth;
+void main(){
+  vPhase=aPhase;
+  #ifdef USE_INSTANCING_COLOR
+    vColor=instanceColor;
+  #else
+    vColor=vec3(1.0);
+  #endif
+  vec4 wp=vec4(position,1.0);
+  #ifdef USE_INSTANCING
+    wp=instanceMatrix*wp;
+  #endif
+  vWorldPos=(modelMatrix*wp).xyz;
+  vec4 mv=modelViewMatrix*wp;
+  vec3 tn=normal;
+  #ifdef USE_INSTANCING
+    tn=mat3(instanceMatrix)*tn;
+  #endif
+  vNormal=normalize(normalMatrix*tn);
+  vFogDepth=-mv.z;
+  gl_Position=projectionMatrix*mv;
+}`;
+const PLASMA_FRAG = `
+uniform float time;
+varying vec3 vNormal,vWorldPos,vColor;
+varying float vPhase,vFogDepth;
+float hash(vec3 p){p=fract(p*vec3(443.897,441.423,437.195));p+=dot(p,p.yzx+19.19);return fract((p.x+p.y)*p.z);}
+float nse(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(mix(hash(i),hash(i+vec3(1,0,0)),f.x),mix(hash(i+vec3(0,1,0)),hash(i+vec3(1,1,0)),f.x),f.y),mix(mix(hash(i+vec3(0,0,1)),hash(i+vec3(1,0,1)),f.x),mix(hash(i+vec3(0,1,1)),hash(i+vec3(1,1,1)),f.x),f.y),f.z);}
+float fbm(vec3 p){float v=0.0,a=0.5;for(int i=0;i<3;i++){v+=a*nse(p);p*=2.0;a*=0.5;}return v;}
+void main(){
+  vec3 np=vWorldPos*0.5+vec3(time*0.4+vPhase);
+  float n=fbm(np)+fbm(np*1.5+vec3(0.0,time*0.28,0.0));
+  float pl=pow(n*0.5,0.7);
+  float facing=abs(dot(vNormal,vec3(0.0,0.0,1.0)));
+  float fr=pow(1.0-facing,2.5);
+  float core=mix(0.3,1.0,pow(facing,0.6));
+  vec3 col=vColor*(pl*1.0+0.1)*core*1.3+vColor*fr*0.8;
+  float fog=1.0-exp(-0.000002*vFogDepth*vFogDepth);
+  gl_FragColor=vec4(mix(col,vec3(0.024,0.031,0.051),fog),0.95);
+}`;
 
 // ─── UI Components ───────────────────────────────────────────────────────────
 function Sparkline({data,color,w=260,h=50}){if(!data||!data.length)return null;const mx=Math.max(...data),mn=Math.min(...data),rng=mx-mn||1;const pts=data.map((v,i)=>`${(i/(data.length-1))*w},${h-4-((v-mn)/rng)*(h-8)}`).join(' ');const gid='sp'+color.replace('#','');return(<svg width={w} height={h} style={{display:'block'}}><defs><linearGradient id={gid} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={color} stopOpacity="0.3"/><stop offset="100%" stopColor={color} stopOpacity="0.02"/></linearGradient></defs><polygon points={`0,${h} ${pts} ${w},${h}`} fill={`url(#${gid})`}/><polyline points={pts} fill="none" stroke={color} strokeWidth="1.5"/><text x="0" y={h-1} fill="#475569" fontSize="8" fontFamily="IBM Plex Mono">2014</text><text x={w} y={h-1} fill="#475569" fontSize="8" fontFamily="IBM Plex Mono" textAnchor="end">2024</text></svg>);}
@@ -119,7 +171,7 @@ function Sparkline({data,color,w=260,h=50}){if(!data||!data.length)return null;c
 function Tooltip({disease,connCount,x,y}){if(!disease)return null;const c=CC[disease.category],t=disease.trend,ar=t>0?'↑':t<0?'↓':'→';return(<div style={{position:'fixed',left:x+15,top:y+15,pointerEvents:'none',zIndex:100,background:'rgba(10,16,30,0.94)',backdropFilter:'blur(16px)',maxWidth:240,border:'1px solid rgba(255,255,255,0.08)',borderRadius:8,padding:'8px 12px',fontFamily:'IBM Plex Mono,monospace',fontSize:11,color:'#e2e8f0'}}><div style={{fontWeight:600,fontSize:12,marginBottom:3}}>{disease.label}</div><span style={{fontSize:9,padding:'1px 6px',borderRadius:4,background:c+'22',color:c}}>{CL[disease.category]}</span><div style={{color:'#94a3b8',marginTop:4}}>{fmt(disease.papers)} papers <span style={{color:t>0?'#22c55e':t<0?'#ef4444':'#94a3b8'}}>{ar}{Math.abs(t)}%</span></div><div style={{color:'#64748b'}}>{connCount} connections</div></div>);}
 
 function Sidebar({disease,data,onSelect,onClose}){if(!disease)return null;const c=CC[disease.category],idx=data.diseases.indexOf(disease),cc=data.connCounts.get(idx);const conns=data.edges.filter(e=>e.si===idx||e.ti===idx).map(e=>{const oi=e.si===idx?e.ti:e.si;return{d:data.diseases[oi],sp:e.sharedPapers,t:e.trend,oi};}).sort((a,b)=>b.sp-a.sp);const t=disease.trend,ar=t>0?'↑':t<0?'↓':'→',tc=t>0?'#22c55e':t<0?'#ef4444':'#94a3b8';const gc={high:'#ef4444',medium:'#eab308',low:'#22c55e'};
-  return(<div style={{position:'absolute',top:0,right:0,width:320,height:'100%',background:'rgba(10,16,30,0.94)',backdropFilter:'blur(16px)',borderLeft:'1px solid rgba(255,255,255,0.06)',fontFamily:'IBM Plex Mono,monospace',color:'#e2e8f0',overflowY:'auto',overflowX:'hidden',zIndex:50,fontSize:11}}>
+  return(<div style={{position:'absolute',top:75,right:0,width:320,height:'calc(100% - 75px)',background:'rgba(10,16,30,0.94)',backdropFilter:'blur(16px)',borderLeft:'1px solid rgba(255,255,255,0.06)',fontFamily:'IBM Plex Mono,monospace',color:'#e2e8f0',overflowY:'auto',overflowX:'hidden',zIndex:50,fontSize:11}}>
     <div style={{padding:'16px 16px 8px',borderBottom:'1px solid rgba(255,255,255,0.06)'}}><div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}><div><div style={{fontSize:15,fontWeight:600,marginBottom:4}}>{disease.label}</div><span style={{fontSize:9,padding:'2px 8px',borderRadius:4,background:c+'22',color:c}}>{CL[disease.category]}</span></div><button onClick={onClose} style={{background:'none',border:'none',color:'#64748b',cursor:'pointer',fontSize:18,lineHeight:1,padding:'0 4px'}}>×</button></div></div>
     <div style={{padding:'10px 16px',color:'#64748b',lineHeight:1.5}}>{disease.description}</div>
     <div style={{padding:'0 16px 12px',display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}><SB l="Publications" v={fmt(disease.papers)} s={<span style={{color:tc}}>{ar}{Math.abs(t)}%</span>}/><SB l="Connections" v={cc}/><SB l="WHO Deaths/yr" v={disease.mortality>0?fmt(disease.mortality):'N/A'}/><SB l="Funding Gap" v={disease.fundingGap.toUpperCase()} vc={gc[disease.fundingGap]}/></div>
@@ -163,9 +215,9 @@ function StoryChips({onChip,visible}){
   </div>);
 }
 
-function StoryCaption({text}){
+function StoryCaption({text,onClick}){
   if(!text) return null;
-  return(<div style={{position:'absolute',bottom:100,left:'50%',transform:'translateX(-50%)',zIndex:46,background:'rgba(10,16,30,0.9)',backdropFilter:'blur(12px)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:8,padding:'10px 20px',fontFamily:'IBM Plex Mono,monospace',fontSize:12,color:'#e2e8f0',whiteSpace:'nowrap',opacity:0,animation:'fadeIn 0.3s ease forwards'}}>{text}</div>);
+  return(<div onClick={onClick} style={{position:'absolute',bottom:100,left:'50%',transform:'translateX(-50%)',zIndex:46,background:'rgba(10,16,30,0.9)',backdropFilter:'blur(12px)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:8,padding:'10px 20px',fontFamily:'IBM Plex Mono,monospace',fontSize:12,color:'#e2e8f0',whiteSpace:'nowrap',cursor:'pointer',opacity:0,animation:'fadeIn 0.4s ease forwards'}}>{text}<span style={{color:'#475569',fontSize:9,marginLeft:12}}>click to continue</span></div>);
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -191,6 +243,8 @@ export default function MedGalaxy() {
   const [layoutMode,setLayoutMode]=useState('category');
   const [storyVisible,setStoryVisible]=useState(true);
   const [storyCaption,setStoryCaption]=useState('');
+  const [ambientTip,setAmbientTip]=useState(null); // {disease, x, y, opacity}
+  const ambientTipRef=useRef({active:false,idx:-1,timer:150,fadeIn:true});
 
   const selectDisease=useCallback((idx)=>{const data=dataRef.current;if(!data)return;setSelectedNode({index:idx,disease:data.diseases[idx]});idleRef.current=0;const p=curPosRef.current?curPosRef.current[idx]:catPosRef.current[idx];const ctrl=controlsRef.current;if(ctrl)flyRef.current={st:ctrl.target.clone(),et:new THREE.Vector3(p[0],p[1],p[2]),sr:ctrl.radius,er:Math.max(150,ctrl.radius*0.5),f:0,total:50};},[]);
   const deselect=useCallback(()=>{setSelectedNode(null);},[]);
@@ -200,8 +254,27 @@ export default function MedGalaxy() {
   const handleSearchSel=useCallback((disease)=>{const data=dataRef.current;if(!data)return;const idx=data.idMap[disease.id];if(idx!==undefined){selectDisease(idx);setSearchQuery('');}},[selectDisease]);
 
   // Story mode handler
+  const storyRef=useRef({timer:null,step:0,seq:null,chipId:null,nodeIdx:-1});
+  const [storyTip,setStoryTip]=useState(null);
+  const advanceStory=useCallback(()=>{
+    const sr=storyRef.current;
+    if(sr.timer){clearTimeout(sr.timer);sr.timer=null;}
+    if(!sr.seq||sr.step>=sr.seq.length){
+      setStoryCaption('');sr.nodeIdx=-1;setStoryTip(null);
+      if(sr.chipId==='mismatch'&&sizeToggleRef.current){sizeToggleRef.current.style.animation='chipPulse 1.5s infinite';}
+      sr.seq=null;return;
+    }
+    const s=sr.seq[sr.step];
+    setStoryCaption(s.caption||'');
+    if(s.id!==undefined){selectDisease(s.id);sr.nodeIdx=s.id;}
+    else{sr.nodeIdx=-1;setStoryTip(null);}
+    sr.step++;
+    sr.timer=setTimeout(advanceStory,5000);
+  },[selectDisease]);
   const handleStory=useCallback((chipId)=>{
-    setStoryVisible(false);setStoryCaption('');
+    const sr=storyRef.current;
+    if(sr.timer){clearTimeout(sr.timer);sr.timer=null;}
+    setStoryCaption('');setStoryTip(null);sr.nodeIdx=-1;
     const data=dataRef.current;if(!data)return;
     const find=id=>data.idMap[id];
     const sequences={
@@ -209,18 +282,10 @@ export default function MedGalaxy() {
       killers:[{id:find('heart-disease'),caption:'Heart Disease — 600K deaths/yr'},{id:find('malaria'),caption:'Malaria — 608K deaths/yr'},{id:find('tuberculosis'),caption:'Tuberculosis — 1.3M deaths/yr'},{caption:'These diseases kill hundreds of thousands per year.'}],
       mismatch:[{id:find('breast-cancer'),caption:'Breast Cancer — 430K papers, 45K deaths'},{id:find('buruli-ulcer'),caption:'Buruli Ulcer — 3K papers, devastating disease'},{caption:'130× more papers, far fewer deaths. Now toggle Mortality →'}],
     };
-    const seq=sequences[chipId];if(!seq)return;
-    let step=0;
-    function advance(){
-      if(step>=seq.length){setStoryCaption('');if(chipId==='mismatch'&&sizeToggleRef.current){sizeToggleRef.current.style.animation='chipPulse 1.5s infinite';}return;}
-      const s=seq[step];
-      setStoryCaption(s.caption||'');
-      if(s.id!==undefined) selectDisease(s.id);
-      step++;
-      setTimeout(advance,3000);
-    }
-    advance();
-  },[selectDisease]);
+    sr.seq=sequences[chipId];sr.step=0;sr.chipId=chipId;
+    if(!sr.seq)return;
+    advanceStory();
+  },[selectDisease,advanceStory]);
 
   useEffect(()=>{
     const container=containerRef.current;if(!container)return;
@@ -233,25 +298,25 @@ export default function MedGalaxy() {
 
     const scene=new THREE.Scene();
     const camera=new THREE.PerspectiveCamera(60,container.clientWidth/container.clientHeight,1,5000);
-    camera.position.set(0,0,800);cameraRef.current=camera;
+    camera.position.set(0,0,500);cameraRef.current=camera;
     const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
     renderer.setSize(container.clientWidth,container.clientHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio,cfg.dprCap));
     renderer.setClearColor(0x000000,0);container.appendChild(renderer.domElement);rendererRef.current=renderer;
     const controls=new OC(camera,renderer.domElement);controlsRef.current=controls;
 
-    // Lighting: ambient + key light + rim/back light for depth
-    scene.add(new THREE.AmbientLight(0xffffff,0.35));
-    const ptL=new THREE.PointLight(0xffffff,0.7,0);scene.add(ptL);
-    const rimLight=new THREE.DirectionalLight(0x6699cc,0.45);rimLight.position.set(-200,150,-300);scene.add(rimLight);
+    // Lighting: lower ambient to preserve color saturation
+    scene.add(new THREE.AmbientLight(0xffffff,0.3));
+    const ptL=new THREE.PointLight(0xffffff,0.6,0);scene.add(ptL);
+    const rimLight=new THREE.DirectionalLight(0x6699cc,0.3);rimLight.position.set(-200,150,-300);scene.add(rimLight);
     // Fog for depth fade
-    scene.fog=new THREE.FogExp2(0x06080d,0.0014); // stronger depth fade for focus-plane feel
-    // Tone mapping
-    renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.4;
+    scene.fog=new THREE.FogExp2(0x06080d,0.0014);
+    // Tone mapping — lower exposure to prevent desaturation
+    renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;
 
     const count=diseases.length;
-    // Glass-like spheres: high shininess, strong specular, self-luminous emissive
-    const sGeo=new THREE.SphereGeometry(1,24,24),sMat=new THREE.MeshPhongMaterial({emissiveIntensity:0.4,shininess:120,specular:new THREE.Color(0x666666),transparent:true,opacity:0.92});
+    // Plasma orb spheres — custom shader with 3D noise + Fresnel rim
+    const sGeo=new THREE.SphereGeometry(1,24,24),sMat=new THREE.ShaderMaterial({uniforms:{time:{value:0}},vertexShader:PLASMA_VERT,fragmentShader:PLASMA_FRAG,transparent:true});
     const iMesh=new THREE.InstancedMesh(sGeo,sMat,count);
     const m4=new THREE.Matrix4(),v3=new THREE.Vector3(),q4=new THREE.Quaternion(),s3=new THREE.Vector3();
 
@@ -259,7 +324,11 @@ export default function MedGalaxy() {
     const phases=[];
     for(let i=0;i<count;i++){v3.set(...catPos[i]);s3.set(0.001,0.001,0.001);m4.compose(v3,q4,s3);iMesh.setMatrixAt(i,m4);iMesh.setColorAt(i,new THREE.Color(CC[diseases[i].category]));phases.push(Math.random()*Math.PI*2);}
     nodePhaseRef.current=phases;
-    iMesh.instanceMatrix.needsUpdate=true;iMesh.instanceColor.needsUpdate=true;scene.add(iMesh);iMeshRef.current=iMesh;
+    iMesh.instanceMatrix.needsUpdate=true;iMesh.instanceColor.needsUpdate=true;
+    // Per-instance phase offset for unique plasma animation
+    const phaseArr=new Float32Array(count);for(let i=0;i<count;i++)phaseArr[i]=phases[i];
+    sGeo.setAttribute('aPhase',new THREE.InstancedBufferAttribute(phaseArr,1));
+    scene.add(iMesh);iMeshRef.current=iMesh;
 
     // Glow sprites
     const glowTex=makeGlowTexture();
@@ -270,7 +339,7 @@ export default function MedGalaxy() {
     const glowSet=new Set(sorted);
     for(let i=0;i<count;i++){
       if(!glowSet.has(i)){glowSprites.push(null);continue;}
-      const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:new THREE.Color(CC[diseases[i].category]),transparent:true,blending:THREE.AdditiveBlending,opacity:0}));
+      const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:new THREE.Color(CC[diseases[i].category]),transparent:true,blending:THREE.AdditiveBlending,depthTest:false,depthWrite:false,opacity:0}));
       sp.position.set(...catPos[i]);
       const r=nR(diseases[i].papers)*3.5;sp.scale.set(r,r,1);
       glowGroup.add(sp);glowSprites.push(sp);
@@ -305,7 +374,13 @@ export default function MedGalaxy() {
     function onMM(e){const rc=renderer.domElement.getBoundingClientRect();mouse.x=((e.clientX-rc.left)/rc.width)*2-1;mouse.y=-((e.clientY-rc.top)/rc.height)*2+1;setTipPos({x:e.clientX,y:e.clientY});idleRef.current=0;}
     function onMD(e){mdRef.current={x:e.clientX,y:e.clientY};idleRef.current=0;}
     function onMU(e){const dx=e.clientX-mdRef.current.x,dy=e.clientY-mdRef.current.y;if(Math.sqrt(dx*dx+dy*dy)<5){if(hoverIdxRef.current>=0)selectDisease(hoverIdxRef.current);else deselect();}}
-    renderer.domElement.addEventListener('mousemove',onMM);renderer.domElement.addEventListener('mousedown',onMD);renderer.domElement.addEventListener('mouseup',onMU);
+    function onDblClick(e){
+      e.preventDefault();idleRef.current=0;deselect();
+      flyRef.current={st:controls.target.clone(),et:new THREE.Vector3(0,0,0),sr:controls.radius,er:controls.defaultRadius,f:0,total:50};
+      // Also reset theta/phi smoothly by zeroing velocities and letting fly handle position
+      controls.theta=controls.defaultTheta;controls.phi=controls.defaultPhi;controls.tV=0;controls.pV=0;controls.pnX=0;controls.pnY=0;
+    }
+    renderer.domElement.addEventListener('mousemove',onMM);renderer.domElement.addEventListener('mousedown',onMD);renderer.domElement.addEventListener('mouseup',onMU);renderer.domElement.addEventListener('dblclick',onDblClick);
 
     // Entrance state
     const entrance={phase:0,f:0,nodesDone:0};
@@ -341,6 +416,38 @@ export default function MedGalaxy() {
       if(entrance.phase===2&&idleRef.current>300){ // 5s at 60fps
         controls.tV=0.0006;
       }
+      // ── Ambient tooltip twinkling (starts right after entrance) ──
+      if(entrance.phase>=1&&idleRef.current>60){
+        const at=ambientTipRef.current;
+        at.timer++;
+        if(!at.active&&at.timer>180){ // 3s between tooltips
+          at.active=true;at.timer=0;at.fadeIn=true;
+          at.idx=Math.floor(Math.random()*count);
+          const pos=curPosRef.current[at.idx];
+          const vp=new THREE.Vector3(pos[0],pos[1],pos[2]).project(camera);
+          const rc=renderer.domElement.getBoundingClientRect();
+          const sx=(vp.x*0.5+0.5)*rc.width+rc.left;
+          const sy=(-vp.y*0.5+0.5)*rc.height+rc.top;
+          if(sx>0&&sx<rc.width&&sy>0&&sy<rc.height){
+            setAmbientTip({disease:diseases[at.idx],x:sx,y:sy,opacity:0});
+          } else {at.active=false;at.timer=120;}
+        } else if(at.active){
+          if(at.fadeIn){
+            const o=Math.min(1,at.timer/30);
+            setAmbientTip(prev=>prev?{...prev,opacity:o}:null);
+            if(at.timer>=90){at.fadeIn=false;at.timer=0;} // hold ~1s then fade out
+          } else {
+            const o=Math.max(0,1-at.timer/30);
+            setAmbientTip(prev=>prev?{...prev,opacity:o}:null);
+            if(at.timer>=30){at.active=false;at.timer=0;setAmbientTip(null);}
+          }
+        }
+      } else if(idleRef.current<=60){
+        // User interacting — clear ambient tooltip
+        const at=ambientTipRef.current;
+        if(at.active){at.active=false;at.timer=0;setAmbientTip(null);}
+        else at.timer=0;
+      }
 
       // Layout lerp
       const la=layoutAnimRef.current;
@@ -360,24 +467,26 @@ export default function MedGalaxy() {
         for(let i=0;i<count;i++){const r=sa.from[i]+(sa.to[i]-sa.from[i])*ease;v3.set(cur[i][0],cur[i][1],cur[i][2]);s3.set(r,r,r);m4.compose(v3,q4,s3);iMesh.setMatrixAt(i,m4);proxies[i].scale.set(Math.max(r,1.5),Math.max(r,1.5),Math.max(r,1.5));if(glowSprites[i]){const gr=r*3;glowSprites[i].scale.set(gr,gr,1);}}
         iMesh.instanceMatrix.needsUpdate=true;if(t>=1)sizeAnimRef.current=null;}
 
-      // Node pulse (±3%, 3-5s period)
-      if(cfg.pulse&&entrance.phase>=2&&!sizeAnimRef.current&&!layoutAnimRef.current){
-        const time=frame*0.016;
-        const cur=curPosRef.current;
-        for(let i=0;i<count;i++){
-          const baseR=sizeModeRef.current==='papers'?nR(diseases[i].papers):nRM(diseases[i].mortality);
-          const pulse=1+0.03*Math.sin(time*1.5+phases[i]);
-          const r=baseR*pulse;
-          v3.set(cur[i][0],cur[i][1],cur[i][2]);s3.set(r,r,r);m4.compose(v3,q4,s3);iMesh.setMatrixAt(i,m4);
-        }
-        iMesh.instanceMatrix.needsUpdate=true;
-      }
+      // Plasma animation — update time uniform (replaces pulse)
+      sMat.uniforms.time.value=frame*0.016;
 
       // Fly-to
       const fly=flyRef.current;
       if(fly){fly.f++;const t=Math.min(fly.f/fly.total,1),ease=1-Math.pow(1-t,3);controls.target.lerpVectors(fly.st,fly.et,ease);controls.radius=fly.sr+(fly.er-fly.sr)*ease;if(t>=1)flyRef.current=null;}
 
       controls.update();ptL.position.copy(camera.position);
+
+      // Story tooltip — project focused node to screen coords
+      const sni=storyRef.current.nodeIdx;
+      if(sni>=0&&frame%3===0&&curPosRef.current){
+        camera.updateMatrixWorld();
+        const sp=curPosRef.current[sni];
+        const vp=new THREE.Vector3(sp[0],sp[1],sp[2]).project(camera);
+        const rc=renderer.domElement.getBoundingClientRect();
+        const sx=(vp.x*0.5+0.5)*rc.width+rc.left;
+        const sy=(-vp.y*0.5+0.5)*rc.height+rc.top;
+        setStoryTip({disease:diseases[sni],x:sx,y:sy,connCount:data.connCounts.get(sni)});
+      }
 
       // Raycast
       if(frame%2===0&&entrance.phase>=2){
@@ -395,7 +504,7 @@ export default function MedGalaxy() {
     function onKey(e){if(e.key==='Escape'){setStoryVisible(false);setStoryCaption('');}}
     window.addEventListener('keydown',onKey);
 
-    return()=>{alive=false;ro.disconnect();controls.dispose();window.removeEventListener('keydown',onKey);renderer.domElement.removeEventListener('mousemove',onMM);renderer.domElement.removeEventListener('mousedown',onMD);renderer.domElement.removeEventListener('mouseup',onMU);sGeo.dispose();sMat.dispose();pGeo.dispose();pMat.dispose();eGeo.dispose();eMat.dispose();iMesh.dispose();glowTex.dispose();renderer.dispose();if(container.contains(renderer.domElement))container.removeChild(renderer.domElement);};
+    return()=>{alive=false;ro.disconnect();controls.dispose();window.removeEventListener('keydown',onKey);renderer.domElement.removeEventListener('mousemove',onMM);renderer.domElement.removeEventListener('mousedown',onMD);renderer.domElement.removeEventListener('mouseup',onMU);renderer.domElement.removeEventListener('dblclick',onDblClick);sGeo.dispose();sMat.dispose();pGeo.dispose();pMat.dispose();eGeo.dispose();eMat.dispose();iMesh.dispose();glowTex.dispose();renderer.dispose();if(container.contains(renderer.domElement))container.removeChild(renderer.domElement);};
   },[selectDisease,deselect]);
 
   // Highlight effect
@@ -440,8 +549,10 @@ export default function MedGalaxy() {
       {searchQuery&&dataRef.current&&<SearchDropdown query={searchQuery} diseases={dataRef.current.diseases} onSelect={handleSearchSel}/>}
       {hoveredNode&&(!selectedNode||hoveredNode.index!==selectedNode.index)&&(<Tooltip disease={hoveredNode.disease} connCount={dataRef.current?.connCounts.get(hoveredNode.index)||0} x={tipPos.x} y={tipPos.y}/>)}
       {selectedNode&&dataRef.current&&(<Sidebar disease={selectedNode.disease} data={dataRef.current} onSelect={selectDisease} onClose={deselect}/>)}
+      {storyTip&&(<Tooltip disease={storyTip.disease} connCount={storyTip.connCount} x={storyTip.x} y={storyTip.y}/>)}
+      {ambientTip&&!hoveredNode&&!selectedNode&&(<div style={{position:'fixed',left:ambientTip.x+15,top:ambientTip.y+15,pointerEvents:'none',zIndex:90,background:'rgba(10,16,30,0.94)',backdropFilter:'blur(16px)',maxWidth:240,border:'1px solid rgba(255,255,255,0.08)',borderRadius:8,padding:'8px 12px',fontFamily:'IBM Plex Mono,monospace',fontSize:11,color:'#e2e8f0',opacity:ambientTip.opacity,transition:'opacity 0.1s'}}><div style={{fontWeight:600,fontSize:12,marginBottom:3}}>{ambientTip.disease.label}</div><span style={{fontSize:9,padding:'1px 6px',borderRadius:4,background:CC[ambientTip.disease.category]+'22',color:CC[ambientTip.disease.category]}}>{CL[ambientTip.disease.category]}</span><div style={{color:'#94a3b8',marginTop:4}}>{fmt(ambientTip.disease.papers)} papers</div></div>)}
       <StoryChips onChip={handleStory} visible={storyVisible}/>
-      {storyCaption&&<StoryCaption text={storyCaption}/>}
+      {storyCaption&&<StoryCaption text={storyCaption} onClick={advanceStory}/>}
     </div>
   );
 }
