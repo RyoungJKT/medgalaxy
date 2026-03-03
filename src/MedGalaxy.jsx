@@ -322,7 +322,7 @@ export default function MedGalaxy() {
     for(let i=0;i<eC;i++){const e=displayEdges[i],s=catPos[e.si],t=catPos[e.ti],o=i*6;eBuf[o]=s[0];eBuf[o+1]=s[1];eBuf[o+2]=s[2];eBuf[o+3]=t[0];eBuf[o+4]=t[1];eBuf[o+5]=t[2];}
     const eGeo=new THREE.BufferGeometry();eGeo.setAttribute('position',new THREE.BufferAttribute(eBuf,3));
     const eClr=new Float32Array(eC*6).fill(1.0);eGeo.setAttribute('color',new THREE.BufferAttribute(eClr,3));
-    const eMat=new THREE.LineBasicMaterial({vertexColors:true,transparent:true,opacity:0.08});
+    const eMat=new THREE.LineBasicMaterial({vertexColors:true,transparent:true,opacity:0.03});
     const eMesh=new THREE.LineSegments(eGeo,eMat);scene.add(eMesh);edgeMeshRef.current=eMesh;
 
     // Mouse handlers
@@ -437,12 +437,12 @@ export default function MedGalaxy() {
       const srcVis=activeCategories.has(diseases[e.si].category);
       const tgtVis=activeCategories.has(diseases[e.ti].category);
       if(!srcVis||!tgtVis){ca[o]=0;ca[o+1]=0;ca[o+2]=0;ca[o+3]=0;ca[o+4]=0;ca[o+5]=0;continue;}
-      const bright=aIdx>=0&&(e.si===aIdx||e.ti===aIdx);
-      const v=bright?1.0:(aIdx>=0?0.15:1.0);
+      const isNeighbor=aIdx>=0&&(e.si===aIdx||e.ti===aIdx);
+      const v=isNeighbor?1.0:(aIdx>=0?0.0:1.0); // hide non-neighbor edges on hover/select
       ca[o]=v;ca[o+1]=v;ca[o+2]=v;ca[o+3]=v;ca[o+4]=v;ca[o+5]=v;
     }
     eMesh.geometry.getAttribute('color').needsUpdate=true;
-    eMesh.material.opacity=aIdx>=0?0.25:0.08;
+    eMesh.material.opacity=aIdx>=0?0.35:0.03;
   },[hoveredNode,selectedNode,activeCategories,searchQuery,sizeMode]);
 
   return(
