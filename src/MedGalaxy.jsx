@@ -26,10 +26,11 @@ function dTier() {
   if (matchMedia('(pointer:coarse)').matches || window.innerWidth<768) return 'LOW';
   return window.innerWidth<1200 ? 'MEDIUM' : 'HIGH';
 }
-const MN=2, MX=14;
+// Node sizing: log + gamma curve, capped radius for composition
+const MN=0.7, MX=6.5, GAMMA=0.7;
 const LN=Math.log10(500), LX=Math.log10(450000), LMN=Math.log10(2), LMX=Math.log10(1400000);
-function nR(p){const t=(Math.log10(Math.max(p,10))-LN)/(LX-LN);return MN+Math.max(0,Math.min(1,t))*(MX-MN);}
-function nRM(m){if(m<=0)return MN*0.6;const t=(Math.log10(m)-LMN)/(LMX-LMN);return MN+Math.max(0,Math.min(1,t))*(MX-MN);}
+function nR(p){const t=Math.max(0,Math.min(1,(Math.log10(Math.max(p,10))-LN)/(LX-LN)));return MN+Math.pow(t,GAMMA)*(MX-MN);}
+function nRM(m){if(m<=0)return MN*0.5;const t=Math.max(0,Math.min(1,(Math.log10(m)-LMN)/(LMX-LMN)));return MN+Math.pow(t,GAMMA)*(MX-MN);}
 function fmt(n){if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=10000)return Math.round(n/1000)+'K';if(n>=1000)return(n/1000).toFixed(1)+'K';return String(n);}
 
 // ─── Data Processing ─────────────────────────────────────────────────────────
@@ -47,15 +48,42 @@ function processData(diseases, connections) {
 
 // ─── Force Layout ────────────────────────────────────────────────────────────
 function computeLayouts(diseases, layoutEdges) {
-  const xy={},zz={};CATS.forEach((c,i)=>{const a=(i/CATS.length)*Math.PI*2;xy[c]={x:Math.cos(a)*200,y:Math.sin(a)*200};zz[c]=((i/CATS.length)-0.5)*300;});
+  // Category anchors: tighter ring so center isn't empty
+  const xy={},zz={};CATS.forEach((c,i)=>{const a=(i/CATS.length)*Math.PI*2;xy[c]={x:Math.cos(a)*130,y:Math.sin(a)*130};zz[c]=((i/CATS.length)-0.5)*150;});
   const ms=Math.max(...layoutEdges.map(e=>e.score),0.001);
   const ml=es=>es.map(e=>({source:e.si,target:e.ti,score:e.score}));
-  function zR(ns){for(let a=0;a<ns.length;a++)for(let b=a+1;b<ns.length;b++){const na=ns[a],nb=ns[b],dx=na.x-nb.x,dy=na.y-nb.y,dz=na.z-nb.z,d=Math.sqrt(dx*dx+dy*dy+dz*dz);if(d<30&&d>0){const f=(dz/d)*0.5;na.z+=f;nb.z-=f;}}}
-  const cn=diseases.map((d,i)=>({index:i,category:d.category,papers:d.papers,x:xy[d.category].x+(Math.random()-0.5)*50,y:xy[d.category].y+(Math.random()-0.5)*50,z:zz[d.category]+(Math.random()-0.5)*30}));
-  const cs=d3.forceSimulation(cn).force('charge',d3.forceManyBody().strength(-50)).force('link',d3.forceLink(ml(layoutEdges)).id(d=>d.index).distance(80).strength(d=>(d.score/ms)*0.5)).force('center',d3.forceCenter(0,0)).force('cx',d3.forceX(d=>xy[d.category].x).strength(0.15)).force('cy',d3.forceY(d=>xy[d.category].y).strength(0.15)).stop();
-  for(let i=0;i<300;i++){cs.tick();cn.forEach(n=>{n.z+=(zz[n.category]-n.z)*0.02;});zR(cn);}
-  const nn=diseases.map((d,i)=>({index:i,category:d.category,papers:d.papers,x:(Math.random()-0.5)*400,y:(Math.random()-0.5)*400,z:(Math.random()-0.5)*200}));
-  const ns2=d3.forceSimulation(nn).force('charge',d3.forceManyBody().strength(-50)).force('link',d3.forceLink(ml(layoutEdges)).id(d=>d.index).distance(80).strength(d=>(d.score/ms)*0.5)).force('center',d3.forceCenter(0,0)).force('collide',d3.forceCollide(d=>nR(d.papers)*1.2)).stop();
+  function zR(ns){for(let a=0;a<ns.length;a++)for(let b=a+1;b<ns.length;b++){const na=ns[a],nb=ns[b],dx=na.x-nb.x,dy=na.y-nb.y,dz=na.z-nb.z,d=Math.sqrt(dx*dx+dy*dy+dz*dz);if(d<20&&d>0){const f=(dz/d)*0.3;na.z+=f;nb.z-=f;}}}
+
+  // ── Category View: weaker anchors, stronger center, collide with radius ──
+  const cn=diseases.map((d,i)=>({index:i,r:nR(d.papers),category:d.category,papers:d.papers,x:xy[d.category].x+(Math.random()-0.5)*40,y:xy[d.category].y+(Math.random()-0.5)*40,z:zz[d.category]+(Math.random()-0.5)*20}));
+  d3.forceSimulation(cn)
+    .force('charge',d3.forceManyBody().strength(-30))
+    .force('link',d3.forceLink(ml(layoutEdges)).id(d=>d.index).distance(50).strength(d=>(d.score/ms)*0.6))
+    .force('center',d3.forceCenter(0,0).strength(0.05))
+    .force('cx',d3.forceX(d=>xy[d.category].x).strength(0.08))
+    .force('cy',d3.forceY(d=>xy[d.category].y).strength(0.08))
+    .force('collide',d3.forceCollide(d=>d.r+0.3).strength(0.7))
+    .stop();
+  for(let i=0;i<300;i++){cn.forEach(n=>{n.x+=(0-n.x)*0.001;n.y+=(0-n.y)*0.001;});/* mild global pull */zR(cn);}
+  // Actually need to tick the sim
+  const cs=d3.forceSimulation(cn)
+    .force('charge',d3.forceManyBody().strength(-30))
+    .force('link',d3.forceLink(ml(layoutEdges)).id(d=>d.index).distance(50).strength(d=>(d.score/ms)*0.6))
+    .force('center',d3.forceCenter(0,0).strength(0.05))
+    .force('cx',d3.forceX(d=>xy[d.category].x).strength(0.08))
+    .force('cy',d3.forceY(d=>xy[d.category].y).strength(0.08))
+    .force('collide',d3.forceCollide(d=>d.r+0.3).strength(0.7))
+    .stop();
+  for(let i=0;i<300;i++){cs.tick();cn.forEach(n=>{n.z+=(zz[n.category]-n.z)*0.015;});zR(cn);}
+
+  // ── Network View: purely link-driven, no category forces ──
+  const nn=diseases.map((d,i)=>({index:i,r:nR(d.papers),category:d.category,papers:d.papers,x:(Math.random()-0.5)*300,y:(Math.random()-0.5)*300,z:(Math.random()-0.5)*100}));
+  const ns2=d3.forceSimulation(nn)
+    .force('charge',d3.forceManyBody().strength(-40))
+    .force('link',d3.forceLink(ml(layoutEdges)).id(d=>d.index).distance(40).strength(d=>(d.score/ms)*0.8))
+    .force('center',d3.forceCenter(0,0).strength(0.03))
+    .force('collide',d3.forceCollide(d=>d.r+0.3).strength(0.8))
+    .stop();
   for(let i=0;i<300;i++){ns2.tick();zR(nn);}
   return{catPos:cn.map(n=>[n.x,n.y,n.z]),netPos:nn.map(n=>[n.x,n.y,n.z])};
 }
@@ -210,11 +238,17 @@ export default function MedGalaxy() {
     renderer.setClearColor(0x000000,0);container.appendChild(renderer.domElement);rendererRef.current=renderer;
     const controls=new OC(camera,renderer.domElement);controlsRef.current=controls;
 
-    scene.add(new THREE.AmbientLight(0xffffff,0.4));
-    const ptL=new THREE.PointLight(0xffffff,0.8,0);scene.add(ptL);
+    // Lighting: ambient + key light + rim/back light for depth
+    scene.add(new THREE.AmbientLight(0xffffff,0.35));
+    const ptL=new THREE.PointLight(0xffffff,0.7,0);scene.add(ptL);
+    const rimLight=new THREE.DirectionalLight(0x4488ff,0.3);rimLight.position.set(-200,100,-300);scene.add(rimLight);
+    // Fog for depth fade
+    scene.fog=new THREE.FogExp2(0x06080d,0.0008);
+    // Tone mapping
+    renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.2;
 
     const count=diseases.length;
-    const sGeo=new THREE.SphereGeometry(1,16,16),sMat=new THREE.MeshPhongMaterial({emissiveIntensity:0.3,shininess:30});
+    const sGeo=new THREE.SphereGeometry(1,24,24),sMat=new THREE.MeshPhongMaterial({emissiveIntensity:0.25,shininess:60,specular:new THREE.Color(0x222222)});
     const iMesh=new THREE.InstancedMesh(sGeo,sMat,count);
     const m4=new THREE.Matrix4(),v3=new THREE.Vector3(),q4=new THREE.Quaternion(),s3=new THREE.Vector3();
 
@@ -235,7 +269,7 @@ export default function MedGalaxy() {
       if(!glowSet.has(i)){glowSprites.push(null);continue;}
       const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:new THREE.Color(CC[diseases[i].category]),transparent:true,blending:THREE.AdditiveBlending,opacity:0}));
       sp.position.set(...catPos[i]);
-      const r=nR(diseases[i].papers)*3;sp.scale.set(r,r,1);
+      const r=nR(diseases[i].papers)*3.5;sp.scale.set(r,r,1);
       glowGroup.add(sp);glowSprites.push(sp);
     }
     glowGroup.renderOrder=-2;scene.add(glowGroup);glowSpritesRef.current=glowSprites;
@@ -243,7 +277,7 @@ export default function MedGalaxy() {
     // Proxies
     const pGeo=new THREE.SphereGeometry(1,8,8),pMat=new THREE.MeshBasicMaterial({visible:false});
     const pGroup=new THREE.Group(),proxies=[];
-    for(let i=0;i<count;i++){const pr=new THREE.Mesh(pGeo,pMat);pr.position.set(...catPos[i]);const r=Math.max(nR(diseases[i].papers),3);pr.scale.set(r,r,r);pr.userData.idx=i;pGroup.add(pr);proxies.push(pr);}
+    for(let i=0;i<count;i++){const pr=new THREE.Mesh(pGeo,pMat);pr.position.set(...catPos[i]);const r=Math.max(nR(diseases[i].papers),1.5);pr.scale.set(r,r,r);pr.userData.idx=i;pGroup.add(pr);proxies.push(pr);}
     scene.add(pGroup);proxiesRef.current=proxies;
 
     // Edges
@@ -325,7 +359,7 @@ export default function MedGalaxy() {
       // Size lerp
       const sa=sizeAnimRef.current;
       if(sa){sa.f++;const t=Math.min(sa.f/sa.total,1),ease=1-Math.pow(1-t,3);const cur=curPosRef.current;
-        for(let i=0;i<count;i++){const r=sa.from[i]+(sa.to[i]-sa.from[i])*ease;v3.set(cur[i][0],cur[i][1],cur[i][2]);s3.set(r,r,r);m4.compose(v3,q4,s3);iMesh.setMatrixAt(i,m4);proxies[i].scale.set(Math.max(r,3),Math.max(r,3),Math.max(r,3));if(glowSprites[i]){const gr=r*3;glowSprites[i].scale.set(gr,gr,1);}}
+        for(let i=0;i<count;i++){const r=sa.from[i]+(sa.to[i]-sa.from[i])*ease;v3.set(cur[i][0],cur[i][1],cur[i][2]);s3.set(r,r,r);m4.compose(v3,q4,s3);iMesh.setMatrixAt(i,m4);proxies[i].scale.set(Math.max(r,1.5),Math.max(r,1.5),Math.max(r,1.5));if(glowSprites[i]){const gr=r*3;glowSprites[i].scale.set(gr,gr,1);}}
         iMesh.instanceMatrix.needsUpdate=true;if(t>=1)sizeAnimRef.current=null;}
 
       // Node pulse (±3%, 3-5s period)
