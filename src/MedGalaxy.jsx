@@ -275,7 +275,49 @@ function ExplodeOverlay({data,onClose}){
   );
 }
 
-function Header({diseaseCount,edgeCount,searchQuery,onSearchChange,sizeMode,onSizeToggle,layoutMode,onLayoutToggle,sizeToggleRef,onExplode}){
+function ConnectionsOverlay({data,onClose,onSelect}){
+  const mob=isMob();
+  const maxConn=data.hubs[0]?.count||1;
+  return(
+    <div style={{position:'absolute',inset:0,zIndex:55,display:'flex',alignItems:'center',justifyContent:'center',background:'rgba(0,0,0,0.5)',backdropFilter:'blur(4px)',fontFamily:'IBM Plex Mono,monospace',opacity:0,animation:'fadeIn 0.5s ease 0.3s forwards'}}>
+      <div style={{background:'rgba(10,16,30,0.97)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:12,padding:mob?16:28,maxWidth:mob?'95vw':880,width:'100%',maxHeight:'85vh',overflowY:'auto',position:'relative'}}>
+        <button onClick={onClose} style={{position:'absolute',top:12,right:14,background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:6,color:'#94a3b8',cursor:'pointer',fontSize:14,lineHeight:1,padding:'4px 8px',fontFamily:'inherit'}}>✕ Close</button>
+        <div style={{fontSize:mob?14:18,fontWeight:600,color:'#e2e8f0',marginBottom:4}}>Connection Clusters</div>
+        <div style={{fontSize:mob?9:12,color:'#64748b',marginBottom:mob?16:24}}>Diseases linked by shared PubMed publications — revealing comorbidities, shared biology, and research overlap</div>
+        <div style={{display:'flex',flexDirection:mob?'column':'row',gap:mob?20:36}}>
+          <div style={{flex:1}}>
+            <div style={{fontSize:10,color:'#3399ff',fontWeight:600,marginBottom:4,textTransform:'uppercase',letterSpacing:1}}>Hub Diseases</div>
+            <div style={{fontSize:8,color:'#475569',marginBottom:12}}>Most connected — tap to explore</div>
+            {data.hubs.map((d,i)=>(<div key={d.id} onClick={()=>onSelect(d.id)} style={{marginBottom:8,cursor:'pointer',opacity:0,animation:`fadeIn 0.3s ease ${0.5+i*0.05}s forwards`}} onMouseEnter={e=>{e.currentTarget.querySelector('.hub-bar').style.filter='brightness(1.3)';}} onMouseLeave={e=>{e.currentTarget.querySelector('.hub-bar').style.filter='none';}}>
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:3}}>
+                <span style={{fontSize:mob?9:11,color:'#cbd5e1',display:'flex',alignItems:'center',gap:6}}><span style={{width:6,height:6,borderRadius:'50%',background:CC[d.category],flexShrink:0}}/>{d.label}</span>
+                <span style={{fontSize:mob?9:11,color:'#3399ff',fontWeight:600,marginLeft:8,whiteSpace:'nowrap'}}>{d.count}</span>
+              </div>
+              <div style={{height:6,background:'rgba(255,255,255,0.04)',borderRadius:3,overflow:'hidden'}}>
+                <div className="hub-bar" style={{height:'100%',width:`${Math.max((d.count/maxConn)*100,2)}%`,background:'linear-gradient(90deg,#3399ff,#1d6fcf)',borderRadius:3,transition:'width 0.6s ease,filter 0.2s'}}/>
+              </div>
+            </div>))}
+          </div>
+          <div style={{width:1,background:'rgba(255,255,255,0.06)',display:mob?'none':'block'}}/>
+          <div style={{flex:1}}>
+            <div style={{fontSize:10,color:'#ffd500',fontWeight:600,marginBottom:4,textTransform:'uppercase',letterSpacing:1}}>Surprising Links</div>
+            <div style={{fontSize:8,color:'#475569',marginBottom:12}}>Cross-category connections with most shared research</div>
+            {data.crossLinks.map((d,i)=>(<div key={i} style={{marginBottom:10,opacity:0,animation:`fadeIn 0.3s ease ${0.5+i*0.05}s forwards`}}>
+              <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:2,flexWrap:'wrap'}}>
+                <span style={{fontSize:mob?9:11,color:'#cbd5e1',display:'flex',alignItems:'center',gap:4}}><span style={{width:5,height:5,borderRadius:'50%',background:CC[d.sCat]}}/>{d.sLabel}</span>
+                <span style={{fontSize:9,color:'#ffd500'}}>⟷</span>
+                <span style={{fontSize:mob?9:11,color:'#cbd5e1',display:'flex',alignItems:'center',gap:4}}><span style={{width:5,height:5,borderRadius:'50%',background:CC[d.tCat]}}/>{d.tLabel}</span>
+              </div>
+              <div style={{fontSize:mob?8:9,color:'#64748b'}}>{fmt(d.shared)} shared papers · {d.reason}</div>
+            </div>))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Header({diseaseCount,edgeCount,searchQuery,onSearchChange,sizeMode,onSizeToggle,layoutMode,onLayoutToggle,sizeToggleRef,onExplode,onConnections}){
   const mob=isMob();
   const [menuOpen,setMenuOpen]=React.useState(false);
   const [searchOpen,setSearchOpen]=React.useState(false);
@@ -293,6 +335,7 @@ function Header({diseaseCount,edgeCount,searchQuery,onSearchChange,sizeMode,onSi
           <div style={{display:'flex',borderRadius:6,overflow:'hidden',border:'1px solid rgba(255,255,255,0.08)'}}>{['category','network'].map(m=>(<button key={m} onClick={()=>{onLayoutToggle(m);setMenuOpen(false);}} style={{flex:1,padding:'6px 10px',fontSize:10,fontFamily:'inherit',border:'none',cursor:'pointer',background:layoutMode===m?'rgba(255,255,255,0.12)':'transparent',color:layoutMode===m?'#e2e8f0':'#64748b'}}>{m==='category'?'Category':'Network'}</button>))}</div>
           <div style={{color:'#64748b',fontSize:9,padding:'4px 4px 0'}}>Analysis</div>
           <button onClick={()=>{onExplode();setMenuOpen(false);}} style={{padding:'6px 10px',fontSize:10,fontFamily:'inherit',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,cursor:'pointer',background:'transparent',color:'#e2e8f0',width:'100%',textAlign:'left'}}>Research Gap</button>
+          <button onClick={()=>{onConnections();setMenuOpen(false);}} style={{padding:'6px 10px',fontSize:10,fontFamily:'inherit',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,cursor:'pointer',background:'transparent',color:'#e2e8f0',width:'100%',textAlign:'left'}}>Connections</button>
         </div>}
       </div>
     </>):(<>
@@ -300,6 +343,7 @@ function Header({diseaseCount,edgeCount,searchQuery,onSearchChange,sizeMode,onSi
       <div ref={sizeToggleRef} style={{display:'flex',borderRadius:6,overflow:'hidden',border:'1px solid rgba(255,255,255,0.08)',pointerEvents:'auto'}}>{['papers','mortality'].map(m=>(<button key={m} onClick={()=>onSizeToggle(m)} style={{padding:'6px 12px',fontSize:11,fontFamily:'inherit',border:'none',cursor:'pointer',background:sizeMode===m?'rgba(255,255,255,0.12)':'transparent',color:sizeMode===m?'#e2e8f0':'#64748b'}}>{m==='papers'?'Papers':'Mortality'}</button>))}</div>
       <div style={{display:'flex',borderRadius:6,overflow:'hidden',border:'1px solid rgba(255,255,255,0.08)',pointerEvents:'auto'}}>{['category','network'].map(m=>(<button key={m} onClick={()=>onLayoutToggle(m)} style={{padding:'6px 12px',fontSize:11,fontFamily:'inherit',border:'none',cursor:'pointer',background:layoutMode===m?'rgba(255,255,255,0.12)':'transparent',color:layoutMode===m?'#e2e8f0':'#64748b'}}>{m==='category'?'Category':'Network'}</button>))}</div>
       <button onClick={onExplode} style={{padding:'6px 12px',fontSize:11,fontFamily:'inherit',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,cursor:'pointer',background:'transparent',color:'#e2e8f0',pointerEvents:'auto',whiteSpace:'nowrap'}}>Research Gap</button>
+      <button onClick={onConnections} style={{padding:'6px 12px',fontSize:11,fontFamily:'inherit',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,cursor:'pointer',background:'transparent',color:'#e2e8f0',pointerEvents:'auto',whiteSpace:'nowrap'}}>Connections</button>
     </>)}
     <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}@keyframes slideDown{to{transform:translateY(0)}}@keyframes slideUp{to{transform:translateY(0)}}@keyframes fadeIn{to{opacity:1}}@keyframes chipPulse{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,0.4)}50%{box-shadow:0 0 12px 4px rgba(34,197,94,0.15)}}`}</style>
   </div>);
@@ -360,9 +404,39 @@ export default function MedGalaxy() {
   const [explodeActive,setExplodeActive]=useState(false);
   const explodeAnimRef=useRef(null);
   const explodeActiveRef=useRef(false);
+  const [connectionsActive,setConnectionsActive]=useState(false);
+  const connectionsActiveRef=useRef(false);
   const labelsRef=useRef(null); // DOM container for node labels
 
   const ppdData=React.useMemo(()=>{const wr=diseasesData.filter(d=>d.mortality>0).map(d=>({...d,ppd:d.papers/d.mortality}));const s=[...wr].sort((a,b)=>b.ppd-a.ppd);return{highest:s.slice(0,10),lowest:s.slice(-10).reverse()};},[]);
+
+  const connData=React.useMemo(()=>{
+    // Hub diseases: most connections
+    const counts=new Map();
+    diseasesData.forEach(d=>counts.set(d.id,0));
+    connectionsData.forEach(c=>{counts.set(c.source,(counts.get(c.source)||0)+1);counts.set(c.target,(counts.get(c.target)||0)+1);});
+    const catMap=new Map();diseasesData.forEach(d=>catMap.set(d.id,d.category));
+    const labelMap=new Map();diseasesData.forEach(d=>labelMap.set(d.id,d.label));
+    const hubs=[...counts.entries()].map(([id,count])=>({id,label:labelMap.get(id),category:catMap.get(id),count})).sort((a,b)=>b.count-a.count).slice(0,10);
+    // Cross-category surprising links
+    const reasons={
+      'infectious-respiratory':'shared pathogen-host pathways',
+      'cardiovascular-metabolic':'metabolic-cardiovascular syndrome',
+      'autoimmune-metabolic':'autoimmune metabolic overlap',
+      'neurological-metabolic':'neurometabolic pathways',
+      'cancer-infectious':'oncogenic infection link',
+      'respiratory-cancer':'shared carcinogenic exposure',
+      'infectious-neurological':'neuroinfectious pathway',
+      'cardiovascular-respiratory':'cardiopulmonary comorbidity',
+      'mental-neurological':'neuropsychiatric overlap',
+      'mental-metabolic':'metabolic-psychiatric link',
+    };
+    function reasonFor(a,b){const k1=a+'-'+b,k2=b+'-'+a;return reasons[k1]||reasons[k2]||'cross-discipline research overlap';}
+    const cross=connectionsData.filter(c=>catMap.get(c.source)!==catMap.get(c.target))
+      .map(c=>({sLabel:labelMap.get(c.source),tLabel:labelMap.get(c.target),sCat:catMap.get(c.source),tCat:catMap.get(c.target),shared:c.sharedPapers,reason:reasonFor(catMap.get(c.source),catMap.get(c.target))}))
+      .sort((a,b)=>b.shared-a.shared).slice(0,10);
+    return{hubs,crossLinks:cross};
+  },[]);
 
   const selectDisease=useCallback((idx)=>{const data=dataRef.current;if(!data)return;setSelectedNode({index:idx,disease:data.diseases[idx]});idleRef.current=0;const p=curPosRef.current?curPosRef.current[idx]:catPosRef.current[idx];const ctrl=controlsRef.current;if(ctrl)flyRef.current={st:ctrl.target.clone(),et:new THREE.Vector3(p[0],p[1],p[2]),sr:ctrl.radius,er:Math.max(150,ctrl.radius*0.5),f:0,total:50};},[]);
   const deselect=useCallback(()=>{setSelectedNode(null);},[]);
@@ -390,6 +464,23 @@ export default function MedGalaxy() {
     explodeAnimRef.current={from:currentPos,to:src.map(p=>[...p]),f:0,total:60,returning:true};
     setExplodeActive(false);
   },[]);
+
+  const handleConnections=useCallback(()=>{
+    connectionsActiveRef.current=true;setConnectionsActive(true);
+    // Switch to network layout for best connection visualization
+    if(layoutModeRef.current!=='network'){
+      setLayoutMode('network');layoutModeRef.current='network';
+      const cp=catPosRef.current,np=netPosRef.current;
+      if(cp&&np)layoutAnimRef.current={from:curPosRef.current||cp,to:np,f:0,total:60};
+    }
+  },[]);
+  const handleCloseConnections=useCallback(()=>{
+    connectionsActiveRef.current=false;setConnectionsActive(false);
+  },[]);
+  const handleConnSelect=useCallback((diseaseId)=>{
+    const data=dataRef.current;if(!data)return;
+    const idx=data.idMap[diseaseId];if(idx!==undefined){selectDisease(idx);setConnectionsActive(false);connectionsActiveRef.current=false;}
+  },[selectDisease]);
 
   // Story mode handler
   const storyRef=useRef({timer:null,step:0,seq:null,chipId:null,nodeIdx:-1});
@@ -693,35 +784,47 @@ export default function MedGalaxy() {
     const hIdx=hoveredNode?hoveredNode.index:-1,sIdx=selectedNode?selectedNode.index:-1,aIdx=hIdx>=0?hIdx:sIdx;
     const nbrs=aIdx>=0?data.neighbors.get(aIdx):null;
     const {diseases,displayEdges}=data;const sq=searchQuery.toLowerCase();
+    const connMode=connectionsActive;
+    // Hub set for connections mode (top 10 most connected)
+    const hubSet=new Set();
+    if(connMode){connData.hubs.forEach(h=>{const idx=data.idMap[h.id];if(idx!==undefined)hubSet.add(idx);});}
 
     for(let i=0;i<diseases.length;i++){
       const d=diseases[i],c=new THREE.Color(CC[d.category]);
       const catVis=activeCats.has(d.category),searchMatch=!sq||d.label.toLowerCase().includes(sq);
       if(!catVis)c.multiplyScalar(0.05);
+      else if(connMode){if(hubSet.has(i))c.multiplyScalar(1.3);else c.multiplyScalar(0.4);}
       else if(aIdx>=0){if(i===aIdx)c.multiplyScalar(1.4);else if(nbrs&&nbrs.has(i)){}else c.multiplyScalar(0.25);}
       else if(sq&&!searchMatch)c.multiplyScalar(0.15);
       iMesh.setColorAt(i,c);
       // Glow brightness
-      if(glows&&glows[i]){glows[i].material.opacity=(!catVis?0:aIdx>=0?(i===aIdx||nbrs?.has(i)?0.5:0.05):0.35);}
+      if(glows&&glows[i]){glows[i].material.opacity=(!catVis?0:connMode?(hubSet.has(i)?0.55:0.08):aIdx>=0?(i===aIdx||nbrs?.has(i)?0.5:0.05):0.35);}
       if(!catVis){const m=new THREE.Matrix4();iMesh.getMatrixAt(i,m);const p=new THREE.Vector3(),q=new THREE.Quaternion(),s=new THREE.Vector3();m.decompose(p,q,s);s.set(0.001,0.001,0.001);m.compose(p,q,s);iMesh.setMatrixAt(i,m);}
     }
     iMesh.instanceColor.needsUpdate=true;iMesh.instanceMatrix.needsUpdate=true;
 
-    // Edges: invisible at rest, neighborhood only on hover/select
+    // Edges: invisible at rest, neighborhood on hover/select, all visible in connections mode
     const ca=eMesh.geometry.getAttribute('color').array;
     const hasActive=aIdx>=0;
     for(let i=0;i<displayEdges.length;i++){const e=displayEdges[i],o=i*6;
-      const isNb=hasActive&&(e.si===aIdx||e.ti===aIdx);
       const sv=activeCats.has(diseases[e.si].category),tv=activeCats.has(diseases[e.ti].category);
-      const v=(isNb&&sv&&tv)?1.0:0.0;
+      let v=0;
+      if(connMode&&sv&&tv){
+        // In connections mode: hub edges brighter, others dimmer
+        const isHub=hubSet.has(e.si)||hubSet.has(e.ti);
+        v=isHub?1.0:0.3;
+      }else{
+        const isNb=hasActive&&(e.si===aIdx||e.ti===aIdx);
+        v=(isNb&&sv&&tv)?1.0:0.0;
+      }
       ca[o]=v;ca[o+1]=v;ca[o+2]=v;ca[o+3]=v;ca[o+4]=v;ca[o+5]=v;}
     eMesh.geometry.getAttribute('color').needsUpdate=true;
-    eMesh.material.opacity=hasActive?0.3:0;
-  },[hoveredNode,selectedNode,activeCats,searchQuery,sizeMode]);
+    eMesh.material.opacity=(connMode||hasActive)?0.3:0;
+  },[hoveredNode,selectedNode,activeCats,searchQuery,sizeMode,connectionsActive,connData]);
 
   return(
     <div ref={containerRef} style={{width:'100%',height:'100%',position:'relative',overflow:'hidden',cursor,touchAction:'none'}}>
-      <Header diseaseCount={diseasesData.length} edgeCount={connectionsData.length} searchQuery={searchQuery} onSearchChange={setSearchQuery} sizeMode={sizeMode} onSizeToggle={handleSize} layoutMode={layoutMode} onLayoutToggle={handleLayout} sizeToggleRef={sizeToggleRef} onExplode={handleExplode}/>
+      <Header diseaseCount={diseasesData.length} edgeCount={connectionsData.length} searchQuery={searchQuery} onSearchChange={setSearchQuery} sizeMode={sizeMode} onSizeToggle={handleSize} layoutMode={layoutMode} onLayoutToggle={handleLayout} sizeToggleRef={sizeToggleRef} onExplode={handleExplode} onConnections={handleConnections}/>
       <FilterBar activeCategories={activeCats} onToggle={toggleCat}/>
       <Legend sizeMode={sizeMode} layoutMode={layoutMode}/>
       {searchQuery&&dataRef.current&&<SearchDropdown query={searchQuery} diseases={dataRef.current.diseases} onSelect={handleSearchSel}/>}
@@ -735,6 +838,7 @@ export default function MedGalaxy() {
       <StoryChips onChip={handleStory} visible={storyVisible}/>
       {storyCaption&&<StoryCaption text={storyCaption} onClick={advanceStory}/>}
       {explodeActive&&<ExplodeOverlay data={ppdData} onClose={handleUnexplode}/>}
+      {connectionsActive&&<ConnectionsOverlay data={connData} onClose={handleCloseConnections} onSelect={handleConnSelect}/>}
     </div>
   );
 }
