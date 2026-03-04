@@ -770,9 +770,9 @@ export default function MedGalaxy() {
     camera.position.set(0,0,camDist);cameraRef.current=camera;
     const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
     renderer.setSize(container.clientWidth,container.clientHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio,cfg.dprCap));
-    renderer.setClearColor(0x000000,0);container.appendChild(renderer.domElement);rendererRef.current=renderer;
     const isAndroid=/android/i.test(navigator.userAgent);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio,isAndroid?2:cfg.dprCap));
+    renderer.setClearColor(0x000000,0);container.appendChild(renderer.domElement);rendererRef.current=renderer;
     let composer=null;
     if(isAndroid){
       composer=new EffectComposer(renderer);
