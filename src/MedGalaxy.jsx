@@ -643,21 +643,15 @@ export default function MedGalaxy() {
     if(spotlightActive){stopSpotlight();return;}
     if(explodeActiveRef.current||connectionsActiveRef.current||connFocusRef.current>=0)return;
     const data=dataRef.current;if(!data)return;
-    const find=id=>data.idMap[id];
-    const list=[
-      {id:find('heart-disease'),caption:'Heart Disease — 9.1M deaths/yr · Most lethal disease globally'},
-      {id:find('breast-cancer'),caption:'Breast Cancer — 430K papers · Most researched cancer'},
-      {id:find('rheumatic-heart-disease'),caption:'Rheumatic Heart Disease — 373K deaths, only 9K papers'},
-      {id:find('hiv-aids'),caption:'HIV/AIDS — 630K deaths/yr · 300K+ publications'},
-      {id:find('malaria'),caption:'Malaria — 608K deaths/yr · Developing world impact'},
-      {id:find('alzheimers-disease'),caption:"Alzheimer's Disease — 1.9M deaths/yr · Research surging"},
-      {id:find('cystic-fibrosis'),caption:'Cystic Fibrosis — 48 papers per death · Most researched per capita'},
-      {id:find('tuberculosis'),caption:'Tuberculosis — 1.25M deaths/yr · 0.09 papers per death'},
-      {id:find('covid-19'),caption:'COVID-19 — 1.2M deaths/yr · Fastest research ramp in history'},
-      {id:find('depression'),caption:'Depression — 280K papers · Zero mortality metric'},
-      {id:find('rotavirus'),caption:'Rotavirus — 200K child deaths/yr · Research declining'},
-      {id:find('sepsis'),caption:'Sepsis — 11M deaths/yr · Highest overall mortality'},
-    ].filter(s=>s.id!==undefined);
+    const fmt=n=>n>=1e6?(n/1e6).toFixed(1).replace(/\.0$/,'')+'M':n>=1e3?(n/1e3).toFixed(0)+'K':String(n);
+    const list=data.diseases.map((d,i)=>{
+      const parts=[d.label];
+      if(d.mortality>0)parts.push(fmt(d.mortality)+' deaths/yr');
+      parts.push(fmt(d.papers)+' papers');
+      if(d.trend>0)parts.push('trending +'+d.trend+'%');
+      else if(d.trend<0)parts.push('declining '+d.trend+'%');
+      return{id:i,caption:parts.join(' · ')};
+    });
     for(let i=list.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[list[i],list[j]]=[list[j],list[i]];}
     sp.list=list;sp.step=0;
     setSpotlightActive(true);
