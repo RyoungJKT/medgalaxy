@@ -3254,5 +3254,137 @@
       1350,
       1460
     ]
+  },
+  {
+    "id": "chronic-kidney-disease",
+    "label": "Chronic Kidney Disease",
+    "category": "metabolic",
+    "description": "Progressive loss of kidney function often caused by diabetes and hypertension, requiring dialysis or transplantation in advanced stages.",
+    "papers": 237000,
+    "trend": 5,
+    "mortality": 1300000,
+    "fundingGap": "high",
+    "yearlyPapers": [
+      9362,
+      9679,
+      9876,
+      10208,
+      10716,
+      12203,
+      13413,
+      12722,
+      12425,
+      13504
+    ]
+  },
+  {
+    "id": "cirrhosis",
+    "label": "Cirrhosis",
+    "category": "metabolic",
+    "description": "End-stage scarring of the liver caused by chronic hepatitis, alcohol use, or fatty liver disease, leading to liver failure.",
+    "papers": 160000,
+    "trend": 4,
+    "mortality": 1320000,
+    "fundingGap": "high",
+    "yearlyPapers": [
+      5697,
+      5604,
+      5607,
+      5780,
+      6078,
+      6754,
+      7450,
+      7226,
+      7175,
+      7088
+    ]
+  },
+  {
+    "id": "preeclampsia",
+    "label": "Preeclampsia",
+    "category": "cardiovascular",
+    "description": "Dangerous pregnancy complication characterized by high blood pressure and organ damage, a leading cause of maternal and fetal mortality worldwide.",
+    "papers": 59000,
+    "trend": 7,
+    "mortality": 76000,
+    "fundingGap": "high",
+    "yearlyPapers": [
+      2110,
+      2127,
+      2198,
+      2399,
+      2568,
+      2959,
+      3216,
+      3451,
+      3191,
+      3162
+    ]
+  },
+  {
+    "id": "endometriosis",
+    "label": "Endometriosis",
+    "category": "autoimmune",
+    "description": "Chronic inflammatory condition where tissue similar to the uterine lining grows outside the uterus, causing severe pain and infertility, affecting 1 in 10 women.",
+    "papers": 40000,
+    "trend": 10,
+    "mortality": 0,
+    "fundingGap": "high",
+    "yearlyPapers": [
+      1358,
+      1242,
+      1317,
+      1511,
+      1492,
+      1921,
+      2123,
+      2034,
+      2174,
+      2422
+    ]
+  },
+  {
+    "id": "tetanus",
+    "label": "Tetanus",
+    "category": "infectious",
+    "description": "Acute bacterial infection caused by Clostridium tetani spores entering wounds, producing a neurotoxin that causes severe muscle spasms and lockjaw, preventable by vaccination.",
+    "papers": 32000,
+    "trend": -3,
+    "mortality": 35000,
+    "fundingGap": "high",
+    "yearlyPapers": [
+      639,
+      624,
+      601,
+      624,
+      612,
+      576,
+      673,
+      596,
+      558,
+      522
+    ]
+  },
+  {
+    "id": "rotavirus",
+    "label": "Rotavirus",
+    "category": "infectious",
+    "description": "Leading cause of severe diarrheal disease in children under five worldwide, killing 128,000 children annually despite availability of effective vaccines.",
+    "papers": 19000,
+    "trend": -4,
+    "mortality": 128000,
+    "fundingGap": "high",
+    "yearlyPapers": [
+      697,
+      752,
+      665,
+      688,
+      681,
+      712,
+      768,
+      626,
+      591,
+      615
+    ]
   }
 ]

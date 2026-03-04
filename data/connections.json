@@ -4210,5 +4210,233 @@
     "target": "ovarian-cancer",
     "sharedPapers": 400,
     "trend": "up"
+  },
+  {
+    "source": "chronic-kidney-disease",
+    "target": "type-2-diabetes",
+    "sharedPapers": 12000,
+    "trend": "up"
+  },
+  {
+    "source": "chronic-kidney-disease",
+    "target": "hypertension",
+    "sharedPapers": 10000,
+    "trend": "up"
+  },
+  {
+    "source": "chronic-kidney-disease",
+    "target": "heart-disease",
+    "sharedPapers": 8000,
+    "trend": "up"
+  },
+  {
+    "source": "chronic-kidney-disease",
+    "target": "heart-failure",
+    "sharedPapers": 6000,
+    "trend": "up"
+  },
+  {
+    "source": "chronic-kidney-disease",
+    "target": "obesity",
+    "sharedPapers": 4000,
+    "trend": "up"
+  },
+  {
+    "source": "chronic-kidney-disease",
+    "target": "stroke",
+    "sharedPapers": 3500,
+    "trend": "stable"
+  },
+  {
+    "source": "chronic-kidney-disease",
+    "target": "lupus",
+    "sharedPapers": 3000,
+    "trend": "stable"
+  },
+  {
+    "source": "chronic-kidney-disease",
+    "target": "gout",
+    "sharedPapers": 2500,
+    "trend": "up"
+  },
+  {
+    "source": "chronic-kidney-disease",
+    "target": "cirrhosis",
+    "sharedPapers": 2000,
+    "trend": "stable"
+  },
+  {
+    "source": "cirrhosis",
+    "target": "hepatitis-c",
+    "sharedPapers": 10000,
+    "trend": "down"
+  },
+  {
+    "source": "cirrhosis",
+    "target": "liver-cancer",
+    "sharedPapers": 9000,
+    "trend": "up"
+  },
+  {
+    "source": "cirrhosis",
+    "target": "hepatitis-b",
+    "sharedPapers": 8000,
+    "trend": "stable"
+  },
+  {
+    "source": "cirrhosis",
+    "target": "nafld",
+    "sharedPapers": 7000,
+    "trend": "up"
+  },
+  {
+    "source": "cirrhosis",
+    "target": "substance-use-disorder",
+    "sharedPapers": 4000,
+    "trend": "up"
+  },
+  {
+    "source": "cirrhosis",
+    "target": "obesity",
+    "sharedPapers": 3000,
+    "trend": "up"
+  },
+  {
+    "source": "preeclampsia",
+    "target": "hypertension",
+    "sharedPapers": 6000,
+    "trend": "up"
+  },
+  {
+    "source": "preeclampsia",
+    "target": "stroke",
+    "sharedPapers": 3500,
+    "trend": "up"
+  },
+  {
+    "source": "preeclampsia",
+    "target": "heart-disease",
+    "sharedPapers": 3000,
+    "trend": "up"
+  },
+  {
+    "source": "preeclampsia",
+    "target": "chronic-kidney-disease",
+    "sharedPapers": 2500,
+    "trend": "up"
+  },
+  {
+    "source": "preeclampsia",
+    "target": "lupus",
+    "sharedPapers": 2500,
+    "trend": "stable"
+  },
+  {
+    "source": "preeclampsia",
+    "target": "type-2-diabetes",
+    "sharedPapers": 2000,
+    "trend": "up"
+  },
+  {
+    "source": "preeclampsia",
+    "target": "obesity",
+    "sharedPapers": 2000,
+    "trend": "up"
+  },
+  {
+    "source": "endometriosis",
+    "target": "ovarian-cancer",
+    "sharedPapers": 3500,
+    "trend": "up"
+  },
+  {
+    "source": "endometriosis",
+    "target": "depression",
+    "sharedPapers": 2500,
+    "trend": "up"
+  },
+  {
+    "source": "endometriosis",
+    "target": "breast-cancer",
+    "sharedPapers": 1500,
+    "trend": "up"
+  },
+  {
+    "source": "endometriosis",
+    "target": "anxiety-disorders",
+    "sharedPapers": 1500,
+    "trend": "up"
+  },
+  {
+    "source": "endometriosis",
+    "target": "lupus",
+    "sharedPapers": 1800,
+    "trend": "stable"
+  },
+  {
+    "source": "endometriosis",
+    "target": "crohns-disease",
+    "sharedPapers": 1200,
+    "trend": "stable"
+  },
+  {
+    "source": "tetanus",
+    "target": "sepsis",
+    "sharedPapers": 2000,
+    "trend": "down"
+  },
+  {
+    "source": "tetanus",
+    "target": "pertussis",
+    "sharedPapers": 1800,
+    "trend": "down"
+  },
+  {
+    "source": "tetanus",
+    "target": "meningitis",
+    "sharedPapers": 1500,
+    "trend": "stable"
+  },
+  {
+    "source": "tetanus",
+    "target": "measles",
+    "sharedPapers": 1200,
+    "trend": "down"
+  },
+  {
+    "source": "tetanus",
+    "target": "rabies",
+    "sharedPapers": 1000,
+    "trend": "stable"
+  },
+  {
+    "source": "rotavirus",
+    "target": "norovirus",
+    "sharedPapers": 3000,
+    "trend": "down"
+  },
+  {
+    "source": "rotavirus",
+    "target": "cholera",
+    "sharedPapers": 2000,
+    "trend": "down"
+  },
+  {
+    "source": "rotavirus",
+    "target": "measles",
+    "sharedPapers": 1500,
+    "trend": "down"
+  },
+  {
+    "source": "rotavirus",
+    "target": "influenza",
+    "sharedPapers": 1200,
+    "trend": "stable"
+  },
+  {
+    "source": "rotavirus",
+    "target": "sepsis",
+    "sharedPapers": 1500,
+    "trend": "stable"
   }
 ]
