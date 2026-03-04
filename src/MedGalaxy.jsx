@@ -30,8 +30,8 @@ function neglectColor(ppd){
 }
 const TC = {
   HIGH:  { dprCap:99, particles:400, glowAll:true, pulse:true },
-  MEDIUM:{ dprCap:1.5, particles:150, glowAll:false, pulse:true },
-  LOW:   { dprCap:1.0, particles:0, glowAll:false, pulse:false },
+  MEDIUM:{ dprCap:2, particles:150, glowAll:false, pulse:true },
+  LOW:   { dprCap:2, particles:0, glowAll:false, pulse:false },
 };
 function dTier() {
   if (typeof window==='undefined') return 'HIGH';
