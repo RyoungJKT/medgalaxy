@@ -1021,6 +1021,8 @@ export default function MedGalaxy() {
       if(connectionsActiveRef.current){connectionsActiveRef.current=false;setConnectionsActive(false);}
       setNeglectMode(false);
       deselect();
+      const ctrl=controlsRef.current;
+      if(ctrl)flyRef.current={st:ctrl.target.clone(),et:new THREE.Vector3(0,0,0),sr:ctrl.radius,er:ctrl.defaultRadius,f:0,total:70};
     }}
     window.addEventListener('keydown',onKey);
 
