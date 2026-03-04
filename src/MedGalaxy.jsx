@@ -17,6 +17,9 @@ const CL = {
   neurological:'Neurological', respiratory:'Respiratory', autoimmune:'Autoimmune',
   metabolic:'Metabolic', infectious:'Infectious', genetic:'Genetic', mental:'Mental Health',
 };
+// WHO region colors and labels for Geography mode
+const RC = {AFR:'#ff9f1c',SEAR:'#2ec4b6',EUR:'#4361ee',AMR:'#9b5de5',WPR:'#00f5d4',EMR:'#f15bb5'};
+const RL = {AFR:'Africa',SEAR:'SE Asia',EUR:'Europe',AMR:'Americas',WPR:'W Pacific',EMR:'E Mediterranean'};
 const TC = {
   HIGH:  { dprCap:99, particles:400, glowAll:true, pulse:true },
   MEDIUM:{ dprCap:1.5, particles:150, glowAll:false, pulse:true },
@@ -123,7 +126,54 @@ function computeLayouts(diseases, layoutEdges) {
   const _dbg={nanCount,minOrbit:minOrbit.toFixed(1),maxOrbit:maxOrbit.toFixed(1),N:cn.length};
   const _dbgTop=top5.map(n=>({r:n.r.toFixed(1),orbit:Math.sqrt(n.x*n.x+n.y*n.y+n.z*n.z).toFixed(1)}));
   const debugStr=`NaN:${_dbg.nanCount} orbit:[${_dbg.minOrbit}..${_dbg.maxOrbit}] N:${_dbg.N}\nTop5: ${_dbgTop.map(t=>`r=${t.r} orb=${t.orbit}`).join(' | ')}`;
-  return{catPos:cn.map(n=>[n.x,n.y,n.z]),netPos:nn.map(n=>[n.x,n.y,n.z]),debugStr,rawMax};
+
+  // ── Geography Layout: Global South vs Global North hemispheres ──
+  // South (left): AFR, SEAR, EMR — many diseases, less research, high mortality
+  // North (right): EUR, AMR, WPR — heavy research, lower mortality-per-paper
+  const regions=['AFR','SEAR','EUR','AMR','WPR','EMR'];
+  const regCounts={};regions.forEach(r=>{regCounts[r]=diseases.filter(d=>(d.region||'EUR')===r).length;});
+  // Position anchors: two hemispheres separated on X axis
+  // Within each hemisphere, sub-regions spread on Y/Z
+  const regAnchors={
+    // Global South — left side (negative X)
+    AFR: {x:-380,y:80,z:0},     // Africa: front-center-left
+    SEAR:{x:-380,y:-180,z:120}, // SE Asia: below-left, offset Z
+    EMR: {x:-280,y:-80,z:-200}, // E Med: upper-left, behind
+    // Global North — right side (positive X)
+    EUR: {x:300,y:-40,z:0},     // Europe: center-right (biggest, needs room)
+    AMR: {x:380,y:220,z:100},   // Americas: upper-right
+    WPR: {x:380,y:-220,z:-120}, // W Pacific: lower-right
+  };
+  const gn=diseases.map((d,i)=>{
+    const reg=d.region||'EUR',anc=regAnchors[reg];
+    // Spread proportional to sqrt of region size
+    const spread=Math.sqrt(regCounts[reg])*18;
+    return{index:i,r:nR(d.papers),region:reg,papers:d.papers,
+      x:anc.x+(Math.random()-0.5)*spread,
+      y:anc.y+(Math.random()-0.5)*spread,
+      z:anc.z+(Math.random()-0.5)*spread};
+  });
+  // 3D force: attract to anchor, collide, repel — more iterations for clean separation
+  for(let iter=0;iter<400;iter++){
+    for(let i=0;i<gn.length;i++){
+      const n=gn[i],anc=regAnchors[n.region];
+      n.x+=(anc.x-n.x)*0.03;n.y+=(anc.y-n.y)*0.03;n.z+=(anc.z-n.z)*0.03;
+    }
+    for(let a=0;a<gn.length;a++)for(let b=a+1;b<gn.length;b++){
+      const na=gn[a],nb=gn[b];
+      const dx=na.x-nb.x,dy=na.y-nb.y,dz=na.z-nb.z;
+      const dd=Math.sqrt(dx*dx+dy*dy+dz*dz)||0.1;
+      const minD=na.r+nb.r+4;
+      if(dd<minD){const push=(minD-dd)*0.3/dd;na.x+=dx*push;na.y+=dy*push;na.z+=dz*push;nb.x-=dx*push;nb.y-=dy*push;nb.z-=dz*push;}
+      if(dd<60){const rep=12/(dd*dd);na.x+=dx*rep;na.y+=dy*rep;na.z+=dz*rep;nb.x-=dx*rep;nb.y-=dy*rep;nb.z-=dz*rep;}
+    }
+  }
+
+  // Compute actual cluster centers (average position of nodes in each region)
+  const geoAnchors={};
+  regions.forEach(r=>{const nodes=gn.filter(n=>n.region===r);if(!nodes.length)return;geoAnchors[r]=[nodes.reduce((s,n)=>s+n.x,0)/nodes.length,nodes.reduce((s,n)=>s+n.y,0)/nodes.length,nodes.reduce((s,n)=>s+n.z,0)/nodes.length];});
+
+  return{catPos:cn.map(n=>[n.x,n.y,n.z]),netPos:nn.map(n=>[n.x,n.y,n.z]),geoPos:gn.map(n=>[n.x,n.y,n.z]),geoAnchors,debugStr,rawMax};
 }
 
 // ─── Orbit Controls ──────────────────────────────────────────────────────────
@@ -371,7 +421,7 @@ function VelocityOverlay({data,onClose}){
   );
 }
 
-function Header({diseaseCount,edgeCount,searchQuery,onSearchChange,sizeMode,onSizeToggle,layoutMode,onLayoutToggle,sizeToggleRef,onExplode,onConnections,onVelocity}){
+function Header({diseaseCount,edgeCount,searchQuery,onSearchChange,sizeMode,onSizeToggle,layoutMode,onLayoutToggle,sizeToggleRef,onExplode,onConnections,onVelocity,geoMode,onGeo}){
   const mob=isMob();
   const [menuOpen,setMenuOpen]=React.useState(false);
   const menuRef=React.useRef(null);
@@ -393,6 +443,7 @@ function Header({diseaseCount,edgeCount,searchQuery,onSearchChange,sizeMode,onSi
           <button onClick={()=>{onExplode();setMenuOpen(false);}} style={{padding:'6px 10px',fontSize:10,fontFamily:'inherit',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,cursor:'pointer',background:'transparent',color:'#e2e8f0',width:'100%',textAlign:'left'}}>Research Gap</button>
           <button onClick={()=>{onConnections();setMenuOpen(false);}} style={{padding:'6px 10px',fontSize:10,fontFamily:'inherit',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,cursor:'pointer',background:'transparent',color:'#e2e8f0',width:'100%',textAlign:'left'}}>Connections</button>
           <button onClick={()=>{onVelocity();setMenuOpen(false);}} style={{padding:'6px 10px',fontSize:10,fontFamily:'inherit',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,cursor:'pointer',background:'transparent',color:'#e2e8f0',width:'100%',textAlign:'left'}}>Trends</button>
+          <button onClick={()=>{onGeo();setMenuOpen(false);}} style={{padding:'6px 10px',fontSize:10,fontFamily:'inherit',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,cursor:'pointer',background:geoMode?'rgba(255,255,255,0.12)':'transparent',color:geoMode?'#00f5d4':'#e2e8f0',width:'100%',textAlign:'left'}}>{geoMode?'✕ Geography':'Geography'}</button>
         </div>}
       </div>
     </>):(<>
@@ -402,18 +453,32 @@ function Header({diseaseCount,edgeCount,searchQuery,onSearchChange,sizeMode,onSi
       <button onClick={onExplode} style={{padding:'6px 12px',fontSize:11,fontFamily:'inherit',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,cursor:'pointer',background:'transparent',color:'#e2e8f0',pointerEvents:'auto',whiteSpace:'nowrap'}}>Research Gap</button>
       <button onClick={onConnections} style={{padding:'6px 12px',fontSize:11,fontFamily:'inherit',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,cursor:'pointer',background:'transparent',color:'#e2e8f0',pointerEvents:'auto',whiteSpace:'nowrap'}}>Connections</button>
       <button onClick={onVelocity} style={{padding:'6px 12px',fontSize:11,fontFamily:'inherit',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,cursor:'pointer',background:'transparent',color:'#e2e8f0',pointerEvents:'auto',whiteSpace:'nowrap'}}>Trends</button>
+      <div style={{position:'relative',pointerEvents:'auto'}}>
+        <button onClick={onGeo} style={{padding:'6px 12px',fontSize:11,fontFamily:'inherit',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,cursor:'pointer',background:geoMode?'rgba(255,255,255,0.12)':'transparent',color:geoMode?'#00f5d4':'#e2e8f0',whiteSpace:'nowrap'}}>{geoMode?'✕ Geography':'Geography'}</button>
+        {geoMode&&<div style={{position:'absolute',top:'100%',right:0,marginTop:6,padding:'8px 12px',background:'rgba(10,16,30,0.95)',backdropFilter:'blur(12px)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,fontSize:10,color:'#94a3b8',width:240,lineHeight:1.5,opacity:0,animation:'fadeIn 0.4s ease forwards'}}>Diseases clustered by WHO region where they cause the most burden. Global South (left) vs Global North (right) — revealing where research doesn't match mortality.</div>}
+      </div>
     </>)}
     <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}@keyframes slideDown{to{transform:translateY(0)}}@keyframes slideUp{to{transform:translateY(0)}}@keyframes fadeIn{to{opacity:1}}@keyframes chipPulse{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,0.4)}50%{box-shadow:0 0 12px 4px rgba(34,197,94,0.15)}}`}</style>
   </div>);
 }
 
-function FilterBar({activeCategories,onToggle}){if(isMob())return null;const allActive=activeCategories.size===CATS.length;return(
+function FilterBar({activeCategories,onToggle,geoMode}){if(isMob())return null;
+  if(geoMode){return(
+    <div style={{position:'absolute',top:50,left:0,right:0,zIndex:40,padding:'0 20px',display:'flex',flexWrap:'wrap',gap:5,alignItems:'center',fontFamily:'IBM Plex Mono,monospace',fontSize:11,pointerEvents:'none',opacity:0,animation:'fadeIn 0.4s ease forwards'}}>
+      <span style={{fontSize:9,color:'#94a3b8',marginRight:2}}>GLOBAL SOUTH</span>
+      {['AFR','SEAR','EMR'].map(r=>(<div key={r} style={{padding:'4px 12px',borderRadius:4,border:`1px solid ${RC[r]}33`,background:`${RC[r]}11`,display:'flex',alignItems:'center',gap:5,fontSize:10,color:RC[r]}}><span style={{width:7,height:7,borderRadius:'50%',background:RC[r],boxShadow:`0 0 6px ${RC[r]}55`}}/>{RL[r]}</div>))}
+      <span style={{color:'rgba(255,255,255,0.15)',margin:'0 4px'}}>│</span>
+      <span style={{fontSize:9,color:'#94a3b8',marginRight:2}}>GLOBAL NORTH</span>
+      {['EUR','AMR','WPR'].map(r=>(<div key={r} style={{padding:'4px 12px',borderRadius:4,border:`1px solid ${RC[r]}33`,background:`${RC[r]}11`,display:'flex',alignItems:'center',gap:5,fontSize:10,color:RC[r]}}><span style={{width:7,height:7,borderRadius:'50%',background:RC[r],boxShadow:`0 0 6px ${RC[r]}55`}}/>{RL[r]}</div>))}
+    </div>);}
+  const allActive=activeCategories.size===CATS.length;return(
   <div style={{position:'absolute',top:50,left:0,right:0,zIndex:40,padding:'0 20px',display:'flex',flexWrap:'wrap',gap:5,fontFamily:'IBM Plex Mono,monospace',fontSize:11,pointerEvents:'none',transform:'translateY(-60px)',animation:'slideDown 0.5s ease 1.95s forwards'}}>
     <button onClick={()=>onToggle('ALL')} style={{pointerEvents:'auto',padding:'4px 12px',borderRadius:4,border:'1px solid rgba(255,255,255,0.08)',cursor:'pointer',fontFamily:'inherit',fontSize:10,background:allActive?'rgba(255,255,255,0.12)':'transparent',color:allActive?'#e2e8f0':'#64748b'}}>ALL</button>
     {CATS.map(cat=>{const on=activeCategories.has(cat);return(<button key={cat} onClick={()=>onToggle(cat)} style={{pointerEvents:'auto',padding:'4px 12px',borderRadius:4,border:'1px solid rgba(255,255,255,0.08)',cursor:'pointer',fontFamily:'inherit',fontSize:10,display:'flex',alignItems:'center',gap:4,background:on?'rgba(255,255,255,0.08)':'transparent',color:on?'#e2e8f0':'#475569',opacity:on?1:0.5}}><span style={{width:6,height:6,borderRadius:'50%',background:CC[cat]}}/>{CL[cat]}</button>);})}
   </div>);}
 
 function SearchDropdown({query,diseases,onSelect}){if(!query||query.length<1)return null;const q=query.toLowerCase(),matches=diseases.filter(d=>d.label.toLowerCase().includes(q)).slice(0,8);if(!matches.length)return null;const mob=isMob();return(<div style={{position:'absolute',top:mob?80:40,left:mob?12:undefined,right:mob?12:260,zIndex:60,background:'rgba(10,16,30,0.96)',backdropFilter:'blur(16px)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,padding:4,fontFamily:'IBM Plex Mono,monospace',fontSize:11,minWidth:mob?undefined:200}}>{matches.map(d=>(<div key={d.id} onClick={()=>onSelect(d)} style={{padding:'5px 8px',cursor:'pointer',borderRadius:4,color:'#e2e8f0',display:'flex',alignItems:'center',gap:6}} onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.06)'}} onMouseLeave={e=>{e.currentTarget.style.background='none'}}><span style={{width:6,height:6,borderRadius:'50%',background:CC[d.category]}}/>{d.label}</div>))}</div>);}
+
 
 function Legend({sizeMode,layoutMode}){const mob=isMob();return(<div style={{position:'absolute',bottom:0,left:0,right:0,zIndex:40,padding:mob?'8px 12px':'8px 16px',display:'flex',gap:mob?8:16,fontFamily:'IBM Plex Mono,monospace',fontSize:9,color:'#cbd5e1',background:'linear-gradient(0deg,rgba(6,8,13,0.85) 0%,rgba(6,8,13,0) 100%)',pointerEvents:'none',transform:'translateY(100%)',animation:'slideUp 0.5s ease 2.1s forwards'}}>{mob?<span>Tap to explore · Pinch to zoom</span>:(<><span>Node size = {sizeMode==='papers'?'publications':'mortality'}</span><span>Layout = {layoutMode==='category'?'Category clusters':'Network connections'}</span><span>Drag to rotate · Scroll to zoom · Right-drag to pan · Double-click to re-center</span></>)}<span style={{marginLeft:'auto'}}>Project by Russell J. Young</span></div>);}
 
@@ -441,7 +506,7 @@ function StoryCaption({text,onClick}){
 // ═════════════════════════════════════════════════════════════════════════════
 export default function MedGalaxy() {
   const containerRef=useRef(null),cameraRef=useRef(null),rendererRef=useRef(null),controlsRef=useRef(null);
-  const iMeshRef=useRef(null),edgeMeshRef=useRef(null),catPosRef=useRef(null),netPosRef=useRef(null);
+  const iMeshRef=useRef(null),edgeMeshRef=useRef(null),catPosRef=useRef(null),netPosRef=useRef(null),geoPosRef=useRef(null),geoAnchorsRef=useRef(null);
   const dataRef=useRef(null),proxiesRef=useRef([]),flyRef=useRef(null),mdRef=useRef({x:0,y:0});
   const frameRef=useRef(0),hoverIdxRef=useRef(-1);
   const sizeAnimRef=useRef(null),layoutAnimRef=useRef(null),curPosRef=useRef(null);
@@ -471,7 +536,10 @@ export default function MedGalaxy() {
   const connFocusRef=useRef(-1); // index of focused hub disease, -1 = none
   const [connFocusActive,setConnFocusActive]=useState(false);
   const [velocityActive,setVelocityActive]=useState(false);
+  const [geoMode,setGeoMode]=useState(false);
+  const geoModeRef=useRef(false);
   const labelsRef=useRef(null); // DOM container for node labels
+  const geoLabelsRef=useRef(null); // DOM container for geography region labels
 
   const ppdData=React.useMemo(()=>{const wr=diseasesData.filter(d=>d.mortality>0).map(d=>({...d,ppd:d.papers/d.mortality}));const s=[...wr].sort((a,b)=>b.ppd-a.ppd);return{highest:s.slice(0,10),lowest:s.slice(-10).reverse()};},[]);
 
@@ -528,7 +596,7 @@ export default function MedGalaxy() {
       const cur=curPosRef.current,data=dataRef.current;
       if(cur&&data){
         const currentPos=cur.map(p=>[...p]);
-        const src=layoutModeRef.current==='network'?netPosRef.current:catPosRef.current;
+        const src=geoModeRef.current?geoPosRef.current:layoutModeRef.current==='network'?netPosRef.current:catPosRef.current;
         explodeAnimRef.current={from:currentPos,to:src.map(p=>[...p]),f:0,total:90,returning:true,connReturning:true};
         const proxies=proxiesRef.current;
         const curSizes=data.diseases.map((_,i)=>proxies[i]?proxies[i].scale.x:0.001);
@@ -544,7 +612,7 @@ export default function MedGalaxy() {
   },[]);
   const toggleCat=useCallback((cat)=>{setActiveCats(prev=>{if(cat==='ALL')return prev.size===CATS.length?new Set():new Set(CATS);const next=new Set(prev);if(next.has(cat))next.delete(cat);else next.add(cat);return next;});},[]);
   const handleSize=useCallback((mode)=>{if(mode===sizeMode)return;setSizeMode(mode);sizeModeRef.current=mode;const data=dataRef.current;if(!data)return;sizeAnimRef.current={from:data.diseases.map(d=>sizeMode==='papers'?nR(d.papers):nRM(d.mortality)),to:data.diseases.map(d=>mode==='papers'?nR(d.papers):nRM(d.mortality)),f:0,total:60};},[sizeMode]);
-  const handleLayout=useCallback((mode)=>{if(mode===layoutMode)return;setLayoutMode(mode);layoutModeRef.current=mode;const cp=catPosRef.current,np=netPosRef.current;if(!cp||!np)return;layoutAnimRef.current={from:curPosRef.current||(layoutMode==='category'?cp:np),to:mode==='category'?cp:np,f:0,total:60};},[layoutMode]);
+  const handleLayout=useCallback((mode)=>{if(mode===layoutMode)return;setLayoutMode(mode);layoutModeRef.current=mode;if(geoModeRef.current){geoModeRef.current=false;setGeoMode(false);}const cp=catPosRef.current,np=netPosRef.current;if(!cp||!np)return;layoutAnimRef.current={from:curPosRef.current||(layoutMode==='category'?cp:np),to:mode==='category'?cp:np,f:0,total:60};},[layoutMode]);
   const handleSearchSel=useCallback((disease)=>{const data=dataRef.current;if(!data)return;const idx=data.idMap[disease.id];if(idx!==undefined){selectDisease(idx);setSearchQuery('');}},[selectDisease]);
 
   const handleExplode=useCallback(()=>{
@@ -562,7 +630,7 @@ export default function MedGalaxy() {
   const handleUnexplode=useCallback(()=>{
     const cur=curPosRef.current;if(!cur)return;
     const currentPos=cur.map(p=>[...p]);
-    const src=layoutModeRef.current==='network'?netPosRef.current:catPosRef.current;
+    const src=geoModeRef.current?geoPosRef.current:layoutModeRef.current==='network'?netPosRef.current:catPosRef.current;
     explodeAnimRef.current={from:currentPos,to:src.map(p=>[...p]),f:0,total:60,returning:true};
     setExplodeActive(false);
   },[]);
@@ -576,6 +644,18 @@ export default function MedGalaxy() {
   },[]);
   const handleVelocity=useCallback(()=>{setVelocityActive(true);},[]);
   const handleCloseVelocity=useCallback(()=>{setVelocityActive(false);},[]);
+  const handleGeo=useCallback(()=>{
+    const entering=!geoModeRef.current;
+    geoModeRef.current=entering;setGeoMode(entering);
+    const cur=curPosRef.current,gp=geoPosRef.current;if(!cur||!gp)return;
+    const from=cur.map(p=>[...p]);
+    if(entering){
+      layoutAnimRef.current={from,to:gp.map(p=>[...p]),f:0,total:60};
+    }else{
+      const src=layoutModeRef.current==='network'?netPosRef.current:catPosRef.current;
+      layoutAnimRef.current={from,to:src.map(p=>[...p]),f:0,total:60};
+    }
+  },[]);
   const handleConnSelect=useCallback((diseaseId)=>{
     const data=dataRef.current;if(!data)return;
     const idx=data.idMap[diseaseId];if(idx===undefined)return;
@@ -663,8 +743,8 @@ export default function MedGalaxy() {
     const tier=dTier(),cfg=TC[tier];
     const data=processData(diseasesData,connectionsData);dataRef.current=data;
     const {diseases,layoutEdges,displayEdges}=data;
-    const {catPos,netPos,debugStr,rawMax}=computeLayouts(diseases,layoutEdges);
-    catPosRef.current=catPos;netPosRef.current=netPos;
+    const {catPos,netPos,geoPos,geoAnchors,debugStr,rawMax}=computeLayouts(diseases,layoutEdges);
+    catPosRef.current=catPos;netPosRef.current=netPos;geoPosRef.current=geoPos;geoAnchorsRef.current=geoAnchors;
     curPosRef.current=catPos.map(p=>[...p]);
 
     // Camera distance scales with layout size
@@ -834,7 +914,7 @@ export default function MedGalaxy() {
       if(!layoutAnimRef.current&&!sizeAnimRef.current&&!explodeAnimRef.current&&!explodeActiveRef.current&&!connectionsActiveRef.current&&connFocusRef.current<0){
         const t=frame*0.016;
         const cur=curPosRef.current;
-        const src=layoutModeRef.current==='network'?netPosRef.current:catPosRef.current;
+        const src=geoModeRef.current?geoPosRef.current:layoutModeRef.current==='network'?netPosRef.current:catPosRef.current;
         if(src){
           const ph_arr=nodePhaseRef.current;
           const bl=driftBlendRef.current;
@@ -909,6 +989,24 @@ export default function MedGalaxy() {
         }
       }
 
+      // ── Geography region labels: project anchor positions to screen ──
+      const glc=geoLabelsRef.current;
+      if(glc&&geoModeRef.current&&geoAnchorsRef.current&&frame%2===0){
+        const rc=renderer.domElement.getBoundingClientRect();
+        const anchors=geoAnchorsRef.current;
+        const kids=glc.children;
+        const pv2=new THREE.Vector3();
+        let ci=0;
+        for(const r of ['AFR','SEAR','EUR','AMR','WPR','EMR']){
+          const el=kids[ci];ci++;if(!el||!anchors[r])continue;
+          pv2.set(anchors[r][0],anchors[r][1]+60,anchors[r][2]).project(camera);
+          if(pv2.z>1||pv2.z<-1){el.style.display='none';continue;}
+          el.style.display='';
+          el.style.left=(pv2.x*0.5+0.5)*rc.width+'px';
+          el.style.top=(-pv2.y*0.5+0.5)*rc.height+'px';
+        }
+      }
+
       requestAnimationFrame(animate);
     }
     animate();
@@ -936,17 +1034,22 @@ export default function MedGalaxy() {
     const hubSet=new Set();
     if(connMode){connData.hubs.forEach(h=>{const idx=data.idMap[h.id];if(idx!==undefined)hubSet.add(idx);});}
 
+    const geo=geoMode;
     for(let i=0;i<diseases.length;i++){
-      const d=diseases[i],c=new THREE.Color(CC[d.category]);
+      const d=diseases[i],c=new THREE.Color(geo?RC[d.region]||'#ffffff':CC[d.category]);
       const catVis=activeCats.has(d.category),searchMatch=!sq||d.label.toLowerCase().includes(sq);
-      if(!catVis)c.multiplyScalar(0.05);
+      if(!geo&&!catVis)c.multiplyScalar(0.05);
       else if(connMode){if(hubSet.has(i))c.multiplyScalar(1.3);else c.multiplyScalar(0.4);}
       else if(aIdx>=0){if(i===aIdx)c.multiplyScalar(1.4);else if(nbrs&&nbrs.has(i)){}else c.multiplyScalar(0.25);}
       else if(sq&&!searchMatch)c.multiplyScalar(0.15);
       iMesh.setColorAt(i,c);
-      // Glow brightness
-      if(glows&&glows[i]){glows[i].material.opacity=(!catVis?0:connMode?(hubSet.has(i)?0.55:0.08):aIdx>=0?(i===aIdx||nbrs?.has(i)?0.5:0.05):0.35);}
-      if(!catVis){const m=new THREE.Matrix4();iMesh.getMatrixAt(i,m);const p=new THREE.Vector3(),q=new THREE.Quaternion(),s=new THREE.Vector3();m.decompose(p,q,s);s.set(0.001,0.001,0.001);m.compose(p,q,s);iMesh.setMatrixAt(i,m);}
+      // Glow brightness + recolor
+      if(glows&&glows[i]){
+        if(geo)glows[i].material.color.set(RC[d.region]||'#ffffff');
+        else glows[i].material.color.set(CC[d.category]);
+        glows[i].material.opacity=((!geo&&!catVis)?0:connMode?(hubSet.has(i)?0.55:0.08):aIdx>=0?(i===aIdx||nbrs?.has(i)?0.5:0.05):0.35);
+      }
+      if(!geo&&!catVis){const m=new THREE.Matrix4();iMesh.getMatrixAt(i,m);const p=new THREE.Vector3(),q=new THREE.Quaternion(),s=new THREE.Vector3();m.decompose(p,q,s);s.set(0.001,0.001,0.001);m.compose(p,q,s);iMesh.setMatrixAt(i,m);}
     }
     iMesh.instanceColor.needsUpdate=true;iMesh.instanceMatrix.needsUpdate=true;
 
@@ -967,19 +1070,19 @@ export default function MedGalaxy() {
       ca[o]=v;ca[o+1]=v;ca[o+2]=v;ca[o+3]=v;ca[o+4]=v;ca[o+5]=v;}
     eMesh.geometry.getAttribute('color').needsUpdate=true;
     eMesh.material.opacity=(connMode||hasActive)?0.55:0;
-  },[hoveredNode,selectedNode,activeCats,searchQuery,sizeMode,connectionsActive,connData,connFocusActive]);
+  },[hoveredNode,selectedNode,activeCats,searchQuery,sizeMode,connectionsActive,connData,connFocusActive,geoMode]);
 
   return(
     <div ref={containerRef} style={{width:'100%',height:'100%',position:'relative',overflow:'hidden',cursor,touchAction:'none'}}>
-      <Header diseaseCount={diseasesData.length} edgeCount={connectionsData.length} searchQuery={searchQuery} onSearchChange={setSearchQuery} sizeMode={sizeMode} onSizeToggle={handleSize} layoutMode={layoutMode} onLayoutToggle={handleLayout} sizeToggleRef={sizeToggleRef} onExplode={handleExplode} onConnections={handleConnections} onVelocity={handleVelocity}/>
-      <FilterBar activeCategories={activeCats} onToggle={toggleCat}/>
+      <Header diseaseCount={diseasesData.length} edgeCount={connectionsData.length} searchQuery={searchQuery} onSearchChange={setSearchQuery} sizeMode={sizeMode} onSizeToggle={handleSize} layoutMode={layoutMode} onLayoutToggle={handleLayout} sizeToggleRef={sizeToggleRef} onExplode={handleExplode} onConnections={handleConnections} onVelocity={handleVelocity} geoMode={geoMode} onGeo={handleGeo}/>
+      <FilterBar activeCategories={activeCats} onToggle={toggleCat} geoMode={geoMode}/>
       <Legend sizeMode={sizeMode} layoutMode={layoutMode}/>
       {searchQuery&&dataRef.current&&<SearchDropdown query={searchQuery} diseases={dataRef.current.diseases} onSelect={handleSearchSel}/>}
       {hoveredNode&&(!selectedNode||hoveredNode.index!==selectedNode.index)&&(<Tooltip disease={hoveredNode.disease} connCount={dataRef.current?.connCounts.get(hoveredNode.index)||0} x={tipPos.x} y={tipPos.y}/>)}
       {selectedNode&&dataRef.current&&(<Sidebar disease={selectedNode.disease} data={dataRef.current} onSelect={selectDisease} onClose={isMob()&&connFocusRef.current>=0?(()=>{setSelectedNode(null);}):deselect}/>)}
       {storyTip&&(<Tooltip disease={storyTip.disease} connCount={storyTip.connCount} x={storyTip.x} y={storyTip.y}/>)}
       <div ref={labelsRef} style={{position:'absolute',top:0,left:0,width:'100%',height:'100%',pointerEvents:'none',zIndex:30,overflow:'hidden'}}>
-        {diseasesData.map((d,i)=>(<div key={d.id} className="node-lbl" style={{position:'absolute',transform:'translateX(-50%)',fontFamily:'IBM Plex Mono,monospace',fontSize:isMob()?7:9,color:CC[d.category],textAlign:'center',whiteSpace:'nowrap',textShadow:'0 0 4px rgba(0,0,0,0.8),0 1px 2px rgba(0,0,0,0.9)'}}><span className="lbl-name">{d.label}</span>{!isMob()&&<span className="lbl-detail" style={{display:'none',color:'#94a3b8',fontSize:8}}><br/>{fmt(d.papers)} papers</span>}</div>))}
+        {diseasesData.map((d,i)=>(<div key={d.id} className="node-lbl" style={{position:'absolute',transform:'translateX(-50%)',fontFamily:'IBM Plex Mono,monospace',fontSize:isMob()?7:9,color:geoMode?(RC[d.region]||'#fff'):CC[d.category],textAlign:'center',whiteSpace:'nowrap',textShadow:'0 0 4px rgba(0,0,0,0.8),0 1px 2px rgba(0,0,0,0.9)'}}><span className="lbl-name">{d.label}</span>{!isMob()&&<span className="lbl-detail" style={{display:'none',color:'#94a3b8',fontSize:8}}><br/>{fmt(d.papers)} papers</span>}</div>))}
       </div>
       <style>{`.node-lbl{transition:opacity 0.15s}.lbl-hover .lbl-name{font-size:11px!important;font-weight:600;color:#e2e8f0!important}.lbl-hover .lbl-detail{display:inline!important}`}</style>
       <StoryChips onChip={handleStory} visible={storyVisible}/>
@@ -987,6 +1090,9 @@ export default function MedGalaxy() {
       {explodeActive&&<ExplodeOverlay data={ppdData} onClose={handleUnexplode}/>}
       {connectionsActive&&<ConnectionsOverlay data={connData} onClose={handleCloseConnections} onSelect={handleConnSelect}/>}
       {velocityActive&&<VelocityOverlay data={velocityData} onClose={handleCloseVelocity}/>}
+      <div ref={geoLabelsRef} style={{position:'absolute',top:0,left:0,width:'100%',height:'100%',pointerEvents:'none',zIndex:31,overflow:'hidden',display:geoMode?'block':'none'}}>
+        {['AFR','SEAR','EUR','AMR','WPR','EMR'].map(r=>(<div key={r} style={{position:'absolute',transform:'translate(-50%,-100%)',fontFamily:'IBM Plex Mono,monospace',fontSize:isMob()?11:14,fontWeight:700,color:'#ffffff',textAlign:'center',whiteSpace:'nowrap',textShadow:`0 0 16px ${RC[r]}88,0 0 6px rgba(0,0,0,0.95),0 2px 6px rgba(0,0,0,0.9)`,letterSpacing:'0.05em'}}>{RL[r]}</div>))}
+      </div>
     </div>
   );
 }
