@@ -658,15 +658,16 @@ export default function MedGalaxy() {
       {id:find('rotavirus'),caption:'Rotavirus — 200K child deaths/yr · Research declining'},
       {id:find('sepsis'),caption:'Sepsis — 11M deaths/yr · Highest overall mortality'},
     ].filter(s=>s.id!==undefined);
-    sp.step=0;
+    for(let i=list.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[list[i],list[j]]=[list[j],list[i]];}
+    sp.list=list;sp.step=0;
     setSpotlightActive(true);
     setSpotlightCaption(list[0].caption);
     selectDisease(list[0].id);
     sp.step=1;
     sp.timer=setInterval(()=>{
-      const idx=sp.step%list.length;
-      setSpotlightCaption(list[idx].caption);
-      selectDisease(list[idx].id);
+      const idx=sp.step%sp.list.length;
+      setSpotlightCaption(sp.list[idx].caption);
+      selectDisease(sp.list[idx].id);
       sp.step++;
     },6000);
   },[spotlightActive,stopSpotlight,selectDisease]);
