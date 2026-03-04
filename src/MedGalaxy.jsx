@@ -383,7 +383,7 @@ function VelocityOverlay({data,onClose}){
   );
 }
 
-function Header({diseaseCount,edgeCount,searchQuery,onSearchChange,sizeMode,onSizeToggle,sizeToggleRef,onExplode,onConnections,onVelocity,neglectMode,onNeglect}){
+function Header({diseaseCount,edgeCount,searchQuery,onSearchChange,sizeMode,onSizeToggle,sizeToggleRef,onExplode,onConnections,onVelocity,neglectMode,onNeglect,spotlightActive,onSpotlight}){
   const mob=isMob();
   const [menuOpen,setMenuOpen]=React.useState(false);
   const menuRef=React.useRef(null);
@@ -404,6 +404,7 @@ function Header({diseaseCount,edgeCount,searchQuery,onSearchChange,sizeMode,onSi
           <button onClick={()=>{onConnections();setMenuOpen(false);}} style={{padding:'6px 10px',fontSize:10,fontFamily:'inherit',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,cursor:'pointer',background:'transparent',color:'#e2e8f0',width:'100%',textAlign:'left'}}>Connections</button>
           <button onClick={()=>{onVelocity();setMenuOpen(false);}} style={{padding:'6px 10px',fontSize:10,fontFamily:'inherit',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,cursor:'pointer',background:'transparent',color:'#e2e8f0',width:'100%',textAlign:'left'}}>Trends</button>
           <button onClick={()=>{onNeglect();setMenuOpen(false);}} style={{padding:'6px 10px',fontSize:10,fontFamily:'inherit',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,cursor:'pointer',background:neglectMode?'rgba(255,255,255,0.12)':'transparent',color:neglectMode?'#ef4444':'#e2e8f0',width:'100%',textAlign:'left'}}>{neglectMode?'✕ Attention Map':'Attention Map'}</button>
+          <button onClick={()=>{onSpotlight();setMenuOpen(false);}} style={{padding:'6px 10px',fontSize:10,fontFamily:'inherit',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,cursor:'pointer',background:spotlightActive?'rgba(255,255,255,0.12)':'transparent',color:spotlightActive?'#f59e0b':'#e2e8f0',width:'100%',textAlign:'left'}}>{spotlightActive?'✕ Spotlight':'Spotlight'}</button>
         </div>}
       </div>
     </>):(<>
@@ -416,6 +417,7 @@ function Header({diseaseCount,edgeCount,searchQuery,onSearchChange,sizeMode,onSi
         <button onClick={onNeglect} style={{padding:'6px 12px',fontSize:11,fontFamily:'inherit',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,cursor:'pointer',background:neglectMode?'rgba(255,255,255,0.12)':'transparent',color:neglectMode?'#ef4444':'#e2e8f0',whiteSpace:'nowrap'}}>{neglectMode?'✕ Attention Map':'Attention Map'}</button>
         {neglectMode&&<div style={{position:'absolute',top:'100%',right:0,marginTop:6,padding:'8px 12px',background:'rgba(10,16,30,0.95)',backdropFilter:'blur(12px)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,fontSize:10,color:'#94a3b8',width:260,lineHeight:1.5,opacity:0,animation:'fadeIn 0.4s ease forwards'}}>Nodes colored by research papers per death. <span style={{color:'#22c55e'}}>Green</span> = high attention. <span style={{color:'#f59e0b'}}>Yellow</span> = moderate. <span style={{color:'#ef4444'}}>Red</span> = overlooked.</div>}
       </div>
+      <button onClick={onSpotlight} style={{padding:'6px 12px',fontSize:11,fontFamily:'inherit',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,cursor:'pointer',background:spotlightActive?'rgba(255,255,255,0.12)':'transparent',color:spotlightActive?'#f59e0b':'#e2e8f0',pointerEvents:'auto',whiteSpace:'nowrap'}}>{spotlightActive?'✕ Spotlight':'Spotlight'}</button>
     </>)}
     <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}@keyframes slideDown{to{transform:translateY(0)}}@keyframes slideUp{to{transform:translateY(0)}}@keyframes fadeIn{to{opacity:1}}@keyframes chipPulse{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,0.4)}50%{box-shadow:0 0 12px 4px rgba(34,197,94,0.15)}}`}</style>
   </div>);
@@ -439,7 +441,12 @@ function FilterBar({activeCategories,onToggle,neglectMode}){if(isMob())return nu
 function SearchDropdown({query,diseases,onSelect}){if(!query||query.length<1)return null;const q=query.toLowerCase(),matches=diseases.filter(d=>d.label.toLowerCase().includes(q)).slice(0,8);if(!matches.length)return null;const mob=isMob();return(<div style={{position:'absolute',top:mob?80:40,left:mob?12:undefined,right:mob?12:260,zIndex:60,background:'rgba(10,16,30,0.96)',backdropFilter:'blur(16px)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,padding:4,fontFamily:'IBM Plex Mono,monospace',fontSize:11,minWidth:mob?undefined:200}}>{matches.map(d=>(<div key={d.id} onClick={()=>onSelect(d)} style={{padding:'5px 8px',cursor:'pointer',borderRadius:4,color:'#e2e8f0',display:'flex',alignItems:'center',gap:6}} onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.06)'}} onMouseLeave={e=>{e.currentTarget.style.background='none'}}><span style={{width:6,height:6,borderRadius:'50%',background:CC[d.category]}}/>{d.label}</div>))}</div>);}
 
 
-function Legend({sizeMode}){const mob=isMob();return(<div style={{position:'absolute',bottom:0,left:0,right:0,zIndex:40,padding:mob?'8px 12px':'8px 16px',display:'flex',gap:mob?8:16,fontFamily:'IBM Plex Mono,monospace',fontSize:9,color:'#cbd5e1',background:'linear-gradient(0deg,rgba(6,8,13,0.85) 0%,rgba(6,8,13,0) 100%)',pointerEvents:'none',transform:'translateY(100%)',animation:'slideUp 0.5s ease 2.1s forwards'}}>{mob?<span>Tap to explore · Pinch to zoom</span>:(<><span>Node size = {sizeMode==='papers'?'publications':'mortality'}</span><span>Drag to rotate · Scroll to zoom · Right-drag to pan · Double-click to re-center</span></>)}<span style={{marginLeft:'auto'}}>Project by Russell J. Young</span></div>);}
+function SpotlightCaption({text}){
+  if(!text)return null;const mob=isMob();
+  return(<div key={text} style={{position:'absolute',bottom:mob?90:110,left:'50%',transform:'translateX(-50%)',zIndex:46,background:'rgba(10,16,30,0.95)',backdropFilter:'blur(16px)',border:'1px solid rgba(255,255,255,0.15)',borderRadius:12,padding:mob?'12px 18px':'16px 28px',fontFamily:'IBM Plex Mono,monospace',textAlign:'center',opacity:0,animation:'fadeIn 0.4s ease forwards',boxShadow:'0 8px 32px rgba(0,0,0,0.5)'}}><div style={{fontSize:8,color:'#f59e0b',fontWeight:600,textTransform:'uppercase',letterSpacing:2,marginBottom:6}}>Spotlight</div><div style={{fontSize:mob?12:14,color:'#f1f5f9',lineHeight:1.5,whiteSpace:mob?'normal':'nowrap',maxWidth:mob?'85vw':'none'}}>{text}</div></div>);
+}
+
+function Legend({sizeMode}){const mob=isMob();return(<div style={{position:'absolute',bottom:0,left:0,right:0,zIndex:40,padding:mob?'8px 12px':'8px 16px',display:'flex',gap:mob?8:16,fontFamily:'IBM Plex Mono,monospace',fontSize:9,color:'#cbd5e1',background:'linear-gradient(0deg,rgba(6,8,13,0.85) 0%,rgba(6,8,13,0) 100%)',pointerEvents:'none',transform:'translateY(100%)',animation:'slideUp 0.5s ease 2.1s forwards'}}>{mob?<span>Tap to explore · Pinch to zoom</span>:(<><span>Node size = {sizeMode==='papers'?'publications':'mortality'}</span><span>Drag to rotate · Scroll to zoom · Right-drag to pan · Double-click to re-center</span></>)}<span style={{marginLeft:'auto'}}>Data: PubMed · WHO Global Health Estimates 2021 · Project by Russell J. Young</span></div>);}
 
 // ─── Story Mode Component ────────────────────────────────────────────────────
 function StoryChips({onChip,visible}){
@@ -454,7 +461,7 @@ function StoryChips({onChip,visible}){
     {id:'mismatch',label:'See the Mismatch',desc:'The 2,000:1 research gap'},
   ];
   return(<div style={{position:'absolute',bottom:mob?32:50,left:'50%',transform:'translateX(-50%)',zIndex:45,display:mob?'grid':'flex',gridTemplateColumns:mob?'repeat(3,1fr)':undefined,gap:mob?6:10,fontFamily:'IBM Plex Mono,monospace',opacity:0,animation:'fadeIn 0.5s ease 2.8s forwards',width:mob?'92vw':undefined}}>
-    {chips.map(c=>(<button key={c.id} onClick={()=>onChip(c.id)} style={{padding:mob?'6px 4px':'8px 16px',borderRadius:8,border:'1px solid rgba(255,255,255,0.1)',background:'rgba(10,16,30,0.9)',backdropFilter:'blur(12px)',color:'#e2e8f0',fontSize:mob?9:11,cursor:'pointer',fontFamily:'inherit',animation:'none',transition:'background 0.2s'}} onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.08)'}} onMouseLeave={e=>{e.currentTarget.style.background='rgba(10,16,30,0.9)'}}>{c.label}</button>))}
+    {chips.map(c=>(<button key={c.id} onClick={()=>onChip(c.id)} style={{padding:mob?'6px 4px':'8px 16px',borderRadius:8,border:'1px solid rgba(255,255,255,0.1)',background:'rgba(10,16,30,0.9)',backdropFilter:'blur(12px)',color:'#e2e8f0',fontSize:mob?9:11,cursor:'pointer',fontFamily:'inherit',animation:'none',transition:'background 0.2s, box-shadow 0.3s, border-color 0.3s'}} onMouseEnter={e=>{const s=e.currentTarget.style;s.boxShadow='0 0 8px 1px rgba(57,255,20,0.4), 0 0 20px 3px rgba(57,255,20,0.15)';s.borderColor='rgba(57,255,20,0.6)';}} onMouseLeave={e=>{const s=e.currentTarget.style;s.boxShadow='none';s.borderColor='rgba(255,255,255,0.1)';}}>{c.label}</button>))}
   </div>);
 }
 
@@ -495,6 +502,9 @@ export default function MedGalaxy() {
   const [connFocusActive,setConnFocusActive]=useState(false);
   const [velocityActive,setVelocityActive]=useState(false);
   const [neglectMode,setNeglectMode]=useState(false);
+  const [spotlightActive,setSpotlightActive]=useState(false);
+  const [spotlightCaption,setSpotlightCaption]=useState('');
+  const spotlightRef=useRef({step:0,timer:null});
   const labelsRef=useRef(null); // DOM container for node labels
 
   const ppdData=React.useMemo(()=>{const wr=diseasesData.filter(d=>d.mortality>0).map(d=>({...d,ppd:d.papers/d.mortality}));const s=[...wr].sort((a,b)=>b.ppd-a.ppd);return{highest:s.slice(0,10),lowest:s.slice(-10).reverse()};},[]);
@@ -616,6 +626,46 @@ export default function MedGalaxy() {
     setVelocityActive(false);
   },[]);
   const handleNeglect=useCallback(()=>{setNeglectMode(prev=>!prev);},[]);
+  const stopSpotlight=useCallback(()=>{
+    const sp=spotlightRef.current;
+    if(sp.timer){clearInterval(sp.timer);sp.timer=null;}
+    setSpotlightActive(false);setSpotlightCaption('');
+    setSelectedNode(null);
+    const ctrl=controlsRef.current;
+    if(ctrl)flyRef.current={st:ctrl.target.clone(),et:new THREE.Vector3(0,0,0),sr:ctrl.radius,er:ctrl.defaultRadius,f:0,total:70};
+  },[]);
+  const handleSpotlight=useCallback(()=>{
+    const sp=spotlightRef.current;
+    if(spotlightActive){stopSpotlight();return;}
+    if(explodeActiveRef.current||connectionsActiveRef.current||connFocusRef.current>=0)return;
+    const data=dataRef.current;if(!data)return;
+    const find=id=>data.idMap[id];
+    const list=[
+      {id:find('heart-disease'),caption:'Heart Disease — 9.1M deaths/yr · Most lethal disease globally'},
+      {id:find('breast-cancer'),caption:'Breast Cancer — 430K papers · Most researched cancer'},
+      {id:find('rheumatic-heart-disease'),caption:'Rheumatic Heart Disease — 373K deaths, only 9K papers'},
+      {id:find('hiv-aids'),caption:'HIV/AIDS — 630K deaths/yr · 300K+ publications'},
+      {id:find('malaria'),caption:'Malaria — 608K deaths/yr · Developing world impact'},
+      {id:find('alzheimers-disease'),caption:"Alzheimer's Disease — 1.9M deaths/yr · Research surging"},
+      {id:find('cystic-fibrosis'),caption:'Cystic Fibrosis — 48 papers per death · Most researched per capita'},
+      {id:find('tuberculosis'),caption:'Tuberculosis — 1.25M deaths/yr · 0.09 papers per death'},
+      {id:find('covid-19'),caption:'COVID-19 — 1.2M deaths/yr · Fastest research ramp in history'},
+      {id:find('depression'),caption:'Depression — 280K papers · Zero mortality metric'},
+      {id:find('rotavirus'),caption:'Rotavirus — 200K child deaths/yr · Research declining'},
+      {id:find('sepsis'),caption:'Sepsis — 11M deaths/yr · Highest overall mortality'},
+    ].filter(s=>s.id!==undefined);
+    sp.step=0;
+    setSpotlightActive(true);
+    setSpotlightCaption(list[0].caption);
+    selectDisease(list[0].id);
+    sp.step=1;
+    sp.timer=setInterval(()=>{
+      const idx=sp.step%list.length;
+      setSpotlightCaption(list[idx].caption);
+      selectDisease(list[idx].id);
+      sp.step++;
+    },6000);
+  },[spotlightActive,stopSpotlight,selectDisease]);
   const handleConnSelect=useCallback((diseaseId)=>{
     const data=dataRef.current;if(!data)return;
     const idx=data.idMap[diseaseId];if(idx===undefined)return;
@@ -689,7 +739,7 @@ export default function MedGalaxy() {
     const find=id=>data.idMap[id];
     const sequences={
       researched:[{id:find('breast-cancer'),caption:'Breast Cancer — 430K papers'},{id:find('lung-cancer'),caption:'Lung Cancer — 350K papers'},{id:find('type-2-diabetes'),caption:'Type 2 Diabetes — 380K papers'},{caption:'These diseases each have 300,000+ papers.'}],
-      killers:[{id:find('heart-disease'),caption:'Heart Disease — 9M deaths/yr'},{id:find('stroke'),caption:'Stroke — 7.3M deaths/yr'},{id:find('copd'),caption:'COPD — 3.5M deaths/yr'},{caption:'These diseases kill millions per year.'}],
+      killers:[{id:find('heart-disease'),caption:'Heart Disease — 9.1M deaths/yr'},{id:find('stroke'),caption:'Stroke — 7.3M deaths/yr'},{id:find('copd'),caption:'COPD — 3.5M deaths/yr'},{caption:'These diseases kill millions per year.'}],
       forgotten:[{id:find('rotavirus'),caption:'Rotavirus — 200K child deaths/yr, research declining 18%'},{id:find('tetanus'),caption:'Tetanus — 35K deaths/yr, research declining 10%'},{id:find('hepatitis-c'),caption:'Hepatitis C — 242K deaths/yr, research declining'},{caption:'These diseases still kill 470,000+ yearly while the world looks away.'}],
       silent:[{id:find('rheumatic-heart-disease'),caption:'Rheumatic Heart Disease — 373K deaths/yr, only 9K papers (41 deaths per paper)'},{id:find('norovirus'),caption:'Norovirus — 200K deaths/yr, only 12K papers'},{id:find('pertussis'),caption:'Pertussis — 160K deaths/yr, only 14K papers'},{id:find('rotavirus'),caption:'Rotavirus — 200K child deaths/yr, research declining'},{caption:'These diseases kill 930,000+ people every year in near-silence.'}],
       richpoor:[{id:find('cystic-fibrosis'),caption:'Cystic Fibrosis — 48 papers per death (wealthy nation disease)'},{id:find('multiple-sclerosis'),caption:'Multiple Sclerosis — 16 papers per death (wealthy nation disease)'},{id:find('tuberculosis'),caption:'Tuberculosis — 0.09 papers per death, 1.25M deaths/yr (developing nation)'},{id:find('malaria'),caption:'Malaria — 0.16 papers per death, 608K deaths/yr (developing nation)'},{caption:'Where you are born determines how much science fights for your life.'}],
@@ -792,7 +842,7 @@ export default function MedGalaxy() {
     // Mouse
     const raycaster=new THREE.Raycaster(),mouse=new THREE.Vector2(-9999,-9999);
     function onMM(e){const rc=renderer.domElement.getBoundingClientRect();mouse.x=((e.clientX-rc.left)/rc.width)*2-1;mouse.y=-((e.clientY-rc.top)/rc.height)*2+1;setTipPos({x:e.clientX,y:e.clientY});idleRef.current=0;}
-    function onMD(e){mdRef.current={x:e.clientX,y:e.clientY};idleRef.current=0;}
+    function onMD(e){mdRef.current={x:e.clientX,y:e.clientY};idleRef.current=0;if(spotlightRef.current.timer){clearInterval(spotlightRef.current.timer);spotlightRef.current.timer=null;setSpotlightActive(false);setSpotlightCaption('');}}
     function onMU(e){const dx=e.clientX-mdRef.current.x,dy=e.clientY-mdRef.current.y;if(Math.sqrt(dx*dx+dy*dy)<5){if(hoverIdxRef.current>=0)selectDisease(hoverIdxRef.current);else deselect();}}
     function onDblClick(e){
       e.preventDefault();idleRef.current=0;deselect();
@@ -805,7 +855,7 @@ export default function MedGalaxy() {
     // Touch: tap-to-select, double-tap-to-recenter
     const mob=isMob();
     let _tapStart={x:0,y:0,t:0},_lastTap=0;
-    function onTouchStart(e){if(e.touches.length===1){_tapStart={x:e.touches[0].clientX,y:e.touches[0].clientY,t:Date.now()};idleRef.current=0;}else{idleRef.current=0;}}
+    function onTouchStart(e){if(spotlightRef.current.timer){clearInterval(spotlightRef.current.timer);spotlightRef.current.timer=null;setSpotlightActive(false);setSpotlightCaption('');}if(e.touches.length===1){_tapStart={x:e.touches[0].clientX,y:e.touches[0].clientY,t:Date.now()};idleRef.current=0;}else{idleRef.current=0;}}
     function onTouchEnd(e){if(e.touches.length>0)return;
       const dt=Date.now()-_tapStart.t;if(dt>300)return; // not a tap
       const cx=_tapStart.x,cy=_tapStart.y;
@@ -961,10 +1011,10 @@ export default function MedGalaxy() {
     const ro=new ResizeObserver(([e])=>{const{width:w,height:h}=e.contentRect;if(!w||!h)return;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h);});
     ro.observe(container);
     // Escape to dismiss story
-    function onKey(e){if(e.key==='Escape'){setStoryVisible(false);setStoryCaption('');}}
+    function onKey(e){if(e.key==='Escape'){setStoryVisible(false);setStoryCaption('');if(spotlightRef.current.timer){clearInterval(spotlightRef.current.timer);spotlightRef.current.timer=null;setSpotlightActive(false);setSpotlightCaption('');}}}
     window.addEventListener('keydown',onKey);
 
-    return()=>{alive=false;ro.disconnect();controls.dispose();window.removeEventListener('keydown',onKey);renderer.domElement.removeEventListener('mousemove',onMM);renderer.domElement.removeEventListener('mousedown',onMD);renderer.domElement.removeEventListener('mouseup',onMU);renderer.domElement.removeEventListener('dblclick',onDblClick);renderer.domElement.removeEventListener('touchstart',onTouchStart);renderer.domElement.removeEventListener('touchmove',onTouchMove2);renderer.domElement.removeEventListener('touchend',onTouchEnd);sGeo.dispose();sMat.dispose();pGeo.dispose();pMat.dispose();eGeo.dispose();eMat.dispose();iMesh.dispose();glowTex.dispose();renderer.dispose();if(container.contains(renderer.domElement))container.removeChild(renderer.domElement);};
+    return()=>{alive=false;ro.disconnect();controls.dispose();window.removeEventListener('keydown',onKey);if(spotlightRef.current.timer)clearInterval(spotlightRef.current.timer);renderer.domElement.removeEventListener('mousemove',onMM);renderer.domElement.removeEventListener('mousedown',onMD);renderer.domElement.removeEventListener('mouseup',onMU);renderer.domElement.removeEventListener('dblclick',onDblClick);renderer.domElement.removeEventListener('touchstart',onTouchStart);renderer.domElement.removeEventListener('touchmove',onTouchMove2);renderer.domElement.removeEventListener('touchend',onTouchEnd);sGeo.dispose();sMat.dispose();pGeo.dispose();pMat.dispose();eGeo.dispose();eMat.dispose();iMesh.dispose();glowTex.dispose();renderer.dispose();if(container.contains(renderer.domElement))container.removeChild(renderer.domElement);};
   },[selectDisease,deselect]);
 
   // Highlight effect — deferred via rAF to avoid blocking the frame that triggers state change
@@ -1024,7 +1074,7 @@ export default function MedGalaxy() {
 
   return(
     <div ref={containerRef} style={{width:'100%',height:'100%',position:'relative',overflow:'hidden',cursor,touchAction:'none'}}>
-      <Header diseaseCount={diseasesData.length} edgeCount={connectionsData.length} searchQuery={searchQuery} onSearchChange={setSearchQuery} sizeMode={sizeMode} onSizeToggle={handleSize} sizeToggleRef={sizeToggleRef} onExplode={handleExplode} onConnections={handleConnections} onVelocity={handleVelocity} neglectMode={neglectMode} onNeglect={handleNeglect}/>
+      <Header diseaseCount={diseasesData.length} edgeCount={connectionsData.length} searchQuery={searchQuery} onSearchChange={setSearchQuery} sizeMode={sizeMode} onSizeToggle={handleSize} sizeToggleRef={sizeToggleRef} onExplode={handleExplode} onConnections={handleConnections} onVelocity={handleVelocity} neglectMode={neglectMode} onNeglect={handleNeglect} spotlightActive={spotlightActive} onSpotlight={handleSpotlight}/>
       <FilterBar activeCategories={activeCats} onToggle={toggleCat} neglectMode={neglectMode}/>
       <Legend sizeMode={sizeMode}/>
       {searchQuery&&dataRef.current&&<SearchDropdown query={searchQuery} diseases={dataRef.current.diseases} onSelect={handleSearchSel}/>}
@@ -1037,6 +1087,7 @@ export default function MedGalaxy() {
       <style>{`.node-lbl{transition:opacity 0.15s}.lbl-hover .lbl-name{font-size:11px!important;font-weight:600;color:#e2e8f0!important}.lbl-hover .lbl-detail{display:inline!important}`}</style>
       <StoryChips onChip={handleStory} visible={storyVisible}/>
       {storyCaption&&<StoryCaption text={storyCaption} onClick={advanceStory}/>}
+      {spotlightActive&&<SpotlightCaption text={spotlightCaption}/>}
       {explodeActive&&<ExplodeOverlay data={ppdData} onClose={handleUnexplode}/>}
       {connectionsActive&&<ConnectionsOverlay data={connData} onClose={handleCloseConnections} onSelect={handleConnSelect}/>}
       {velocityActive&&<VelocityOverlay data={velocityData} onClose={handleCloseVelocity}/>}

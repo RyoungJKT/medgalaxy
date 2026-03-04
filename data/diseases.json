@@ -880,7 +880,7 @@
     "description": "Leading global cause of death encompassing coronary and ischemic conditions.",
     "papers": 400000,
     "trend": 3,
-    "mortality": 9000000,
+    "mortality": 9100000,
     "fundingGap": "medium",
     "yearlyPapers": [
       28000,
@@ -2076,7 +2076,7 @@
     "description": "Metabolic disorder characterized by insulin resistance and high blood sugar.",
     "papers": 380000,
     "trend": 5,
-    "mortality": 1550000,
+    "mortality": 1600000,
     "fundingGap": "low",
     "yearlyPapers": [
       25000,
