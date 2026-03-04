@@ -27,11 +27,11 @@ function dTier() {
   if (matchMedia('(pointer:coarse)').matches || window.innerWidth<768) return 'LOW';
   return window.innerWidth<1200 ? 'MEDIUM' : 'HIGH';
 }
-// Node sizing: log + gamma curve, capped radius for composition
-const MN=0.3, MX=14, GAMMA=0.6;
-const LN=Math.log10(500), LX=Math.log10(450000), LMN=Math.log10(2), LMX=Math.log10(1400000);
-function nR(p){const t=Math.max(0,Math.min(1,(Math.log10(Math.max(p,10))-LN)/(LX-LN)));return MN+Math.pow(t,GAMMA)*(MX-MN);}
-function nRM(m){if(m<=0)return MN*0.5;const t=Math.max(0,Math.min(1,(Math.log10(m)-LMN)/(LMX-LMN)));return MN+Math.pow(t,GAMMA)*(MX-MN);}
+function isMob(){return typeof window!=='undefined'&&(matchMedia('(pointer:coarse)').matches||window.innerWidth<768);}
+// Node sizing: extreme power-law for maximum size contrast
+const MN=0.3, MX=55, MAX_PAPERS=450000, MAX_MORT=1400000;
+function nR(p){return MN+Math.pow(Math.min(p,MAX_PAPERS)/MAX_PAPERS,0.35)*(MX-MN);}
+function nRM(m){if(m<=0)return MN*0.2;return MN+Math.pow(Math.min(m,MAX_MORT)/MAX_MORT,0.35)*(MX-MN);}
 function fmt(n){if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=10000)return Math.round(n/1000)+'K';if(n>=1000)return(n/1000).toFixed(1)+'K';return String(n);}
 
 // ─── Data Processing ─────────────────────────────────────────────────────────
@@ -49,66 +49,113 @@ function processData(diseases, connections) {
 
 // ─── Force Layout ────────────────────────────────────────────────────────────
 function computeLayouts(diseases, layoutEdges) {
-  // Spherical cluster — distribute category centers on a sphere surface
-  const xy={},zz={};CATS.forEach((c,i)=>{
-    // Fibonacci sphere for even distribution of 10 points on a sphere
-    const phi=Math.acos(1-2*(i+0.5)/CATS.length);
-    const theta=Math.PI*(1+Math.sqrt(5))*i;
-    const R=90;
-    xy[c]={x:R*Math.sin(phi)*Math.cos(theta),y:R*Math.sin(phi)*Math.sin(theta)};
-    zz[c]=R*Math.cos(phi);
-  });
   const ms=Math.max(...layoutEdges.map(e=>e.score),0.001);
   const ml=es=>es.map(e=>({source:e.si,target:e.ti,score:e.score}));
-  function zR(ns){for(let a=0;a<ns.length;a++)for(let b=a+1;b<ns.length;b++){const na=ns[a],nb=ns[b],dx=na.x-nb.x,dy=na.y-nb.y,dz=na.z-nb.z,d=Math.sqrt(dx*dx+dy*dy+dz*dz);if(d<20&&d>0){const f=(dz/d)*0.3;na.z+=f;nb.z-=f;}}}
 
-  // ── Category View: weaker anchors, stronger center, collide with radius ──
-  const cn=diseases.map((d,i)=>({index:i,r:nR(d.papers),category:d.category,papers:d.papers,x:xy[d.category].x+(Math.random()-0.5)*40,y:xy[d.category].y+(Math.random()-0.5)*40,z:zz[d.category]+(Math.random()-0.5)*40}));
-  d3.forceSimulation(cn)
-    .force('charge',d3.forceManyBody().strength(-30))
-    .force('link',d3.forceLink(ml(layoutEdges)).id(d=>d.index).distance(50).strength(d=>(d.score/ms)*0.6))
-    .force('center',d3.forceCenter(0,0).strength(0.05))
-    .force('cx',d3.forceX(d=>xy[d.category].x).strength(0.08))
-    .force('cy',d3.forceY(d=>xy[d.category].y).strength(0.08))
-    .force('collide',d3.forceCollide(d=>d.r+1.2).strength(0.8))
-    .stop();
-  for(let i=0;i<300;i++){cn.forEach(n=>{n.x+=(0-n.x)*0.001;n.y+=(0-n.y)*0.001;});/* mild global pull */zR(cn);}
-  // Actually need to tick the sim
-  const cs=d3.forceSimulation(cn)
-    .force('charge',d3.forceManyBody().strength(-30))
-    .force('link',d3.forceLink(ml(layoutEdges)).id(d=>d.index).distance(50).strength(d=>(d.score/ms)*0.6))
-    .force('center',d3.forceCenter(0,0).strength(0.05))
-    .force('cx',d3.forceX(d=>xy[d.category].x).strength(0.08))
-    .force('cy',d3.forceY(d=>xy[d.category].y).strength(0.08))
-    .force('collide',d3.forceCollide(d=>d.r+1.2).strength(0.8))
-    .stop();
-  for(let i=0;i<300;i++){cs.tick();cn.forEach(n=>{n.z+=(zz[n.category]-n.z)*0.04;});zR(cn);}
+  // ── Solar Layout: biggest in center, others orbit outward by paper rank ──
+  // Sort by papers descending to get rank
+  const ranked=[...diseases].map((d,i)=>({i,papers:d.papers})).sort((a,b)=>b.papers-a.papers);
+  const rankMap=new Map();ranked.forEach((r,rank)=>rankMap.set(r.i,rank));
+  const maxPapers=ranked[0].papers;
+
+  // Sun + planets layout: rank 0 at center, others orbit outward.
+  // Orbits computed cumulatively so each node clears the previous shell.
+  const goldenAngle=Math.PI*(3-Math.sqrt(5)); // ~2.3999 rad, true golden angle
+  const N=diseases.length;
+  // Compute cumulative orbit radii based on actual node sizes
+  const PAD=4; // gap between node edges
+  let cumOrbit=0;
+  const orbitByRank=new Array(N);
+  for(let rank=0;rank<N;rank++){
+    const idx=ranked[rank].i,r=nR(diseases[idx].papers);
+    if(rank===0){orbitByRank[rank]=0;cumOrbit=r+PAD;}
+    else{orbitByRank[rank]=cumOrbit+r;cumOrbit=orbitByRank[rank]+r+PAD;}
+  }
+  // Hybrid compression: keep inner orbits intact (big nodes need room),
+  // compress outer range so small nodes aren't too far away.
+  const rawCum=cumOrbit||1;
+  const INNER=300; // preserve exact spacing below this orbit
+  const OUTER_RANGE=500; // compressed range for everything beyond INNER
+  function compressOrbit(raw){
+    if(raw<=INNER) return raw;
+    return INNER+Math.pow((raw-INNER)/(rawCum-INNER||1),0.5)*OUTER_RANGE;
+  }
+  const rawMax=compressOrbit(rawCum);
+
+  // Use golden-ratio scatter so big nodes aren't all at the same pole.
+  // rank → orbit distance, scattered fibIdx → Fibonacci direction.
+  const cn=diseases.map((d,i)=>{
+    const rank=rankMap.get(i);
+    if(rank===0) return{index:i,r:nR(d.papers),category:d.category,papers:d.papers,x:0,y:0,z:0};
+    const orbit=compressOrbit(orbitByRank[rank]);
+    // Scatter rank across Fibonacci sphere using golden ratio
+    const fibIdx=Math.floor((rank*0.618033988749895*N)%N);
+    const ft=(fibIdx+0.5)/N;
+    const uz=1-2*ft;
+    const theta=goldenAngle*fibIdx;
+    const rXY=Math.sqrt(1-uz*uz);
+    return{index:i,r:nR(d.papers),category:d.category,papers:d.papers,
+      x:rXY*Math.cos(theta)*orbit,y:rXY*Math.sin(theta)*orbit,z:uz*orbit};
+  });
+
+  // Debug: check for NaN, shell vs volume, orbit range
+  let nanCount=0,minOrbit=1e9,maxOrbit=-1e9;
+  cn.forEach(n=>{
+    if(![n.x,n.y,n.z].every(Number.isFinite))nanCount++;
+    const rr=Math.sqrt(n.x*n.x+n.y*n.y+n.z*n.z);
+    minOrbit=Math.min(minOrbit,rr);maxOrbit=Math.max(maxOrbit,rr);
+  });
+  const top5=cn.slice().sort((a,b)=>(b.papers||0)-(a.papers||0)).slice(0,5);
 
   // ── Network View: purely link-driven, no category forces ──
-  const nn=diseases.map((d,i)=>({index:i,r:nR(d.papers),category:d.category,papers:d.papers,x:(Math.random()-0.5)*300,y:(Math.random()-0.5)*300,z:(Math.random()-0.5)*100}));
+  const nn=diseases.map((d,i)=>({index:i,r:nR(d.papers),category:d.category,papers:d.papers,x:(Math.random()-0.5)*300,y:(Math.random()-0.5)*300,z:(Math.random()-0.5)*150}));
   const ns2=d3.forceSimulation(nn)
     .force('charge',d3.forceManyBody().strength(-40))
     .force('link',d3.forceLink(ml(layoutEdges)).id(d=>d.index).distance(40).strength(d=>(d.score/ms)*0.8))
     .force('center',d3.forceCenter(0,0).strength(0.03))
     .force('collide',d3.forceCollide(d=>d.r+1.2).strength(0.85))
     .stop();
-  for(let i=0;i<300;i++){ns2.tick();zR(nn);}
-  return{catPos:cn.map(n=>[n.x,n.y,n.z]),netPos:nn.map(n=>[n.x,n.y,n.z])};
+  for(let i=0;i<300;i++){ns2.tick();
+    // Z repulsion
+    for(let a=0;a<nn.length;a++)for(let b=a+1;b<nn.length;b++){const na=nn[a],nb=nn[b],dz=na.z-nb.z,d=Math.sqrt((na.x-nb.x)**2+(na.y-nb.y)**2+dz*dz);if(d<20&&d>0){const f=(dz/d)*0.3;na.z+=f;nb.z-=f;}}
+  }
+  // Build debug string
+  const _dbg={nanCount,minOrbit:minOrbit.toFixed(1),maxOrbit:maxOrbit.toFixed(1),N:cn.length};
+  const _dbgTop=top5.map(n=>({r:n.r.toFixed(1),orbit:Math.sqrt(n.x*n.x+n.y*n.y+n.z*n.z).toFixed(1)}));
+  const debugStr=`NaN:${_dbg.nanCount} orbit:[${_dbg.minOrbit}..${_dbg.maxOrbit}] N:${_dbg.N}\nTop5: ${_dbgTop.map(t=>`r=${t.r} orb=${t.orbit}`).join(' | ')}`;
+  return{catPos:cn.map(n=>[n.x,n.y,n.z]),netPos:nn.map(n=>[n.x,n.y,n.z]),debugStr,rawMax};
 }
 
 // ─── Orbit Controls ──────────────────────────────────────────────────────────
 class OC{
-  constructor(cam,el){this.cam=cam;this.el=el;this.target=new THREE.Vector3();this.theta=0;this.phi=Math.PI/2;this.radius=500;this.defaultTheta=0;this.defaultPhi=Math.PI/2;this.defaultRadius=500;this.tV=0;this.pV=0;this.pnX=0;this.pnY=0;this._dr=false;this._pn=false;this._lx=0;this._ly=0;this.enabled=true;
+  constructor(cam,el){this.cam=cam;this.el=el;this.target=new THREE.Vector3();this.theta=0;this.phi=Math.PI/2;this.radius=700;this.defaultTheta=0;this.defaultPhi=Math.PI/2;this.defaultRadius=700;this.tV=0;this.pV=0;this.pnX=0;this.pnY=0;this._dr=false;this._pn=false;this._lx=0;this._ly=0;this.enabled=true;
+    this._td=0;this._tp=0;this.zV=0; // touch: pinch distance, touch count, zoom velocity
     this._d=this._d.bind(this);this._m=this._m.bind(this);this._u=this._u.bind(this);this._w=this._w.bind(this);this._c=e=>e.preventDefault();
-    el.addEventListener('mousedown',this._d);el.addEventListener('mousemove',this._m);el.addEventListener('mouseup',this._u);el.addEventListener('mouseleave',this._u);el.addEventListener('wheel',this._w,{passive:false});el.addEventListener('contextmenu',this._c);}
+    this._ts=this._ts.bind(this);this._tm=this._tm.bind(this);this._te=this._te.bind(this);
+    el.addEventListener('mousedown',this._d);el.addEventListener('mousemove',this._m);el.addEventListener('mouseup',this._u);el.addEventListener('mouseleave',this._u);el.addEventListener('wheel',this._w,{passive:false});el.addEventListener('contextmenu',this._c);
+    el.addEventListener('touchstart',this._ts,{passive:false});el.addEventListener('touchmove',this._tm,{passive:false});el.addEventListener('touchend',this._te,{passive:false});}
   _d(e){if(!this.enabled)return;if(e.button===2)this._pn=true;else if(e.button===0)this._dr=true;this._lx=e.clientX;this._ly=e.clientY;}
   _m(e){const dx=e.clientX-this._lx,dy=e.clientY-this._ly;this._lx=e.clientX;this._ly=e.clientY;if(this._dr&&this.enabled){this.tV-=dx*0.0045;this.pV-=dy*0.0045;}if(this._pn&&this.enabled){const s=this.radius*0.0009;this.pnX-=dx*s;this.pnY+=dy*s;}}
   _u(){this._dr=false;this._pn=false;}
-  _w(e){if(!this.enabled)return;e.preventDefault();this.radius=Math.max(50,Math.min(3000,this.radius+e.deltaY*0.001*this.radius));}
+  _w(e){if(!this.enabled)return;e.preventDefault();this.radius=Math.max(50,Math.min(this.defaultRadius*4,this.radius+e.deltaY*0.001*this.radius));}
+  _ts(e){if(!this.enabled)return;e.preventDefault();this._tp=e.touches.length;
+    if(this._tp===1){this._lx=e.touches[0].clientX;this._ly=e.touches[0].clientY;}
+    else if(this._tp>=2){const dx=e.touches[0].clientX-e.touches[1].clientX,dy=e.touches[0].clientY-e.touches[1].clientY;this._td=Math.sqrt(dx*dx+dy*dy);this._lx=(e.touches[0].clientX+e.touches[1].clientX)/2;this._ly=(e.touches[0].clientY+e.touches[1].clientY)/2;}}
+  _tm(e){if(!this.enabled||!e.touches.length)return;e.preventDefault();
+    if(this._tp===1&&e.touches.length===1){const dx=e.touches[0].clientX-this._lx,dy=e.touches[0].clientY-this._ly;this._lx=e.touches[0].clientX;this._ly=e.touches[0].clientY;this.tV-=dx*0.0018;this.pV-=dy*0.0018;}
+    else if(e.touches.length>=2){const dx=e.touches[0].clientX-e.touches[1].clientX,dy=e.touches[0].clientY-e.touches[1].clientY;const nd=Math.sqrt(dx*dx+dy*dy);
+      if(this._td>0){const raw=this._td/nd-1;const clamped=Math.max(-0.08,Math.min(0.08,raw*0.65));this.zV=clamped;}
+      this._td=nd;
+      const mx=(e.touches[0].clientX+e.touches[1].clientX)/2,my=(e.touches[0].clientY+e.touches[1].clientY)/2;
+      const pmx=mx-this._lx,pmy=my-this._ly;this._lx=mx;this._ly=my;
+      const s=this.radius*0.0004;this.pnX-=pmx*s;this.pnY+=pmy*s;}}
+  _te(e){this._tp=e.touches.length;this._td=0;}
   update(){this.theta+=this.tV;this.phi=Math.max(0.05,Math.min(Math.PI-0.05,this.phi+this.pV));this.tV*=0.92;this.pV*=0.92;
+    if(Math.abs(this.zV)>0.0001){this.radius=Math.max(50,Math.min(this.defaultRadius*4,this.radius*(1+this.zV)));this.zV*=0.88;}
     if(Math.abs(this.pnX)>0.001||Math.abs(this.pnY)>0.001){const r=new THREE.Vector3().setFromMatrixColumn(this.cam.matrixWorld,0),u=new THREE.Vector3().setFromMatrixColumn(this.cam.matrixWorld,1);this.target.addScaledVector(r,this.pnX);this.target.addScaledVector(u,this.pnY);this.pnX*=0.92;this.pnY*=0.92;}
     const sp=Math.sin(this.phi);this.cam.position.set(this.target.x+this.radius*sp*Math.sin(this.theta),this.target.y+this.radius*Math.cos(this.phi),this.target.z+this.radius*sp*Math.cos(this.theta));this.cam.lookAt(this.target);}
-  dispose(){this.el.removeEventListener('mousedown',this._d);this.el.removeEventListener('mousemove',this._m);this.el.removeEventListener('mouseup',this._u);this.el.removeEventListener('mouseleave',this._u);this.el.removeEventListener('wheel',this._w);this.el.removeEventListener('contextmenu',this._c);}
+  dispose(){this.el.removeEventListener('mousedown',this._d);this.el.removeEventListener('mousemove',this._m);this.el.removeEventListener('mouseup',this._u);this.el.removeEventListener('mouseleave',this._u);this.el.removeEventListener('wheel',this._w);this.el.removeEventListener('contextmenu',this._c);
+    this.el.removeEventListener('touchstart',this._ts);this.el.removeEventListener('touchmove',this._tm);this.el.removeEventListener('touchend',this._te);}
 }
 
 // ─── Glow Texture (programmatic radial gradient) ─────────────────────────────
@@ -161,8 +208,7 @@ void main(){
   float fr=pow(1.0-facing,2.5);
   float core=mix(0.3,1.0,pow(facing,0.6));
   vec3 col=vColor*(pl*1.0+0.1)*core*1.3+vColor*fr*0.8;
-  float fog=1.0-exp(-0.000002*vFogDepth*vFogDepth);
-  gl_FragColor=vec4(mix(col,vec3(0.024,0.031,0.051),fog),0.95);
+  gl_FragColor=vec4(col,0.95);
 }`;
 
 // ─── UI Components ───────────────────────────────────────────────────────────
@@ -171,53 +217,72 @@ function Sparkline({data,color,w=260,h=50}){if(!data||!data.length)return null;c
 function Tooltip({disease,connCount,x,y}){if(!disease)return null;const c=CC[disease.category],t=disease.trend,ar=t>0?'↑':t<0?'↓':'→';return(<div style={{position:'fixed',left:x+15,top:y+15,pointerEvents:'none',zIndex:100,background:'rgba(10,16,30,0.94)',backdropFilter:'blur(16px)',maxWidth:240,border:'1px solid rgba(255,255,255,0.08)',borderRadius:8,padding:'8px 12px',fontFamily:'IBM Plex Mono,monospace',fontSize:11,color:'#e2e8f0'}}><div style={{fontWeight:600,fontSize:12,marginBottom:3}}>{disease.label}</div><span style={{fontSize:9,padding:'1px 6px',borderRadius:4,background:c+'22',color:c}}>{CL[disease.category]}</span><div style={{color:'#94a3b8',marginTop:4}}>{fmt(disease.papers)} papers <span style={{color:t>0?'#22c55e':t<0?'#ef4444':'#94a3b8'}}>{ar}{Math.abs(t)}%</span></div><div style={{color:'#64748b'}}>{connCount} connections</div></div>);}
 
 function Sidebar({disease,data,onSelect,onClose}){if(!disease)return null;const c=CC[disease.category],idx=data.diseases.indexOf(disease),cc=data.connCounts.get(idx);const conns=data.edges.filter(e=>e.si===idx||e.ti===idx).map(e=>{const oi=e.si===idx?e.ti:e.si;return{d:data.diseases[oi],sp:e.sharedPapers,t:e.trend,oi};}).sort((a,b)=>b.sp-a.sp);const t=disease.trend,ar=t>0?'↑':t<0?'↓':'→',tc=t>0?'#22c55e':t<0?'#ef4444':'#94a3b8';const gc={high:'#ef4444',medium:'#eab308',low:'#22c55e'};
-  return(<div style={{position:'absolute',top:75,right:0,width:320,height:'calc(100% - 75px)',background:'rgba(10,16,30,0.94)',backdropFilter:'blur(16px)',borderLeft:'1px solid rgba(255,255,255,0.06)',fontFamily:'IBM Plex Mono,monospace',color:'#e2e8f0',overflowY:'auto',overflowX:'hidden',zIndex:50,fontSize:11}}>
+  const mob=isMob();
+  const panelStyle=mob?{position:'absolute',bottom:0,left:0,right:0,maxHeight:'60vh',background:'rgba(10,16,30,0.96)',backdropFilter:'blur(16px)',borderTop:'1px solid rgba(255,255,255,0.08)',borderRadius:'16px 16px 0 0',fontFamily:'IBM Plex Mono,monospace',color:'#e2e8f0',overflowY:'auto',overflowX:'hidden',zIndex:50,fontSize:11}:{position:'absolute',top:75,right:0,width:320,height:'calc(100% - 75px)',background:'rgba(10,16,30,0.94)',backdropFilter:'blur(16px)',borderLeft:'1px solid rgba(255,255,255,0.06)',fontFamily:'IBM Plex Mono,monospace',color:'#e2e8f0',overflowY:'auto',overflowX:'hidden',zIndex:50,fontSize:11};
+  return(<>{mob&&<div onClick={onClose} style={{position:'absolute',inset:0,zIndex:49,background:'rgba(0,0,0,0.4)'}}/>}<div style={panelStyle}>
+    {mob&&<div style={{display:'flex',justifyContent:'center',padding:'8px 0'}}><div style={{width:32,height:4,borderRadius:2,background:'rgba(255,255,255,0.2)'}}/></div>}
     <div style={{padding:'16px 16px 8px',borderBottom:'1px solid rgba(255,255,255,0.06)'}}><div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}><div><div style={{fontSize:15,fontWeight:600,marginBottom:4}}>{disease.label}</div><span style={{fontSize:9,padding:'2px 8px',borderRadius:4,background:c+'22',color:c}}>{CL[disease.category]}</span></div><button onClick={onClose} style={{background:'none',border:'none',color:'#64748b',cursor:'pointer',fontSize:18,lineHeight:1,padding:'0 4px'}}>×</button></div></div>
-    <div style={{padding:'10px 16px',color:'#64748b',lineHeight:1.5}}>{disease.description}</div>
+    <div style={{padding:'10px 16px',color:'#94a3b8',lineHeight:1.5}}>{disease.description}</div>
     <div style={{padding:'0 16px 12px',display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}><SB l="Publications" v={fmt(disease.papers)} s={<span style={{color:tc}}>{ar}{Math.abs(t)}%</span>}/><SB l="Connections" v={cc}/><SB l="WHO Deaths/yr" v={disease.mortality>0?fmt(disease.mortality):'N/A'}/><SB l="Funding Gap" v={disease.fundingGap.toUpperCase()} vc={gc[disease.fundingGap]}/></div>
-    <div style={{padding:'0 16px 12px'}}><div style={{color:'#475569',fontSize:9,marginBottom:4}}>Publication Trend (2014–2024)</div><Sparkline data={disease.yearlyPapers} color={c}/></div>
+    <div style={{padding:'0 16px 12px'}}><div style={{color:'#94a3b8',fontSize:9,marginBottom:4}}>Publication Trend (2014–2024)</div><Sparkline data={disease.yearlyPapers} color={c}/></div>
     <div style={{padding:'0 16px 12px'}}><a href={`https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(disease.label)}&sort=date`} target="_blank" rel="noopener noreferrer" style={{display:'block',textAlign:'center',padding:'8px 0',borderRadius:6,background:c+'22',color:c,textDecoration:'none',fontSize:11,fontWeight:500}}>View on PubMed →</a></div>
-    <div style={{padding:'0 16px 16px'}}><div style={{color:'#475569',fontSize:9,marginBottom:6}}>Connections ({conns.length})</div><div style={{maxHeight:240,overflowY:'auto'}}>{conns.map((cn,i)=>{const cc2=CC[cn.d.category],ta=cn.t==='up'?'↑':cn.t==='down'?'↓':'→';return(<div key={i} onClick={()=>onSelect(cn.oi)} style={{display:'flex',alignItems:'center',gap:8,padding:'5px 6px',cursor:'pointer',borderRadius:4,borderBottom:'1px solid rgba(255,255,255,0.03)'}} onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.04)'}} onMouseLeave={e=>{e.currentTarget.style.background='none'}}><span style={{width:6,height:6,borderRadius:'50%',background:cc2,flexShrink:0}}/><span style={{flex:1,color:'#94a3b8'}}>{cn.d.label}</span><span style={{color:'#475569',fontSize:10}}>{fmt(cn.sp)}</span><span style={{color:cn.t==='up'?'#22c55e':cn.t==='down'?'#ef4444':'#64748b',fontSize:10}}>{ta}</span></div>);})}</div></div>
-  </div>);}
-function SB({l,v,s,vc}){return(<div style={{background:'rgba(255,255,255,0.03)',borderRadius:6,padding:'8px 10px',border:'1px solid rgba(255,255,255,0.04)'}}><div style={{color:'#475569',fontSize:9,marginBottom:2}}>{l}</div><div style={{fontSize:14,fontWeight:600,color:vc||'#e2e8f0'}}>{v} {s&&<span style={{fontSize:10,fontWeight:400}}>{s}</span>}</div></div>);}
+    <div style={{padding:'0 16px 16px'}}><div style={{color:'#94a3b8',fontSize:9,marginBottom:2}}>Connections ({conns.length})</div><div style={{color:'#64748b',fontSize:8,marginBottom:6}}>Diseases linked by shared PubMed publications</div><div style={{maxHeight:240,overflowY:'auto'}}>{conns.map((cn,i)=>{const cc2=CC[cn.d.category],ta=cn.t==='up'?'↑':cn.t==='down'?'↓':'→';return(<div key={i} onClick={()=>onSelect(cn.oi)} style={{display:'flex',alignItems:'center',gap:8,padding:'5px 6px',cursor:'pointer',borderRadius:4,borderBottom:'1px solid rgba(255,255,255,0.03)'}} onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.04)'}} onMouseLeave={e=>{e.currentTarget.style.background='none'}}><span style={{width:6,height:6,borderRadius:'50%',background:cc2,flexShrink:0}}/><span style={{flex:1,color:'#cbd5e1'}}>{cn.d.label}</span><span style={{color:'#94a3b8',fontSize:10}}>{fmt(cn.sp)}</span><span style={{color:cn.t==='up'?'#22c55e':cn.t==='down'?'#ef4444':'#64748b',fontSize:10}}>{ta}</span></div>);})}</div></div>
+  </div></>);}
+function SB({l,v,s,vc}){return(<div style={{background:'rgba(255,255,255,0.03)',borderRadius:6,padding:'8px 10px',border:'1px solid rgba(255,255,255,0.04)'}}><div style={{color:'#94a3b8',fontSize:9,marginBottom:2}}>{l}</div><div style={{fontSize:14,fontWeight:600,color:vc||'#e2e8f0'}}>{v} {s&&<span style={{fontSize:10,fontWeight:400}}>{s}</span>}</div></div>);}
 
 function Header({diseaseCount,edgeCount,searchQuery,onSearchChange,sizeMode,onSizeToggle,layoutMode,onLayoutToggle,sizeToggleRef}){
-  return(<div style={{position:'absolute',top:0,left:0,right:0,zIndex:40,padding:'10px 16px',display:'flex',alignItems:'center',gap:12,fontFamily:'IBM Plex Mono,monospace',fontSize:11,color:'#e2e8f0',background:'linear-gradient(180deg,rgba(6,8,13,0.85) 0%,rgba(6,8,13,0) 100%)',pointerEvents:'none',transform:'translateY(-100%)',animation:'slideDown 0.6s ease 1.8s forwards'}}>
-    <div style={{display:'flex',alignItems:'center',gap:8,pointerEvents:'auto'}}><span style={{width:8,height:8,borderRadius:'50%',background:'#22c55e',boxShadow:'0 0 6px #22c55e',animation:'pulse 2s infinite'}}/><span style={{fontWeight:600,fontSize:13}}>MedGalaxy</span><span style={{color:'#475569',fontSize:10}}>{diseaseCount} diseases · {edgeCount} connections</span></div>
+  const mob=isMob();
+  const [menuOpen,setMenuOpen]=React.useState(false);
+  const [searchOpen,setSearchOpen]=React.useState(false);
+  return(<div style={{position:'absolute',top:0,left:0,right:0,zIndex:40,padding:mob?'10px 12px':'14px 20px',display:'flex',alignItems:'center',gap:mob?8:14,fontFamily:'IBM Plex Mono,monospace',fontSize:12,color:'#e2e8f0',background:'linear-gradient(180deg,rgba(6,8,13,0.9) 0%,rgba(6,8,13,0) 100%)',pointerEvents:'none',transform:'translateY(-100%)',animation:'slideDown 0.6s ease 1.8s forwards'}}>
+    <div style={{display:'flex',alignItems:'center',gap:8,pointerEvents:'auto'}}><span style={{width:8,height:8,borderRadius:'50%',background:'#22c55e',boxShadow:'0 0 6px #22c55e',animation:'pulse 2s infinite'}}/><span style={{fontWeight:600,fontSize:mob?13:15}}>MedGalaxy</span>{!mob&&<span style={{color:'#94a3b8',fontSize:11}}>{diseaseCount} diseases · {edgeCount} connections</span>}</div>
     <div style={{flex:1}}/>
-    <div style={{position:'relative',pointerEvents:'auto'}}><input value={searchQuery} onChange={e=>onSearchChange(e.target.value)} placeholder="Search diseases..." style={{background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,padding:'5px 10px',color:'#e2e8f0',fontSize:11,fontFamily:'inherit',width:180,outline:'none'}}/></div>
-    <div ref={sizeToggleRef} style={{display:'flex',borderRadius:6,overflow:'hidden',border:'1px solid rgba(255,255,255,0.08)',pointerEvents:'auto'}}>{['papers','mortality'].map(m=>(<button key={m} onClick={()=>onSizeToggle(m)} style={{padding:'4px 10px',fontSize:10,fontFamily:'inherit',border:'none',cursor:'pointer',background:sizeMode===m?'rgba(255,255,255,0.12)':'transparent',color:sizeMode===m?'#e2e8f0':'#64748b'}}>{m==='papers'?'Papers':'Mortality'}</button>))}</div>
-    <div style={{display:'flex',borderRadius:6,overflow:'hidden',border:'1px solid rgba(255,255,255,0.08)',pointerEvents:'auto'}}>{['category','network'].map(m=>(<button key={m} onClick={()=>onLayoutToggle(m)} style={{padding:'4px 10px',fontSize:10,fontFamily:'inherit',border:'none',cursor:'pointer',background:layoutMode===m?'rgba(255,255,255,0.12)':'transparent',color:layoutMode===m?'#e2e8f0':'#64748b'}}>{m==='category'?'Category':'Network'}</button>))}</div>
+    {mob?(<>
+      {searchOpen&&<div style={{position:'absolute',top:'100%',left:0,right:0,padding:'8px 12px',background:'rgba(6,8,13,0.95)',pointerEvents:'auto'}}><input value={searchQuery} onChange={e=>onSearchChange(e.target.value)} placeholder="Search diseases..." autoFocus onBlur={()=>{if(!searchQuery)setSearchOpen(false);}} style={{background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,padding:'7px 12px',color:'#e2e8f0',fontSize:12,fontFamily:'inherit',width:'100%',outline:'none'}}/></div>}
+      <button onClick={()=>{setSearchOpen(!searchOpen);setMenuOpen(false);}} style={{pointerEvents:'auto',background:'none',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,padding:'5px 8px',color:'#94a3b8',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>&#x1F50D;</button>
+      <div style={{position:'relative',pointerEvents:'auto'}}><button onClick={()=>{setMenuOpen(!menuOpen);setSearchOpen(false);}} style={{background:'none',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,padding:'5px 8px',color:'#94a3b8',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>&#x2630;</button>
+        {menuOpen&&<div style={{position:'absolute',top:'100%',right:0,marginTop:4,background:'rgba(10,16,30,0.96)',backdropFilter:'blur(16px)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,padding:8,minWidth:160,display:'flex',flexDirection:'column',gap:6}}>
+          <div style={{color:'#64748b',fontSize:9,padding:'0 4px'}}>Size by</div>
+          <div ref={sizeToggleRef} style={{display:'flex',borderRadius:6,overflow:'hidden',border:'1px solid rgba(255,255,255,0.08)'}}>{['papers','mortality'].map(m=>(<button key={m} onClick={()=>{onSizeToggle(m);setMenuOpen(false);}} style={{flex:1,padding:'6px 10px',fontSize:10,fontFamily:'inherit',border:'none',cursor:'pointer',background:sizeMode===m?'rgba(255,255,255,0.12)':'transparent',color:sizeMode===m?'#e2e8f0':'#64748b'}}>{m==='papers'?'Papers':'Mortality'}</button>))}</div>
+          <div style={{color:'#64748b',fontSize:9,padding:'0 4px'}}>Layout</div>
+          <div style={{display:'flex',borderRadius:6,overflow:'hidden',border:'1px solid rgba(255,255,255,0.08)'}}>{['category','network'].map(m=>(<button key={m} onClick={()=>{onLayoutToggle(m);setMenuOpen(false);}} style={{flex:1,padding:'6px 10px',fontSize:10,fontFamily:'inherit',border:'none',cursor:'pointer',background:layoutMode===m?'rgba(255,255,255,0.12)':'transparent',color:layoutMode===m?'#e2e8f0':'#64748b'}}>{m==='category'?'Category':'Network'}</button>))}</div>
+        </div>}
+      </div>
+    </>):(<>
+      <div style={{position:'relative',pointerEvents:'auto'}}><input value={searchQuery} onChange={e=>onSearchChange(e.target.value)} placeholder="Search diseases..." style={{background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,padding:'7px 12px',color:'#e2e8f0',fontSize:12,fontFamily:'inherit',width:200,outline:'none'}}/></div>
+      <div ref={sizeToggleRef} style={{display:'flex',borderRadius:6,overflow:'hidden',border:'1px solid rgba(255,255,255,0.08)',pointerEvents:'auto'}}>{['papers','mortality'].map(m=>(<button key={m} onClick={()=>onSizeToggle(m)} style={{padding:'6px 12px',fontSize:11,fontFamily:'inherit',border:'none',cursor:'pointer',background:sizeMode===m?'rgba(255,255,255,0.12)':'transparent',color:sizeMode===m?'#e2e8f0':'#64748b'}}>{m==='papers'?'Papers':'Mortality'}</button>))}</div>
+      <div style={{display:'flex',borderRadius:6,overflow:'hidden',border:'1px solid rgba(255,255,255,0.08)',pointerEvents:'auto'}}>{['category','network'].map(m=>(<button key={m} onClick={()=>onLayoutToggle(m)} style={{padding:'6px 12px',fontSize:11,fontFamily:'inherit',border:'none',cursor:'pointer',background:layoutMode===m?'rgba(255,255,255,0.12)':'transparent',color:layoutMode===m?'#e2e8f0':'#64748b'}}>{m==='category'?'Category':'Network'}</button>))}</div>
+    </>)}
     <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}@keyframes slideDown{to{transform:translateY(0)}}@keyframes slideUp{to{transform:translateY(0)}}@keyframes fadeIn{to{opacity:1}}@keyframes chipPulse{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,0.4)}50%{box-shadow:0 0 12px 4px rgba(34,197,94,0.15)}}`}</style>
   </div>);
 }
 
-function FilterBar({activeCategories,onToggle}){const allActive=activeCategories.size===CATS.length;return(
-  <div style={{position:'absolute',top:44,left:0,right:0,zIndex:40,padding:'0 16px',display:'flex',flexWrap:'wrap',gap:4,fontFamily:'IBM Plex Mono,monospace',fontSize:10,pointerEvents:'none',transform:'translateY(-60px)',animation:'slideDown 0.5s ease 1.95s forwards'}}>
-    <button onClick={()=>onToggle('ALL')} style={{pointerEvents:'auto',padding:'3px 10px',borderRadius:4,border:'1px solid rgba(255,255,255,0.08)',cursor:'pointer',fontFamily:'inherit',fontSize:10,background:allActive?'rgba(255,255,255,0.12)':'transparent',color:allActive?'#e2e8f0':'#64748b'}}>ALL</button>
-    {CATS.map(cat=>{const on=activeCategories.has(cat);return(<button key={cat} onClick={()=>onToggle(cat)} style={{pointerEvents:'auto',padding:'3px 10px',borderRadius:4,border:'1px solid rgba(255,255,255,0.08)',cursor:'pointer',fontFamily:'inherit',fontSize:10,display:'flex',alignItems:'center',gap:4,background:on?'rgba(255,255,255,0.08)':'transparent',color:on?'#e2e8f0':'#475569',opacity:on?1:0.5}}><span style={{width:6,height:6,borderRadius:'50%',background:CC[cat]}}/>{CL[cat]}</button>);})}
+function FilterBar({activeCategories,onToggle}){if(isMob())return null;const allActive=activeCategories.size===CATS.length;return(
+  <div style={{position:'absolute',top:50,left:0,right:0,zIndex:40,padding:'0 20px',display:'flex',flexWrap:'wrap',gap:5,fontFamily:'IBM Plex Mono,monospace',fontSize:11,pointerEvents:'none',transform:'translateY(-60px)',animation:'slideDown 0.5s ease 1.95s forwards'}}>
+    <button onClick={()=>onToggle('ALL')} style={{pointerEvents:'auto',padding:'4px 12px',borderRadius:4,border:'1px solid rgba(255,255,255,0.08)',cursor:'pointer',fontFamily:'inherit',fontSize:10,background:allActive?'rgba(255,255,255,0.12)':'transparent',color:allActive?'#e2e8f0':'#64748b'}}>ALL</button>
+    {CATS.map(cat=>{const on=activeCategories.has(cat);return(<button key={cat} onClick={()=>onToggle(cat)} style={{pointerEvents:'auto',padding:'4px 12px',borderRadius:4,border:'1px solid rgba(255,255,255,0.08)',cursor:'pointer',fontFamily:'inherit',fontSize:10,display:'flex',alignItems:'center',gap:4,background:on?'rgba(255,255,255,0.08)':'transparent',color:on?'#e2e8f0':'#475569',opacity:on?1:0.5}}><span style={{width:6,height:6,borderRadius:'50%',background:CC[cat]}}/>{CL[cat]}</button>);})}
   </div>);}
 
-function SearchDropdown({query,diseases,onSelect}){if(!query||query.length<1)return null;const q=query.toLowerCase(),matches=diseases.filter(d=>d.label.toLowerCase().includes(q)).slice(0,8);if(!matches.length)return null;return(<div style={{position:'absolute',top:40,right:260,zIndex:60,background:'rgba(10,16,30,0.96)',backdropFilter:'blur(16px)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,padding:4,fontFamily:'IBM Plex Mono,monospace',fontSize:11,minWidth:200}}>{matches.map(d=>(<div key={d.id} onClick={()=>onSelect(d)} style={{padding:'5px 8px',cursor:'pointer',borderRadius:4,color:'#e2e8f0',display:'flex',alignItems:'center',gap:6}} onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.06)'}} onMouseLeave={e=>{e.currentTarget.style.background='none'}}><span style={{width:6,height:6,borderRadius:'50%',background:CC[d.category]}}/>{d.label}</div>))}</div>);}
+function SearchDropdown({query,diseases,onSelect}){if(!query||query.length<1)return null;const q=query.toLowerCase(),matches=diseases.filter(d=>d.label.toLowerCase().includes(q)).slice(0,8);if(!matches.length)return null;const mob=isMob();return(<div style={{position:'absolute',top:mob?80:40,left:mob?12:undefined,right:mob?12:260,zIndex:60,background:'rgba(10,16,30,0.96)',backdropFilter:'blur(16px)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,padding:4,fontFamily:'IBM Plex Mono,monospace',fontSize:11,minWidth:mob?undefined:200}}>{matches.map(d=>(<div key={d.id} onClick={()=>onSelect(d)} style={{padding:'5px 8px',cursor:'pointer',borderRadius:4,color:'#e2e8f0',display:'flex',alignItems:'center',gap:6}} onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.06)'}} onMouseLeave={e=>{e.currentTarget.style.background='none'}}><span style={{width:6,height:6,borderRadius:'50%',background:CC[d.category]}}/>{d.label}</div>))}</div>);}
 
-function Legend({sizeMode,layoutMode}){return(<div style={{position:'absolute',bottom:0,left:0,right:0,zIndex:40,padding:'8px 16px',display:'flex',gap:16,fontFamily:'IBM Plex Mono,monospace',fontSize:9,color:'#475569',background:'linear-gradient(0deg,rgba(6,8,13,0.85) 0%,rgba(6,8,13,0) 100%)',pointerEvents:'none',transform:'translateY(100%)',animation:'slideUp 0.5s ease 2.1s forwards'}}><span>Node size = {sizeMode==='papers'?'publications':'mortality'}</span><span>Layout = {layoutMode==='category'?'Category clusters':'Network connections'}</span><span>Drag to rotate · Scroll to zoom · Right-drag to pan</span></div>);}
+function Legend({sizeMode,layoutMode}){const mob=isMob();return(<div style={{position:'absolute',bottom:0,left:0,right:0,zIndex:40,padding:mob?'8px 12px':'8px 16px',display:'flex',gap:mob?8:16,fontFamily:'IBM Plex Mono,monospace',fontSize:9,color:'#cbd5e1',background:'linear-gradient(0deg,rgba(6,8,13,0.85) 0%,rgba(6,8,13,0) 100%)',pointerEvents:'none',transform:'translateY(100%)',animation:'slideUp 0.5s ease 2.1s forwards'}}>{mob?<span>Tap to explore · Pinch to zoom</span>:(<><span>Node size = {sizeMode==='papers'?'publications':'mortality'}</span><span>Layout = {layoutMode==='category'?'Category clusters':'Network connections'}</span><span>Drag to rotate · Scroll to zoom · Right-drag to pan · Double-click to re-center</span></>)}<span style={{marginLeft:'auto'}}>Project by Russell J. Young</span></div>);}
 
 // ─── Story Mode Component ────────────────────────────────────────────────────
 function StoryChips({onChip,visible}){
-  if(!visible) return null;
+  if(!visible) return null;const mob=isMob();
   const chips=[
     {id:'researched',label:'Most Researched',desc:'See the biggest research spheres'},
     {id:'killers',label:'Biggest Killers',desc:'Diseases with highest mortality'},
-    {id:'mismatch',label:'See the Mismatch',desc:'The 130:1 research gap',highlight:true},
+    {id:'mismatch',label:'See the Mismatch',desc:'The 600:1 research gap',highlight:true},
   ];
-  return(<div style={{position:'absolute',bottom:50,left:'50%',transform:'translateX(-50%)',zIndex:45,display:'flex',gap:10,fontFamily:'IBM Plex Mono,monospace',opacity:0,animation:'fadeIn 0.5s ease 2.8s forwards'}}>
-    {chips.map(c=>(<button key={c.id} onClick={()=>onChip(c.id)} style={{padding:'8px 16px',borderRadius:8,border:c.highlight?'1px solid rgba(34,197,94,0.4)':'1px solid rgba(255,255,255,0.1)',background:'rgba(10,16,30,0.9)',backdropFilter:'blur(12px)',color:'#e2e8f0',fontSize:11,cursor:'pointer',fontFamily:'inherit',animation:c.highlight?'chipPulse 2s infinite':'none',transition:'background 0.2s'}} onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.08)'}} onMouseLeave={e=>{e.currentTarget.style.background='rgba(10,16,30,0.9)'}}>{c.label}</button>))}
+  return(<div style={{position:'absolute',bottom:mob?40:50,left:'50%',transform:'translateX(-50%)',zIndex:45,display:'flex',gap:mob?6:10,fontFamily:'IBM Plex Mono,monospace',opacity:0,animation:'fadeIn 0.5s ease 2.8s forwards'}}>
+    {chips.map(c=>(<button key={c.id} onClick={()=>onChip(c.id)} style={{padding:mob?'6px 10px':'8px 16px',borderRadius:8,border:c.highlight?'1px solid rgba(34,197,94,0.4)':'1px solid rgba(255,255,255,0.1)',background:'rgba(10,16,30,0.9)',backdropFilter:'blur(12px)',color:'#e2e8f0',fontSize:mob?10:11,cursor:'pointer',fontFamily:'inherit',animation:'none',transition:'background 0.2s'}} onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.08)'}} onMouseLeave={e=>{e.currentTarget.style.background='rgba(10,16,30,0.9)'}}>{c.label}</button>))}
   </div>);
 }
 
 function StoryCaption({text,onClick}){
-  if(!text) return null;
-  return(<div onClick={onClick} style={{position:'absolute',bottom:100,left:'50%',transform:'translateX(-50%)',zIndex:46,background:'rgba(10,16,30,0.9)',backdropFilter:'blur(12px)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:8,padding:'10px 20px',fontFamily:'IBM Plex Mono,monospace',fontSize:12,color:'#e2e8f0',whiteSpace:'nowrap',cursor:'pointer',opacity:0,animation:'fadeIn 0.4s ease forwards'}}>{text}<span style={{color:'#475569',fontSize:9,marginLeft:12}}>click to continue</span></div>);
+  if(!text) return null;const mob=isMob();
+  return(<div onClick={onClick} style={{position:'absolute',bottom:mob?85:100,left:'50%',transform:'translateX(-50%)',zIndex:46,background:'rgba(10,16,30,0.9)',backdropFilter:'blur(12px)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:8,padding:mob?'8px 14px':'10px 20px',fontFamily:'IBM Plex Mono,monospace',fontSize:mob?11:12,color:'#e2e8f0',whiteSpace:mob?'normal':'nowrap',maxWidth:mob?'90vw':'none',textAlign:'center',cursor:'pointer',opacity:0,animation:'fadeIn 0.4s ease forwards'}}>{text}<span style={{color:'#475569',fontSize:9,marginLeft:12}}>{mob?'tap':'click'} to continue</span></div>);
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -228,6 +293,7 @@ export default function MedGalaxy() {
   const frameRef=useRef(0),hoverIdxRef=useRef(-1);
   const sizeAnimRef=useRef(null),layoutAnimRef=useRef(null),curPosRef=useRef(null);
   const sizeModeRef=useRef('papers'); // mutable mirror for animation loop
+  const layoutModeRef=useRef('category');
   const idleRef=useRef(0); // frames since last interaction
   const sizeToggleRef=useRef(null);
   const glowSpritesRef=useRef(null);
@@ -243,14 +309,13 @@ export default function MedGalaxy() {
   const [layoutMode,setLayoutMode]=useState('category');
   const [storyVisible,setStoryVisible]=useState(true);
   const [storyCaption,setStoryCaption]=useState('');
-  const [ambientTip,setAmbientTip]=useState(null); // {disease, x, y, opacity}
-  const ambientTipRef=useRef({active:false,idx:-1,timer:150,fadeIn:true});
+  const labelsRef=useRef(null); // DOM container for node labels
 
   const selectDisease=useCallback((idx)=>{const data=dataRef.current;if(!data)return;setSelectedNode({index:idx,disease:data.diseases[idx]});idleRef.current=0;const p=curPosRef.current?curPosRef.current[idx]:catPosRef.current[idx];const ctrl=controlsRef.current;if(ctrl)flyRef.current={st:ctrl.target.clone(),et:new THREE.Vector3(p[0],p[1],p[2]),sr:ctrl.radius,er:Math.max(150,ctrl.radius*0.5),f:0,total:50};},[]);
   const deselect=useCallback(()=>{setSelectedNode(null);},[]);
   const toggleCat=useCallback((cat)=>{setActiveCats(prev=>{if(cat==='ALL')return prev.size===CATS.length?new Set():new Set(CATS);const next=new Set(prev);if(next.has(cat))next.delete(cat);else next.add(cat);return next;});},[]);
   const handleSize=useCallback((mode)=>{if(mode===sizeMode)return;setSizeMode(mode);sizeModeRef.current=mode;const data=dataRef.current;if(!data)return;sizeAnimRef.current={from:data.diseases.map(d=>sizeMode==='papers'?nR(d.papers):nRM(d.mortality)),to:data.diseases.map(d=>mode==='papers'?nR(d.papers):nRM(d.mortality)),f:0,total:60};},[sizeMode]);
-  const handleLayout=useCallback((mode)=>{if(mode===layoutMode)return;setLayoutMode(mode);const cp=catPosRef.current,np=netPosRef.current;if(!cp||!np)return;layoutAnimRef.current={from:curPosRef.current||(layoutMode==='category'?cp:np),to:mode==='category'?cp:np,f:0,total:60};},[layoutMode]);
+  const handleLayout=useCallback((mode)=>{if(mode===layoutMode)return;setLayoutMode(mode);layoutModeRef.current=mode;const cp=catPosRef.current,np=netPosRef.current;if(!cp||!np)return;layoutAnimRef.current={from:curPosRef.current||(layoutMode==='category'?cp:np),to:mode==='category'?cp:np,f:0,total:60};},[layoutMode]);
   const handleSearchSel=useCallback((disease)=>{const data=dataRef.current;if(!data)return;const idx=data.idMap[disease.id];if(idx!==undefined){selectDisease(idx);setSearchQuery('');}},[selectDisease]);
 
   // Story mode handler
@@ -269,7 +334,6 @@ export default function MedGalaxy() {
     if(s.id!==undefined){selectDisease(s.id);sr.nodeIdx=s.id;}
     else{sr.nodeIdx=-1;setStoryTip(null);}
     sr.step++;
-    sr.timer=setTimeout(advanceStory,5000);
   },[selectDisease]);
   const handleStory=useCallback((chipId)=>{
     const sr=storyRef.current;
@@ -279,8 +343,8 @@ export default function MedGalaxy() {
     const find=id=>data.idMap[id];
     const sequences={
       researched:[{id:find('breast-cancer'),caption:'Breast Cancer — 430K papers'},{id:find('lung-cancer'),caption:'Lung Cancer — 350K papers'},{id:find('leukemia'),caption:'Leukemia — 85K papers'},{caption:'These diseases have 100,000+ papers each.'}],
-      killers:[{id:find('heart-disease'),caption:'Heart Disease — 600K deaths/yr'},{id:find('malaria'),caption:'Malaria — 608K deaths/yr'},{id:find('tuberculosis'),caption:'Tuberculosis — 1.3M deaths/yr'},{caption:'These diseases kill hundreds of thousands per year.'}],
-      mismatch:[{id:find('breast-cancer'),caption:'Breast Cancer — 430K papers, 45K deaths'},{id:find('buruli-ulcer'),caption:'Buruli Ulcer — 3K papers, devastating disease'},{caption:'130× more papers, far fewer deaths. Now toggle Mortality →'}],
+      killers:[{id:find('heart-disease'),caption:'Heart Disease — 9M deaths/yr'},{id:find('stroke'),caption:'Stroke — 7.3M deaths/yr'},{id:find('copd'),caption:'COPD — 3.2M deaths/yr'},{caption:'These diseases kill millions per year.'}],
+      mismatch:[{id:find('multiple-sclerosis'),caption:'Multiple Sclerosis — 75K papers, 4,700 deaths/yr'},{id:find('copd'),caption:'COPD — 85K papers, 3.2M deaths/yr'},{caption:'Similar research, 687× more deaths. Now toggle Mortality →'}],
     };
     sr.seq=sequences[chipId];sr.step=0;sr.chipId=chipId;
     if(!sr.seq)return;
@@ -292,37 +356,42 @@ export default function MedGalaxy() {
     const tier=dTier(),cfg=TC[tier];
     const data=processData(diseasesData,connectionsData);dataRef.current=data;
     const {diseases,layoutEdges,displayEdges}=data;
-    const {catPos,netPos}=computeLayouts(diseases,layoutEdges);
+    const {catPos,netPos,debugStr,rawMax}=computeLayouts(diseases,layoutEdges);
     catPosRef.current=catPos;netPosRef.current=netPos;
     curPosRef.current=catPos.map(p=>[...p]);
 
+    // Camera distance scales with layout size
+    const camDist=rawMax*2.0;
     const scene=new THREE.Scene();
-    const camera=new THREE.PerspectiveCamera(60,container.clientWidth/container.clientHeight,1,5000);
-    camera.position.set(0,0,500);cameraRef.current=camera;
+    const camera=new THREE.PerspectiveCamera(60,container.clientWidth/container.clientHeight,1,camDist*4);
+    camera.position.set(0,0,camDist);cameraRef.current=camera;
     const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
     renderer.setSize(container.clientWidth,container.clientHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio,cfg.dprCap));
     renderer.setClearColor(0x000000,0);container.appendChild(renderer.domElement);rendererRef.current=renderer;
-    const controls=new OC(camera,renderer.domElement);controlsRef.current=controls;
+    const controls=new OC(camera,renderer.domElement);
+    controls.radius=camDist;controls.defaultRadius=camDist;
+    controlsRef.current=controls;
 
     // Lighting: lower ambient to preserve color saturation
     scene.add(new THREE.AmbientLight(0xffffff,0.3));
     const ptL=new THREE.PointLight(0xffffff,0.6,0);scene.add(ptL);
     const rimLight=new THREE.DirectionalLight(0x6699cc,0.3);rimLight.position.set(-200,150,-300);scene.add(rimLight);
-    // Fog for depth fade
-    scene.fog=new THREE.FogExp2(0x06080d,0.0014);
+    // No fog — keep nodes fully visible at all zoom levels
     // Tone mapping — lower exposure to prevent desaturation
     renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;
 
     const count=diseases.length;
-    // Plasma orb spheres — custom shader with 3D noise + Fresnel rim
-    const sGeo=new THREE.SphereGeometry(1,24,24),sMat=new THREE.ShaderMaterial({uniforms:{time:{value:0}},vertexShader:PLASMA_VERT,fragmentShader:PLASMA_FRAG,transparent:true});
+    // Plasma orb spheres — custom shader on desktop, simple material on mobile
+    const mobDevice=tier==='LOW';
+    const sGeo=new THREE.SphereGeometry(1,mobDevice?16:24,mobDevice?16:24);
+    const sMat=mobDevice?new THREE.MeshPhongMaterial({transparent:true,opacity:0.95,shininess:60}):new THREE.ShaderMaterial({uniforms:{time:{value:0}},vertexShader:PLASMA_VERT,fragmentShader:PLASMA_FRAG,transparent:true});
     const iMesh=new THREE.InstancedMesh(sGeo,sMat,count);
     const m4=new THREE.Matrix4(),v3=new THREE.Vector3(),q4=new THREE.Quaternion(),s3=new THREE.Vector3();
 
-    // Init nodes at scale 0 for entrance animation
+    // Init nodes at full scale — oscillation starts immediately
     const phases=[];
-    for(let i=0;i<count;i++){v3.set(...catPos[i]);s3.set(0.001,0.001,0.001);m4.compose(v3,q4,s3);iMesh.setMatrixAt(i,m4);iMesh.setColorAt(i,new THREE.Color(CC[diseases[i].category]));phases.push(Math.random()*Math.PI*2);}
+    for(let i=0;i<count;i++){v3.set(...catPos[i]);const r=nR(diseases[i].papers);s3.set(r,r,r);m4.compose(v3,q4,s3);iMesh.setMatrixAt(i,m4);iMesh.setColorAt(i,new THREE.Color(CC[diseases[i].category]));phases.push(Math.random()*Math.PI*2);}
     nodePhaseRef.current=phases;
     iMesh.instanceMatrix.needsUpdate=true;iMesh.instanceColor.needsUpdate=true;
     // Per-instance phase offset for unique plasma animation
@@ -339,7 +408,7 @@ export default function MedGalaxy() {
     const glowSet=new Set(sorted);
     for(let i=0;i<count;i++){
       if(!glowSet.has(i)){glowSprites.push(null);continue;}
-      const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:new THREE.Color(CC[diseases[i].category]),transparent:true,blending:THREE.AdditiveBlending,depthTest:false,depthWrite:false,opacity:0}));
+      const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:new THREE.Color(CC[diseases[i].category]),transparent:true,blending:THREE.AdditiveBlending,depthTest:false,depthWrite:false,opacity:0.35}));
       sp.position.set(...catPos[i]);
       const r=nR(diseases[i].papers)*3.5;sp.scale.set(r,r,1);
       glowGroup.add(sp);glowSprites.push(sp);
@@ -363,14 +432,14 @@ export default function MedGalaxy() {
     // Background particles
     if(cfg.particles>0){
       const pCount=cfg.particles,pPos=new Float32Array(pCount*3);
-      for(let i=0;i<pCount;i++){const th=Math.random()*Math.PI*2,ph=Math.acos(2*Math.random()-1),r=1800+Math.random()*400;pPos[i*3]=r*Math.sin(ph)*Math.cos(th);pPos[i*3+1]=r*Math.sin(ph)*Math.sin(th);pPos[i*3+2]=r*Math.cos(ph);}
+      const pR=camDist*4;for(let i=0;i<pCount;i++){const th=Math.random()*Math.PI*2,ph=Math.acos(2*Math.random()-1),r=pR+Math.random()*pR*0.3;pPos[i*3]=r*Math.sin(ph)*Math.cos(th);pPos[i*3+1]=r*Math.sin(ph)*Math.sin(th);pPos[i*3+2]=r*Math.cos(ph);}
       const pGeo2=new THREE.BufferGeometry();pGeo2.setAttribute('position',new THREE.BufferAttribute(pPos,3));
       const pMat2=new THREE.PointsMaterial({color:0x334155,size:1.5,transparent:true,opacity:0.6});
       const particles=new THREE.Points(pGeo2,pMat2);scene.add(particles);
     }
 
     // Mouse
-    const raycaster=new THREE.Raycaster(),mouse=new THREE.Vector2();
+    const raycaster=new THREE.Raycaster(),mouse=new THREE.Vector2(-9999,-9999);
     function onMM(e){const rc=renderer.domElement.getBoundingClientRect();mouse.x=((e.clientX-rc.left)/rc.width)*2-1;mouse.y=-((e.clientY-rc.top)/rc.height)*2+1;setTipPos({x:e.clientX,y:e.clientY});idleRef.current=0;}
     function onMD(e){mdRef.current={x:e.clientX,y:e.clientY};idleRef.current=0;}
     function onMU(e){const dx=e.clientX-mdRef.current.x,dy=e.clientY-mdRef.current.y;if(Math.sqrt(dx*dx+dy*dy)<5){if(hoverIdxRef.current>=0)selectDisease(hoverIdxRef.current);else deselect();}}
@@ -382,72 +451,40 @@ export default function MedGalaxy() {
     }
     renderer.domElement.addEventListener('mousemove',onMM);renderer.domElement.addEventListener('mousedown',onMD);renderer.domElement.addEventListener('mouseup',onMU);renderer.domElement.addEventListener('dblclick',onDblClick);
 
-    // Entrance state
-    const entrance={phase:0,f:0,nodesDone:0};
+    // Touch: tap-to-select, double-tap-to-recenter
+    const mob=isMob();
+    let _tapStart={x:0,y:0,t:0},_lastTap=0;
+    function onTouchStart(e){if(e.touches.length===1){_tapStart={x:e.touches[0].clientX,y:e.touches[0].clientY,t:Date.now()};idleRef.current=0;}else{idleRef.current=0;}}
+    function onTouchEnd(e){if(e.touches.length>0)return;
+      const dt=Date.now()-_tapStart.t;if(dt>300)return; // not a tap
+      const cx=_tapStart.x,cy=_tapStart.y;
+      // Double-tap detection
+      const now=Date.now();
+      if(now-_lastTap<350){_lastTap=0;idleRef.current=0;deselect();
+        flyRef.current={st:controls.target.clone(),et:new THREE.Vector3(0,0,0),sr:controls.radius,er:controls.defaultRadius,f:0,total:50};
+        controls.theta=controls.defaultTheta;controls.phi=controls.defaultPhi;controls.tV=0;controls.pV=0;controls.pnX=0;controls.pnY=0;return;}
+      _lastTap=now;
+      // Single tap: raycast at touch position
+      const rc=renderer.domElement.getBoundingClientRect();
+      mouse.x=((cx-rc.left)/rc.width)*2-1;mouse.y=-((cy-rc.top)/rc.height)*2+1;
+      raycaster.setFromCamera(mouse,camera);const hits=raycaster.intersectObjects(proxies);
+      if(hits.length>0){selectDisease(hits[0].object.userData.idx);}else{deselect();}
+      mouse.x=-9999;mouse.y=-9999; // reset so continuous raycast doesn't fire
+    }
+    function onTouchMove2(){idleRef.current=0;}
+    renderer.domElement.addEventListener('touchstart',onTouchStart,{passive:true});renderer.domElement.addEventListener('touchmove',onTouchMove2,{passive:true});renderer.domElement.addEventListener('touchend',onTouchEnd,{passive:true});
+
+    // Start oscillation immediately — no entrance stagger
+    const entrance={phase:2,f:0,nodesDone:count};
+    controls.tV=0.0006; // gentle initial rotation
     let alive=true;
     function animate(){
       if(!alive)return;
       const frame=++frameRef.current;
       idleRef.current++;
 
-      // ── Entrance choreography ──
-      if(entrance.phase===0){
-        // Phase 0: slow auto-pan + stagger nodes in
-        controls.tV=0.0008; // gentle rotation
-        entrance.f++;
-        const nodesPerFrame=Math.ceil(count/90); // ~90 frames to show all
-        for(let n=0;n<nodesPerFrame&&entrance.nodesDone<count;n++){
-          const i=entrance.nodesDone;
-          const r=nR(diseases[i].papers);
-          v3.set(...catPos[i]);s3.set(r,r,r);m4.compose(v3,q4,s3);iMesh.setMatrixAt(i,m4);
-          // Glow fade in
-          if(glowSprites[i]) glowSprites[i].material.opacity=0.35;
-          entrance.nodesDone++;
-        }
-        iMesh.instanceMatrix.needsUpdate=true;
-        if(entrance.nodesDone>=count){entrance.phase=1;entrance.f=0;}
-      } else if(entrance.phase===1){
-        // Phase 1: let UI slide in (CSS handles it), then stop auto-pan
-        entrance.f++;
-        if(entrance.f>60){controls.tV=0;entrance.phase=2;} // stop rotation after ~1s
-      }
-
-      // ── Auto-rotate when idle (after entrance) ──
-      if(entrance.phase===2&&idleRef.current>300){ // 5s at 60fps
-        controls.tV=0.0006;
-      }
-      // ── Ambient tooltip twinkling (starts right after entrance) ──
-      if(entrance.phase>=1&&idleRef.current>60){
-        const at=ambientTipRef.current;
-        at.timer++;
-        if(!at.active&&at.timer>180){ // 3s between tooltips
-          at.active=true;at.timer=0;at.fadeIn=true;
-          at.idx=Math.floor(Math.random()*count);
-          const pos=curPosRef.current[at.idx];
-          const vp=new THREE.Vector3(pos[0],pos[1],pos[2]).project(camera);
-          const rc=renderer.domElement.getBoundingClientRect();
-          const sx=(vp.x*0.5+0.5)*rc.width+rc.left;
-          const sy=(-vp.y*0.5+0.5)*rc.height+rc.top;
-          if(sx>0&&sx<rc.width&&sy>0&&sy<rc.height){
-            setAmbientTip({disease:diseases[at.idx],x:sx,y:sy,opacity:0});
-          } else {at.active=false;at.timer=120;}
-        } else if(at.active){
-          if(at.fadeIn){
-            const o=Math.min(1,at.timer/30);
-            setAmbientTip(prev=>prev?{...prev,opacity:o}:null);
-            if(at.timer>=90){at.fadeIn=false;at.timer=0;} // hold ~1s then fade out
-          } else {
-            const o=Math.max(0,1-at.timer/30);
-            setAmbientTip(prev=>prev?{...prev,opacity:o}:null);
-            if(at.timer>=30){at.active=false;at.timer=0;setAmbientTip(null);}
-          }
-        }
-      } else if(idleRef.current<=60){
-        // User interacting — clear ambient tooltip
-        const at=ambientTipRef.current;
-        if(at.active){at.active=false;at.timer=0;setAmbientTip(null);}
-        else at.timer=0;
-      }
+      // ── Auto-rotate when idle — only after user momentum fully decays ──
+      if(idleRef.current>5&&Math.abs(controls.tV)<0.0004&&Math.abs(controls.pV)<0.0004) controls.tV=0.0006;
 
       // Layout lerp
       const la=layoutAnimRef.current;
@@ -467,12 +504,37 @@ export default function MedGalaxy() {
         for(let i=0;i<count;i++){const r=sa.from[i]+(sa.to[i]-sa.from[i])*ease;v3.set(cur[i][0],cur[i][1],cur[i][2]);s3.set(r,r,r);m4.compose(v3,q4,s3);iMesh.setMatrixAt(i,m4);proxies[i].scale.set(Math.max(r,1.5),Math.max(r,1.5),Math.max(r,1.5));if(glowSprites[i]){const gr=r*3;glowSprites[i].scale.set(gr,gr,1);}}
         iMesh.instanceMatrix.needsUpdate=true;if(t>=1)sizeAnimRef.current=null;}
 
-      // Plasma animation — update time uniform (replaces pulse)
-      sMat.uniforms.time.value=frame*0.016;
+      // Plasma animation — update time uniform (desktop only)
+      if(sMat.uniforms)sMat.uniforms.time.value=frame*0.016;
 
       // Fly-to
       const fly=flyRef.current;
       if(fly){fly.f++;const t=Math.min(fly.f/fly.total,1),ease=1-Math.pow(1-t,3);controls.target.lerpVectors(fly.st,fly.et,ease);controls.radius=fly.sr+(fly.er-fly.sr)*ease;if(t>=1)flyRef.current=null;}
+
+      // ── Idle drift: sinusoidal breathing on node positions (single-pass) ──
+      if(!layoutAnimRef.current&&!sizeAnimRef.current){
+        const t=frame*0.016;
+        const cur=curPosRef.current;
+        const src=layoutModeRef.current==='network'?netPosRef.current:catPosRef.current;
+        if(src){
+          const ph_arr=nodePhaseRef.current;
+          const ry=t*0.15;q4.set(0,Math.sin(ry*0.5),0,Math.cos(ry*0.5));
+          for(let i=0;i<count;i++){
+            const ph=ph_arr[i];
+            const px=src[i][0]+Math.sin(t*0.3+ph)*12;
+            const py=src[i][1]+Math.cos(t*0.25+ph*1.3)*12;
+            const pz=src[i][2]+Math.sin(t*0.2+ph*0.7)*10;
+            cur[i][0]=px;cur[i][1]=py;cur[i][2]=pz;
+            v3.set(px,py,pz);
+            const r=proxies[i].scale.x;s3.set(r,r,r);
+            m4.compose(v3,q4,s3);iMesh.setMatrixAt(i,m4);
+            proxies[i].position.set(px,py,pz);
+            if(glowSprites[i])glowSprites[i].position.set(px,py,pz);
+          }
+          iMesh.instanceMatrix.needsUpdate=true;
+        }
+        q4.set(0,0,0,1);
+      }
 
       controls.update();ptL.position.copy(camera.position);
 
@@ -494,7 +556,39 @@ export default function MedGalaxy() {
         const ni=hits.length>0?hits[0].object.userData.idx:-1;
         if(ni!==hoverIdxRef.current){hoverIdxRef.current=ni;if(ni>=0){setHoveredNode({index:ni,disease:diseases[ni]});setCursor('pointer');}else{setHoveredNode(null);setCursor('default');}}
       }
-      renderer.render(scene,camera);requestAnimationFrame(animate);
+      renderer.render(scene,camera);
+
+      // ── Node labels: project all positions to screen, update DOM directly ──
+      const lc=labelsRef.current;
+      if(lc&&entrance.phase>=1){
+        const rc=renderer.domElement.getBoundingClientRect();
+        const cur=curPosRef.current;
+        const hIdx=hoverIdxRef.current;
+        const kids=lc.children;
+        const pv=new THREE.Vector3();
+        for(let i=0;i<count;i++){
+          const el=kids[i];if(!el)continue;
+          pv.set(cur[i][0],cur[i][1],cur[i][2]).project(camera);
+          // behind camera or off-screen → hide
+          if(pv.z>1||pv.z<-1){el.style.display='none';continue;}
+          let sx=(pv.x*0.5+0.5)*rc.width;
+          const sy=(-pv.y*0.5+0.5)*rc.height;
+          // clamp so labels don't get cut off at screen edges
+          sx=Math.max(40,Math.min(rc.width-40,sx));
+          const nodeR=nR(diseases[i].papers);
+          const screenR=nodeR*rc.height/(2*controls.radius*Math.tan(Math.PI/6));
+          // hide only very tiny labels when zoomed way out
+          if(screenR<0.3&&i!==hIdx){el.style.display='none';continue;}
+          el.style.display='';
+          el.style.left=sx+'px';
+          el.style.top=(sy-Math.max(screenR*1.2,4)-12)+'px';
+          el.style.opacity=i===hIdx?1:0.75;
+          // expanded on hover
+          if(i===hIdx){el.classList.add('lbl-hover');}else{el.classList.remove('lbl-hover');}
+        }
+      }
+
+      requestAnimationFrame(animate);
     }
     animate();
 
@@ -504,7 +598,7 @@ export default function MedGalaxy() {
     function onKey(e){if(e.key==='Escape'){setStoryVisible(false);setStoryCaption('');}}
     window.addEventListener('keydown',onKey);
 
-    return()=>{alive=false;ro.disconnect();controls.dispose();window.removeEventListener('keydown',onKey);renderer.domElement.removeEventListener('mousemove',onMM);renderer.domElement.removeEventListener('mousedown',onMD);renderer.domElement.removeEventListener('mouseup',onMU);renderer.domElement.removeEventListener('dblclick',onDblClick);sGeo.dispose();sMat.dispose();pGeo.dispose();pMat.dispose();eGeo.dispose();eMat.dispose();iMesh.dispose();glowTex.dispose();renderer.dispose();if(container.contains(renderer.domElement))container.removeChild(renderer.domElement);};
+    return()=>{alive=false;ro.disconnect();controls.dispose();window.removeEventListener('keydown',onKey);renderer.domElement.removeEventListener('mousemove',onMM);renderer.domElement.removeEventListener('mousedown',onMD);renderer.domElement.removeEventListener('mouseup',onMU);renderer.domElement.removeEventListener('dblclick',onDblClick);renderer.domElement.removeEventListener('touchstart',onTouchStart);renderer.domElement.removeEventListener('touchmove',onTouchMove2);renderer.domElement.removeEventListener('touchend',onTouchEnd);sGeo.dispose();sMat.dispose();pGeo.dispose();pMat.dispose();eGeo.dispose();eMat.dispose();iMesh.dispose();glowTex.dispose();renderer.dispose();if(container.contains(renderer.domElement))container.removeChild(renderer.domElement);};
   },[selectDisease,deselect]);
 
   // Highlight effect
@@ -524,8 +618,7 @@ export default function MedGalaxy() {
       iMesh.setColorAt(i,c);
       // Glow brightness
       if(glows&&glows[i]){glows[i].material.opacity=(!catVis?0:aIdx>=0?(i===aIdx||nbrs?.has(i)?0.5:0.05):0.35);}
-      if(!catVis&&!sizeAnimRef.current&&!layoutAnimRef.current){const m=new THREE.Matrix4();iMesh.getMatrixAt(i,m);const p=new THREE.Vector3(),q=new THREE.Quaternion(),s=new THREE.Vector3();m.decompose(p,q,s);s.set(0.001,0.001,0.001);m.compose(p,q,s);iMesh.setMatrixAt(i,m);}
-      else if(catVis&&!sizeAnimRef.current&&!layoutAnimRef.current){const cur=curPosRef.current;if(cur){const r=sizeMode==='papers'?nR(d.papers):nRM(d.mortality);const p2=new THREE.Vector3(cur[i][0],cur[i][1],cur[i][2]);const s2=new THREE.Vector3(r,r,r);const m2=new THREE.Matrix4();m2.compose(p2,new THREE.Quaternion(),s2);iMesh.setMatrixAt(i,m2);}}
+      if(!catVis){const m=new THREE.Matrix4();iMesh.getMatrixAt(i,m);const p=new THREE.Vector3(),q=new THREE.Quaternion(),s=new THREE.Vector3();m.decompose(p,q,s);s.set(0.001,0.001,0.001);m.compose(p,q,s);iMesh.setMatrixAt(i,m);}
     }
     iMesh.instanceColor.needsUpdate=true;iMesh.instanceMatrix.needsUpdate=true;
 
@@ -542,7 +635,7 @@ export default function MedGalaxy() {
   },[hoveredNode,selectedNode,activeCats,searchQuery,sizeMode]);
 
   return(
-    <div ref={containerRef} style={{width:'100%',height:'100%',position:'relative',overflow:'hidden',cursor}}>
+    <div ref={containerRef} style={{width:'100%',height:'100%',position:'relative',overflow:'hidden',cursor,touchAction:'none'}}>
       <Header diseaseCount={diseasesData.length} edgeCount={connectionsData.length} searchQuery={searchQuery} onSearchChange={setSearchQuery} sizeMode={sizeMode} onSizeToggle={handleSize} layoutMode={layoutMode} onLayoutToggle={handleLayout} sizeToggleRef={sizeToggleRef}/>
       <FilterBar activeCategories={activeCats} onToggle={toggleCat}/>
       <Legend sizeMode={sizeMode} layoutMode={layoutMode}/>
@@ -550,7 +643,10 @@ export default function MedGalaxy() {
       {hoveredNode&&(!selectedNode||hoveredNode.index!==selectedNode.index)&&(<Tooltip disease={hoveredNode.disease} connCount={dataRef.current?.connCounts.get(hoveredNode.index)||0} x={tipPos.x} y={tipPos.y}/>)}
       {selectedNode&&dataRef.current&&(<Sidebar disease={selectedNode.disease} data={dataRef.current} onSelect={selectDisease} onClose={deselect}/>)}
       {storyTip&&(<Tooltip disease={storyTip.disease} connCount={storyTip.connCount} x={storyTip.x} y={storyTip.y}/>)}
-      {ambientTip&&!hoveredNode&&!selectedNode&&(<div style={{position:'fixed',left:ambientTip.x+15,top:ambientTip.y+15,pointerEvents:'none',zIndex:90,background:'rgba(10,16,30,0.94)',backdropFilter:'blur(16px)',maxWidth:240,border:'1px solid rgba(255,255,255,0.08)',borderRadius:8,padding:'8px 12px',fontFamily:'IBM Plex Mono,monospace',fontSize:11,color:'#e2e8f0',opacity:ambientTip.opacity,transition:'opacity 0.1s'}}><div style={{fontWeight:600,fontSize:12,marginBottom:3}}>{ambientTip.disease.label}</div><span style={{fontSize:9,padding:'1px 6px',borderRadius:4,background:CC[ambientTip.disease.category]+'22',color:CC[ambientTip.disease.category]}}>{CL[ambientTip.disease.category]}</span><div style={{color:'#94a3b8',marginTop:4}}>{fmt(ambientTip.disease.papers)} papers</div></div>)}
+      <div ref={labelsRef} style={{position:'absolute',top:0,left:0,width:'100%',height:'100%',pointerEvents:'none',zIndex:30,overflow:'hidden'}}>
+        {diseasesData.map((d,i)=>(<div key={d.id} className="node-lbl" style={{position:'absolute',transform:'translateX(-50%)',fontFamily:'IBM Plex Mono,monospace',fontSize:isMob()?7:9,color:CC[d.category],textAlign:'center',whiteSpace:'nowrap',textShadow:'0 0 4px rgba(0,0,0,0.8),0 1px 2px rgba(0,0,0,0.9)'}}><span className="lbl-name">{d.label}</span>{!isMob()&&<span className="lbl-detail" style={{display:'none',color:'#94a3b8',fontSize:8}}><br/>{fmt(d.papers)} papers</span>}</div>))}
+      </div>
+      <style>{`.node-lbl{transition:opacity 0.15s}.lbl-hover .lbl-name{font-size:11px!important;font-weight:600;color:#e2e8f0!important}.lbl-hover .lbl-detail{display:inline!important}`}</style>
       <StoryChips onChip={handleStory} visible={storyVisible}/>
       {storyCaption&&<StoryCaption text={storyCaption} onClick={advanceStory}/>}
     </div>

@@ -8,7 +8,18 @@
     "trend": 12,
     "mortality": 40000,
     "fundingGap": "high",
-    "yearlyPapers": [1800, 2100, 2400, 2600, 2900, 3200, 3500, 3800, 4100, 4500]
+    "yearlyPapers": [
+      1800,
+      2100,
+      2400,
+      2600,
+      2900,
+      3200,
+      3500,
+      3800,
+      4100,
+      4500
+    ]
   },
   {
     "id": "malaria",
@@ -19,7 +30,18 @@
     "trend": 5,
     "mortality": 608000,
     "fundingGap": "high",
-    "yearlyPapers": [7200, 7600, 8000, 8400, 8800, 9200, 9500, 9800, 10200, 10600]
+    "yearlyPapers": [
+      7200,
+      7600,
+      8000,
+      8400,
+      8800,
+      9200,
+      9500,
+      9800,
+      10200,
+      10600
+    ]
   },
   {
     "id": "chagas",
@@ -30,7 +52,18 @@
     "trend": 6,
     "mortality": 12000,
     "fundingGap": "high",
-    "yearlyPapers": [1000, 1100, 1200, 1250, 1350, 1400, 1500, 1600, 1650, 1750]
+    "yearlyPapers": [
+      1000,
+      1100,
+      1200,
+      1250,
+      1350,
+      1400,
+      1500,
+      1600,
+      1650,
+      1750
+    ]
   },
   {
     "id": "leprosy",
@@ -41,7 +74,18 @@
     "trend": 2,
     "mortality": 0,
     "fundingGap": "medium",
-    "yearlyPapers": [1200, 1250, 1300, 1350, 1400, 1400, 1450, 1480, 1500, 1520]
+    "yearlyPapers": [
+      1200,
+      1250,
+      1300,
+      1350,
+      1400,
+      1400,
+      1450,
+      1480,
+      1500,
+      1520
+    ]
   },
   {
     "id": "buruli-ulcer",
@@ -52,7 +96,18 @@
     "trend": 4,
     "mortality": 0,
     "fundingGap": "high",
-    "yearlyPapers": [200, 220, 240, 260, 280, 300, 320, 340, 360, 380]
+    "yearlyPapers": [
+      200,
+      220,
+      240,
+      260,
+      280,
+      300,
+      320,
+      340,
+      360,
+      380
+    ]
   },
   {
     "id": "schistosomiasis",
@@ -61,9 +116,20 @@
     "description": "Parasitic disease caused by blood flukes acquired through contaminated freshwater.",
     "papers": 22000,
     "trend": 5,
-    "mortality": 11000,
+    "mortality": 13000,
     "fundingGap": "high",
-    "yearlyPapers": [1600, 1700, 1800, 1900, 2000, 2100, 2200, 2400, 2500, 2600]
+    "yearlyPapers": [
+      1600,
+      1700,
+      1800,
+      1900,
+      2000,
+      2100,
+      2200,
+      2400,
+      2500,
+      2600
+    ]
   },
   {
     "id": "leishmaniasis",
@@ -74,7 +140,18 @@
     "trend": 7,
     "mortality": 26000,
     "fundingGap": "high",
-    "yearlyPapers": [1700, 1850, 2000, 2150, 2300, 2500, 2700, 2900, 3100, 3300]
+    "yearlyPapers": [
+      1700,
+      1850,
+      2000,
+      2150,
+      2300,
+      2500,
+      2700,
+      2900,
+      3100,
+      3300
+    ]
   },
   {
     "id": "sleeping-sickness",
@@ -83,9 +160,20 @@
     "description": "Tsetse fly-transmitted parasitic disease affecting the central nervous system.",
     "papers": 6500,
     "trend": -2,
-    "mortality": 3500,
+    "mortality": 500,
     "fundingGap": "high",
-    "yearlyPapers": [550, 560, 580, 600, 620, 610, 590, 580, 570, 560]
+    "yearlyPapers": [
+      550,
+      560,
+      580,
+      600,
+      620,
+      610,
+      590,
+      580,
+      570,
+      560
+    ]
   },
   {
     "id": "river-blindness",
@@ -96,7 +184,18 @@
     "trend": 3,
     "mortality": 0,
     "fundingGap": "high",
-    "yearlyPapers": [580, 600, 620, 650, 680, 700, 720, 750, 780, 800]
+    "yearlyPapers": [
+      580,
+      600,
+      620,
+      650,
+      680,
+      700,
+      720,
+      750,
+      780,
+      800
+    ]
   },
   {
     "id": "lymphatic-filariasis",
@@ -107,7 +206,18 @@
     "trend": 4,
     "mortality": 0,
     "fundingGap": "high",
-    "yearlyPapers": [520, 550, 580, 610, 640, 670, 710, 750, 790, 830]
+    "yearlyPapers": [
+      520,
+      550,
+      580,
+      610,
+      640,
+      670,
+      710,
+      750,
+      790,
+      830
+    ]
   },
   {
     "id": "trachoma",
@@ -118,7 +228,18 @@
     "trend": 1,
     "mortality": 0,
     "fundingGap": "high",
-    "yearlyPapers": [420, 430, 440, 450, 460, 470, 480, 490, 500, 510]
+    "yearlyPapers": [
+      420,
+      430,
+      440,
+      450,
+      460,
+      470,
+      480,
+      490,
+      500,
+      510
+    ]
   },
   {
     "id": "guinea-worm",
@@ -129,7 +250,18 @@
     "trend": -5,
     "mortality": 0,
     "fundingGap": "medium",
-    "yearlyPapers": [160, 155, 150, 145, 140, 135, 130, 125, 120, 115]
+    "yearlyPapers": [
+      160,
+      155,
+      150,
+      145,
+      140,
+      135,
+      130,
+      125,
+      120,
+      115
+    ]
   },
   {
     "id": "rabies",
@@ -140,7 +272,18 @@
     "trend": 6,
     "mortality": 59000,
     "fundingGap": "high",
-    "yearlyPapers": [1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900, 2000, 2100]
+    "yearlyPapers": [
+      1200,
+      1300,
+      1400,
+      1500,
+      1600,
+      1700,
+      1800,
+      1900,
+      2000,
+      2100
+    ]
   },
   {
     "id": "yaws",
@@ -151,7 +294,18 @@
     "trend": 3,
     "mortality": 0,
     "fundingGap": "high",
-    "yearlyPapers": [140, 150, 160, 165, 170, 180, 190, 200, 210, 220]
+    "yearlyPapers": [
+      140,
+      150,
+      160,
+      165,
+      170,
+      180,
+      190,
+      200,
+      210,
+      220
+    ]
   },
   {
     "id": "chikungunya",
@@ -162,7 +316,18 @@
     "trend": 10,
     "mortality": 500,
     "fundingGap": "medium",
-    "yearlyPapers": [600, 800, 1000, 1100, 1200, 1300, 1400, 1500, 1600, 1800]
+    "yearlyPapers": [
+      600,
+      800,
+      1000,
+      1100,
+      1200,
+      1300,
+      1400,
+      1500,
+      1600,
+      1800
+    ]
   },
   {
     "id": "leptospirosis",
@@ -173,7 +338,18 @@
     "trend": 8,
     "mortality": 58900,
     "fundingGap": "high",
-    "yearlyPapers": [700, 780, 860, 950, 1050, 1150, 1250, 1350, 1450, 1550]
+    "yearlyPapers": [
+      700,
+      780,
+      860,
+      950,
+      1050,
+      1150,
+      1250,
+      1350,
+      1450,
+      1550
+    ]
   },
   {
     "id": "mycetoma",
@@ -184,7 +360,18 @@
     "trend": 5,
     "mortality": 0,
     "fundingGap": "high",
-    "yearlyPapers": [160, 175, 190, 205, 220, 240, 260, 280, 300, 320]
+    "yearlyPapers": [
+      160,
+      175,
+      190,
+      205,
+      220,
+      240,
+      260,
+      280,
+      300,
+      320
+    ]
   },
   {
     "id": "echinococcosis",
@@ -193,9 +380,20 @@
     "description": "Parasitic cyst-forming disease caused by Echinococcus tapeworms.",
     "papers": 9000,
     "trend": 6,
-    "mortality": 2000,
+    "mortality": 1400,
     "fundingGap": "high",
-    "yearlyPapers": [600, 650, 700, 750, 800, 860, 920, 990, 1050, 1120]
+    "yearlyPapers": [
+      600,
+      650,
+      700,
+      750,
+      800,
+      860,
+      920,
+      990,
+      1050,
+      1120
+    ]
   },
   {
     "id": "fascioliasis",
@@ -206,7 +404,18 @@
     "trend": 4,
     "mortality": 0,
     "fundingGap": "high",
-    "yearlyPapers": [300, 320, 340, 360, 380, 400, 430, 460, 490, 520]
+    "yearlyPapers": [
+      300,
+      320,
+      340,
+      360,
+      380,
+      400,
+      430,
+      460,
+      490,
+      520
+    ]
   },
   {
     "id": "soil-transmitted-helminths",
@@ -215,9 +424,20 @@
     "description": "Intestinal worm infections affecting over a billion people in developing regions.",
     "papers": 12000,
     "trend": 5,
-    "mortality": 3000,
+    "mortality": 3500,
     "fundingGap": "high",
-    "yearlyPapers": [800, 860, 920, 980, 1050, 1120, 1200, 1280, 1360, 1440]
+    "yearlyPapers": [
+      800,
+      860,
+      920,
+      980,
+      1050,
+      1120,
+      1200,
+      1280,
+      1360,
+      1440
+    ]
   },
   {
     "id": "breast-cancer",
@@ -226,9 +446,20 @@
     "description": "Most commonly diagnosed cancer worldwide, arising from breast tissue cells.",
     "papers": 430000,
     "trend": 4,
-    "mortality": 45000,
+    "mortality": 666000,
     "fundingGap": "low",
-    "yearlyPapers": [28000, 30000, 32000, 34000, 36000, 38000, 40000, 42000, 44000, 46000]
+    "yearlyPapers": [
+      28000,
+      30000,
+      32000,
+      34000,
+      36000,
+      38000,
+      40000,
+      42000,
+      44000,
+      46000
+    ]
   },
   {
     "id": "lung-cancer",
@@ -237,9 +468,20 @@
     "description": "Leading cause of cancer death, strongly linked to smoking and air pollution.",
     "papers": 350000,
     "trend": 5,
-    "mortality": 127000,
+    "mortality": 1817000,
     "fundingGap": "medium",
-    "yearlyPapers": [23000, 25000, 27000, 29000, 31000, 33000, 35000, 37000, 39000, 41000]
+    "yearlyPapers": [
+      23000,
+      25000,
+      27000,
+      29000,
+      31000,
+      33000,
+      35000,
+      37000,
+      39000,
+      41000
+    ]
   },
   {
     "id": "colon-cancer",
@@ -248,9 +490,20 @@
     "description": "Cancer of the large intestine, highly treatable when detected early via screening.",
     "papers": 120000,
     "trend": 6,
-    "mortality": 52000,
+    "mortality": 904000,
     "fundingGap": "medium",
-    "yearlyPapers": [8500, 9200, 9900, 10700, 11500, 12400, 13300, 14300, 15200, 16100]
+    "yearlyPapers": [
+      8500,
+      9200,
+      9900,
+      10700,
+      11500,
+      12400,
+      13300,
+      14300,
+      15200,
+      16100
+    ]
   },
   {
     "id": "pancreatic-cancer",
@@ -259,9 +512,20 @@
     "description": "Aggressive cancer with low survival rates due to late-stage diagnosis.",
     "papers": 68000,
     "trend": 8,
-    "mortality": 47000,
+    "mortality": 467000,
     "fundingGap": "high",
-    "yearlyPapers": [4200, 4700, 5200, 5800, 6400, 7100, 7800, 8600, 9400, 10200]
+    "yearlyPapers": [
+      4200,
+      4700,
+      5200,
+      5800,
+      6400,
+      7100,
+      7800,
+      8600,
+      9400,
+      10200
+    ]
   },
   {
     "id": "leukemia",
@@ -270,9 +534,20 @@
     "description": "Blood cancer affecting white blood cells in bone marrow and lymphatic system.",
     "papers": 160000,
     "trend": 4,
-    "mortality": 24000,
+    "mortality": 305000,
     "fundingGap": "low",
-    "yearlyPapers": [11000, 11800, 12600, 13400, 14200, 15000, 15800, 16600, 17400, 18200]
+    "yearlyPapers": [
+      11000,
+      11800,
+      12600,
+      13400,
+      14200,
+      15000,
+      15800,
+      16600,
+      17400,
+      18200
+    ]
   },
   {
     "id": "lymphoma",
@@ -281,9 +556,20 @@
     "description": "Cancer of the lymphatic system including Hodgkin and non-Hodgkin types.",
     "papers": 130000,
     "trend": 4,
-    "mortality": 21000,
+    "mortality": 251000,
     "fundingGap": "low",
-    "yearlyPapers": [9000, 9600, 10200, 10900, 11600, 12300, 13000, 13700, 14400, 15100]
+    "yearlyPapers": [
+      9000,
+      9600,
+      10200,
+      10900,
+      11600,
+      12300,
+      13000,
+      13700,
+      14400,
+      15100
+    ]
   },
   {
     "id": "prostate-cancer",
@@ -292,9 +578,20 @@
     "description": "Most common cancer in men, often slow-growing but variable in aggressiveness.",
     "papers": 180000,
     "trend": 3,
-    "mortality": 34000,
+    "mortality": 397000,
     "fundingGap": "low",
-    "yearlyPapers": [13000, 13600, 14200, 14800, 15500, 16200, 16900, 17600, 18300, 19000]
+    "yearlyPapers": [
+      13000,
+      13600,
+      14200,
+      14800,
+      15500,
+      16200,
+      16900,
+      17600,
+      18300,
+      19000
+    ]
   },
   {
     "id": "ovarian-cancer",
@@ -303,9 +600,20 @@
     "description": "Gynecological cancer often diagnosed at advanced stages with poor prognosis.",
     "papers": 65000,
     "trend": 5,
-    "mortality": 14000,
+    "mortality": 207000,
     "fundingGap": "medium",
-    "yearlyPapers": [4500, 4900, 5300, 5700, 6100, 6500, 7000, 7500, 8000, 8500]
+    "yearlyPapers": [
+      4500,
+      4900,
+      5300,
+      5700,
+      6100,
+      6500,
+      7000,
+      7500,
+      8000,
+      8500
+    ]
   },
   {
     "id": "melanoma",
@@ -314,9 +622,20 @@
     "description": "Deadliest form of skin cancer, strongly associated with UV radiation exposure.",
     "papers": 85000,
     "trend": 6,
-    "mortality": 8000,
+    "mortality": 59000,
     "fundingGap": "low",
-    "yearlyPapers": [5500, 6000, 6500, 7100, 7700, 8300, 9000, 9700, 10400, 11200]
+    "yearlyPapers": [
+      5500,
+      6000,
+      6500,
+      7100,
+      7700,
+      8300,
+      9000,
+      9700,
+      10400,
+      11200
+    ]
   },
   {
     "id": "liver-cancer",
@@ -325,9 +644,20 @@
     "description": "Cancer closely linked to hepatitis infections and chronic liver disease.",
     "papers": 95000,
     "trend": 7,
-    "mortality": 30000,
+    "mortality": 759000,
     "fundingGap": "medium",
-    "yearlyPapers": [6000, 6600, 7200, 7900, 8700, 9500, 10400, 11400, 12400, 13500]
+    "yearlyPapers": [
+      6000,
+      6600,
+      7200,
+      7900,
+      8700,
+      9500,
+      10400,
+      11400,
+      12400,
+      13500
+    ]
   },
   {
     "id": "stomach-cancer",
@@ -336,9 +666,20 @@
     "description": "Gastric cancer associated with H. pylori infection and dietary factors.",
     "papers": 75000,
     "trend": 3,
-    "mortality": 770000,
+    "mortality": 660000,
     "fundingGap": "high",
-    "yearlyPapers": [5200, 5500, 5800, 6100, 6400, 6700, 7000, 7300, 7600, 7900]
+    "yearlyPapers": [
+      5200,
+      5500,
+      5800,
+      6100,
+      6400,
+      6700,
+      7000,
+      7300,
+      7600,
+      7900
+    ]
   },
   {
     "id": "cervical-cancer",
@@ -347,9 +688,20 @@
     "description": "HPV-linked cancer of the cervix, largely preventable through vaccination.",
     "papers": 62000,
     "trend": 4,
-    "mortality": 342000,
+    "mortality": 349000,
     "fundingGap": "high",
-    "yearlyPapers": [4400, 4700, 5000, 5300, 5600, 5900, 6200, 6500, 6800, 7100]
+    "yearlyPapers": [
+      4400,
+      4700,
+      5000,
+      5300,
+      5600,
+      5900,
+      6200,
+      6500,
+      6800,
+      7100
+    ]
   },
   {
     "id": "bladder-cancer",
@@ -358,9 +710,20 @@
     "description": "Cancer of the urinary bladder, linked to smoking and chemical exposures.",
     "papers": 52000,
     "trend": 5,
-    "mortality": 17000,
+    "mortality": 221000,
     "fundingGap": "medium",
-    "yearlyPapers": [3600, 3900, 4200, 4500, 4800, 5100, 5500, 5900, 6300, 6700]
+    "yearlyPapers": [
+      3600,
+      3900,
+      4200,
+      4500,
+      4800,
+      5100,
+      5500,
+      5900,
+      6300,
+      6700
+    ]
   },
   {
     "id": "brain-cancer",
@@ -369,9 +732,20 @@
     "description": "Primary tumors of the brain and central nervous system with poor survival.",
     "papers": 72000,
     "trend": 5,
-    "mortality": 18000,
+    "mortality": 249000,
     "fundingGap": "medium",
-    "yearlyPapers": [5000, 5400, 5800, 6200, 6600, 7000, 7500, 8000, 8500, 9000]
+    "yearlyPapers": [
+      5000,
+      5400,
+      5800,
+      6200,
+      6600,
+      7000,
+      7500,
+      8000,
+      8500,
+      9000
+    ]
   },
   {
     "id": "kidney-cancer",
@@ -380,9 +754,20 @@
     "description": "Renal cell carcinoma accounting for most adult kidney cancers.",
     "papers": 48000,
     "trend": 6,
-    "mortality": 14000,
+    "mortality": 156000,
     "fundingGap": "medium",
-    "yearlyPapers": [3200, 3500, 3800, 4100, 4500, 4900, 5300, 5700, 6200, 6700]
+    "yearlyPapers": [
+      3200,
+      3500,
+      3800,
+      4100,
+      4500,
+      4900,
+      5300,
+      5700,
+      6200,
+      6700
+    ]
   },
   {
     "id": "thyroid-cancer",
@@ -391,9 +776,20 @@
     "description": "Endocrine cancer with rising incidence but generally favorable prognosis.",
     "papers": 45000,
     "trend": 7,
-    "mortality": 2200,
+    "mortality": 48000,
     "fundingGap": "low",
-    "yearlyPapers": [2800, 3100, 3400, 3800, 4200, 4600, 5000, 5500, 6000, 6500]
+    "yearlyPapers": [
+      2800,
+      3100,
+      3400,
+      3800,
+      4200,
+      4600,
+      5000,
+      5500,
+      6000,
+      6500
+    ]
   },
   {
     "id": "esophageal-cancer",
@@ -402,9 +798,20 @@
     "description": "Cancer of the esophagus with high mortality and regional variation.",
     "papers": 40000,
     "trend": 5,
-    "mortality": 16000,
+    "mortality": 445000,
     "fundingGap": "high",
-    "yearlyPapers": [2800, 3000, 3200, 3400, 3700, 3900, 4200, 4500, 4800, 5100]
+    "yearlyPapers": [
+      2800,
+      3000,
+      3200,
+      3400,
+      3700,
+      3900,
+      4200,
+      4500,
+      4800,
+      5100
+    ]
   },
   {
     "id": "multiple-myeloma",
@@ -413,9 +820,20 @@
     "description": "Blood cancer of plasma cells in bone marrow causing bone lesions.",
     "papers": 42000,
     "trend": 6,
-    "mortality": 13000,
+    "mortality": 121000,
     "fundingGap": "medium",
-    "yearlyPapers": [2800, 3100, 3400, 3700, 4000, 4300, 4700, 5100, 5500, 5900]
+    "yearlyPapers": [
+      2800,
+      3100,
+      3400,
+      3700,
+      4000,
+      4300,
+      4700,
+      5100,
+      5500,
+      5900
+    ]
   },
   {
     "id": "heart-disease",
@@ -424,9 +842,20 @@
     "description": "Leading global cause of death encompassing coronary and ischemic conditions.",
     "papers": 400000,
     "trend": 3,
-    "mortality": 600000,
+    "mortality": 9000000,
     "fundingGap": "medium",
-    "yearlyPapers": [28000, 29500, 31000, 32500, 34000, 35500, 37000, 38500, 40000, 41500]
+    "yearlyPapers": [
+      28000,
+      29500,
+      31000,
+      32500,
+      34000,
+      35500,
+      37000,
+      38500,
+      40000,
+      41500
+    ]
   },
   {
     "id": "stroke",
@@ -435,9 +864,20 @@
     "description": "Sudden interruption of blood supply to the brain causing cell death.",
     "papers": 250000,
     "trend": 4,
-    "mortality": 300000,
+    "mortality": 7300000,
     "fundingGap": "medium",
-    "yearlyPapers": [17000, 18000, 19000, 20000, 21000, 22000, 23000, 24000, 25000, 26500]
+    "yearlyPapers": [
+      17000,
+      18000,
+      19000,
+      20000,
+      21000,
+      22000,
+      23000,
+      24000,
+      25000,
+      26500
+    ]
   },
   {
     "id": "hypertension",
@@ -446,9 +886,20 @@
     "description": "Chronically elevated blood pressure and major risk factor for heart disease.",
     "papers": 300000,
     "trend": 3,
-    "mortality": 0,
+    "mortality": 1330000,
     "fundingGap": "low",
-    "yearlyPapers": [21000, 22000, 23000, 24000, 25000, 26000, 27000, 28000, 29000, 30000]
+    "yearlyPapers": [
+      21000,
+      22000,
+      23000,
+      24000,
+      25000,
+      26000,
+      27000,
+      28000,
+      29000,
+      30000
+    ]
   },
   {
     "id": "atherosclerosis",
@@ -459,7 +910,18 @@
     "trend": 3,
     "mortality": 0,
     "fundingGap": "low",
-    "yearlyPapers": [5800, 6000, 6200, 6500, 6700, 7000, 7200, 7500, 7800, 8100]
+    "yearlyPapers": [
+      5800,
+      6000,
+      6200,
+      6500,
+      6700,
+      7000,
+      7200,
+      7500,
+      7800,
+      8100
+    ]
   },
   {
     "id": "heart-failure",
@@ -470,7 +932,18 @@
     "trend": 5,
     "mortality": 86000,
     "fundingGap": "medium",
-    "yearlyPapers": [10000, 10800, 11600, 12500, 13400, 14400, 15400, 16500, 17600, 18800]
+    "yearlyPapers": [
+      10000,
+      10800,
+      11600,
+      12500,
+      13400,
+      14400,
+      15400,
+      16500,
+      17600,
+      18800
+    ]
   },
   {
     "id": "arrhythmia",
@@ -479,9 +952,20 @@
     "description": "Irregular heart rhythms including atrial fibrillation and tachycardia.",
     "papers": 75000,
     "trend": 4,
-    "mortality": 25000,
+    "mortality": 340000,
     "fundingGap": "medium",
-    "yearlyPapers": [5200, 5500, 5900, 6200, 6600, 7000, 7400, 7800, 8200, 8700]
+    "yearlyPapers": [
+      5200,
+      5500,
+      5900,
+      6200,
+      6600,
+      7000,
+      7400,
+      7800,
+      8200,
+      8700
+    ]
   },
   {
     "id": "peripheral-artery-disease",
@@ -490,9 +974,20 @@
     "description": "Narrowing of peripheral arteries reducing blood flow to the limbs.",
     "papers": 28000,
     "trend": 4,
-    "mortality": 12000,
+    "mortality": 65000,
     "fundingGap": "medium",
-    "yearlyPapers": [2000, 2150, 2300, 2450, 2600, 2750, 2900, 3100, 3300, 3500]
+    "yearlyPapers": [
+      2000,
+      2150,
+      2300,
+      2450,
+      2600,
+      2750,
+      2900,
+      3100,
+      3300,
+      3500
+    ]
   },
   {
     "id": "aortic-aneurysm",
@@ -501,9 +996,20 @@
     "description": "Dangerous widening of the aorta that may rupture without warning.",
     "papers": 22000,
     "trend": 3,
-    "mortality": 10000,
+    "mortality": 154000,
     "fundingGap": "medium",
-    "yearlyPapers": [1600, 1700, 1800, 1900, 2000, 2100, 2200, 2300, 2400, 2500]
+    "yearlyPapers": [
+      1600,
+      1700,
+      1800,
+      1900,
+      2000,
+      2100,
+      2200,
+      2300,
+      2400,
+      2500
+    ]
   },
   {
     "id": "cardiomyopathy",
@@ -512,9 +1018,20 @@
     "description": "Disease of the heart muscle affecting its ability to pump blood.",
     "papers": 45000,
     "trend": 5,
-    "mortality": 8000,
+    "mortality": 370000,
     "fundingGap": "medium",
-    "yearlyPapers": [3100, 3350, 3600, 3850, 4100, 4400, 4700, 5000, 5350, 5700]
+    "yearlyPapers": [
+      3100,
+      3350,
+      3600,
+      3850,
+      4100,
+      4400,
+      4700,
+      5000,
+      5350,
+      5700
+    ]
   },
   {
     "id": "deep-vein-thrombosis",
@@ -525,7 +1042,18 @@
     "trend": 3,
     "mortality": 10000,
     "fundingGap": "medium",
-    "yearlyPapers": [2200, 2300, 2400, 2500, 2600, 2700, 2800, 2900, 3000, 3100]
+    "yearlyPapers": [
+      2200,
+      2300,
+      2400,
+      2500,
+      2600,
+      2700,
+      2800,
+      2900,
+      3000,
+      3100
+    ]
   },
   {
     "id": "pulmonary-embolism",
@@ -534,9 +1062,20 @@
     "description": "Blockage of a pulmonary artery by a blood clot from a deep vein.",
     "papers": 35000,
     "trend": 5,
-    "mortality": 50000,
+    "mortality": 400000,
     "fundingGap": "medium",
-    "yearlyPapers": [2400, 2600, 2800, 3000, 3200, 3400, 3600, 3800, 4100, 4400]
+    "yearlyPapers": [
+      2400,
+      2600,
+      2800,
+      3000,
+      3200,
+      3400,
+      3600,
+      3800,
+      4100,
+      4400
+    ]
   },
   {
     "id": "rheumatic-heart-disease",
@@ -545,9 +1084,20 @@
     "description": "Heart valve damage from rheumatic fever, prevalent in low-income countries.",
     "papers": 9000,
     "trend": 4,
-    "mortality": 288000,
+    "mortality": 373000,
     "fundingGap": "high",
-    "yearlyPapers": [600, 650, 700, 750, 800, 850, 920, 990, 1060, 1130]
+    "yearlyPapers": [
+      600,
+      650,
+      700,
+      750,
+      800,
+      850,
+      920,
+      990,
+      1060,
+      1130
+    ]
   },
   {
     "id": "endocarditis",
@@ -556,9 +1106,20 @@
     "description": "Infection of the heart's inner lining, typically affecting heart valves.",
     "papers": 18000,
     "trend": 3,
-    "mortality": 12000,
+    "mortality": 17000,
     "fundingGap": "medium",
-    "yearlyPapers": [1300, 1350, 1400, 1450, 1500, 1560, 1620, 1680, 1740, 1800]
+    "yearlyPapers": [
+      1300,
+      1350,
+      1400,
+      1450,
+      1500,
+      1560,
+      1620,
+      1680,
+      1740,
+      1800
+    ]
   },
   {
     "id": "myocarditis",
@@ -567,9 +1128,20 @@
     "description": "Inflammation of the heart muscle often caused by viral infections.",
     "papers": 14000,
     "trend": 10,
-    "mortality": 4000,
+    "mortality": 32000,
     "fundingGap": "medium",
-    "yearlyPapers": [700, 750, 800, 850, 900, 1000, 1200, 1500, 2200, 2800]
+    "yearlyPapers": [
+      700,
+      750,
+      800,
+      850,
+      900,
+      1000,
+      1200,
+      1500,
+      2200,
+      2800
+    ]
   },
   {
     "id": "alzheimers-disease",
@@ -578,9 +1150,20 @@
     "description": "Progressive neurodegenerative disorder and leading cause of dementia.",
     "papers": 180000,
     "trend": 6,
-    "mortality": 121000,
+    "mortality": 1900000,
     "fundingGap": "medium",
-    "yearlyPapers": [11000, 12000, 13000, 14200, 15500, 16800, 18200, 19800, 21500, 23200]
+    "yearlyPapers": [
+      11000,
+      12000,
+      13000,
+      14200,
+      15500,
+      16800,
+      18200,
+      19800,
+      21500,
+      23200
+    ]
   },
   {
     "id": "parkinsons-disease",
@@ -589,9 +1172,20 @@
     "description": "Degenerative movement disorder caused by loss of dopamine-producing neurons.",
     "papers": 110000,
     "trend": 5,
-    "mortality": 35000,
+    "mortality": 388000,
     "fundingGap": "medium",
-    "yearlyPapers": [7500, 8000, 8600, 9200, 9800, 10500, 11200, 12000, 12800, 13700]
+    "yearlyPapers": [
+      7500,
+      8000,
+      8600,
+      9200,
+      9800,
+      10500,
+      11200,
+      12000,
+      12800,
+      13700
+    ]
   },
   {
     "id": "epilepsy",
@@ -600,9 +1194,20 @@
     "description": "Neurological disorder marked by recurrent unprovoked seizures.",
     "papers": 85000,
     "trend": 4,
-    "mortality": 3000,
+    "mortality": 140000,
     "fundingGap": "medium",
-    "yearlyPapers": [6000, 6300, 6600, 7000, 7400, 7800, 8200, 8600, 9000, 9500]
+    "yearlyPapers": [
+      6000,
+      6300,
+      6600,
+      7000,
+      7400,
+      7800,
+      8200,
+      8600,
+      9000,
+      9500
+    ]
   },
   {
     "id": "multiple-sclerosis",
@@ -611,9 +1216,20 @@
     "description": "Autoimmune disease damaging nerve cell insulation in the brain and spine.",
     "papers": 75000,
     "trend": 4,
-    "mortality": 3000,
+    "mortality": 4700,
     "fundingGap": "low",
-    "yearlyPapers": [5200, 5500, 5800, 6100, 6500, 6900, 7300, 7700, 8100, 8500]
+    "yearlyPapers": [
+      5200,
+      5500,
+      5800,
+      6100,
+      6500,
+      6900,
+      7300,
+      7700,
+      8100,
+      8500
+    ]
   },
   {
     "id": "als",
@@ -622,9 +1238,20 @@
     "description": "Fatal motor neuron disease causing progressive muscle paralysis.",
     "papers": 32000,
     "trend": 5,
-    "mortality": 5000,
+    "mortality": 39000,
     "fundingGap": "medium",
-    "yearlyPapers": [2200, 2400, 2600, 2800, 3000, 3200, 3400, 3600, 3800, 4100]
+    "yearlyPapers": [
+      2200,
+      2400,
+      2600,
+      2800,
+      3000,
+      3200,
+      3400,
+      3600,
+      3800,
+      4100
+    ]
   },
   {
     "id": "huntingtons-disease",
@@ -633,9 +1260,20 @@
     "description": "Inherited neurodegenerative disorder causing progressive motor and cognitive decline.",
     "papers": 18000,
     "trend": 4,
-    "mortality": 2000,
+    "mortality": 5000,
     "fundingGap": "medium",
-    "yearlyPapers": [1200, 1280, 1360, 1440, 1520, 1600, 1700, 1800, 1900, 2000]
+    "yearlyPapers": [
+      1200,
+      1280,
+      1360,
+      1440,
+      1520,
+      1600,
+      1700,
+      1800,
+      1900,
+      2000
+    ]
   },
   {
     "id": "migraine",
@@ -646,7 +1284,18 @@
     "trend": 6,
     "mortality": 0,
     "fundingGap": "medium",
-    "yearlyPapers": [3000, 3200, 3500, 3800, 4100, 4400, 4700, 5100, 5500, 5900]
+    "yearlyPapers": [
+      3000,
+      3200,
+      3500,
+      3800,
+      4100,
+      4400,
+      4700,
+      5100,
+      5500,
+      5900
+    ]
   },
   {
     "id": "neuropathy",
@@ -657,7 +1306,18 @@
     "trend": 4,
     "mortality": 0,
     "fundingGap": "medium",
-    "yearlyPapers": [4200, 4400, 4700, 5000, 5300, 5600, 5900, 6300, 6700, 7100]
+    "yearlyPapers": [
+      4200,
+      4400,
+      4700,
+      5000,
+      5300,
+      5600,
+      5900,
+      6300,
+      6700,
+      7100
+    ]
   },
   {
     "id": "meningitis",
@@ -666,9 +1326,20 @@
     "description": "Inflammation of brain and spinal cord membranes from infection.",
     "papers": 42000,
     "trend": 2,
-    "mortality": 250000,
+    "mortality": 214000,
     "fundingGap": "high",
-    "yearlyPapers": [3200, 3300, 3400, 3500, 3600, 3700, 3800, 3900, 4000, 4100]
+    "yearlyPapers": [
+      3200,
+      3300,
+      3400,
+      3500,
+      3600,
+      3700,
+      3800,
+      3900,
+      4000,
+      4100
+    ]
   },
   {
     "id": "cerebral-palsy",
@@ -679,7 +1350,18 @@
     "trend": 3,
     "mortality": 0,
     "fundingGap": "medium",
-    "yearlyPapers": [2000, 2100, 2200, 2300, 2400, 2500, 2600, 2700, 2800, 2900]
+    "yearlyPapers": [
+      2000,
+      2100,
+      2200,
+      2300,
+      2400,
+      2500,
+      2600,
+      2700,
+      2800,
+      2900
+    ]
   },
   {
     "id": "spinal-cord-injury",
@@ -690,7 +1372,18 @@
     "trend": 4,
     "mortality": 0,
     "fundingGap": "medium",
-    "yearlyPapers": [2500, 2650, 2800, 2950, 3100, 3300, 3500, 3700, 3900, 4100]
+    "yearlyPapers": [
+      2500,
+      2650,
+      2800,
+      2950,
+      3100,
+      3300,
+      3500,
+      3700,
+      3900,
+      4100
+    ]
   },
   {
     "id": "traumatic-brain-injury",
@@ -699,9 +1392,20 @@
     "description": "Brain damage caused by external mechanical force or impact to the head.",
     "papers": 48000,
     "trend": 5,
-    "mortality": 64000,
+    "mortality": 500000,
     "fundingGap": "medium",
-    "yearlyPapers": [3200, 3500, 3800, 4100, 4400, 4700, 5100, 5500, 5900, 6300]
+    "yearlyPapers": [
+      3200,
+      3500,
+      3800,
+      4100,
+      4400,
+      4700,
+      5100,
+      5500,
+      5900,
+      6300
+    ]
   },
   {
     "id": "narcolepsy",
@@ -712,7 +1416,18 @@
     "trend": 4,
     "mortality": 0,
     "fundingGap": "medium",
-    "yearlyPapers": [580, 620, 660, 700, 750, 800, 850, 900, 960, 1020]
+    "yearlyPapers": [
+      580,
+      620,
+      660,
+      700,
+      750,
+      800,
+      850,
+      900,
+      960,
+      1020
+    ]
   },
   {
     "id": "essential-tremor",
@@ -723,7 +1438,18 @@
     "trend": 3,
     "mortality": 0,
     "fundingGap": "medium",
-    "yearlyPapers": [500, 520, 540, 570, 600, 630, 660, 700, 740, 780]
+    "yearlyPapers": [
+      500,
+      520,
+      540,
+      570,
+      600,
+      630,
+      660,
+      700,
+      740,
+      780
+    ]
   },
   {
     "id": "asthma",
@@ -732,9 +1458,20 @@
     "description": "Chronic airway inflammation causing reversible breathing difficulty.",
     "papers": 150000,
     "trend": 3,
-    "mortality": 4500,
+    "mortality": 455000,
     "fundingGap": "low",
-    "yearlyPapers": [10500, 11000, 11500, 12000, 12500, 13000, 13500, 14000, 14500, 15000]
+    "yearlyPapers": [
+      10500,
+      11000,
+      11500,
+      12000,
+      12500,
+      13000,
+      13500,
+      14000,
+      14500,
+      15000
+    ]
   },
   {
     "id": "copd",
@@ -743,9 +1480,20 @@
     "description": "Progressive lung disease causing obstructed airflow and breathing difficulty.",
     "papers": 85000,
     "trend": 4,
-    "mortality": 150000,
+    "mortality": 3230000,
     "fundingGap": "high",
-    "yearlyPapers": [5800, 6200, 6600, 7000, 7500, 8000, 8500, 9000, 9600, 10200]
+    "yearlyPapers": [
+      5800,
+      6200,
+      6600,
+      7000,
+      7500,
+      8000,
+      8500,
+      9000,
+      9600,
+      10200
+    ]
   },
   {
     "id": "pneumonia",
@@ -754,9 +1502,20 @@
     "description": "Lung infection causing inflammation of the air sacs, a major killer globally.",
     "papers": 120000,
     "trend": 4,
-    "mortality": 250000,
+    "mortality": 2200000,
     "fundingGap": "high",
-    "yearlyPapers": [8000, 8500, 9000, 9500, 10000, 10500, 11000, 12000, 13500, 15000]
+    "yearlyPapers": [
+      8000,
+      8500,
+      9000,
+      9500,
+      10000,
+      10500,
+      11000,
+      12000,
+      13500,
+      15000
+    ]
   },
   {
     "id": "tuberculosis",
@@ -765,9 +1524,20 @@
     "description": "Bacterial lung infection and one of the deadliest infectious diseases worldwide.",
     "papers": 110000,
     "trend": 3,
-    "mortality": 1300000,
+    "mortality": 1250000,
     "fundingGap": "high",
-    "yearlyPapers": [8200, 8600, 9000, 9400, 9800, 10200, 10600, 11000, 11400, 11800]
+    "yearlyPapers": [
+      8200,
+      8600,
+      9000,
+      9400,
+      9800,
+      10200,
+      10600,
+      11000,
+      11400,
+      11800
+    ]
   },
   {
     "id": "lung-fibrosis",
@@ -776,9 +1546,20 @@
     "description": "Progressive scarring of lung tissue leading to respiratory failure.",
     "papers": 35000,
     "trend": 7,
-    "mortality": 10000,
+    "mortality": 188000,
     "fundingGap": "medium",
-    "yearlyPapers": [2200, 2500, 2800, 3100, 3400, 3800, 4200, 4600, 5100, 5600]
+    "yearlyPapers": [
+      2200,
+      2500,
+      2800,
+      3100,
+      3400,
+      3800,
+      4200,
+      4600,
+      5100,
+      5600
+    ]
   },
   {
     "id": "sleep-apnea",
@@ -789,7 +1570,18 @@
     "trend": 6,
     "mortality": 0,
     "fundingGap": "low",
-    "yearlyPapers": [2600, 2900, 3200, 3500, 3800, 4100, 4500, 4900, 5300, 5800]
+    "yearlyPapers": [
+      2600,
+      2900,
+      3200,
+      3500,
+      3800,
+      4100,
+      4500,
+      4900,
+      5300,
+      5800
+    ]
   },
   {
     "id": "bronchiectasis",
@@ -800,7 +1592,18 @@
     "trend": 8,
     "mortality": 1000,
     "fundingGap": "medium",
-    "yearlyPapers": [700, 800, 900, 1000, 1100, 1250, 1400, 1550, 1700, 1900]
+    "yearlyPapers": [
+      700,
+      800,
+      900,
+      1000,
+      1100,
+      1250,
+      1400,
+      1550,
+      1700,
+      1900
+    ]
   },
   {
     "id": "sarcoidosis",
@@ -811,7 +1614,18 @@
     "trend": 4,
     "mortality": 1000,
     "fundingGap": "medium",
-    "yearlyPapers": [1200, 1280, 1360, 1440, 1520, 1600, 1700, 1800, 1900, 2000]
+    "yearlyPapers": [
+      1200,
+      1280,
+      1360,
+      1440,
+      1520,
+      1600,
+      1700,
+      1800,
+      1900,
+      2000
+    ]
   },
   {
     "id": "pulmonary-hypertension",
@@ -820,9 +1634,20 @@
     "description": "High blood pressure in the pulmonary arteries straining the right heart.",
     "papers": 25000,
     "trend": 6,
-    "mortality": 10000,
+    "mortality": 22000,
     "fundingGap": "medium",
-    "yearlyPapers": [1600, 1750, 1900, 2100, 2300, 2500, 2700, 2950, 3200, 3500]
+    "yearlyPapers": [
+      1600,
+      1750,
+      1900,
+      2100,
+      2300,
+      2500,
+      2700,
+      2950,
+      3200,
+      3500
+    ]
   },
   {
     "id": "pleural-effusion",
@@ -833,7 +1658,18 @@
     "trend": 3,
     "mortality": 0,
     "fundingGap": "low",
-    "yearlyPapers": [1000, 1050, 1100, 1150, 1200, 1250, 1300, 1350, 1400, 1450]
+    "yearlyPapers": [
+      1000,
+      1050,
+      1100,
+      1150,
+      1200,
+      1250,
+      1300,
+      1350,
+      1400,
+      1450
+    ]
   },
   {
     "id": "acute-respiratory-distress",
@@ -842,9 +1678,20 @@
     "description": "Life-threatening lung condition causing severe shortness of breath.",
     "papers": 30000,
     "trend": 15,
-    "mortality": 40000,
+    "mortality": 400000,
     "fundingGap": "medium",
-    "yearlyPapers": [1800, 1900, 2000, 2100, 2200, 2400, 2700, 3500, 5500, 7000]
+    "yearlyPapers": [
+      1800,
+      1900,
+      2000,
+      2100,
+      2200,
+      2400,
+      2700,
+      3500,
+      5500,
+      7000
+    ]
   },
   {
     "id": "pertussis",
@@ -855,7 +1702,18 @@
     "trend": 3,
     "mortality": 160000,
     "fundingGap": "high",
-    "yearlyPapers": [1000, 1050, 1100, 1150, 1200, 1250, 1300, 1350, 1400, 1450]
+    "yearlyPapers": [
+      1000,
+      1050,
+      1100,
+      1150,
+      1200,
+      1250,
+      1300,
+      1350,
+      1400,
+      1450
+    ]
   },
   {
     "id": "lupus",
@@ -864,9 +1722,20 @@
     "description": "Systemic autoimmune disease where the body attacks its own tissues.",
     "papers": 65000,
     "trend": 4,
-    "mortality": 3000,
+    "mortality": 35000,
     "fundingGap": "medium",
-    "yearlyPapers": [4500, 4800, 5100, 5400, 5700, 6000, 6300, 6700, 7100, 7500]
+    "yearlyPapers": [
+      4500,
+      4800,
+      5100,
+      5400,
+      5700,
+      6000,
+      6300,
+      6700,
+      7100,
+      7500
+    ]
   },
   {
     "id": "rheumatoid-arthritis",
@@ -875,9 +1744,20 @@
     "description": "Chronic inflammatory disorder affecting the joints and connective tissue.",
     "papers": 95000,
     "trend": 3,
-    "mortality": 3000,
+    "mortality": 38000,
     "fundingGap": "low",
-    "yearlyPapers": [6800, 7100, 7400, 7700, 8000, 8300, 8600, 9000, 9400, 9800]
+    "yearlyPapers": [
+      6800,
+      7100,
+      7400,
+      7700,
+      8000,
+      8300,
+      8600,
+      9000,
+      9400,
+      9800
+    ]
   },
   {
     "id": "crohns-disease",
@@ -886,9 +1766,20 @@
     "description": "Inflammatory bowel disease causing chronic digestive tract inflammation.",
     "papers": 42000,
     "trend": 4,
-    "mortality": 0,
+    "mortality": 20000,
     "fundingGap": "low",
-    "yearlyPapers": [3000, 3200, 3400, 3600, 3800, 4000, 4200, 4400, 4600, 4800]
+    "yearlyPapers": [
+      3000,
+      3200,
+      3400,
+      3600,
+      3800,
+      4000,
+      4200,
+      4400,
+      4600,
+      4800
+    ]
   },
   {
     "id": "celiac-disease",
@@ -899,7 +1790,18 @@
     "trend": 4,
     "mortality": 0,
     "fundingGap": "low",
-    "yearlyPapers": [1500, 1620, 1740, 1870, 2000, 2140, 2290, 2450, 2620, 2800]
+    "yearlyPapers": [
+      1500,
+      1620,
+      1740,
+      1870,
+      2000,
+      2140,
+      2290,
+      2450,
+      2620,
+      2800
+    ]
   },
   {
     "id": "type-1-diabetes",
@@ -908,9 +1810,20 @@
     "description": "Autoimmune destruction of insulin-producing beta cells in the pancreas.",
     "papers": 90000,
     "trend": 4,
-    "mortality": 8000,
+    "mortality": 49000,
     "fundingGap": "low",
-    "yearlyPapers": [6200, 6500, 6900, 7300, 7700, 8100, 8500, 9000, 9500, 10000]
+    "yearlyPapers": [
+      6200,
+      6500,
+      6900,
+      7300,
+      7700,
+      8100,
+      8500,
+      9000,
+      9500,
+      10000
+    ]
   },
   {
     "id": "psoriasis",
@@ -921,7 +1834,18 @@
     "trend": 5,
     "mortality": 0,
     "fundingGap": "low",
-    "yearlyPapers": [3600, 3900, 4200, 4500, 4800, 5100, 5500, 5900, 6300, 6800]
+    "yearlyPapers": [
+      3600,
+      3900,
+      4200,
+      4500,
+      4800,
+      5100,
+      5500,
+      5900,
+      6300,
+      6800
+    ]
   },
   {
     "id": "ulcerative-colitis",
@@ -930,9 +1854,20 @@
     "description": "Inflammatory bowel disease causing chronic inflammation of the colon lining.",
     "papers": 35000,
     "trend": 4,
-    "mortality": 1000,
+    "mortality": 20000,
     "fundingGap": "low",
-    "yearlyPapers": [2400, 2560, 2720, 2900, 3080, 3260, 3450, 3650, 3860, 4080]
+    "yearlyPapers": [
+      2400,
+      2560,
+      2720,
+      2900,
+      3080,
+      3260,
+      3450,
+      3650,
+      3860,
+      4080
+    ]
   },
   {
     "id": "sjogrens-syndrome",
@@ -943,7 +1878,18 @@
     "trend": 4,
     "mortality": 0,
     "fundingGap": "medium",
-    "yearlyPapers": [1000, 1080, 1160, 1240, 1330, 1420, 1520, 1620, 1730, 1840]
+    "yearlyPapers": [
+      1000,
+      1080,
+      1160,
+      1240,
+      1330,
+      1420,
+      1520,
+      1620,
+      1730,
+      1840
+    ]
   },
   {
     "id": "vasculitis",
@@ -952,9 +1898,20 @@
     "description": "Inflammation of blood vessels that can restrict blood flow to organs.",
     "papers": 22000,
     "trend": 5,
-    "mortality": 2000,
+    "mortality": 4000,
     "fundingGap": "medium",
-    "yearlyPapers": [1500, 1600, 1700, 1800, 1900, 2050, 2200, 2350, 2500, 2700]
+    "yearlyPapers": [
+      1500,
+      1600,
+      1700,
+      1800,
+      1900,
+      2050,
+      2200,
+      2350,
+      2500,
+      2700
+    ]
   },
   {
     "id": "scleroderma",
@@ -963,9 +1920,20 @@
     "description": "Autoimmune connective tissue disease causing skin and organ hardening.",
     "papers": 18000,
     "trend": 3,
-    "mortality": 1500,
+    "mortality": 15000,
     "fundingGap": "medium",
-    "yearlyPapers": [1300, 1350, 1400, 1450, 1500, 1560, 1620, 1680, 1750, 1820]
+    "yearlyPapers": [
+      1300,
+      1350,
+      1400,
+      1450,
+      1500,
+      1560,
+      1620,
+      1680,
+      1750,
+      1820
+    ]
   },
   {
     "id": "myasthenia-gravis",
@@ -974,9 +1942,20 @@
     "description": "Autoimmune disorder causing weakness in voluntary skeletal muscles.",
     "papers": 14000,
     "trend": 5,
-    "mortality": 500,
+    "mortality": 3000,
     "fundingGap": "medium",
-    "yearlyPapers": [950, 1020, 1090, 1170, 1250, 1340, 1440, 1540, 1650, 1770]
+    "yearlyPapers": [
+      950,
+      1020,
+      1090,
+      1170,
+      1250,
+      1340,
+      1440,
+      1540,
+      1650,
+      1770
+    ]
   },
   {
     "id": "ankylosing-spondylitis",
@@ -987,7 +1966,18 @@
     "trend": 4,
     "mortality": 0,
     "fundingGap": "medium",
-    "yearlyPapers": [1100, 1180, 1260, 1340, 1420, 1510, 1600, 1700, 1800, 1900]
+    "yearlyPapers": [
+      1100,
+      1180,
+      1260,
+      1340,
+      1420,
+      1510,
+      1600,
+      1700,
+      1800,
+      1900
+    ]
   },
   {
     "id": "type-2-diabetes",
@@ -996,9 +1986,20 @@
     "description": "Metabolic disorder characterized by insulin resistance and high blood sugar.",
     "papers": 380000,
     "trend": 5,
-    "mortality": 100000,
+    "mortality": 1550000,
     "fundingGap": "low",
-    "yearlyPapers": [25000, 27000, 29000, 31000, 33000, 35000, 37000, 39000, 41500, 44000]
+    "yearlyPapers": [
+      25000,
+      27000,
+      29000,
+      31000,
+      33000,
+      35000,
+      37000,
+      39000,
+      41500,
+      44000
+    ]
   },
   {
     "id": "obesity",
@@ -1009,7 +2010,18 @@
     "trend": 6,
     "mortality": 0,
     "fundingGap": "medium",
-    "yearlyPapers": [12000, 13200, 14500, 15900, 17400, 19000, 20800, 22800, 24900, 27200]
+    "yearlyPapers": [
+      12000,
+      13200,
+      14500,
+      15900,
+      17400,
+      19000,
+      20800,
+      22800,
+      24900,
+      27200
+    ]
   },
   {
     "id": "gout",
@@ -1020,7 +2032,18 @@
     "trend": 5,
     "mortality": 0,
     "fundingGap": "low",
-    "yearlyPapers": [1500, 1620, 1750, 1880, 2020, 2170, 2330, 2500, 2680, 2870]
+    "yearlyPapers": [
+      1500,
+      1620,
+      1750,
+      1880,
+      2020,
+      2170,
+      2330,
+      2500,
+      2680,
+      2870
+    ]
   },
   {
     "id": "nafld",
@@ -1029,9 +2052,20 @@
     "description": "Non-alcoholic fatty liver disease linked to obesity and metabolic syndrome.",
     "papers": 38000,
     "trend": 15,
-    "mortality": 8000,
+    "mortality": 138000,
     "fundingGap": "medium",
-    "yearlyPapers": [1400, 1800, 2300, 2900, 3600, 4400, 5300, 6300, 7400, 8600]
+    "yearlyPapers": [
+      1400,
+      1800,
+      2300,
+      2900,
+      3600,
+      4400,
+      5300,
+      6300,
+      7400,
+      8600
+    ]
   },
   {
     "id": "metabolic-syndrome",
@@ -1042,7 +2076,18 @@
     "trend": 4,
     "mortality": 0,
     "fundingGap": "low",
-    "yearlyPapers": [3800, 4050, 4300, 4550, 4800, 5100, 5400, 5700, 6000, 6350]
+    "yearlyPapers": [
+      3800,
+      4050,
+      4300,
+      4550,
+      4800,
+      5100,
+      5400,
+      5700,
+      6000,
+      6350
+    ]
   },
   {
     "id": "hyperlipidemia",
@@ -1053,7 +2098,18 @@
     "trend": 3,
     "mortality": 0,
     "fundingGap": "low",
-    "yearlyPapers": [3200, 3350, 3500, 3650, 3800, 3950, 4100, 4250, 4400, 4600]
+    "yearlyPapers": [
+      3200,
+      3350,
+      3500,
+      3650,
+      3800,
+      3950,
+      4100,
+      4250,
+      4400,
+      4600
+    ]
   },
   {
     "id": "hypothyroidism",
@@ -1064,7 +2120,18 @@
     "trend": 3,
     "mortality": 0,
     "fundingGap": "low",
-    "yearlyPapers": [2000, 2100, 2200, 2300, 2400, 2500, 2600, 2700, 2800, 2900]
+    "yearlyPapers": [
+      2000,
+      2100,
+      2200,
+      2300,
+      2400,
+      2500,
+      2600,
+      2700,
+      2800,
+      2900
+    ]
   },
   {
     "id": "hyperthyroidism",
@@ -1075,7 +2142,18 @@
     "trend": 3,
     "mortality": 0,
     "fundingGap": "low",
-    "yearlyPapers": [1400, 1480, 1560, 1640, 1720, 1800, 1880, 1970, 2060, 2150]
+    "yearlyPapers": [
+      1400,
+      1480,
+      1560,
+      1640,
+      1720,
+      1800,
+      1880,
+      1970,
+      2060,
+      2150
+    ]
   },
   {
     "id": "osteoporosis",
@@ -1086,7 +2164,18 @@
     "trend": 2,
     "mortality": 0,
     "fundingGap": "low",
-    "yearlyPapers": [6200, 6350, 6500, 6650, 6800, 6950, 7100, 7250, 7400, 7550]
+    "yearlyPapers": [
+      6200,
+      6350,
+      6500,
+      6650,
+      6800,
+      6950,
+      7100,
+      7250,
+      7400,
+      7550
+    ]
   },
   {
     "id": "phenylketonuria",
@@ -1097,7 +2186,18 @@
     "trend": 3,
     "mortality": 0,
     "fundingGap": "medium",
-    "yearlyPapers": [520, 550, 580, 610, 640, 670, 700, 740, 780, 820]
+    "yearlyPapers": [
+      520,
+      550,
+      580,
+      610,
+      640,
+      670,
+      700,
+      740,
+      780,
+      820
+    ]
   },
   {
     "id": "porphyria",
@@ -1108,7 +2208,18 @@
     "trend": 3,
     "mortality": 0,
     "fundingGap": "medium",
-    "yearlyPapers": [420, 440, 460, 480, 500, 530, 560, 590, 620, 650]
+    "yearlyPapers": [
+      420,
+      440,
+      460,
+      480,
+      500,
+      530,
+      560,
+      590,
+      620,
+      650
+    ]
   },
   {
     "id": "wilsons-disease",
@@ -1119,7 +2230,18 @@
     "trend": 4,
     "mortality": 500,
     "fundingGap": "medium",
-    "yearlyPapers": [440, 470, 500, 530, 560, 600, 640, 680, 720, 770]
+    "yearlyPapers": [
+      440,
+      470,
+      500,
+      530,
+      560,
+      600,
+      640,
+      680,
+      720,
+      770
+    ]
   },
   {
     "id": "hiv-aids",
@@ -1128,9 +2250,20 @@
     "description": "Viral infection attacking the immune system, progressing to AIDS if untreated.",
     "papers": 350000,
     "trend": 2,
-    "mortality": 650000,
+    "mortality": 630000,
     "fundingGap": "medium",
-    "yearlyPapers": [26000, 27000, 27500, 28000, 28500, 29000, 29500, 30000, 30500, 31000]
+    "yearlyPapers": [
+      26000,
+      27000,
+      27500,
+      28000,
+      28500,
+      29000,
+      29500,
+      30000,
+      30500,
+      31000
+    ]
   },
   {
     "id": "covid-19",
@@ -1139,9 +2272,20 @@
     "description": "Respiratory illness caused by SARS-CoV-2 that triggered a global pandemic.",
     "papers": 300000,
     "trend": -10,
-    "mortality": 1100000,
+    "mortality": 1200000,
     "fundingGap": "low",
-    "yearlyPapers": [0, 0, 0, 0, 0, 0, 85000, 95000, 75000, 45000]
+    "yearlyPapers": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      85000,
+      95000,
+      75000,
+      45000
+    ]
   },
   {
     "id": "hepatitis-b",
@@ -1150,9 +2294,20 @@
     "description": "Viral liver infection transmitted through blood and body fluids.",
     "papers": 72000,
     "trend": 3,
-    "mortality": 820000,
+    "mortality": 1100000,
     "fundingGap": "high",
-    "yearlyPapers": [5000, 5200, 5500, 5800, 6100, 6400, 6700, 7000, 7300, 7600]
+    "yearlyPapers": [
+      5000,
+      5200,
+      5500,
+      5800,
+      6100,
+      6400,
+      6700,
+      7000,
+      7300,
+      7600
+    ]
   },
   {
     "id": "hepatitis-c",
@@ -1161,9 +2316,20 @@
     "description": "Blood-borne viral infection causing chronic liver disease and cirrhosis.",
     "papers": 68000,
     "trend": -2,
-    "mortality": 290000,
+    "mortality": 242000,
     "fundingGap": "medium",
-    "yearlyPapers": [5800, 5900, 5700, 5500, 5300, 5100, 4900, 4700, 4500, 4400]
+    "yearlyPapers": [
+      5800,
+      5900,
+      5700,
+      5500,
+      5300,
+      5100,
+      4900,
+      4700,
+      4500,
+      4400
+    ]
   },
   {
     "id": "influenza",
@@ -1174,7 +2340,18 @@
     "trend": 3,
     "mortality": 400000,
     "fundingGap": "medium",
-    "yearlyPapers": [8500, 8900, 9300, 9700, 10100, 10600, 11100, 11600, 12100, 12700]
+    "yearlyPapers": [
+      8500,
+      8900,
+      9300,
+      9700,
+      10100,
+      10600,
+      11100,
+      11600,
+      12100,
+      12700
+    ]
   },
   {
     "id": "measles",
@@ -1183,9 +2360,20 @@
     "description": "Highly contagious viral disease preventable by vaccination.",
     "papers": 25000,
     "trend": 4,
-    "mortality": 128000,
+    "mortality": 108000,
     "fundingGap": "high",
-    "yearlyPapers": [1700, 1800, 1900, 2000, 2100, 2200, 2400, 2600, 2800, 3000]
+    "yearlyPapers": [
+      1700,
+      1800,
+      1900,
+      2000,
+      2100,
+      2200,
+      2400,
+      2600,
+      2800,
+      3000
+    ]
   },
   {
     "id": "ebola",
@@ -1194,9 +2382,20 @@
     "description": "Severe hemorrhagic fever virus with high fatality rates in outbreaks.",
     "papers": 12000,
     "trend": -5,
-    "mortality": 5000,
+    "mortality": 300,
     "fundingGap": "medium",
-    "yearlyPapers": [400, 2200, 1800, 1200, 1400, 1600, 1000, 800, 700, 600]
+    "yearlyPapers": [
+      400,
+      2200,
+      1800,
+      1200,
+      1400,
+      1600,
+      1000,
+      800,
+      700,
+      600
+    ]
   },
   {
     "id": "cholera",
@@ -1207,7 +2406,18 @@
     "trend": 4,
     "mortality": 95000,
     "fundingGap": "high",
-    "yearlyPapers": [1200, 1280, 1360, 1450, 1540, 1640, 1740, 1850, 1960, 2080]
+    "yearlyPapers": [
+      1200,
+      1280,
+      1360,
+      1450,
+      1540,
+      1640,
+      1740,
+      1850,
+      1960,
+      2080
+    ]
   },
   {
     "id": "typhoid",
@@ -1218,7 +2428,18 @@
     "trend": 3,
     "mortality": 110000,
     "fundingGap": "high",
-    "yearlyPapers": [1000, 1050, 1100, 1150, 1200, 1260, 1320, 1380, 1440, 1500]
+    "yearlyPapers": [
+      1000,
+      1050,
+      1100,
+      1150,
+      1200,
+      1260,
+      1320,
+      1380,
+      1440,
+      1500
+    ]
   },
   {
     "id": "plague",
@@ -1229,7 +2450,18 @@
     "trend": 2,
     "mortality": 300,
     "fundingGap": "low",
-    "yearlyPapers": [350, 360, 370, 380, 390, 400, 410, 420, 430, 440]
+    "yearlyPapers": [
+      350,
+      360,
+      370,
+      380,
+      390,
+      400,
+      410,
+      420,
+      430,
+      440
+    ]
   },
   {
     "id": "mrsa",
@@ -1238,9 +2470,20 @@
     "description": "Methicillin-resistant Staphylococcus aureus causing hard-to-treat infections.",
     "papers": 35000,
     "trend": 2,
-    "mortality": 11000,
+    "mortality": 130000,
     "fundingGap": "medium",
-    "yearlyPapers": [2800, 2850, 2900, 2950, 3000, 3050, 3100, 3150, 3200, 3250]
+    "yearlyPapers": [
+      2800,
+      2850,
+      2900,
+      2950,
+      3000,
+      3050,
+      3100,
+      3150,
+      3200,
+      3250
+    ]
   },
   {
     "id": "c-difficile",
@@ -1249,9 +2492,20 @@
     "description": "Bacterial infection causing severe diarrhea, often hospital-acquired.",
     "papers": 18000,
     "trend": 4,
-    "mortality": 12000,
+    "mortality": 16000,
     "fundingGap": "medium",
-    "yearlyPapers": [1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900, 2000, 2100]
+    "yearlyPapers": [
+      1200,
+      1300,
+      1400,
+      1500,
+      1600,
+      1700,
+      1800,
+      1900,
+      2000,
+      2100
+    ]
   },
   {
     "id": "zika",
@@ -1262,7 +2516,18 @@
     "trend": -8,
     "mortality": 0,
     "fundingGap": "medium",
-    "yearlyPapers": [100, 200, 3500, 3200, 1500, 900, 600, 400, 350, 300]
+    "yearlyPapers": [
+      100,
+      200,
+      3500,
+      3200,
+      1500,
+      900,
+      600,
+      400,
+      350,
+      300
+    ]
   },
   {
     "id": "west-nile-virus",
@@ -1271,9 +2536,20 @@
     "description": "Mosquito-transmitted virus that can cause serious neurological disease.",
     "papers": 9000,
     "trend": 1,
-    "mortality": 2000,
+    "mortality": 200,
     "fundingGap": "medium",
-    "yearlyPapers": [650, 670, 690, 710, 730, 750, 770, 790, 810, 830]
+    "yearlyPapers": [
+      650,
+      670,
+      690,
+      710,
+      730,
+      750,
+      770,
+      790,
+      810,
+      830
+    ]
   },
   {
     "id": "norovirus",
@@ -1282,9 +2558,20 @@
     "description": "Highly contagious virus causing acute gastroenteritis outbreaks worldwide.",
     "papers": 12000,
     "trend": 5,
-    "mortality": 50000,
+    "mortality": 200000,
     "fundingGap": "high",
-    "yearlyPapers": [800, 870, 940, 1010, 1080, 1160, 1250, 1340, 1440, 1540]
+    "yearlyPapers": [
+      800,
+      870,
+      940,
+      1010,
+      1080,
+      1160,
+      1250,
+      1340,
+      1440,
+      1540
+    ]
   },
   {
     "id": "hpv",
@@ -1295,7 +2582,18 @@
     "trend": 4,
     "mortality": 0,
     "fundingGap": "low",
-    "yearlyPapers": [3500, 3700, 3900, 4100, 4300, 4500, 4800, 5100, 5400, 5700]
+    "yearlyPapers": [
+      3500,
+      3700,
+      3900,
+      4100,
+      4300,
+      4500,
+      4800,
+      5100,
+      5400,
+      5700
+    ]
   },
   {
     "id": "cystic-fibrosis",
@@ -1306,7 +2604,18 @@
     "trend": 4,
     "mortality": 1000,
     "fundingGap": "low",
-    "yearlyPapers": [3300, 3500, 3700, 3900, 4100, 4300, 4500, 4700, 5000, 5300]
+    "yearlyPapers": [
+      3300,
+      3500,
+      3700,
+      3900,
+      4100,
+      4300,
+      4500,
+      4700,
+      5000,
+      5300
+    ]
   },
   {
     "id": "sickle-cell-disease",
@@ -1315,9 +2624,20 @@
     "description": "Inherited blood disorder producing abnormally shaped red blood cells.",
     "papers": 32000,
     "trend": 6,
-    "mortality": 300000,
+    "mortality": 376000,
     "fundingGap": "high",
-    "yearlyPapers": [2000, 2200, 2400, 2600, 2800, 3100, 3400, 3700, 4000, 4400]
+    "yearlyPapers": [
+      2000,
+      2200,
+      2400,
+      2600,
+      2800,
+      3100,
+      3400,
+      3700,
+      4000,
+      4400
+    ]
   },
   {
     "id": "down-syndrome",
@@ -1326,9 +2646,20 @@
     "description": "Chromosomal condition caused by trisomy 21 affecting development.",
     "papers": 28000,
     "trend": 3,
-    "mortality": 0,
+    "mortality": 21000,
     "fundingGap": "medium",
-    "yearlyPapers": [2000, 2080, 2160, 2240, 2320, 2400, 2480, 2570, 2660, 2750]
+    "yearlyPapers": [
+      2000,
+      2080,
+      2160,
+      2240,
+      2320,
+      2400,
+      2480,
+      2570,
+      2660,
+      2750
+    ]
   },
   {
     "id": "hemophilia",
@@ -1339,7 +2670,18 @@
     "trend": 5,
     "mortality": 3000,
     "fundingGap": "medium",
-    "yearlyPapers": [1500, 1600, 1700, 1800, 1900, 2050, 2200, 2350, 2500, 2700]
+    "yearlyPapers": [
+      1500,
+      1600,
+      1700,
+      1800,
+      1900,
+      2050,
+      2200,
+      2350,
+      2500,
+      2700
+    ]
   },
   {
     "id": "thalassemia",
@@ -1348,9 +2690,20 @@
     "description": "Inherited blood disorder reducing hemoglobin production.",
     "papers": 24000,
     "trend": 5,
-    "mortality": 16000,
+    "mortality": 11000,
     "fundingGap": "high",
-    "yearlyPapers": [1600, 1720, 1850, 1980, 2120, 2270, 2430, 2600, 2780, 2970]
+    "yearlyPapers": [
+      1600,
+      1720,
+      1850,
+      1980,
+      2120,
+      2270,
+      2430,
+      2600,
+      2780,
+      2970
+    ]
   },
   {
     "id": "marfan-syndrome",
@@ -1361,7 +2714,18 @@
     "trend": 3,
     "mortality": 1000,
     "fundingGap": "medium",
-    "yearlyPapers": [530, 550, 570, 600, 630, 660, 690, 720, 750, 790]
+    "yearlyPapers": [
+      530,
+      550,
+      570,
+      600,
+      630,
+      660,
+      690,
+      720,
+      750,
+      790
+    ]
   },
   {
     "id": "turner-syndrome",
@@ -1372,7 +2736,18 @@
     "trend": 2,
     "mortality": 0,
     "fundingGap": "medium",
-    "yearlyPapers": [580, 590, 600, 620, 640, 660, 680, 700, 720, 740]
+    "yearlyPapers": [
+      580,
+      590,
+      600,
+      620,
+      640,
+      660,
+      680,
+      700,
+      720,
+      740
+    ]
   },
   {
     "id": "duchenne-muscular-dystrophy",
@@ -1383,7 +2758,18 @@
     "trend": 6,
     "mortality": 1500,
     "fundingGap": "medium",
-    "yearlyPapers": [780, 850, 920, 1000, 1080, 1170, 1270, 1380, 1500, 1630]
+    "yearlyPapers": [
+      780,
+      850,
+      920,
+      1000,
+      1080,
+      1170,
+      1270,
+      1380,
+      1500,
+      1630
+    ]
   },
   {
     "id": "fragile-x-syndrome",
@@ -1394,7 +2780,18 @@
     "trend": 3,
     "mortality": 0,
     "fundingGap": "medium",
-    "yearlyPapers": [430, 450, 470, 490, 510, 530, 550, 580, 610, 640]
+    "yearlyPapers": [
+      430,
+      450,
+      470,
+      490,
+      510,
+      530,
+      550,
+      580,
+      610,
+      640
+    ]
   },
   {
     "id": "tay-sachs-disease",
@@ -1405,7 +2802,18 @@
     "trend": 2,
     "mortality": 500,
     "fundingGap": "medium",
-    "yearlyPapers": [290, 300, 310, 320, 330, 340, 350, 360, 370, 380]
+    "yearlyPapers": [
+      290,
+      300,
+      310,
+      320,
+      330,
+      340,
+      350,
+      360,
+      370,
+      380
+    ]
   },
   {
     "id": "gaucher-disease",
@@ -1416,7 +2824,18 @@
     "trend": 3,
     "mortality": 500,
     "fundingGap": "medium",
-    "yearlyPapers": [380, 400, 420, 440, 460, 480, 500, 530, 560, 590]
+    "yearlyPapers": [
+      380,
+      400,
+      420,
+      440,
+      460,
+      480,
+      500,
+      530,
+      560,
+      590
+    ]
   },
   {
     "id": "ehlers-danlos-syndrome",
@@ -1427,7 +2846,18 @@
     "trend": 8,
     "mortality": 0,
     "fundingGap": "medium",
-    "yearlyPapers": [300, 340, 380, 430, 480, 540, 610, 690, 780, 880]
+    "yearlyPapers": [
+      300,
+      340,
+      380,
+      430,
+      480,
+      540,
+      610,
+      690,
+      780,
+      880
+    ]
   },
   {
     "id": "depression",
@@ -1438,7 +2868,18 @@
     "trend": 5,
     "mortality": 0,
     "fundingGap": "medium",
-    "yearlyPapers": [18000, 19500, 21000, 22500, 24000, 25500, 27000, 29000, 31000, 33000]
+    "yearlyPapers": [
+      18000,
+      19500,
+      21000,
+      22500,
+      24000,
+      25500,
+      27000,
+      29000,
+      31000,
+      33000
+    ]
   },
   {
     "id": "schizophrenia",
@@ -1449,7 +2890,18 @@
     "trend": 3,
     "mortality": 0,
     "fundingGap": "medium",
-    "yearlyPapers": [8500, 8800, 9100, 9400, 9700, 10000, 10400, 10800, 11200, 11600]
+    "yearlyPapers": [
+      8500,
+      8800,
+      9100,
+      9400,
+      9700,
+      10000,
+      10400,
+      10800,
+      11200,
+      11600
+    ]
   },
   {
     "id": "ptsd",
@@ -1460,7 +2912,18 @@
     "trend": 7,
     "mortality": 0,
     "fundingGap": "medium",
-    "yearlyPapers": [3000, 3300, 3600, 3900, 4200, 4600, 5000, 5500, 6000, 6500]
+    "yearlyPapers": [
+      3000,
+      3300,
+      3600,
+      3900,
+      4200,
+      4600,
+      5000,
+      5500,
+      6000,
+      6500
+    ]
   },
   {
     "id": "anxiety-disorders",
@@ -1471,7 +2934,18 @@
     "trend": 6,
     "mortality": 0,
     "fundingGap": "medium",
-    "yearlyPapers": [7000, 7600, 8200, 8900, 9600, 10400, 11200, 12100, 13100, 14200]
+    "yearlyPapers": [
+      7000,
+      7600,
+      8200,
+      8900,
+      9600,
+      10400,
+      11200,
+      12100,
+      13100,
+      14200
+    ]
   },
   {
     "id": "bipolar-disorder",
@@ -1482,7 +2956,18 @@
     "trend": 4,
     "mortality": 0,
     "fundingGap": "medium",
-    "yearlyPapers": [3800, 4000, 4200, 4400, 4600, 4900, 5200, 5500, 5800, 6100]
+    "yearlyPapers": [
+      3800,
+      4000,
+      4200,
+      4400,
+      4600,
+      4900,
+      5200,
+      5500,
+      5800,
+      6100
+    ]
   },
   {
     "id": "ocd",
@@ -1493,7 +2978,18 @@
     "trend": 5,
     "mortality": 0,
     "fundingGap": "medium",
-    "yearlyPapers": [1500, 1620, 1740, 1870, 2000, 2140, 2290, 2450, 2620, 2800]
+    "yearlyPapers": [
+      1500,
+      1620,
+      1740,
+      1870,
+      2000,
+      2140,
+      2290,
+      2450,
+      2620,
+      2800
+    ]
   },
   {
     "id": "adhd",
@@ -1504,7 +3000,18 @@
     "trend": 7,
     "mortality": 0,
     "fundingGap": "low",
-    "yearlyPapers": [2600, 2900, 3200, 3500, 3800, 4200, 4600, 5000, 5500, 6000]
+    "yearlyPapers": [
+      2600,
+      2900,
+      3200,
+      3500,
+      3800,
+      4200,
+      4600,
+      5000,
+      5500,
+      6000
+    ]
   },
   {
     "id": "autism-spectrum-disorder",
@@ -1515,7 +3022,18 @@
     "trend": 8,
     "mortality": 0,
     "fundingGap": "medium",
-    "yearlyPapers": [3000, 3400, 3800, 4200, 4700, 5200, 5800, 6400, 7100, 7800]
+    "yearlyPapers": [
+      3000,
+      3400,
+      3800,
+      4200,
+      4700,
+      5200,
+      5800,
+      6400,
+      7100,
+      7800
+    ]
   },
   {
     "id": "anorexia-nervosa",
@@ -1526,7 +3044,18 @@
     "trend": 4,
     "mortality": 1500,
     "fundingGap": "medium",
-    "yearlyPapers": [1100, 1170, 1240, 1310, 1380, 1460, 1540, 1630, 1720, 1820]
+    "yearlyPapers": [
+      1100,
+      1170,
+      1240,
+      1310,
+      1380,
+      1460,
+      1540,
+      1630,
+      1720,
+      1820
+    ]
   },
   {
     "id": "substance-use-disorder",
@@ -1535,9 +3064,20 @@
     "description": "Chronic condition involving compulsive use of substances despite harmful effects.",
     "papers": 85000,
     "trend": 7,
-    "mortality": 106000,
+    "mortality": 137000,
     "fundingGap": "high",
-    "yearlyPapers": [5200, 5700, 6200, 6800, 7400, 8100, 8900, 9700, 10600, 11600]
+    "yearlyPapers": [
+      5200,
+      5700,
+      6200,
+      6800,
+      7400,
+      8100,
+      8900,
+      9700,
+      10600,
+      11600
+    ]
   },
   {
     "id": "borderline-personality-disorder",
@@ -1548,7 +3088,18 @@
     "trend": 5,
     "mortality": 0,
     "fundingGap": "medium",
-    "yearlyPapers": [950, 1020, 1090, 1170, 1250, 1340, 1440, 1540, 1650, 1770]
+    "yearlyPapers": [
+      950,
+      1020,
+      1090,
+      1170,
+      1250,
+      1340,
+      1440,
+      1540,
+      1650,
+      1770
+    ]
   },
   {
     "id": "insomnia",
@@ -1559,7 +3110,18 @@
     "trend": 5,
     "mortality": 0,
     "fundingGap": "low",
-    "yearlyPapers": [1700, 1830, 1970, 2120, 2270, 2430, 2600, 2790, 2990, 3200]
+    "yearlyPapers": [
+      1700,
+      1830,
+      1970,
+      2120,
+      2270,
+      2430,
+      2600,
+      2790,
+      2990,
+      3200
+    ]
   },
   {
     "id": "endometrial-cancer",
@@ -1568,9 +3130,20 @@
     "description": "Cancer of the uterine lining, the most common gynecological malignancy.",
     "papers": 35000,
     "trend": 5,
-    "mortality": 12000,
+    "mortality": 98000,
     "fundingGap": "medium",
-    "yearlyPapers": [2400, 2600, 2800, 3000, 3200, 3400, 3700, 4000, 4300, 4600]
+    "yearlyPapers": [
+      2400,
+      2600,
+      2800,
+      3000,
+      3200,
+      3400,
+      3700,
+      4000,
+      4300,
+      4600
+    ]
   },
   {
     "id": "congenital-heart-defects",
@@ -1579,9 +3152,20 @@
     "description": "Structural heart abnormalities present at birth affecting blood flow.",
     "papers": 35000,
     "trend": 3,
-    "mortality": 5000,
+    "mortality": 251000,
     "fundingGap": "medium",
-    "yearlyPapers": [2500, 2600, 2700, 2800, 2900, 3000, 3100, 3200, 3300, 3400]
+    "yearlyPapers": [
+      2500,
+      2600,
+      2700,
+      2800,
+      2900,
+      3000,
+      3100,
+      3200,
+      3300,
+      3400
+    ]
   },
   {
     "id": "dengue-hemorrhagic-fever",
@@ -1590,9 +3174,20 @@
     "description": "Severe complication of dengue infection causing plasma leakage and bleeding.",
     "papers": 8500,
     "trend": 8,
-    "mortality": 20000,
+    "mortality": 0,
     "fundingGap": "high",
-    "yearlyPapers": [500, 560, 630, 700, 780, 870, 970, 1080, 1200, 1340]
+    "yearlyPapers": [
+      500,
+      560,
+      630,
+      700,
+      780,
+      870,
+      970,
+      1080,
+      1200,
+      1340
+    ]
   },
   {
     "id": "sepsis",
@@ -1601,9 +3196,20 @@
     "description": "Life-threatening organ dysfunction caused by the body's response to infection.",
     "papers": 95000,
     "trend": 7,
-    "mortality": 270000,
+    "mortality": 11000000,
     "fundingGap": "high",
-    "yearlyPapers": [5800, 6400, 7000, 7700, 8500, 9300, 10200, 11200, 12300, 13500]
+    "yearlyPapers": [
+      5800,
+      6400,
+      7000,
+      7700,
+      8500,
+      9300,
+      10200,
+      11200,
+      12300,
+      13500
+    ]
   },
   {
     "id": "prion-disease",
@@ -1612,9 +3218,20 @@
     "description": "Fatal neurodegenerative disorders caused by misfolded prion proteins.",
     "papers": 9500,
     "trend": 2,
-    "mortality": 500,
+    "mortality": 2500,
     "fundingGap": "medium",
-    "yearlyPapers": [680, 700, 720, 740, 760, 780, 800, 820, 840, 860]
+    "yearlyPapers": [
+      680,
+      700,
+      720,
+      740,
+      760,
+      780,
+      800,
+      820,
+      840,
+      860
+    ]
   },
   {
     "id": "polycystic-kidney-disease",
@@ -1625,6 +3242,17 @@
     "trend": 5,
     "mortality": 2000,
     "fundingGap": "medium",
-    "yearlyPapers": [740, 800, 860, 930, 1000, 1080, 1160, 1250, 1350, 1460]
+    "yearlyPapers": [
+      740,
+      800,
+      860,
+      930,
+      1000,
+      1080,
+      1160,
+      1250,
+      1350,
+      1460
+    ]
   }
 ]
