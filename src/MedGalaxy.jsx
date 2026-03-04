@@ -1011,7 +1011,17 @@ export default function MedGalaxy() {
     const ro=new ResizeObserver(([e])=>{const{width:w,height:h}=e.contentRect;if(!w||!h)return;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h);});
     ro.observe(container);
     // Escape to dismiss story
-    function onKey(e){if(e.key==='Escape'){setStoryVisible(false);setStoryCaption('');if(spotlightRef.current.timer){clearInterval(spotlightRef.current.timer);spotlightRef.current.timer=null;setSpotlightActive(false);setSpotlightCaption('');}}}
+    function onKey(e){if(e.key==='Escape'){
+      setStoryCaption('');
+      if(spotlightRef.current.timer){clearInterval(spotlightRef.current.timer);spotlightRef.current.timer=null;setSpotlightActive(false);setSpotlightCaption('');}
+      if(explodeActiveRef.current){
+        const cur=curPosRef.current;if(cur){const cp=cur.map(p=>[...p]);const src=catPosRef.current;explodeAnimRef.current={from:cp,to:src.map(p=>[...p]),f:0,total:60,returning:true};}
+        explodeActiveRef.current=false;setExplodeActive(false);setVelocityActive(false);
+      }
+      if(connectionsActiveRef.current){connectionsActiveRef.current=false;setConnectionsActive(false);}
+      setNeglectMode(false);
+      deselect();
+    }}
     window.addEventListener('keydown',onKey);
 
     return()=>{alive=false;ro.disconnect();controls.dispose();window.removeEventListener('keydown',onKey);if(spotlightRef.current.timer)clearInterval(spotlightRef.current.timer);renderer.domElement.removeEventListener('mousemove',onMM);renderer.domElement.removeEventListener('mousedown',onMD);renderer.domElement.removeEventListener('mouseup',onMU);renderer.domElement.removeEventListener('dblclick',onDblClick);renderer.domElement.removeEventListener('touchstart',onTouchStart);renderer.domElement.removeEventListener('touchmove',onTouchMove2);renderer.domElement.removeEventListener('touchend',onTouchEnd);sGeo.dispose();sMat.dispose();pGeo.dispose();pMat.dispose();eGeo.dispose();eMat.dispose();iMesh.dispose();glowTex.dispose();renderer.dispose();if(container.contains(renderer.domElement))container.removeChild(renderer.domElement);};
