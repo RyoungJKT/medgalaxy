@@ -216,21 +216,66 @@ function Sparkline({data,color,w=260,h=50}){if(!data||!data.length)return null;c
 
 function Tooltip({disease,connCount,x,y}){if(!disease)return null;const c=CC[disease.category],t=disease.trend,ar=t>0?'↑':t<0?'↓':'→';return(<div style={{position:'fixed',left:x+15,top:y+15,pointerEvents:'none',zIndex:100,background:'rgba(10,16,30,0.94)',backdropFilter:'blur(16px)',maxWidth:240,border:'1px solid rgba(255,255,255,0.08)',borderRadius:8,padding:'8px 12px',fontFamily:'IBM Plex Mono,monospace',fontSize:11,color:'#e2e8f0'}}><div style={{fontWeight:600,fontSize:12,marginBottom:3}}>{disease.label}</div><span style={{fontSize:9,padding:'1px 6px',borderRadius:4,background:c+'22',color:c}}>{CL[disease.category]}</span><div style={{color:'#94a3b8',marginTop:4}}>{fmt(disease.papers)} papers <span style={{color:t>0?'#22c55e':t<0?'#ef4444':'#94a3b8'}}>{ar}{Math.abs(t)}%</span></div><div style={{color:'#64748b'}}>{connCount} connections</div></div>);}
 
-function Sidebar({disease,data,onSelect,onClose}){if(!disease)return null;const c=CC[disease.category],idx=data.diseases.indexOf(disease),cc=data.connCounts.get(idx);const conns=data.edges.filter(e=>e.si===idx||e.ti===idx).map(e=>{const oi=e.si===idx?e.ti:e.si;return{d:data.diseases[oi],sp:e.sharedPapers,t:e.trend,oi};}).sort((a,b)=>b.sp-a.sp);const t=disease.trend,ar=t>0?'↑':t<0?'↓':'→',tc=t>0?'#22c55e':t<0?'#ef4444':'#94a3b8';const gc={high:'#ef4444',medium:'#eab308',low:'#22c55e'};
+function Sidebar({disease,data,onSelect,onClose}){if(!disease)return null;const c=CC[disease.category],idx=data.diseases.indexOf(disease),cc=data.connCounts.get(idx);const conns=data.edges.filter(e=>e.si===idx||e.ti===idx).map(e=>{const oi=e.si===idx?e.ti:e.si;return{d:data.diseases[oi],sp:e.sharedPapers,t:e.trend,oi};}).sort((a,b)=>b.sp-a.sp);const t=disease.trend,ar=t>0?'↑':t<0?'↓':'→',tc=t>0?'#22c55e':t<0?'#ef4444':'#94a3b8';const gc={high:'#ef4444',medium:'#eab308',low:'#22c55e'};const ppd=disease.mortality>0?disease.papers/disease.mortality:null;const ppdStr=ppd===null?'N/A':ppd>=10?String(Math.round(ppd)):ppd>=1?ppd.toFixed(1):ppd>=0.01?ppd.toFixed(2):ppd.toFixed(3);
   const mob=isMob();
   const panelStyle=mob?{position:'absolute',bottom:0,left:0,right:0,maxHeight:'60vh',background:'rgba(10,16,30,0.96)',backdropFilter:'blur(16px)',borderTop:'1px solid rgba(255,255,255,0.08)',borderRadius:'16px 16px 0 0',fontFamily:'IBM Plex Mono,monospace',color:'#e2e8f0',overflowY:'auto',overflowX:'hidden',zIndex:50,fontSize:11}:{position:'absolute',top:75,right:0,width:320,height:'calc(100% - 75px)',background:'rgba(10,16,30,0.94)',backdropFilter:'blur(16px)',borderLeft:'1px solid rgba(255,255,255,0.06)',fontFamily:'IBM Plex Mono,monospace',color:'#e2e8f0',overflowY:'auto',overflowX:'hidden',zIndex:50,fontSize:11};
   return(<>{mob&&<div onClick={onClose} style={{position:'absolute',inset:0,zIndex:49,background:'rgba(0,0,0,0.4)'}}/>}<div style={panelStyle}>
     {mob&&<div style={{display:'flex',justifyContent:'center',padding:'8px 0'}}><div style={{width:32,height:4,borderRadius:2,background:'rgba(255,255,255,0.2)'}}/></div>}
     <div style={{padding:'16px 16px 8px',borderBottom:'1px solid rgba(255,255,255,0.06)'}}><div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}><div><div style={{fontSize:15,fontWeight:600,marginBottom:4}}>{disease.label}</div><span style={{fontSize:9,padding:'2px 8px',borderRadius:4,background:c+'22',color:c}}>{CL[disease.category]}</span></div><button onClick={onClose} style={{background:'none',border:'none',color:'#64748b',cursor:'pointer',fontSize:18,lineHeight:1,padding:'0 4px'}}>×</button></div></div>
     <div style={{padding:'10px 16px',color:'#94a3b8',lineHeight:1.5}}>{disease.description}</div>
-    <div style={{padding:'0 16px 12px',display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}><SB l="Publications" v={fmt(disease.papers)} s={<span style={{color:tc}}>{ar}{Math.abs(t)}%</span>}/><SB l="Connections" v={cc}/><SB l="WHO Deaths/yr" v={disease.mortality>0?fmt(disease.mortality):'N/A'}/><SB l="Funding Gap" v={disease.fundingGap.toUpperCase()} vc={gc[disease.fundingGap]}/></div>
+    <div style={{padding:'0 16px 12px',display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}><SB l="Publications" v={fmt(disease.papers)} s={<span style={{color:tc}}>{ar}{Math.abs(t)}%</span>}/><SB l="Connections" v={cc}/><SB l="WHO Deaths/yr" v={disease.mortality>0?fmt(disease.mortality):'N/A'}/><SB l="Funding Gap" v={disease.fundingGap.toUpperCase()} vc={gc[disease.fundingGap]}/><SB l="Papers/Death" v={ppdStr}/></div>
     <div style={{padding:'0 16px 12px'}}><div style={{color:'#94a3b8',fontSize:9,marginBottom:4}}>Publication Trend (2014–2024)</div><Sparkline data={disease.yearlyPapers} color={c}/></div>
     <div style={{padding:'0 16px 12px'}}><a href={`https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(disease.label)}&sort=date`} target="_blank" rel="noopener noreferrer" style={{display:'block',textAlign:'center',padding:'8px 0',borderRadius:6,background:c+'22',color:c,textDecoration:'none',fontSize:11,fontWeight:500}}>View on PubMed →</a></div>
     <div style={{padding:'0 16px 16px'}}><div style={{color:'#94a3b8',fontSize:9,marginBottom:2}}>Connections ({conns.length})</div><div style={{color:'#64748b',fontSize:8,marginBottom:6}}>Diseases linked by shared PubMed publications</div><div style={{maxHeight:240,overflowY:'auto'}}>{conns.map((cn,i)=>{const cc2=CC[cn.d.category],ta=cn.t==='up'?'↑':cn.t==='down'?'↓':'→';return(<div key={i} onClick={()=>onSelect(cn.oi)} style={{display:'flex',alignItems:'center',gap:8,padding:'5px 6px',cursor:'pointer',borderRadius:4,borderBottom:'1px solid rgba(255,255,255,0.03)'}} onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.04)'}} onMouseLeave={e=>{e.currentTarget.style.background='none'}}><span style={{width:6,height:6,borderRadius:'50%',background:cc2,flexShrink:0}}/><span style={{flex:1,color:'#cbd5e1'}}>{cn.d.label}</span><span style={{color:'#94a3b8',fontSize:10}}>{fmt(cn.sp)}</span><span style={{color:cn.t==='up'?'#22c55e':cn.t==='down'?'#ef4444':'#64748b',fontSize:10}}>{ta}</span></div>);})}</div></div>
   </div></>);}
 function SB({l,v,s,vc}){return(<div style={{background:'rgba(255,255,255,0.03)',borderRadius:6,padding:'8px 10px',border:'1px solid rgba(255,255,255,0.04)'}}><div style={{color:'#94a3b8',fontSize:9,marginBottom:2}}>{l}</div><div style={{fontSize:14,fontWeight:600,color:vc||'#e2e8f0'}}>{v} {s&&<span style={{fontSize:10,fontWeight:400}}>{s}</span>}</div></div>);}
 
-function Header({diseaseCount,edgeCount,searchQuery,onSearchChange,sizeMode,onSizeToggle,layoutMode,onLayoutToggle,sizeToggleRef}){
+function ExplodeOverlay({data,onClose}){
+  const mob=isMob();
+  const maxH=data.highest[0]?.ppd||1;
+  const minPPD=data.lowest[0]?.ppd||0.001;
+  function fR(v){return v>=10?String(Math.round(v)):v>=1?v.toFixed(1):v>=0.01?v.toFixed(2):v.toFixed(3);}
+  return(
+    <div style={{position:'absolute',inset:0,zIndex:55,display:'flex',alignItems:'center',justifyContent:'center',background:'rgba(0,0,0,0.5)',backdropFilter:'blur(4px)',fontFamily:'IBM Plex Mono,monospace',opacity:0,animation:'fadeIn 0.5s ease 0.3s forwards'}}>
+      <div style={{background:'rgba(10,16,30,0.97)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:12,padding:mob?16:28,maxWidth:mob?'95vw':820,width:'100%',maxHeight:'85vh',overflowY:'auto',position:'relative'}}>
+        <button onClick={onClose} style={{position:'absolute',top:12,right:14,background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:6,color:'#94a3b8',cursor:'pointer',fontSize:14,lineHeight:1,padding:'4px 8px',fontFamily:'inherit'}}>✕ Close</button>
+        <div style={{fontSize:mob?14:18,fontWeight:600,color:'#e2e8f0',marginBottom:4}}>Research Intensity</div>
+        <div style={{fontSize:mob?9:12,color:'#64748b',marginBottom:mob?16:24}}>Papers published per reported death — revealing where research attention doesn't match disease burden</div>
+        <div style={{display:'flex',flexDirection:mob?'column':'row',gap:mob?20:36}}>
+          <div style={{flex:1}}>
+            <div style={{fontSize:10,color:'#22c55e',fontWeight:600,marginBottom:4,textTransform:'uppercase',letterSpacing:1}}>Most Over-Researched</div>
+            <div style={{fontSize:8,color:'#475569',marginBottom:12}}>Highest papers per death</div>
+            {data.highest.map((d,i)=>(<div key={d.id} style={{marginBottom:8,opacity:0,animation:`fadeIn 0.3s ease ${0.5+i*0.05}s forwards`}}>
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:3}}>
+                <span style={{fontSize:mob?9:11,color:'#cbd5e1'}}>{d.label}</span>
+                <span style={{fontSize:mob?9:11,color:'#22c55e',fontWeight:600,marginLeft:8,whiteSpace:'nowrap'}}>{fR(d.ppd)}</span>
+              </div>
+              <div style={{height:6,background:'rgba(255,255,255,0.04)',borderRadius:3,overflow:'hidden'}}>
+                <div style={{height:'100%',width:`${Math.max((d.ppd/maxH)*100,2)}%`,background:'linear-gradient(90deg,#22c55e,#059669)',borderRadius:3,transition:'width 0.6s ease'}}/>
+              </div>
+            </div>))}
+          </div>
+          <div style={{width:1,background:'rgba(255,255,255,0.06)',display:mob?'none':'block'}}/>
+          <div style={{flex:1}}>
+            <div style={{fontSize:10,color:'#ef4444',fontWeight:600,marginBottom:4,textTransform:'uppercase',letterSpacing:1}}>Most Under-Researched</div>
+            <div style={{fontSize:8,color:'#475569',marginBottom:12}}>Fewest papers per death</div>
+            {data.lowest.map((d,i)=>(<div key={d.id} style={{marginBottom:8,opacity:0,animation:`fadeIn 0.3s ease ${0.5+i*0.05}s forwards`}}>
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:3}}>
+                <span style={{fontSize:mob?9:11,color:'#cbd5e1'}}>{d.label}</span>
+                <span style={{fontSize:mob?9:11,color:'#ef4444',fontWeight:600,marginLeft:8,whiteSpace:'nowrap'}}>{fR(d.ppd)}</span>
+              </div>
+              <div style={{height:6,background:'rgba(255,255,255,0.04)',borderRadius:3,overflow:'hidden'}}>
+                <div style={{height:'100%',width:`${Math.max((minPPD/d.ppd)*100,2)}%`,background:'linear-gradient(90deg,#ef4444,#dc2626)',borderRadius:3,transition:'width 0.6s ease'}}/>
+              </div>
+            </div>))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Header({diseaseCount,edgeCount,searchQuery,onSearchChange,sizeMode,onSizeToggle,layoutMode,onLayoutToggle,sizeToggleRef,onExplode}){
   const mob=isMob();
   const [menuOpen,setMenuOpen]=React.useState(false);
   const [searchOpen,setSearchOpen]=React.useState(false);
@@ -240,18 +285,21 @@ function Header({diseaseCount,edgeCount,searchQuery,onSearchChange,sizeMode,onSi
     {mob?(<>
       {searchOpen&&<div style={{position:'absolute',top:'100%',left:0,right:0,padding:'8px 12px',background:'rgba(6,8,13,0.95)',pointerEvents:'auto'}}><input value={searchQuery} onChange={e=>onSearchChange(e.target.value)} placeholder="Search diseases..." autoFocus onBlur={()=>{if(!searchQuery)setSearchOpen(false);}} style={{background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,padding:'7px 12px',color:'#e2e8f0',fontSize:12,fontFamily:'inherit',width:'100%',outline:'none'}}/></div>}
       <button onClick={()=>{setSearchOpen(!searchOpen);setMenuOpen(false);}} style={{pointerEvents:'auto',background:'none',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,padding:'5px 8px',color:'#94a3b8',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>&#x1F50D;</button>
-      <div style={{position:'relative',pointerEvents:'auto'}}><button onClick={()=>{setMenuOpen(!menuOpen);setSearchOpen(false);}} style={{background:'none',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,padding:'5px 8px',color:'#94a3b8',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>&#x2630;</button>
+      <div style={{position:'relative',pointerEvents:'auto'}}><button onClick={()=>{setMenuOpen(!menuOpen);setSearchOpen(false);}} style={{background:'none',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,padding:'5px 8px',color:'#94a3b8',fontSize:10,cursor:'pointer',fontFamily:'inherit'}}>Menu</button>
         {menuOpen&&<div style={{position:'absolute',top:'100%',right:0,marginTop:4,background:'rgba(10,16,30,0.96)',backdropFilter:'blur(16px)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,padding:8,minWidth:160,display:'flex',flexDirection:'column',gap:6}}>
           <div style={{color:'#64748b',fontSize:9,padding:'0 4px'}}>Size by</div>
           <div ref={sizeToggleRef} style={{display:'flex',borderRadius:6,overflow:'hidden',border:'1px solid rgba(255,255,255,0.08)'}}>{['papers','mortality'].map(m=>(<button key={m} onClick={()=>{onSizeToggle(m);setMenuOpen(false);}} style={{flex:1,padding:'6px 10px',fontSize:10,fontFamily:'inherit',border:'none',cursor:'pointer',background:sizeMode===m?'rgba(255,255,255,0.12)':'transparent',color:sizeMode===m?'#e2e8f0':'#64748b'}}>{m==='papers'?'Papers':'Mortality'}</button>))}</div>
           <div style={{color:'#64748b',fontSize:9,padding:'0 4px'}}>Layout</div>
           <div style={{display:'flex',borderRadius:6,overflow:'hidden',border:'1px solid rgba(255,255,255,0.08)'}}>{['category','network'].map(m=>(<button key={m} onClick={()=>{onLayoutToggle(m);setMenuOpen(false);}} style={{flex:1,padding:'6px 10px',fontSize:10,fontFamily:'inherit',border:'none',cursor:'pointer',background:layoutMode===m?'rgba(255,255,255,0.12)':'transparent',color:layoutMode===m?'#e2e8f0':'#64748b'}}>{m==='category'?'Category':'Network'}</button>))}</div>
+          <div style={{color:'#64748b',fontSize:9,padding:'4px 4px 0'}}>Analysis</div>
+          <button onClick={()=>{onExplode();setMenuOpen(false);}} style={{padding:'6px 10px',fontSize:10,fontFamily:'inherit',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,cursor:'pointer',background:'transparent',color:'#e2e8f0',width:'100%',textAlign:'left'}}>Research Gap</button>
         </div>}
       </div>
     </>):(<>
       <div style={{position:'relative',pointerEvents:'auto'}}><input value={searchQuery} onChange={e=>onSearchChange(e.target.value)} placeholder="Search diseases..." style={{background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,padding:'7px 12px',color:'#e2e8f0',fontSize:12,fontFamily:'inherit',width:200,outline:'none'}}/></div>
       <div ref={sizeToggleRef} style={{display:'flex',borderRadius:6,overflow:'hidden',border:'1px solid rgba(255,255,255,0.08)',pointerEvents:'auto'}}>{['papers','mortality'].map(m=>(<button key={m} onClick={()=>onSizeToggle(m)} style={{padding:'6px 12px',fontSize:11,fontFamily:'inherit',border:'none',cursor:'pointer',background:sizeMode===m?'rgba(255,255,255,0.12)':'transparent',color:sizeMode===m?'#e2e8f0':'#64748b'}}>{m==='papers'?'Papers':'Mortality'}</button>))}</div>
       <div style={{display:'flex',borderRadius:6,overflow:'hidden',border:'1px solid rgba(255,255,255,0.08)',pointerEvents:'auto'}}>{['category','network'].map(m=>(<button key={m} onClick={()=>onLayoutToggle(m)} style={{padding:'6px 12px',fontSize:11,fontFamily:'inherit',border:'none',cursor:'pointer',background:layoutMode===m?'rgba(255,255,255,0.12)':'transparent',color:layoutMode===m?'#e2e8f0':'#64748b'}}>{m==='category'?'Category':'Network'}</button>))}</div>
+      <button onClick={onExplode} style={{padding:'6px 12px',fontSize:11,fontFamily:'inherit',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,cursor:'pointer',background:'transparent',color:'#e2e8f0',pointerEvents:'auto',whiteSpace:'nowrap'}}>Research Gap</button>
     </>)}
     <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}@keyframes slideDown{to{transform:translateY(0)}}@keyframes slideUp{to{transform:translateY(0)}}@keyframes fadeIn{to{opacity:1}}@keyframes chipPulse{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,0.4)}50%{box-shadow:0 0 12px 4px rgba(34,197,94,0.15)}}`}</style>
   </div>);
@@ -273,7 +321,7 @@ function StoryChips({onChip,visible}){
   const chips=[
     {id:'researched',label:'Most Researched',desc:'See the biggest research spheres'},
     {id:'killers',label:'Biggest Killers',desc:'Diseases with highest mortality'},
-    {id:'mismatch',label:'See the Mismatch',desc:'The 600:1 research gap',highlight:true},
+    {id:'mismatch',label:'See the Mismatch',desc:'The 2,000:1 research gap',highlight:true},
   ];
   return(<div style={{position:'absolute',bottom:mob?40:50,left:'50%',transform:'translateX(-50%)',zIndex:45,display:'flex',gap:mob?6:10,fontFamily:'IBM Plex Mono,monospace',opacity:0,animation:'fadeIn 0.5s ease 2.8s forwards'}}>
     {chips.map(c=>(<button key={c.id} onClick={()=>onChip(c.id)} style={{padding:mob?'6px 10px':'8px 16px',borderRadius:8,border:c.highlight?'1px solid rgba(34,197,94,0.4)':'1px solid rgba(255,255,255,0.1)',background:'rgba(10,16,30,0.9)',backdropFilter:'blur(12px)',color:'#e2e8f0',fontSize:mob?10:11,cursor:'pointer',fontFamily:'inherit',animation:'none',transition:'background 0.2s'}} onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.08)'}} onMouseLeave={e=>{e.currentTarget.style.background='rgba(10,16,30,0.9)'}}>{c.label}</button>))}
@@ -309,7 +357,12 @@ export default function MedGalaxy() {
   const [layoutMode,setLayoutMode]=useState('category');
   const [storyVisible,setStoryVisible]=useState(true);
   const [storyCaption,setStoryCaption]=useState('');
+  const [explodeActive,setExplodeActive]=useState(false);
+  const explodeAnimRef=useRef(null);
+  const explodeActiveRef=useRef(false);
   const labelsRef=useRef(null); // DOM container for node labels
+
+  const ppdData=React.useMemo(()=>{const wr=diseasesData.filter(d=>d.mortality>0).map(d=>({...d,ppd:d.papers/d.mortality}));const s=[...wr].sort((a,b)=>b.ppd-a.ppd);return{highest:s.slice(0,10),lowest:s.slice(-10).reverse()};},[]);
 
   const selectDisease=useCallback((idx)=>{const data=dataRef.current;if(!data)return;setSelectedNode({index:idx,disease:data.diseases[idx]});idleRef.current=0;const p=curPosRef.current?curPosRef.current[idx]:catPosRef.current[idx];const ctrl=controlsRef.current;if(ctrl)flyRef.current={st:ctrl.target.clone(),et:new THREE.Vector3(p[0],p[1],p[2]),sr:ctrl.radius,er:Math.max(150,ctrl.radius*0.5),f:0,total:50};},[]);
   const deselect=useCallback(()=>{setSelectedNode(null);},[]);
@@ -317,6 +370,26 @@ export default function MedGalaxy() {
   const handleSize=useCallback((mode)=>{if(mode===sizeMode)return;setSizeMode(mode);sizeModeRef.current=mode;const data=dataRef.current;if(!data)return;sizeAnimRef.current={from:data.diseases.map(d=>sizeMode==='papers'?nR(d.papers):nRM(d.mortality)),to:data.diseases.map(d=>mode==='papers'?nR(d.papers):nRM(d.mortality)),f:0,total:60};},[sizeMode]);
   const handleLayout=useCallback((mode)=>{if(mode===layoutMode)return;setLayoutMode(mode);layoutModeRef.current=mode;const cp=catPosRef.current,np=netPosRef.current;if(!cp||!np)return;layoutAnimRef.current={from:curPosRef.current||(layoutMode==='category'?cp:np),to:mode==='category'?cp:np,f:0,total:60};},[layoutMode]);
   const handleSearchSel=useCallback((disease)=>{const data=dataRef.current;if(!data)return;const idx=data.idMap[disease.id];if(idx!==undefined){selectDisease(idx);setSearchQuery('');}},[selectDisease]);
+
+  const handleExplode=useCallback(()=>{
+    if(explodeActiveRef.current)return;
+    explodeActiveRef.current=true;setExplodeActive(true);
+    const cur=curPosRef.current;if(!cur)return;
+    const saved=cur.map(p=>[...p]);
+    const exploded=cur.map(p=>{
+      const d=Math.sqrt(p[0]*p[0]+p[1]*p[1]+p[2]*p[2])||1;
+      const factor=2.5+Math.random()*1.5;
+      return[p[0]*factor+(Math.random()-0.5)*80,p[1]*factor+(Math.random()-0.5)*80,p[2]*factor+(Math.random()-0.5)*80];
+    });
+    explodeAnimRef.current={from:saved,to:exploded,f:0,total:60};
+  },[]);
+  const handleUnexplode=useCallback(()=>{
+    const cur=curPosRef.current;if(!cur)return;
+    const currentPos=cur.map(p=>[...p]);
+    const src=layoutModeRef.current==='network'?netPosRef.current:catPosRef.current;
+    explodeAnimRef.current={from:currentPos,to:src.map(p=>[...p]),f:0,total:60,returning:true};
+    setExplodeActive(false);
+  },[]);
 
   // Story mode handler
   const storyRef=useRef({timer:null,step:0,seq:null,chipId:null,nodeIdx:-1});
@@ -344,7 +417,7 @@ export default function MedGalaxy() {
     const sequences={
       researched:[{id:find('breast-cancer'),caption:'Breast Cancer — 430K papers'},{id:find('lung-cancer'),caption:'Lung Cancer — 350K papers'},{id:find('leukemia'),caption:'Leukemia — 85K papers'},{caption:'These diseases have 100,000+ papers each.'}],
       killers:[{id:find('heart-disease'),caption:'Heart Disease — 9M deaths/yr'},{id:find('stroke'),caption:'Stroke — 7.3M deaths/yr'},{id:find('copd'),caption:'COPD — 3.2M deaths/yr'},{caption:'These diseases kill millions per year.'}],
-      mismatch:[{id:find('multiple-sclerosis'),caption:'Multiple Sclerosis — 75K papers, 4,700 deaths/yr'},{id:find('copd'),caption:'COPD — 85K papers, 3.2M deaths/yr'},{caption:'Similar research, 687× more deaths. Now toggle Mortality →'}],
+      mismatch:[{id:find('cystic-fibrosis'),caption:'Cystic Fibrosis — 48K papers, 1K deaths (48 papers per death)'},{id:find('rheumatic-heart-disease'),caption:'Rheumatic Heart Disease — 9K papers, 373K deaths (0.02 papers per death)'},{caption:'2,000× research intensity gap. Now toggle Mortality →'}],
     };
     sr.seq=sequences[chipId];sr.step=0;sr.chipId=chipId;
     if(!sr.seq)return;
@@ -504,6 +577,18 @@ export default function MedGalaxy() {
         for(let i=0;i<count;i++){const r=sa.from[i]+(sa.to[i]-sa.from[i])*ease;v3.set(cur[i][0],cur[i][1],cur[i][2]);s3.set(r,r,r);m4.compose(v3,q4,s3);iMesh.setMatrixAt(i,m4);proxies[i].scale.set(Math.max(r,1.5),Math.max(r,1.5),Math.max(r,1.5));if(glowSprites[i]){const gr=r*3;glowSprites[i].scale.set(gr,gr,1);}}
         iMesh.instanceMatrix.needsUpdate=true;if(t>=1)sizeAnimRef.current=null;}
 
+      // Explode animation
+      const ea=explodeAnimRef.current;
+      if(ea){ea.f++;const t=Math.min(ea.f/ea.total,1),ease=1-Math.pow(1-t,3);const cur=curPosRef.current;
+        for(let i=0;i<count;i++){cur[i][0]=ea.from[i][0]+(ea.to[i][0]-ea.from[i][0])*ease;cur[i][1]=ea.from[i][1]+(ea.to[i][1]-ea.from[i][1])*ease;cur[i][2]=ea.from[i][2]+(ea.to[i][2]-ea.from[i][2])*ease;}
+        for(let i=0;i<count;i++){v3.set(cur[i][0],cur[i][1],cur[i][2]);const r=proxies[i].scale.x;s3.set(r,r,r);m4.compose(v3,q4,s3);iMesh.setMatrixAt(i,m4);proxies[i].position.set(cur[i][0],cur[i][1],cur[i][2]);if(glowSprites[i])glowSprites[i].position.set(cur[i][0],cur[i][1],cur[i][2]);}
+        iMesh.instanceMatrix.needsUpdate=true;
+        const ep=eGeo.getAttribute('position').array;
+        for(let i=0;i<eC;i++){const e2=displayEdges[i],s2=cur[e2.si],t2=cur[e2.ti],o=i*6;ep[o]=s2[0];ep[o+1]=s2[1];ep[o+2]=s2[2];ep[o+3]=t2[0];ep[o+4]=t2[1];ep[o+5]=t2[2];}
+        eGeo.getAttribute('position').needsUpdate=true;
+        if(t>=1){explodeAnimRef.current=null;if(ea.returning)explodeActiveRef.current=false;}
+      }
+
       // Plasma animation — update time uniform (desktop only)
       if(sMat.uniforms)sMat.uniforms.time.value=frame*0.016;
 
@@ -512,7 +597,7 @@ export default function MedGalaxy() {
       if(fly){fly.f++;const t=Math.min(fly.f/fly.total,1),ease=1-Math.pow(1-t,3);controls.target.lerpVectors(fly.st,fly.et,ease);controls.radius=fly.sr+(fly.er-fly.sr)*ease;if(t>=1)flyRef.current=null;}
 
       // ── Idle drift: sinusoidal breathing on node positions (single-pass) ──
-      if(!layoutAnimRef.current&&!sizeAnimRef.current){
+      if(!layoutAnimRef.current&&!sizeAnimRef.current&&!explodeAnimRef.current&&!explodeActiveRef.current){
         const t=frame*0.016;
         const cur=curPosRef.current;
         const src=layoutModeRef.current==='network'?netPosRef.current:catPosRef.current;
@@ -636,7 +721,7 @@ export default function MedGalaxy() {
 
   return(
     <div ref={containerRef} style={{width:'100%',height:'100%',position:'relative',overflow:'hidden',cursor,touchAction:'none'}}>
-      <Header diseaseCount={diseasesData.length} edgeCount={connectionsData.length} searchQuery={searchQuery} onSearchChange={setSearchQuery} sizeMode={sizeMode} onSizeToggle={handleSize} layoutMode={layoutMode} onLayoutToggle={handleLayout} sizeToggleRef={sizeToggleRef}/>
+      <Header diseaseCount={diseasesData.length} edgeCount={connectionsData.length} searchQuery={searchQuery} onSearchChange={setSearchQuery} sizeMode={sizeMode} onSizeToggle={handleSize} layoutMode={layoutMode} onLayoutToggle={handleLayout} sizeToggleRef={sizeToggleRef} onExplode={handleExplode}/>
       <FilterBar activeCategories={activeCats} onToggle={toggleCat}/>
       <Legend sizeMode={sizeMode} layoutMode={layoutMode}/>
       {searchQuery&&dataRef.current&&<SearchDropdown query={searchQuery} diseases={dataRef.current.diseases} onSelect={handleSearchSel}/>}
@@ -649,6 +734,7 @@ export default function MedGalaxy() {
       <style>{`.node-lbl{transition:opacity 0.15s}.lbl-hover .lbl-name{font-size:11px!important;font-weight:600;color:#e2e8f0!important}.lbl-hover .lbl-detail{display:inline!important}`}</style>
       <StoryChips onChip={handleStory} visible={storyVisible}/>
       {storyCaption&&<StoryCaption text={storyCaption} onClick={advanceStory}/>}
+      {explodeActive&&<ExplodeOverlay data={ppdData} onClose={handleUnexplode}/>}
     </div>
   );
 }
