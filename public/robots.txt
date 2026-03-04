@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://medgalaxy.vercel.app/sitemap.xml

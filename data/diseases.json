@@ -1547,7 +1547,7 @@
     "description": "Progressive lung disease causing obstructed airflow and breathing difficulty.",
     "papers": 85000,
     "trend": 4,
-    "mortality": 3230000,
+    "mortality": 3500000,
     "fundingGap": "high",
     "yearlyPapers": [
       5800,
@@ -3312,29 +3312,6 @@
     "region": "SEAR"
   },
   {
-    "id": "dengue-hemorrhagic-fever",
-    "label": "Dengue Hemorrhagic Fever",
-    "category": "tropical",
-    "description": "Severe complication of dengue infection causing plasma leakage and bleeding.",
-    "papers": 8500,
-    "trend": 8,
-    "mortality": 0,
-    "fundingGap": "high",
-    "yearlyPapers": [
-      500,
-      560,
-      630,
-      700,
-      780,
-      870,
-      970,
-      1080,
-      1200,
-      1340
-    ],
-    "region": "SEAR"
-  },
-  {
     "id": "sepsis",
     "label": "Sepsis",
     "category": "infectious",
@@ -3522,10 +3499,10 @@
     "id": "rotavirus",
     "label": "Rotavirus",
     "category": "infectious",
-    "description": "Leading cause of severe diarrheal disease in children under five worldwide, killing 128,000 children annually despite availability of effective vaccines.",
+    "description": "Leading cause of severe diarrheal disease in children under five worldwide, killing 200,000 children annually despite availability of effective vaccines.",
     "papers": 19000,
     "trend": -4,
-    "mortality": 128000,
+    "mortality": 200000,
     "fundingGap": "high",
     "yearlyPapers": [
       697,
