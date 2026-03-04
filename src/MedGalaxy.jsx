@@ -772,10 +772,10 @@ export default function MedGalaxy() {
     renderer.setSize(container.clientWidth,container.clientHeight);
     const isAndroid=/android/i.test(navigator.userAgent);
     const isIOS=/iP(hone|ad|od)/i.test(navigator.userAgent);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio,(isAndroid||isIOS)?2:cfg.dprCap));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio,isAndroid?2:isIOS?3:cfg.dprCap));
     renderer.setClearColor(0x000000,0);container.appendChild(renderer.domElement);rendererRef.current=renderer;
     let composer=null;
-    if(isAndroid||isIOS){
+    if(isAndroid){
       composer=new EffectComposer(renderer);
       composer.addPass(new RenderPass(scene,camera));
       const fxaa=new ShaderPass(FXAAShader);
