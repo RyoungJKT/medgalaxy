@@ -349,12 +349,6 @@
   },
   {
     "source": "dengue",
-    "target": "dengue-hemorrhagic-fever",
-    "sharedPapers": 6500,
-    "trend": "up"
-  },
-  {
-    "source": "dengue",
     "target": "west-nile-virus",
     "sharedPapers": 600,
     "trend": "up"
@@ -478,12 +472,6 @@
     "target": "west-nile-virus",
     "sharedPapers": 400,
     "trend": "stable"
-  },
-  {
-    "source": "chikungunya",
-    "target": "dengue-hemorrhagic-fever",
-    "sharedPapers": 600,
-    "trend": "up"
   },
   {
     "source": "malaria",
@@ -670,12 +658,6 @@
     "target": "mycetoma",
     "sharedPapers": 100,
     "trend": "down"
-  },
-  {
-    "source": "dengue-hemorrhagic-fever",
-    "target": "zika",
-    "sharedPapers": 500,
-    "trend": "up"
   },
   {
     "source": "heart-disease",
@@ -3586,12 +3568,6 @@
     "target": "meningitis",
     "sharedPapers": 500,
     "trend": "stable"
-  },
-  {
-    "source": "dengue-hemorrhagic-fever",
-    "target": "sepsis",
-    "sharedPapers": 300,
-    "trend": "up"
   },
   {
     "source": "mrsa",

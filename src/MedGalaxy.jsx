@@ -17,9 +17,17 @@ const CL = {
   neurological:'Neurological', respiratory:'Respiratory', autoimmune:'Autoimmune',
   metabolic:'Metabolic', infectious:'Infectious', genetic:'Genetic', mental:'Mental Health',
 };
-// WHO region colors and labels for Geography mode
-const RC = {AFR:'#ff9f1c',SEAR:'#2ec4b6',EUR:'#4361ee',AMR:'#9b5de5',WPR:'#00f5d4',EMR:'#f15bb5'};
-const RL = {AFR:'Africa',SEAR:'SE Asia',EUR:'Europe',AMR:'Americas',WPR:'W Pacific',EMR:'E Mediterranean'};
+// Neglect score: papers-per-death ratio → color gradient
+function neglectColor(ppd){
+  // ppd: papers per death. High = well-researched (green), low = neglected (red)
+  if(ppd<=0)return'#22c55e'; // no mortality data → treat as well-researched
+  const t=Math.max(0,Math.min(1,(Math.log10(ppd)+2)/3.5)); // -2..1.5 → 0..1
+  // Red → Orange → Yellow → Green
+  const stops=[[239,68,68],[245,158,11],[234,179,8],[34,197,94]];
+  const s=t*(stops.length-1),i=Math.min(Math.floor(s),stops.length-2),f=s-i;
+  const a=stops[i],b=stops[i+1];
+  return`rgb(${Math.round(a[0]+(b[0]-a[0])*f)},${Math.round(a[1]+(b[1]-a[1])*f)},${Math.round(a[2]+(b[2]-a[2])*f)})`;
+}
 const TC = {
   HIGH:  { dprCap:99, particles:400, glowAll:true, pulse:true },
   MEDIUM:{ dprCap:1.5, particles:150, glowAll:false, pulse:true },
@@ -33,8 +41,8 @@ function dTier() {
 function isMob(){return typeof window!=='undefined'&&(matchMedia('(pointer:coarse)').matches||window.innerWidth<768);}
 // Node sizing: extreme power-law for maximum size contrast
 const MN=0.3, MX=55, MAX_PAPERS=450000, MAX_MORT=1400000;
-function nR(p){return MN+Math.pow(Math.min(p,MAX_PAPERS)/MAX_PAPERS,0.35)*(MX-MN);}
-function nRM(m){if(m<=0)return MN*0.2;return MN+Math.pow(Math.min(m,MAX_MORT)/MAX_MORT,0.35)*(MX-MN);}
+function nR(p){return MN+Math.pow(Math.min(p,MAX_PAPERS)/MAX_PAPERS,0.45)*(MX-MN);}
+function nRM(m){if(m<=0)return MN*0.2;return MN+Math.pow(Math.min(m,MAX_MORT)/MAX_MORT,0.45)*(MX-MN);}
 function fmt(n){if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=10000)return Math.round(n/1000)+'K';if(n>=1000)return(n/1000).toFixed(1)+'K';return String(n);}
 
 // ─── Data Processing ─────────────────────────────────────────────────────────
@@ -127,53 +135,7 @@ function computeLayouts(diseases, layoutEdges) {
   const _dbgTop=top5.map(n=>({r:n.r.toFixed(1),orbit:Math.sqrt(n.x*n.x+n.y*n.y+n.z*n.z).toFixed(1)}));
   const debugStr=`NaN:${_dbg.nanCount} orbit:[${_dbg.minOrbit}..${_dbg.maxOrbit}] N:${_dbg.N}\nTop5: ${_dbgTop.map(t=>`r=${t.r} orb=${t.orbit}`).join(' | ')}`;
 
-  // ── Geography Layout: Global South vs Global North hemispheres ──
-  // South (left): AFR, SEAR, EMR — many diseases, less research, high mortality
-  // North (right): EUR, AMR, WPR — heavy research, lower mortality-per-paper
-  const regions=['AFR','SEAR','EUR','AMR','WPR','EMR'];
-  const regCounts={};regions.forEach(r=>{regCounts[r]=diseases.filter(d=>(d.region||'EUR')===r).length;});
-  // Position anchors: two hemispheres separated on X axis
-  // Within each hemisphere, sub-regions spread on Y/Z
-  const regAnchors={
-    // Global South — left side (negative X)
-    AFR: {x:-380,y:80,z:0},     // Africa: front-center-left
-    SEAR:{x:-380,y:-180,z:120}, // SE Asia: below-left, offset Z
-    EMR: {x:-280,y:-80,z:-200}, // E Med: upper-left, behind
-    // Global North — right side (positive X)
-    EUR: {x:300,y:-40,z:0},     // Europe: center-right (biggest, needs room)
-    AMR: {x:380,y:220,z:100},   // Americas: upper-right
-    WPR: {x:380,y:-220,z:-120}, // W Pacific: lower-right
-  };
-  const gn=diseases.map((d,i)=>{
-    const reg=d.region||'EUR',anc=regAnchors[reg];
-    // Spread proportional to sqrt of region size
-    const spread=Math.sqrt(regCounts[reg])*18;
-    return{index:i,r:nR(d.papers),region:reg,papers:d.papers,
-      x:anc.x+(Math.random()-0.5)*spread,
-      y:anc.y+(Math.random()-0.5)*spread,
-      z:anc.z+(Math.random()-0.5)*spread};
-  });
-  // 3D force: attract to anchor, collide, repel — more iterations for clean separation
-  for(let iter=0;iter<400;iter++){
-    for(let i=0;i<gn.length;i++){
-      const n=gn[i],anc=regAnchors[n.region];
-      n.x+=(anc.x-n.x)*0.03;n.y+=(anc.y-n.y)*0.03;n.z+=(anc.z-n.z)*0.03;
-    }
-    for(let a=0;a<gn.length;a++)for(let b=a+1;b<gn.length;b++){
-      const na=gn[a],nb=gn[b];
-      const dx=na.x-nb.x,dy=na.y-nb.y,dz=na.z-nb.z;
-      const dd=Math.sqrt(dx*dx+dy*dy+dz*dz)||0.1;
-      const minD=na.r+nb.r+4;
-      if(dd<minD){const push=(minD-dd)*0.3/dd;na.x+=dx*push;na.y+=dy*push;na.z+=dz*push;nb.x-=dx*push;nb.y-=dy*push;nb.z-=dz*push;}
-      if(dd<60){const rep=12/(dd*dd);na.x+=dx*rep;na.y+=dy*rep;na.z+=dz*rep;nb.x-=dx*rep;nb.y-=dy*rep;nb.z-=dz*rep;}
-    }
-  }
-
-  // Compute actual cluster centers (average position of nodes in each region)
-  const geoAnchors={};
-  regions.forEach(r=>{const nodes=gn.filter(n=>n.region===r);if(!nodes.length)return;geoAnchors[r]=[nodes.reduce((s,n)=>s+n.x,0)/nodes.length,nodes.reduce((s,n)=>s+n.y,0)/nodes.length,nodes.reduce((s,n)=>s+n.z,0)/nodes.length];});
-
-  return{catPos:cn.map(n=>[n.x,n.y,n.z]),netPos:nn.map(n=>[n.x,n.y,n.z]),geoPos:gn.map(n=>[n.x,n.y,n.z]),geoAnchors,debugStr,rawMax};
+  return{catPos:cn.map(n=>[n.x,n.y,n.z]),netPos:nn.map(n=>[n.x,n.y,n.z]),debugStr,rawMax};
 }
 
 // ─── Orbit Controls ──────────────────────────────────────────────────────────
@@ -421,7 +383,7 @@ function VelocityOverlay({data,onClose}){
   );
 }
 
-function Header({diseaseCount,edgeCount,searchQuery,onSearchChange,sizeMode,onSizeToggle,layoutMode,onLayoutToggle,sizeToggleRef,onExplode,onConnections,onVelocity,geoMode,onGeo}){
+function Header({diseaseCount,edgeCount,searchQuery,onSearchChange,sizeMode,onSizeToggle,sizeToggleRef,onExplode,onConnections,onVelocity,neglectMode,onNeglect}){
   const mob=isMob();
   const [menuOpen,setMenuOpen]=React.useState(false);
   const menuRef=React.useRef(null);
@@ -433,43 +395,40 @@ function Header({diseaseCount,edgeCount,searchQuery,onSearchChange,sizeMode,onSi
     {mob?(<>
       {searchOpen&&<div style={{position:'absolute',top:'100%',left:0,right:0,padding:'8px 12px',background:'rgba(6,8,13,0.95)',pointerEvents:'auto'}}><input value={searchQuery} onChange={e=>onSearchChange(e.target.value)} placeholder="Search diseases..." autoFocus onBlur={()=>{if(!searchQuery)setSearchOpen(false);}} style={{background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,padding:'7px 12px',color:'#e2e8f0',fontSize:12,fontFamily:'inherit',width:'100%',outline:'none'}}/></div>}
       <button onClick={()=>{setSearchOpen(!searchOpen);setMenuOpen(false);}} style={{pointerEvents:'auto',background:'none',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,padding:'5px 8px',color:'#94a3b8',fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>&#x1F50D;</button>
-      <div ref={menuRef} style={{position:'relative',pointerEvents:'auto'}}><button onClick={()=>{setMenuOpen(!menuOpen);setSearchOpen(false);}} style={{background:'none',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,padding:'7px 12px',color:'#94a3b8',fontSize:12,cursor:'pointer',fontFamily:'inherit'}}>Menu</button>
+      <div ref={menuRef} style={{position:'relative',pointerEvents:'auto'}}><button onClick={()=>{setMenuOpen(!menuOpen);setSearchOpen(false);}} style={{background:'none',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,padding:'8px 14px',color:'#e2e8f0',fontSize:16,cursor:'pointer',fontFamily:'inherit',fontWeight:500}}>Menu</button>
         {menuOpen&&<div style={{position:'absolute',top:'100%',right:0,marginTop:4,background:'rgba(10,16,30,0.96)',backdropFilter:'blur(16px)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,padding:8,minWidth:160,display:'flex',flexDirection:'column',gap:6}}>
           <div style={{color:'#64748b',fontSize:9,padding:'0 4px'}}>Size by</div>
           <div ref={sizeToggleRef} style={{display:'flex',borderRadius:6,overflow:'hidden',border:'1px solid rgba(255,255,255,0.08)'}}>{['papers','mortality'].map(m=>(<button key={m} onClick={()=>{onSizeToggle(m);setMenuOpen(false);}} style={{flex:1,padding:'6px 10px',fontSize:10,fontFamily:'inherit',border:'none',cursor:'pointer',background:sizeMode===m?'rgba(255,255,255,0.12)':'transparent',color:sizeMode===m?'#e2e8f0':'#64748b'}}>{m==='papers'?'Papers':'Mortality'}</button>))}</div>
-          <div style={{color:'#64748b',fontSize:9,padding:'0 4px'}}>Layout</div>
-          <div style={{display:'flex',borderRadius:6,overflow:'hidden',border:'1px solid rgba(255,255,255,0.08)'}}>{['category','network'].map(m=>(<button key={m} onClick={()=>{onLayoutToggle(m);setMenuOpen(false);}} style={{flex:1,padding:'6px 10px',fontSize:10,fontFamily:'inherit',border:'none',cursor:'pointer',background:layoutMode===m?'rgba(255,255,255,0.12)':'transparent',color:layoutMode===m?'#e2e8f0':'#64748b'}}>{m==='category'?'Category':'Network'}</button>))}</div>
           <div style={{color:'#64748b',fontSize:9,padding:'4px 4px 0'}}>Analysis</div>
           <button onClick={()=>{onExplode();setMenuOpen(false);}} style={{padding:'6px 10px',fontSize:10,fontFamily:'inherit',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,cursor:'pointer',background:'transparent',color:'#e2e8f0',width:'100%',textAlign:'left'}}>Research Gap</button>
           <button onClick={()=>{onConnections();setMenuOpen(false);}} style={{padding:'6px 10px',fontSize:10,fontFamily:'inherit',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,cursor:'pointer',background:'transparent',color:'#e2e8f0',width:'100%',textAlign:'left'}}>Connections</button>
           <button onClick={()=>{onVelocity();setMenuOpen(false);}} style={{padding:'6px 10px',fontSize:10,fontFamily:'inherit',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,cursor:'pointer',background:'transparent',color:'#e2e8f0',width:'100%',textAlign:'left'}}>Trends</button>
-          <button onClick={()=>{onGeo();setMenuOpen(false);}} style={{padding:'6px 10px',fontSize:10,fontFamily:'inherit',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,cursor:'pointer',background:geoMode?'rgba(255,255,255,0.12)':'transparent',color:geoMode?'#00f5d4':'#e2e8f0',width:'100%',textAlign:'left'}}>{geoMode?'✕ Geography':'Geography'}</button>
+          <button onClick={()=>{onNeglect();setMenuOpen(false);}} style={{padding:'6px 10px',fontSize:10,fontFamily:'inherit',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,cursor:'pointer',background:neglectMode?'rgba(255,255,255,0.12)':'transparent',color:neglectMode?'#ef4444':'#e2e8f0',width:'100%',textAlign:'left'}}>{neglectMode?'✕ Attention Map':'Attention Map'}</button>
         </div>}
       </div>
     </>):(<>
       <div style={{position:'relative',pointerEvents:'auto'}}><input value={searchQuery} onChange={e=>onSearchChange(e.target.value)} placeholder="Search diseases..." style={{background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,padding:'7px 12px',color:'#e2e8f0',fontSize:12,fontFamily:'inherit',width:200,outline:'none'}}/></div>
-      <div ref={sizeToggleRef} style={{display:'flex',borderRadius:6,overflow:'hidden',border:'1px solid rgba(255,255,255,0.08)',pointerEvents:'auto'}}>{['papers','mortality'].map(m=>(<button key={m} onClick={()=>onSizeToggle(m)} style={{padding:'6px 12px',fontSize:11,fontFamily:'inherit',border:'none',cursor:'pointer',background:sizeMode===m?'rgba(255,255,255,0.12)':'transparent',color:sizeMode===m?'#e2e8f0':'#64748b'}}>{m==='papers'?'Papers':'Mortality'}</button>))}</div>
-      <div style={{display:'flex',borderRadius:6,overflow:'hidden',border:'1px solid rgba(255,255,255,0.08)',pointerEvents:'auto'}}>{['category','network'].map(m=>(<button key={m} onClick={()=>onLayoutToggle(m)} style={{padding:'6px 12px',fontSize:11,fontFamily:'inherit',border:'none',cursor:'pointer',background:layoutMode===m?'rgba(255,255,255,0.12)':'transparent',color:layoutMode===m?'#e2e8f0':'#64748b'}}>{m==='category'?'Category':'Network'}</button>))}</div>
+      <div style={{position:'relative',pointerEvents:'auto'}}><div ref={sizeToggleRef} style={{display:'flex',borderRadius:6,overflow:'hidden',border:'1px solid rgba(255,255,255,0.08)'}}>{'papers,mortality'.split(',').map(m=>(<button key={m} onClick={()=>onSizeToggle(m)} style={{padding:'6px 12px',fontSize:11,fontFamily:'inherit',border:'none',cursor:'pointer',background:sizeMode===m?'rgba(255,255,255,0.12)':'transparent',color:sizeMode===m?'#e2e8f0':'#64748b'}}>{m==='papers'?'Papers':'Mortality'}</button>))}</div><div style={{position:'absolute',top:'100%',left:'50%',transform:'translateX(-50%)',marginTop:6,padding:'8px 12px',background:'rgba(10,16,30,0.95)',backdropFilter:'blur(12px)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,fontSize:10,color:'#94a3b8',width:220,lineHeight:1.5,opacity:0,animation:'fadeIn 0.4s ease forwards',textAlign:'center',whiteSpace:'normal'}}>{sizeMode==='papers'?'Node size scaled by total publications on PubMed':'Node size scaled by annual deaths reported by WHO'}</div></div>
       <button onClick={onExplode} style={{padding:'6px 12px',fontSize:11,fontFamily:'inherit',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,cursor:'pointer',background:'transparent',color:'#e2e8f0',pointerEvents:'auto',whiteSpace:'nowrap'}}>Research Gap</button>
       <button onClick={onConnections} style={{padding:'6px 12px',fontSize:11,fontFamily:'inherit',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,cursor:'pointer',background:'transparent',color:'#e2e8f0',pointerEvents:'auto',whiteSpace:'nowrap'}}>Connections</button>
       <button onClick={onVelocity} style={{padding:'6px 12px',fontSize:11,fontFamily:'inherit',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,cursor:'pointer',background:'transparent',color:'#e2e8f0',pointerEvents:'auto',whiteSpace:'nowrap'}}>Trends</button>
       <div style={{position:'relative',pointerEvents:'auto'}}>
-        <button onClick={onGeo} style={{padding:'6px 12px',fontSize:11,fontFamily:'inherit',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,cursor:'pointer',background:geoMode?'rgba(255,255,255,0.12)':'transparent',color:geoMode?'#00f5d4':'#e2e8f0',whiteSpace:'nowrap'}}>{geoMode?'✕ Geography':'Geography'}</button>
-        {geoMode&&<div style={{position:'absolute',top:'100%',right:0,marginTop:6,padding:'8px 12px',background:'rgba(10,16,30,0.95)',backdropFilter:'blur(12px)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,fontSize:10,color:'#94a3b8',width:240,lineHeight:1.5,opacity:0,animation:'fadeIn 0.4s ease forwards'}}>Diseases clustered by WHO region where they cause the most burden. Global South (left) vs Global North (right) — revealing where research doesn't match mortality.</div>}
+        <button onClick={onNeglect} style={{padding:'6px 12px',fontSize:11,fontFamily:'inherit',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,cursor:'pointer',background:neglectMode?'rgba(255,255,255,0.12)':'transparent',color:neglectMode?'#ef4444':'#e2e8f0',whiteSpace:'nowrap'}}>{neglectMode?'✕ Attention Map':'Attention Map'}</button>
+        {neglectMode&&<div style={{position:'absolute',top:'100%',right:0,marginTop:6,padding:'8px 12px',background:'rgba(10,16,30,0.95)',backdropFilter:'blur(12px)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,fontSize:10,color:'#94a3b8',width:260,lineHeight:1.5,opacity:0,animation:'fadeIn 0.4s ease forwards'}}>Nodes colored by research papers per death. <span style={{color:'#22c55e'}}>Green</span> = high attention. <span style={{color:'#f59e0b'}}>Yellow</span> = moderate. <span style={{color:'#ef4444'}}>Red</span> = overlooked.</div>}
       </div>
     </>)}
     <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}@keyframes slideDown{to{transform:translateY(0)}}@keyframes slideUp{to{transform:translateY(0)}}@keyframes fadeIn{to{opacity:1}}@keyframes chipPulse{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,0.4)}50%{box-shadow:0 0 12px 4px rgba(34,197,94,0.15)}}`}</style>
   </div>);
 }
 
-function FilterBar({activeCategories,onToggle,geoMode}){if(isMob())return null;
-  if(geoMode){return(
-    <div style={{position:'absolute',top:50,left:0,right:0,zIndex:40,padding:'0 20px',display:'flex',flexWrap:'wrap',gap:5,alignItems:'center',fontFamily:'IBM Plex Mono,monospace',fontSize:11,pointerEvents:'none',opacity:0,animation:'fadeIn 0.4s ease forwards'}}>
-      <span style={{fontSize:9,color:'#94a3b8',marginRight:2}}>GLOBAL SOUTH</span>
-      {['AFR','SEAR','EMR'].map(r=>(<div key={r} style={{padding:'4px 12px',borderRadius:4,border:`1px solid ${RC[r]}33`,background:`${RC[r]}11`,display:'flex',alignItems:'center',gap:5,fontSize:10,color:RC[r]}}><span style={{width:7,height:7,borderRadius:'50%',background:RC[r],boxShadow:`0 0 6px ${RC[r]}55`}}/>{RL[r]}</div>))}
-      <span style={{color:'rgba(255,255,255,0.15)',margin:'0 4px'}}>│</span>
-      <span style={{fontSize:9,color:'#94a3b8',marginRight:2}}>GLOBAL NORTH</span>
-      {['EUR','AMR','WPR'].map(r=>(<div key={r} style={{padding:'4px 12px',borderRadius:4,border:`1px solid ${RC[r]}33`,background:`${RC[r]}11`,display:'flex',alignItems:'center',gap:5,fontSize:10,color:RC[r]}}><span style={{width:7,height:7,borderRadius:'50%',background:RC[r],boxShadow:`0 0 6px ${RC[r]}55`}}/>{RL[r]}</div>))}
+function FilterBar({activeCategories,onToggle,neglectMode}){if(isMob())return null;
+  if(neglectMode){return(
+    <div style={{position:'absolute',top:50,left:0,right:0,zIndex:40,padding:'0 20px',display:'flex',alignItems:'center',gap:10,fontFamily:'IBM Plex Mono,monospace',fontSize:10,pointerEvents:'none',opacity:0,animation:'fadeIn 0.4s ease forwards'}}>
+      <span style={{color:'#ef4444',fontWeight:600}}>OVERLOOKED</span>
+      <div style={{width:180,height:8,borderRadius:4,background:'linear-gradient(90deg,#ef4444,#f59e0b,#eab308,#22c55e)'}}/>
+      <span style={{color:'#22c55e',fontWeight:600}}>HIGH ATTENTION</span>
+      <span style={{color:'#64748b',marginLeft:8}}>·</span>
+      <span style={{color:'#64748b'}}>Papers per death (log scale)</span>
     </div>);}
   const allActive=activeCategories.size===CATS.length;return(
   <div style={{position:'absolute',top:50,left:0,right:0,zIndex:40,padding:'0 20px',display:'flex',flexWrap:'wrap',gap:5,fontFamily:'IBM Plex Mono,monospace',fontSize:11,pointerEvents:'none',transform:'translateY(-60px)',animation:'slideDown 0.5s ease 1.95s forwards'}}>
@@ -480,11 +439,12 @@ function FilterBar({activeCategories,onToggle,geoMode}){if(isMob())return null;
 function SearchDropdown({query,diseases,onSelect}){if(!query||query.length<1)return null;const q=query.toLowerCase(),matches=diseases.filter(d=>d.label.toLowerCase().includes(q)).slice(0,8);if(!matches.length)return null;const mob=isMob();return(<div style={{position:'absolute',top:mob?80:40,left:mob?12:undefined,right:mob?12:260,zIndex:60,background:'rgba(10,16,30,0.96)',backdropFilter:'blur(16px)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,padding:4,fontFamily:'IBM Plex Mono,monospace',fontSize:11,minWidth:mob?undefined:200}}>{matches.map(d=>(<div key={d.id} onClick={()=>onSelect(d)} style={{padding:'5px 8px',cursor:'pointer',borderRadius:4,color:'#e2e8f0',display:'flex',alignItems:'center',gap:6}} onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.06)'}} onMouseLeave={e=>{e.currentTarget.style.background='none'}}><span style={{width:6,height:6,borderRadius:'50%',background:CC[d.category]}}/>{d.label}</div>))}</div>);}
 
 
-function Legend({sizeMode,layoutMode}){const mob=isMob();return(<div style={{position:'absolute',bottom:0,left:0,right:0,zIndex:40,padding:mob?'8px 12px':'8px 16px',display:'flex',gap:mob?8:16,fontFamily:'IBM Plex Mono,monospace',fontSize:9,color:'#cbd5e1',background:'linear-gradient(0deg,rgba(6,8,13,0.85) 0%,rgba(6,8,13,0) 100%)',pointerEvents:'none',transform:'translateY(100%)',animation:'slideUp 0.5s ease 2.1s forwards'}}>{mob?<span>Tap to explore · Pinch to zoom</span>:(<><span>Node size = {sizeMode==='papers'?'publications':'mortality'}</span><span>Layout = {layoutMode==='category'?'Category clusters':'Network connections'}</span><span>Drag to rotate · Scroll to zoom · Right-drag to pan · Double-click to re-center</span></>)}<span style={{marginLeft:'auto'}}>Project by Russell J. Young</span></div>);}
+function Legend({sizeMode}){const mob=isMob();return(<div style={{position:'absolute',bottom:0,left:0,right:0,zIndex:40,padding:mob?'8px 12px':'8px 16px',display:'flex',gap:mob?8:16,fontFamily:'IBM Plex Mono,monospace',fontSize:9,color:'#cbd5e1',background:'linear-gradient(0deg,rgba(6,8,13,0.85) 0%,rgba(6,8,13,0) 100%)',pointerEvents:'none',transform:'translateY(100%)',animation:'slideUp 0.5s ease 2.1s forwards'}}>{mob?<span>Tap to explore · Pinch to zoom</span>:(<><span>Node size = {sizeMode==='papers'?'publications':'mortality'}</span><span>Drag to rotate · Scroll to zoom · Right-drag to pan · Double-click to re-center</span></>)}<span style={{marginLeft:'auto'}}>Project by Russell J. Young</span></div>);}
 
 // ─── Story Mode Component ────────────────────────────────────────────────────
 function StoryChips({onChip,visible}){
-  if(!visible||isMob()) return null;
+  if(!visible) return null;
+  const mob=isMob();
   const chips=[
     {id:'researched',label:'Most Researched',desc:'See the biggest research spheres'},
     {id:'killers',label:'Biggest Killers',desc:'Diseases with highest mortality'},
@@ -493,8 +453,8 @@ function StoryChips({onChip,visible}){
     {id:'richpoor',label:'Rich vs Poor',desc:'Who gets the research?'},
     {id:'mismatch',label:'See the Mismatch',desc:'The 2,000:1 research gap'},
   ];
-  return(<div style={{position:'absolute',bottom:50,left:'50%',transform:'translateX(-50%)',zIndex:45,display:'flex',gap:10,fontFamily:'IBM Plex Mono,monospace',opacity:0,animation:'fadeIn 0.5s ease 2.8s forwards'}}>
-    {chips.map(c=>(<button key={c.id} onClick={()=>onChip(c.id)} style={{padding:'8px 16px',borderRadius:8,border:'1px solid rgba(255,255,255,0.1)',background:'rgba(10,16,30,0.9)',backdropFilter:'blur(12px)',color:'#e2e8f0',fontSize:11,cursor:'pointer',fontFamily:'inherit',animation:'none',transition:'background 0.2s'}} onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.08)'}} onMouseLeave={e=>{e.currentTarget.style.background='rgba(10,16,30,0.9)'}}>{c.label}</button>))}
+  return(<div style={{position:'absolute',bottom:mob?32:50,left:'50%',transform:'translateX(-50%)',zIndex:45,display:mob?'grid':'flex',gridTemplateColumns:mob?'repeat(3,1fr)':undefined,gap:mob?6:10,fontFamily:'IBM Plex Mono,monospace',opacity:0,animation:'fadeIn 0.5s ease 2.8s forwards',width:mob?'92vw':undefined}}>
+    {chips.map(c=>(<button key={c.id} onClick={()=>onChip(c.id)} style={{padding:mob?'6px 4px':'8px 16px',borderRadius:8,border:'1px solid rgba(255,255,255,0.1)',background:'rgba(10,16,30,0.9)',backdropFilter:'blur(12px)',color:'#e2e8f0',fontSize:mob?9:11,cursor:'pointer',fontFamily:'inherit',animation:'none',transition:'background 0.2s'}} onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.08)'}} onMouseLeave={e=>{e.currentTarget.style.background='rgba(10,16,30,0.9)'}}>{c.label}</button>))}
   </div>);
 }
 
@@ -506,12 +466,11 @@ function StoryCaption({text,onClick}){
 // ═════════════════════════════════════════════════════════════════════════════
 export default function MedGalaxy() {
   const containerRef=useRef(null),cameraRef=useRef(null),rendererRef=useRef(null),controlsRef=useRef(null);
-  const iMeshRef=useRef(null),edgeMeshRef=useRef(null),catPosRef=useRef(null),netPosRef=useRef(null),geoPosRef=useRef(null),geoAnchorsRef=useRef(null);
+  const iMeshRef=useRef(null),edgeMeshRef=useRef(null),catPosRef=useRef(null),netPosRef=useRef(null);
   const dataRef=useRef(null),proxiesRef=useRef([]),flyRef=useRef(null),mdRef=useRef({x:0,y:0});
   const frameRef=useRef(0),hoverIdxRef=useRef(-1);
   const sizeAnimRef=useRef(null),layoutAnimRef=useRef(null),curPosRef=useRef(null);
   const sizeModeRef=useRef('papers'); // mutable mirror for animation loop
-  const layoutModeRef=useRef('category');
   const idleRef=useRef(0); // frames since last interaction
   const sizeToggleRef=useRef(null);
   const glowSpritesRef=useRef(null);
@@ -525,7 +484,6 @@ export default function MedGalaxy() {
   const [activeCats,setActiveCats]=useState(()=>new Set(CATS));
   const [searchQuery,setSearchQuery]=useState('');
   const [sizeMode,setSizeMode]=useState('papers');
-  const [layoutMode,setLayoutMode]=useState('category');
   const [storyVisible,setStoryVisible]=useState(true);
   const [storyCaption,setStoryCaption]=useState('');
   const [explodeActive,setExplodeActive]=useState(false);
@@ -536,10 +494,8 @@ export default function MedGalaxy() {
   const connFocusRef=useRef(-1); // index of focused hub disease, -1 = none
   const [connFocusActive,setConnFocusActive]=useState(false);
   const [velocityActive,setVelocityActive]=useState(false);
-  const [geoMode,setGeoMode]=useState(false);
-  const geoModeRef=useRef(false);
+  const [neglectMode,setNeglectMode]=useState(false);
   const labelsRef=useRef(null); // DOM container for node labels
-  const geoLabelsRef=useRef(null); // DOM container for geography region labels
 
   const ppdData=React.useMemo(()=>{const wr=diseasesData.filter(d=>d.mortality>0).map(d=>({...d,ppd:d.papers/d.mortality}));const s=[...wr].sort((a,b)=>b.ppd-a.ppd);return{highest:s.slice(0,10),lowest:s.slice(-10).reverse()};},[]);
 
@@ -586,7 +542,7 @@ export default function MedGalaxy() {
     return{rising,declining};
   },[]);
 
-  const selectDisease=useCallback((idx)=>{const data=dataRef.current;if(!data)return;setSelectedNode({index:idx,disease:data.diseases[idx]});idleRef.current=0;const p=curPosRef.current?curPosRef.current[idx]:catPosRef.current[idx];const ctrl=controlsRef.current;if(ctrl)flyRef.current={st:ctrl.target.clone(),et:new THREE.Vector3(p[0],p[1],p[2]),sr:ctrl.radius,er:Math.max(150,ctrl.radius*0.5),f:0,total:50};},[]);
+  const selectDisease=useCallback((idx)=>{const data=dataRef.current;if(!data)return;setSelectedNode({index:idx,disease:data.diseases[idx]});idleRef.current=0;const p=curPosRef.current?curPosRef.current[idx]:catPosRef.current[idx];const ctrl=controlsRef.current;if(ctrl)flyRef.current={st:ctrl.target.clone(),et:new THREE.Vector3(p[0],p[1],p[2]),sr:ctrl.radius,er:Math.max(150,ctrl.radius*0.5),f:0,total:70};},[]);
   const deselect=useCallback(()=>{
     setSelectedNode(null);
     if(connFocusRef.current>=0){
@@ -596,7 +552,7 @@ export default function MedGalaxy() {
       const cur=curPosRef.current,data=dataRef.current;
       if(cur&&data){
         const currentPos=cur.map(p=>[...p]);
-        const src=geoModeRef.current?geoPosRef.current:layoutModeRef.current==='network'?netPosRef.current:catPosRef.current;
+        const src=catPosRef.current;
         explodeAnimRef.current={from:currentPos,to:src.map(p=>[...p]),f:0,total:90,returning:true,connReturning:true};
         const proxies=proxiesRef.current;
         const curSizes=data.diseases.map((_,i)=>proxies[i]?proxies[i].scale.x:0.001);
@@ -612,7 +568,6 @@ export default function MedGalaxy() {
   },[]);
   const toggleCat=useCallback((cat)=>{setActiveCats(prev=>{if(cat==='ALL')return prev.size===CATS.length?new Set():new Set(CATS);const next=new Set(prev);if(next.has(cat))next.delete(cat);else next.add(cat);return next;});},[]);
   const handleSize=useCallback((mode)=>{if(mode===sizeMode)return;setSizeMode(mode);sizeModeRef.current=mode;const data=dataRef.current;if(!data)return;sizeAnimRef.current={from:data.diseases.map(d=>sizeMode==='papers'?nR(d.papers):nRM(d.mortality)),to:data.diseases.map(d=>mode==='papers'?nR(d.papers):nRM(d.mortality)),f:0,total:60};},[sizeMode]);
-  const handleLayout=useCallback((mode)=>{if(mode===layoutMode)return;setLayoutMode(mode);layoutModeRef.current=mode;if(geoModeRef.current){geoModeRef.current=false;setGeoMode(false);}const cp=catPosRef.current,np=netPosRef.current;if(!cp||!np)return;layoutAnimRef.current={from:curPosRef.current||(layoutMode==='category'?cp:np),to:mode==='category'?cp:np,f:0,total:60};},[layoutMode]);
   const handleSearchSel=useCallback((disease)=>{const data=dataRef.current;if(!data)return;const idx=data.idMap[disease.id];if(idx!==undefined){selectDisease(idx);setSearchQuery('');}},[selectDisease]);
 
   const handleExplode=useCallback(()=>{
@@ -630,7 +585,7 @@ export default function MedGalaxy() {
   const handleUnexplode=useCallback(()=>{
     const cur=curPosRef.current;if(!cur)return;
     const currentPos=cur.map(p=>[...p]);
-    const src=geoModeRef.current?geoPosRef.current:layoutModeRef.current==='network'?netPosRef.current:catPosRef.current;
+    const src=catPosRef.current;
     explodeAnimRef.current={from:currentPos,to:src.map(p=>[...p]),f:0,total:60,returning:true};
     setExplodeActive(false);
   },[]);
@@ -642,20 +597,25 @@ export default function MedGalaxy() {
   const handleCloseConnections=useCallback(()=>{
     connectionsActiveRef.current=false;setConnectionsActive(false);
   },[]);
-  const handleVelocity=useCallback(()=>{setVelocityActive(true);},[]);
-  const handleCloseVelocity=useCallback(()=>{setVelocityActive(false);},[]);
-  const handleGeo=useCallback(()=>{
-    const entering=!geoModeRef.current;
-    geoModeRef.current=entering;setGeoMode(entering);
-    const cur=curPosRef.current,gp=geoPosRef.current;if(!cur||!gp)return;
-    const from=cur.map(p=>[...p]);
-    if(entering){
-      layoutAnimRef.current={from,to:gp.map(p=>[...p]),f:0,total:60};
-    }else{
-      const src=layoutModeRef.current==='network'?netPosRef.current:catPosRef.current;
-      layoutAnimRef.current={from,to:src.map(p=>[...p]),f:0,total:60};
-    }
+  const handleVelocity=useCallback(()=>{
+    if(explodeActiveRef.current)return;
+    explodeActiveRef.current=true;setVelocityActive(true);
+    const cur=curPosRef.current;if(!cur)return;
+    const saved=cur.map(p=>[...p]);
+    const exploded=cur.map(p=>{
+      const factor=2.5+Math.random()*1.5;
+      return[p[0]*factor+(Math.random()-0.5)*80,p[1]*factor+(Math.random()-0.5)*80,p[2]*factor+(Math.random()-0.5)*80];
+    });
+    explodeAnimRef.current={from:saved,to:exploded,f:0,total:60};
   },[]);
+  const handleCloseVelocity=useCallback(()=>{
+    const cur=curPosRef.current;if(!cur)return;
+    const currentPos=cur.map(p=>[...p]);
+    const src=catPosRef.current;
+    explodeAnimRef.current={from:currentPos,to:src.map(p=>[...p]),f:0,total:60,returning:true};
+    setVelocityActive(false);
+  },[]);
+  const handleNeglect=useCallback(()=>{setNeglectMode(prev=>!prev);},[]);
   const handleConnSelect=useCallback((diseaseId)=>{
     const data=dataRef.current;if(!data)return;
     const idx=data.idMap[diseaseId];if(idx===undefined)return;
@@ -709,8 +669,10 @@ export default function MedGalaxy() {
     const sr=storyRef.current;
     if(sr.timer){clearTimeout(sr.timer);sr.timer=null;}
     if(!sr.seq||sr.step>=sr.seq.length){
-      setStoryCaption('');sr.nodeIdx=-1;setStoryTip(null);
+      setStoryCaption('');sr.nodeIdx=-1;setStoryTip(null);setSelectedNode(null);
       if(sr.chipId==='mismatch'&&sizeToggleRef.current){sizeToggleRef.current.style.animation='chipPulse 1.5s infinite';}
+      const ctrl=controlsRef.current;
+      if(ctrl)flyRef.current={st:ctrl.target.clone(),et:new THREE.Vector3(0,0,0),sr:ctrl.radius,er:ctrl.defaultRadius,f:0,total:70};
       sr.seq=null;return;
     }
     const s=sr.seq[sr.step];
@@ -726,10 +688,10 @@ export default function MedGalaxy() {
     const data=dataRef.current;if(!data)return;
     const find=id=>data.idMap[id];
     const sequences={
-      researched:[{id:find('breast-cancer'),caption:'Breast Cancer — 430K papers'},{id:find('lung-cancer'),caption:'Lung Cancer — 350K papers'},{id:find('leukemia'),caption:'Leukemia — 85K papers'},{caption:'These diseases have 100,000+ papers each.'}],
-      killers:[{id:find('heart-disease'),caption:'Heart Disease — 9M deaths/yr'},{id:find('stroke'),caption:'Stroke — 7.3M deaths/yr'},{id:find('copd'),caption:'COPD — 3.2M deaths/yr'},{caption:'These diseases kill millions per year.'}],
-      forgotten:[{id:find('rotavirus'),caption:'Rotavirus — 128K child deaths/yr, research declining 18%'},{id:find('tetanus'),caption:'Tetanus — 35K deaths/yr, research declining 10%'},{id:find('hepatitis-c'),caption:'Hepatitis C — 242K deaths/yr, research declining'},{caption:'These diseases still kill 400,000+ yearly while the world looks away.'}],
-      silent:[{id:find('rheumatic-heart-disease'),caption:'Rheumatic Heart Disease — 373K deaths/yr, only 9K papers (41 deaths per paper)'},{id:find('norovirus'),caption:'Norovirus — 200K deaths/yr, only 12K papers'},{id:find('pertussis'),caption:'Pertussis — 160K deaths/yr, only 14K papers'},{id:find('rotavirus'),caption:'Rotavirus — 128K child deaths/yr, research declining'},{caption:'These diseases kill 860,000+ people every year in near-silence.'}],
+      researched:[{id:find('breast-cancer'),caption:'Breast Cancer — 430K papers'},{id:find('lung-cancer'),caption:'Lung Cancer — 350K papers'},{id:find('type-2-diabetes'),caption:'Type 2 Diabetes — 380K papers'},{caption:'These diseases each have 300,000+ papers.'}],
+      killers:[{id:find('heart-disease'),caption:'Heart Disease — 9M deaths/yr'},{id:find('stroke'),caption:'Stroke — 7.3M deaths/yr'},{id:find('copd'),caption:'COPD — 3.5M deaths/yr'},{caption:'These diseases kill millions per year.'}],
+      forgotten:[{id:find('rotavirus'),caption:'Rotavirus — 200K child deaths/yr, research declining 18%'},{id:find('tetanus'),caption:'Tetanus — 35K deaths/yr, research declining 10%'},{id:find('hepatitis-c'),caption:'Hepatitis C — 242K deaths/yr, research declining'},{caption:'These diseases still kill 470,000+ yearly while the world looks away.'}],
+      silent:[{id:find('rheumatic-heart-disease'),caption:'Rheumatic Heart Disease — 373K deaths/yr, only 9K papers (41 deaths per paper)'},{id:find('norovirus'),caption:'Norovirus — 200K deaths/yr, only 12K papers'},{id:find('pertussis'),caption:'Pertussis — 160K deaths/yr, only 14K papers'},{id:find('rotavirus'),caption:'Rotavirus — 200K child deaths/yr, research declining'},{caption:'These diseases kill 930,000+ people every year in near-silence.'}],
       richpoor:[{id:find('cystic-fibrosis'),caption:'Cystic Fibrosis — 48 papers per death (wealthy nation disease)'},{id:find('multiple-sclerosis'),caption:'Multiple Sclerosis — 16 papers per death (wealthy nation disease)'},{id:find('tuberculosis'),caption:'Tuberculosis — 0.09 papers per death, 1.25M deaths/yr (developing nation)'},{id:find('malaria'),caption:'Malaria — 0.16 papers per death, 608K deaths/yr (developing nation)'},{caption:'Where you are born determines how much science fights for your life.'}],
       mismatch:[{id:find('cystic-fibrosis'),caption:'Cystic Fibrosis — 48K papers, 1K deaths (48 papers per death)'},{id:find('rheumatic-heart-disease'),caption:'Rheumatic Heart Disease — 9K papers, 373K deaths (0.02 papers per death)'},{caption:'2,000× research intensity gap. Now toggle Mortality at the top of the page →'}],
     };
@@ -743,8 +705,8 @@ export default function MedGalaxy() {
     const tier=dTier(),cfg=TC[tier];
     const data=processData(diseasesData,connectionsData);dataRef.current=data;
     const {diseases,layoutEdges,displayEdges}=data;
-    const {catPos,netPos,geoPos,geoAnchors,debugStr,rawMax}=computeLayouts(diseases,layoutEdges);
-    catPosRef.current=catPos;netPosRef.current=netPos;geoPosRef.current=geoPos;geoAnchorsRef.current=geoAnchors;
+    const {catPos,netPos,debugStr,rawMax}=computeLayouts(diseases,layoutEdges);
+    catPosRef.current=catPos;netPosRef.current=netPos;
     curPosRef.current=catPos.map(p=>[...p]);
 
     // Camera distance scales with layout size
@@ -767,6 +729,8 @@ export default function MedGalaxy() {
     // No fog — keep nodes fully visible at all zoom levels
     // Tone mapping — lower exposure to prevent desaturation
     renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;
+
+
 
     const count=diseases.length;
     // Plasma orb spheres — custom shader on desktop, simple material on mobile
@@ -855,7 +819,7 @@ export default function MedGalaxy() {
       const rc=renderer.domElement.getBoundingClientRect();
       mouse.x=((cx-rc.left)/rc.width)*2-1;mouse.y=-((cy-rc.top)/rc.height)*2+1;
       raycaster.setFromCamera(mouse,camera);const hits=raycaster.intersectObjects(proxies);
-      if(hits.length>0){selectDisease(hits[0].object.userData.idx);}else{deselect();}
+      if(hits.length>0){const hi=hits[0].object.userData.idx;selectDisease(hi);setHoveredNode({index:hi,disease:diseases[hi]});setTipPos({x:cx,y:cy});}else{deselect();setHoveredNode(null);}
       mouse.x=-9999;mouse.y=-9999; // reset so continuous raycast doesn't fire
     }
     function onTouchMove2(){idleRef.current=0;}
@@ -885,11 +849,11 @@ export default function MedGalaxy() {
         eGeo.getAttribute('position').needsUpdate=true;
       }
 
-      // Size lerp
+      // Size lerp (scale only — positions handled by drift loop)
       const sa=sizeAnimRef.current;
-      if(sa){sa.f++;const t=Math.min(sa.f/sa.total,1),ease=1-Math.pow(1-t,3);const cur=curPosRef.current;
-        for(let i=0;i<count;i++){const r=sa.from[i]+(sa.to[i]-sa.from[i])*ease;v3.set(cur[i][0],cur[i][1],cur[i][2]);s3.set(r,r,r);m4.compose(v3,q4,s3);iMesh.setMatrixAt(i,m4);proxies[i].scale.set(Math.max(r,1.5),Math.max(r,1.5),Math.max(r,1.5));if(glowSprites[i]){const gr=r*3;glowSprites[i].scale.set(gr,gr,1);}}
-        iMesh.instanceMatrix.needsUpdate=true;if(t>=1)sizeAnimRef.current=null;}
+      if(sa){sa.f++;const t=Math.min(sa.f/sa.total,1),ease=1-Math.pow(1-t,3);
+        for(let i=0;i<count;i++){const r=sa.from[i]+(sa.to[i]-sa.from[i])*ease;proxies[i].scale.set(Math.max(r,1.5),Math.max(r,1.5),Math.max(r,1.5));if(glowSprites[i]){const gr=r*3;glowSprites[i].scale.set(gr,gr,1);}}
+        if(t>=1)sizeAnimRef.current=null;}
 
       // Explode animation
       const ea=explodeAnimRef.current;
@@ -908,13 +872,13 @@ export default function MedGalaxy() {
 
       // Fly-to
       const fly=flyRef.current;
-      if(fly){fly.f++;const t=Math.min(fly.f/fly.total,1),ease=1-Math.pow(1-t,3);controls.target.lerpVectors(fly.st,fly.et,ease);controls.radius=fly.sr+(fly.er-fly.sr)*ease;if(t>=1)flyRef.current=null;}
+      if(fly){fly.f++;const t=Math.min(fly.f/fly.total,1),ease=t*t*(3-2*t);controls.target.lerpVectors(fly.st,fly.et,ease);controls.radius=fly.sr+(fly.er-fly.sr)*ease;if(t>=1)flyRef.current=null;}
 
       // ── Idle drift: sinusoidal breathing on node positions (single-pass) ──
-      if(!layoutAnimRef.current&&!sizeAnimRef.current&&!explodeAnimRef.current&&!explodeActiveRef.current&&!connectionsActiveRef.current&&connFocusRef.current<0){
+      if(!layoutAnimRef.current&&!explodeAnimRef.current&&!explodeActiveRef.current&&!connectionsActiveRef.current&&connFocusRef.current<0){
         const t=frame*0.016;
         const cur=curPosRef.current;
-        const src=geoModeRef.current?geoPosRef.current:layoutModeRef.current==='network'?netPosRef.current:catPosRef.current;
+        const src=catPosRef.current;
         if(src){
           const ph_arr=nodePhaseRef.current;
           const bl=driftBlendRef.current;
@@ -941,7 +905,7 @@ export default function MedGalaxy() {
 
       // Story tooltip — project focused node to screen coords
       const sni=storyRef.current.nodeIdx;
-      if(sni>=0&&frame%3===0&&curPosRef.current){
+      if(sni>=0&&frame%3===0&&curPosRef.current&&!flyRef.current){
         camera.updateMatrixWorld();
         const sp=curPosRef.current[sni];
         const vp=new THREE.Vector3(sp[0],sp[1],sp[2]).project(camera);
@@ -989,23 +953,6 @@ export default function MedGalaxy() {
         }
       }
 
-      // ── Geography region labels: project anchor positions to screen ──
-      const glc=geoLabelsRef.current;
-      if(glc&&geoModeRef.current&&geoAnchorsRef.current&&frame%2===0){
-        const rc=renderer.domElement.getBoundingClientRect();
-        const anchors=geoAnchorsRef.current;
-        const kids=glc.children;
-        const pv2=new THREE.Vector3();
-        let ci=0;
-        for(const r of ['AFR','SEAR','EUR','AMR','WPR','EMR']){
-          const el=kids[ci];ci++;if(!el||!anchors[r])continue;
-          pv2.set(anchors[r][0],anchors[r][1]+60,anchors[r][2]).project(camera);
-          if(pv2.z>1||pv2.z<-1){el.style.display='none';continue;}
-          el.style.display='';
-          el.style.left=(pv2.x*0.5+0.5)*rc.width+'px';
-          el.style.top=(-pv2.y*0.5+0.5)*rc.height+'px';
-        }
-      }
 
       requestAnimationFrame(animate);
     }
@@ -1020,8 +967,9 @@ export default function MedGalaxy() {
     return()=>{alive=false;ro.disconnect();controls.dispose();window.removeEventListener('keydown',onKey);renderer.domElement.removeEventListener('mousemove',onMM);renderer.domElement.removeEventListener('mousedown',onMD);renderer.domElement.removeEventListener('mouseup',onMU);renderer.domElement.removeEventListener('dblclick',onDblClick);renderer.domElement.removeEventListener('touchstart',onTouchStart);renderer.domElement.removeEventListener('touchmove',onTouchMove2);renderer.domElement.removeEventListener('touchend',onTouchEnd);sGeo.dispose();sMat.dispose();pGeo.dispose();pMat.dispose();eGeo.dispose();eMat.dispose();iMesh.dispose();glowTex.dispose();renderer.dispose();if(container.contains(renderer.domElement))container.removeChild(renderer.domElement);};
   },[selectDisease,deselect]);
 
-  // Highlight effect
+  // Highlight effect — deferred via rAF to avoid blocking the frame that triggers state change
   useEffect(()=>{
+    const raf=requestAnimationFrame(()=>{
     const iMesh=iMeshRef.current,eMesh=edgeMeshRef.current,data=dataRef.current,glows=glowSpritesRef.current;
     if(!iMesh||!eMesh||!data)return;
     const hIdx=hoveredNode?hoveredNode.index:-1,sIdx=selectedNode?selectedNode.index:-1;
@@ -1034,22 +982,23 @@ export default function MedGalaxy() {
     const hubSet=new Set();
     if(connMode){connData.hubs.forEach(h=>{const idx=data.idMap[h.id];if(idx!==undefined)hubSet.add(idx);});}
 
-    const geo=geoMode;
+    const neg=neglectMode;
     for(let i=0;i<diseases.length;i++){
-      const d=diseases[i],c=new THREE.Color(geo?RC[d.region]||'#ffffff':CC[d.category]);
+      const d=diseases[i],ppd=d.mortality>0?d.papers/d.mortality:0;
+      const c=new THREE.Color(neg?neglectColor(ppd):CC[d.category]);
       const catVis=activeCats.has(d.category),searchMatch=!sq||d.label.toLowerCase().includes(sq);
-      if(!geo&&!catVis)c.multiplyScalar(0.05);
+      if(!neg&&!catVis)c.multiplyScalar(0.05);
       else if(connMode){if(hubSet.has(i))c.multiplyScalar(1.3);else c.multiplyScalar(0.4);}
       else if(aIdx>=0){if(i===aIdx)c.multiplyScalar(1.4);else if(nbrs&&nbrs.has(i)){}else c.multiplyScalar(0.25);}
       else if(sq&&!searchMatch)c.multiplyScalar(0.15);
       iMesh.setColorAt(i,c);
       // Glow brightness + recolor
       if(glows&&glows[i]){
-        if(geo)glows[i].material.color.set(RC[d.region]||'#ffffff');
+        if(neg)glows[i].material.color.set(neglectColor(ppd));
         else glows[i].material.color.set(CC[d.category]);
-        glows[i].material.opacity=((!geo&&!catVis)?0:connMode?(hubSet.has(i)?0.55:0.08):aIdx>=0?(i===aIdx||nbrs?.has(i)?0.5:0.05):0.35);
+        glows[i].material.opacity=((!neg&&!catVis)?0:connMode?(hubSet.has(i)?0.55:0.08):aIdx>=0?(i===aIdx||nbrs?.has(i)?0.5:0.05):0.35);
       }
-      if(!geo&&!catVis){const m=new THREE.Matrix4();iMesh.getMatrixAt(i,m);const p=new THREE.Vector3(),q=new THREE.Quaternion(),s=new THREE.Vector3();m.decompose(p,q,s);s.set(0.001,0.001,0.001);m.compose(p,q,s);iMesh.setMatrixAt(i,m);}
+      if(!neg&&!catVis){const m=new THREE.Matrix4();iMesh.getMatrixAt(i,m);const p=new THREE.Vector3(),q=new THREE.Quaternion(),s=new THREE.Vector3();m.decompose(p,q,s);s.set(0.001,0.001,0.001);m.compose(p,q,s);iMesh.setMatrixAt(i,m);}
     }
     iMesh.instanceColor.needsUpdate=true;iMesh.instanceMatrix.needsUpdate=true;
 
@@ -1070,19 +1019,20 @@ export default function MedGalaxy() {
       ca[o]=v;ca[o+1]=v;ca[o+2]=v;ca[o+3]=v;ca[o+4]=v;ca[o+5]=v;}
     eMesh.geometry.getAttribute('color').needsUpdate=true;
     eMesh.material.opacity=(connMode||hasActive)?0.55:0;
-  },[hoveredNode,selectedNode,activeCats,searchQuery,sizeMode,connectionsActive,connData,connFocusActive,geoMode]);
+    });return()=>cancelAnimationFrame(raf);
+  },[hoveredNode,selectedNode,activeCats,searchQuery,sizeMode,connectionsActive,connData,connFocusActive,neglectMode]);
 
   return(
     <div ref={containerRef} style={{width:'100%',height:'100%',position:'relative',overflow:'hidden',cursor,touchAction:'none'}}>
-      <Header diseaseCount={diseasesData.length} edgeCount={connectionsData.length} searchQuery={searchQuery} onSearchChange={setSearchQuery} sizeMode={sizeMode} onSizeToggle={handleSize} layoutMode={layoutMode} onLayoutToggle={handleLayout} sizeToggleRef={sizeToggleRef} onExplode={handleExplode} onConnections={handleConnections} onVelocity={handleVelocity} geoMode={geoMode} onGeo={handleGeo}/>
-      <FilterBar activeCategories={activeCats} onToggle={toggleCat} geoMode={geoMode}/>
-      <Legend sizeMode={sizeMode} layoutMode={layoutMode}/>
+      <Header diseaseCount={diseasesData.length} edgeCount={connectionsData.length} searchQuery={searchQuery} onSearchChange={setSearchQuery} sizeMode={sizeMode} onSizeToggle={handleSize} sizeToggleRef={sizeToggleRef} onExplode={handleExplode} onConnections={handleConnections} onVelocity={handleVelocity} neglectMode={neglectMode} onNeglect={handleNeglect}/>
+      <FilterBar activeCategories={activeCats} onToggle={toggleCat} neglectMode={neglectMode}/>
+      <Legend sizeMode={sizeMode}/>
       {searchQuery&&dataRef.current&&<SearchDropdown query={searchQuery} diseases={dataRef.current.diseases} onSelect={handleSearchSel}/>}
-      {hoveredNode&&(!selectedNode||hoveredNode.index!==selectedNode.index)&&(<Tooltip disease={hoveredNode.disease} connCount={dataRef.current?.connCounts.get(hoveredNode.index)||0} x={tipPos.x} y={tipPos.y}/>)}
-      {selectedNode&&dataRef.current&&(<Sidebar disease={selectedNode.disease} data={dataRef.current} onSelect={selectDisease} onClose={isMob()&&connFocusRef.current>=0?(()=>{setSelectedNode(null);}):deselect}/>)}
+      {hoveredNode&&(isMob()||!selectedNode||hoveredNode.index!==selectedNode.index)&&(<Tooltip disease={hoveredNode.disease} connCount={dataRef.current?.connCounts.get(hoveredNode.index)||0} x={tipPos.x} y={tipPos.y}/>)}
+      {selectedNode&&dataRef.current&&!isMob()&&(<Sidebar disease={selectedNode.disease} data={dataRef.current} onSelect={selectDisease} onClose={connFocusRef.current>=0?(()=>{setSelectedNode(null);}):deselect}/>)}
       {storyTip&&(<Tooltip disease={storyTip.disease} connCount={storyTip.connCount} x={storyTip.x} y={storyTip.y}/>)}
       <div ref={labelsRef} style={{position:'absolute',top:0,left:0,width:'100%',height:'100%',pointerEvents:'none',zIndex:30,overflow:'hidden'}}>
-        {diseasesData.map((d,i)=>(<div key={d.id} className="node-lbl" style={{position:'absolute',transform:'translateX(-50%)',fontFamily:'IBM Plex Mono,monospace',fontSize:isMob()?7:9,color:geoMode?(RC[d.region]||'#fff'):CC[d.category],textAlign:'center',whiteSpace:'nowrap',textShadow:'0 0 4px rgba(0,0,0,0.8),0 1px 2px rgba(0,0,0,0.9)'}}><span className="lbl-name">{d.label}</span>{!isMob()&&<span className="lbl-detail" style={{display:'none',color:'#94a3b8',fontSize:8}}><br/>{fmt(d.papers)} papers</span>}</div>))}
+        {diseasesData.map((d,i)=>(<div key={d.id} className="node-lbl" style={{position:'absolute',transform:'translateX(-50%)',fontFamily:'IBM Plex Mono,monospace',fontSize:isMob()?7:9,color:neglectMode?neglectColor(d.mortality>0?d.papers/d.mortality:0):CC[d.category],textAlign:'center',whiteSpace:'nowrap',textShadow:'0 0 4px rgba(0,0,0,0.8),0 1px 2px rgba(0,0,0,0.9)'}}><span className="lbl-name">{d.label}</span>{!isMob()&&<span className="lbl-detail" style={{display:'none',color:'#94a3b8',fontSize:8}}><br/>{fmt(d.papers)} papers</span>}</div>))}
       </div>
       <style>{`.node-lbl{transition:opacity 0.15s}.lbl-hover .lbl-name{font-size:11px!important;font-weight:600;color:#e2e8f0!important}.lbl-hover .lbl-detail{display:inline!important}`}</style>
       <StoryChips onChip={handleStory} visible={storyVisible}/>
@@ -1090,9 +1040,6 @@ export default function MedGalaxy() {
       {explodeActive&&<ExplodeOverlay data={ppdData} onClose={handleUnexplode}/>}
       {connectionsActive&&<ConnectionsOverlay data={connData} onClose={handleCloseConnections} onSelect={handleConnSelect}/>}
       {velocityActive&&<VelocityOverlay data={velocityData} onClose={handleCloseVelocity}/>}
-      <div ref={geoLabelsRef} style={{position:'absolute',top:0,left:0,width:'100%',height:'100%',pointerEvents:'none',zIndex:31,overflow:'hidden',display:geoMode?'block':'none'}}>
-        {['AFR','SEAR','EUR','AMR','WPR','EMR'].map(r=>(<div key={r} style={{position:'absolute',transform:'translate(-50%,-100%)',fontFamily:'IBM Plex Mono,monospace',fontSize:isMob()?11:14,fontWeight:700,color:'#ffffff',textAlign:'center',whiteSpace:'nowrap',textShadow:`0 0 16px ${RC[r]}88,0 0 6px rgba(0,0,0,0.95),0 2px 6px rgba(0,0,0,0.9)`,letterSpacing:'0.05em'}}>{RL[r]}</div>))}
-      </div>
     </div>
   );
 }
