@@ -1012,7 +1012,8 @@ export default function MedGalaxy() {
     ro.observe(container);
     // Escape to dismiss story
     function onKey(e){if(e.key==='Escape'){
-      setStoryCaption('');
+      const sr=storyRef.current;if(sr.timer){clearTimeout(sr.timer);sr.timer=null;}sr.seq=null;sr.step=0;sr.nodeIdx=-1;
+      setStoryCaption('');setStoryTip(null);
       if(spotlightRef.current.timer){clearInterval(spotlightRef.current.timer);spotlightRef.current.timer=null;setSpotlightActive(false);setSpotlightCaption('');}
       if(explodeActiveRef.current){
         const cur=curPosRef.current;if(cur){const cp=cur.map(p=>[...p]);const src=catPosRef.current;explodeAnimRef.current={from:cp,to:src.map(p=>[...p]),f:0,total:60,returning:true};}
