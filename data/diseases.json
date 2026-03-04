@@ -1871,7 +1871,7 @@
   },
   {
     "id": "sjogrens-syndrome",
-    "label": "Sjögren's Syndrome",
+    "label": "Sj\u00f6gren's Syndrome",
     "category": "autoimmune",
     "description": "Autoimmune disorder attacking moisture-producing glands causing dryness.",
     "papers": 15000,
@@ -2443,9 +2443,9 @@
   },
   {
     "id": "plague",
-    "label": "Plague",
+    "label": "Plague (Yersinia pestis)",
     "category": "infectious",
-    "description": "Bacterial disease caused by Yersinia pestis, historically devastating.",
+    "description": "Zoonotic bacterial infection caused by Yersinia pestis, transmitted via flea bites or respiratory droplets. Manifests as bubonic, septicemic, or pneumonic plague. Endemic in parts of Africa, Asia, and the Americas with sporadic outbreaks.",
     "papers": 5000,
     "trend": 2,
     "mortality": 300,
