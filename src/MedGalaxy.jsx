@@ -1,5 +1,9 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import * as THREE from 'three';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
+import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass';
+import { FXAAShader } from 'three/examples/jsm/shaders/FXAAShader';
 import * as d3 from 'd3';
 import diseasesData from '../data/diseases.json';
 import connectionsData from '../data/connections.json';
@@ -768,6 +772,16 @@ export default function MedGalaxy() {
     renderer.setSize(container.clientWidth,container.clientHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio,cfg.dprCap));
     renderer.setClearColor(0x000000,0);container.appendChild(renderer.domElement);rendererRef.current=renderer;
+    const isAndroid=/android/i.test(navigator.userAgent);
+    let composer=null;
+    if(isAndroid){
+      composer=new EffectComposer(renderer);
+      composer.addPass(new RenderPass(scene,camera));
+      const fxaa=new ShaderPass(FXAAShader);
+      const pr=renderer.getPixelRatio();
+      fxaa.material.uniforms['resolution'].value.set(1/(container.clientWidth*pr),1/(container.clientHeight*pr));
+      composer.addPass(fxaa);
+    }
     const controls=new OC(camera,renderer.domElement);
     controls.radius=camDist;controls.defaultRadius=camDist;
     controlsRef.current=controls;
@@ -971,7 +985,7 @@ export default function MedGalaxy() {
         const ni=hits.length>0?hits[0].object.userData.idx:-1;
         if(ni!==hoverIdxRef.current){hoverIdxRef.current=ni;if(ni>=0){setHoveredNode({index:ni,disease:diseases[ni]});setCursor('pointer');}else{setHoveredNode(null);setCursor('default');}}
       }
-      renderer.render(scene,camera);
+      if(composer)composer.render();else renderer.render(scene,camera);
 
       // ── Node labels: project all positions to screen, update DOM directly ──
       const lc=labelsRef.current;
@@ -1008,7 +1022,7 @@ export default function MedGalaxy() {
     }
     animate();
 
-    const ro=new ResizeObserver(([e])=>{const{width:w,height:h}=e.contentRect;if(!w||!h)return;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h);});
+    const ro=new ResizeObserver(([e])=>{const{width:w,height:h}=e.contentRect;if(!w||!h)return;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h);if(composer){composer.setSize(w,h);const pr=renderer.getPixelRatio();composer.passes.forEach(p=>{if(p.material&&p.material.uniforms['resolution'])p.material.uniforms['resolution'].value.set(1/(w*pr),1/(h*pr));});}});
     ro.observe(container);
     // Escape to dismiss story
     function onKey(e){if(e.key==='Escape'){
@@ -1027,7 +1041,7 @@ export default function MedGalaxy() {
     }}
     window.addEventListener('keydown',onKey);
 
-    return()=>{alive=false;ro.disconnect();controls.dispose();window.removeEventListener('keydown',onKey);if(spotlightRef.current.timer)clearInterval(spotlightRef.current.timer);renderer.domElement.removeEventListener('mousemove',onMM);renderer.domElement.removeEventListener('mousedown',onMD);renderer.domElement.removeEventListener('mouseup',onMU);renderer.domElement.removeEventListener('dblclick',onDblClick);renderer.domElement.removeEventListener('touchstart',onTouchStart);renderer.domElement.removeEventListener('touchmove',onTouchMove2);renderer.domElement.removeEventListener('touchend',onTouchEnd);sGeo.dispose();sMat.dispose();pGeo.dispose();pMat.dispose();eGeo.dispose();eMat.dispose();iMesh.dispose();glowTex.dispose();renderer.dispose();if(container.contains(renderer.domElement))container.removeChild(renderer.domElement);};
+    return()=>{alive=false;ro.disconnect();controls.dispose();window.removeEventListener('keydown',onKey);if(spotlightRef.current.timer)clearInterval(spotlightRef.current.timer);renderer.domElement.removeEventListener('mousemove',onMM);renderer.domElement.removeEventListener('mousedown',onMD);renderer.domElement.removeEventListener('mouseup',onMU);renderer.domElement.removeEventListener('dblclick',onDblClick);renderer.domElement.removeEventListener('touchstart',onTouchStart);renderer.domElement.removeEventListener('touchmove',onTouchMove2);renderer.domElement.removeEventListener('touchend',onTouchEnd);sGeo.dispose();sMat.dispose();pGeo.dispose();pMat.dispose();eGeo.dispose();eMat.dispose();iMesh.dispose();glowTex.dispose();if(composer)composer.dispose();renderer.dispose();if(container.contains(renderer.domElement))container.removeChild(renderer.domElement);};
   },[selectDisease,deselect]);
 
   // Highlight effect — deferred via rAF to avoid blocking the frame that triggers state change
