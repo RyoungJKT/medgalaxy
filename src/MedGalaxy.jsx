@@ -485,7 +485,8 @@ function StoryChips({onChip,onRandomPick,visible}){
   const btnStyle={padding:mob?'6px 4px':'8px 16px',borderRadius:8,border:'1px solid rgba(255,255,255,0.1)',background:'rgba(10,16,30,0.9)',backdropFilter:'blur(12px)',color:'#e2e8f0',fontSize:mob?9:11,cursor:'pointer',fontFamily:'inherit',animation:'none',transition:'background 0.2s, box-shadow 0.3s, border-color 0.3s'};
   const hIn=e=>{const s=e.currentTarget.style;s.boxShadow='0 0 8px 1px rgba(57,255,20,0.4), 0 0 20px 3px rgba(57,255,20,0.15)';s.borderColor='rgba(57,255,20,0.6)';};
   const hOut=e=>{const s=e.currentTarget.style;s.boxShadow='none';s.borderColor='rgba(255,255,255,0.1)';};
-  return(<div style={{position:'absolute',bottom:mob?32:50,left:'50%',transform:'translateX(-50%)',zIndex:45,display:mob?'grid':'flex',gridTemplateColumns:mob?'repeat(4,1fr)':undefined,gap:mob?6:10,fontFamily:'IBM Plex Mono,monospace',opacity:0,animation:'fadeIn 0.5s ease 2.8s forwards',width:mob?'92vw':undefined}}>
+  const [mounted,setMounted]=useState(false);useEffect(()=>{const t=setTimeout(()=>setMounted(true),2800);return()=>clearTimeout(t);},[]);
+  return(<div style={{position:'absolute',bottom:mob?32:50,left:'50%',transform:'translateX(-50%)',zIndex:45,display:mob?'grid':'flex',gridTemplateColumns:mob?'repeat(4,1fr)':undefined,gap:mob?6:10,fontFamily:'IBM Plex Mono,monospace',opacity:mounted?1:0,transition:mounted?'opacity 0.4s ease':'none',width:mob?'92vw':undefined}}>
     {chips.map(c=>(<button key={c.id} onClick={()=>onChip(c.id)} style={btnStyle} onMouseEnter={hIn} onMouseLeave={hOut}>{c.label}</button>))}
     <button onClick={onRandomPick} style={{...btnStyle,border:'1px solid rgba(245,158,11,0.3)',color:'#f59e0b'}} onMouseEnter={e=>{const s=e.currentTarget.style;s.boxShadow='0 0 8px 1px rgba(245,158,11,0.4), 0 0 20px 3px rgba(245,158,11,0.15)';s.borderColor='rgba(245,158,11,0.6)';}} onMouseLeave={e=>{const s=e.currentTarget.style;s.boxShadow='none';s.borderColor='rgba(245,158,11,0.3)';}}>⟳ Random Pick</button>
   </div>);
@@ -746,12 +747,12 @@ export default function MedGalaxy() {
     rp.chosenIdx=chosenIdx;rp.fact=pick.fact;
     rp.origPositions=cur.map(p=>[...p]);
     rp.origRadius=ctrl.radius;
+    rp.velocities=null; // will be set at explosion phase
 
+    // Start animation immediately — defer React state to next frame to avoid stutter
     rp.phase=1;rp.f=0;
-    // Snapshot current positions fresh and deselect to avoid jump
-    rp.origPositions=curPosRef.current.map(p=>[...p]);
-    setStoryVisible(false);setRandomPickCaption(null);setSelectedNode(null);
-    explodeActiveRef.current=true; // block idle drift
+    explodeActiveRef.current=true;
+    requestAnimationFrame(()=>{setStoryVisible(false);setRandomPickCaption(null);setSelectedNode(null);});
   },[]);
 
   const stopRandomPick=useCallback(()=>{
@@ -1047,66 +1048,72 @@ export default function MedGalaxy() {
       if(rp.phase>0){
         rp.f++;const cur=curPosRef.current;
         if(rp.phase===1){
-          // Phase 1: Slow gravitational pull inward (150 frames ~2.5s)
+          // Phase 1: Gravitational pull inward (150 frames ~2.5s)
+          // Spin ramps smoothly from idle → medium using cubic ease-in
           const t=Math.min(rp.f/150,1);
-          const easeIn=t*t*t; // cubic ease-in: slow start, accelerating
-          controls.tV=0.0006+easeIn*0.1; // gradual spin buildup
-          const shrink=1-easeIn*0.75; // compress to 25% orbit
+          const easeIn=t*t*t;
+          controls.tV=0.0006+easeIn*0.035; // ramp to ~0.036 (medium speed)
+          const shrink=1-easeIn*0.75;
           const orig=rp.origPositions;
-          // Spiral inward with slight vertical compression
           for(let i=0;i<count;i++){
-            const wobble=Math.sin(rp.f*0.08+i*1.7)*shrink*2; // swirling wobble that fades as cluster tightens
+            const wobble=Math.sin(rp.f*0.08+i*1.7)*shrink*2;
             cur[i][0]=orig[i][0]*shrink+wobble;cur[i][1]=orig[i][1]*shrink*0.85;cur[i][2]=orig[i][2]*shrink+Math.cos(rp.f*0.08+i*2.3)*shrink*2;
             v3.set(cur[i][0],cur[i][1],cur[i][2]);const r=proxies[i].scale.x;s3.set(r,r,r);m4.compose(v3,q4,s3);iMesh.setMatrixAt(i,m4);proxies[i].position.set(cur[i][0],cur[i][1],cur[i][2]);if(glowSprites[i])glowSprites[i].position.set(cur[i][0],cur[i][1],cur[i][2]);}
           iMesh.instanceMatrix.needsUpdate=true;
-          // Camera slowly pulls in during cluster
           if(rp.f%3===0&&controls.radius>controls.defaultRadius*0.7)controls.radius-=0.3;
           if(rp.f>=150){rp.phase=2;rp.f=0;}
         }else if(rp.phase===2){
-          // Phase 2: Hyperspace spin — tight ball spinning intensely (220 frames ~3.7s)
-          controls.tV=0.1;
-          // Pulsing cluster: subtle breathe at high speed + growing intensity
+          // Phase 2: Ramp spin to max + hold (280 frames ~4.7s)
+          // First 80 frames: ramp from medium→max. Remaining 200: sustain at max with tension buildup.
+          const rampT=Math.min(rp.f/80,1);
+          const rampEase=rampT*rampT; // quadratic ramp-up
+          controls.tV=0.036+rampEase*0.074; // 0.036 → 0.11 over 80 frames
           const pulse=1+Math.sin(rp.f*0.3)*0.04;
-          // Slight camera shake in last second for tension
-          const shakeT=Math.max(0,(rp.f-160)/60); // ramps 0→1 in last 60 frames
-          if(shakeT>0){const sk=shakeT*0.4;controls.target.x=Math.sin(rp.f*1.7)*sk;controls.target.y=Math.cos(rp.f*2.3)*sk;}
+          // Camera shake builds in final 60 frames
+          const shakeT=Math.max(0,(rp.f-220)/60);
+          if(shakeT>0){const sk=shakeT*0.5;controls.target.x=Math.sin(rp.f*1.7)*sk;controls.target.y=Math.cos(rp.f*2.3)*sk;}
           const orig=rp.origPositions;
           for(let i=0;i<count;i++){
             const base=0.25*pulse;
             cur[i][0]=orig[i][0]*base;cur[i][1]=orig[i][1]*base*0.85;cur[i][2]=orig[i][2]*base;
             v3.set(cur[i][0],cur[i][1],cur[i][2]);const r=proxies[i].scale.x;s3.set(r,r,r);m4.compose(v3,q4,s3);iMesh.setMatrixAt(i,m4);proxies[i].position.set(cur[i][0],cur[i][1],cur[i][2]);if(glowSprites[i])glowSprites[i].position.set(cur[i][0],cur[i][1],cur[i][2]);}
           iMesh.instanceMatrix.needsUpdate=true;
-          if(rp.f>=220){rp.phase=3;rp.f=0;controls.target.set(0,0,0);}
+          if(rp.f>=280){
+            rp.phase=3;rp.f=0;controls.target.set(0,0,0);
+            // Initialize per-node velocities for physics explosion
+            const vels=[];
+            for(let i=0;i<count;i++){
+              if(i===rp.chosenIdx){vels.push([0,0,0]);continue;}
+              // Random direction on unit sphere (uniform)
+              const u=Math.random()*2-1,th=Math.random()*Math.PI*2;
+              const s2=Math.sqrt(1-u*u);
+              // Speed: base + random variation
+              const spd=controls.defaultRadius*0.12*(0.7+Math.random()*0.6);
+              vels.push([s2*Math.cos(th)*spd, u*spd, s2*Math.sin(th)*spd]);
+            }
+            rp.velocities=vels;
+          }
         }else if(rp.phase===3){
-          // Phase 3: Hyperspace jump — 360° spherical explosion (80 frames)
-          const t=Math.min(rp.f/80,1);
-          const ease=1-Math.pow(1-t,4); // fast burst, ease out
-          controls.tV=0.1*Math.pow(1-t,2)+0.0006;
-          // Golden angle spherical distribution for even 360° scatter
-          const GA=2.399963; // golden angle in radians
+          // Phase 3: Physics explosion — velocity + drag (90 frames)
+          const t=Math.min(rp.f/90,1);
+          controls.tV=0.11*Math.pow(1-t,3)+0.0006; // decelerate rotation
+          const drag=0.96; // per-frame velocity damping
+          const vels=rp.velocities;
           for(let i=0;i<count;i++){
             if(i===rp.chosenIdx){
-              const ce=t<0.3?0:Math.min((t-0.3)/0.4,1);
+              // Chosen: converge to center after brief delay
+              const ce=t<0.25?0:Math.min((t-0.25)/0.35,1);
               const ce2=ce*ce*(3-2*ce);
-              cur[i][0]=cur[i][0]*(1-ce2);cur[i][1]=cur[i][1]*(1-ce2);cur[i][2]=cur[i][2]*(1-ce2);
+              cur[i][0]*=(1-ce2*0.15);cur[i][1]*=(1-ce2*0.15);cur[i][2]*=(1-ce2*0.15);
             }else{
-              // Fibonacci sphere: even distribution across full sphere
-              const idx=i<rp.chosenIdx?i:i-1; // skip chosen in sequence
-              const tot=count-1;
-              const phi2=Math.acos(1-2*(idx+0.5)/tot); // polar angle 0→π
-              const theta2=GA*idx; // azimuthal angle
-              const dist=controls.defaultRadius*(3.5+Math.sin(i*7.3)*1.2);
-              const tx=Math.sin(phi2)*Math.cos(theta2)*dist*ease;
-              const ty=Math.cos(phi2)*dist*ease;
-              const tz=Math.sin(phi2)*Math.sin(theta2)*dist*ease;
-              cur[i][0]=cur[i][0]+(tx-cur[i][0])*Math.min(ease*1.5,1);
-              cur[i][1]=cur[i][1]+(ty-cur[i][1])*Math.min(ease*1.5,1);
-              cur[i][2]=cur[i][2]+(tz-cur[i][2])*Math.min(ease*1.5,1);
+              // Apply velocity then damp
+              cur[i][0]+=vels[i][0];cur[i][1]+=vels[i][1];cur[i][2]+=vels[i][2];
+              vels[i][0]*=drag;vels[i][1]*=drag;vels[i][2]*=drag;
             }
             v3.set(cur[i][0],cur[i][1],cur[i][2]);const r=proxies[i].scale.x;s3.set(r,r,r);m4.compose(v3,q4,s3);iMesh.setMatrixAt(i,m4);proxies[i].position.set(cur[i][0],cur[i][1],cur[i][2]);if(glowSprites[i])glowSprites[i].position.set(cur[i][0],cur[i][1],cur[i][2]);
           }
           iMesh.instanceMatrix.needsUpdate=true;
-          if(rp.f>=80){
+          if(rp.f>=90){
             rp.phase=4;rp.f=0;controls.tV=0.0006;
             selectDisease(rp.chosenIdx);
             setRandomPickCaption({disease:diseases[rp.chosenIdx],fact:rp.fact});
