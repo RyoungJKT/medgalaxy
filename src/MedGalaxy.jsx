@@ -387,7 +387,7 @@ function VelocityOverlay({data,onClose}){
   );
 }
 
-function Header({diseaseCount,edgeCount,searchQuery,onSearchChange,sizeMode,onSizeToggle,sizeToggleRef,onExplode,onConnections,onVelocity,neglectMode,onNeglect,spotlightActive,onSpotlight}){
+function Header({diseaseCount,edgeCount,searchQuery,onSearchChange,sizeMode,onSizeToggle,sizeToggleRef,onExplode,onConnections,onVelocity,neglectMode,onNeglect,spotlightActive,onSpotlight,searchDropdown}){
   const mob=isMob();
   const [menuOpen,setMenuOpen]=React.useState(false);
   const menuRef=React.useRef(null);
@@ -421,7 +421,7 @@ function Header({diseaseCount,edgeCount,searchQuery,onSearchChange,sizeMode,onSi
         <button onClick={onNeglect} style={{padding:'6px 12px',fontSize:11,fontFamily:'inherit',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,cursor:'pointer',background:neglectMode?'rgba(255,255,255,0.12)':'transparent',color:neglectMode?'#ef4444':'#e2e8f0',whiteSpace:'nowrap'}}>{neglectMode?'✕ Attention Map':'Attention Map'}</button>
         {neglectMode&&<div style={{position:'absolute',top:'100%',right:0,marginTop:6,padding:'8px 12px',background:'rgba(10,16,30,0.95)',backdropFilter:'blur(12px)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,fontSize:10,color:'#94a3b8',width:260,lineHeight:1.5,opacity:0,animation:'fadeIn 0.4s ease forwards'}}>Nodes colored by research papers per death. <span style={{color:'#22c55e'}}>Green</span> = high attention. <span style={{color:'#f59e0b'}}>Yellow</span> = moderate. <span style={{color:'#ef4444'}}>Red</span> = overlooked.</div>}
       </div>
-      <div style={{position:'relative',pointerEvents:'auto'}}><input value={searchQuery} onChange={e=>onSearchChange(e.target.value)} placeholder="Search diseases..." style={{background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,padding:'7px 12px',color:'#e2e8f0',fontSize:12,fontFamily:'inherit',width:200,outline:'none'}}/></div>
+      <div style={{position:'relative',pointerEvents:'auto'}}><input value={searchQuery} onChange={e=>onSearchChange(e.target.value)} placeholder="Search diseases..." style={{background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,padding:'7px 12px',color:'#e2e8f0',fontSize:12,fontFamily:'inherit',width:200,outline:'none'}}/>{searchDropdown}</div>
     </>)}
     <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}@keyframes slideDown{to{transform:translateY(0)}}@keyframes slideUp{to{transform:translateY(0)}}@keyframes fadeIn{to{opacity:1}}@keyframes chipPulse{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,0.4)}50%{box-shadow:0 0 12px 4px rgba(34,197,94,0.15)}}`}</style>
   </div>);
@@ -442,7 +442,7 @@ function FilterBar({activeCategories,onToggle,neglectMode}){if(isMob())return nu
     {CATS.map(cat=>{const on=activeCategories.has(cat);return(<button key={cat} onClick={()=>onToggle(cat)} style={{pointerEvents:'auto',padding:'4px 12px',borderRadius:4,border:'1px solid rgba(255,255,255,0.08)',cursor:'pointer',fontFamily:'inherit',fontSize:10,display:'flex',alignItems:'center',gap:4,background:on?'rgba(255,255,255,0.08)':'transparent',color:on?'#e2e8f0':'#475569',opacity:on?1:0.5}}><span style={{width:6,height:6,borderRadius:'50%',background:CC[cat]}}/>{CL[cat]}</button>);})}
   </div>);}
 
-function SearchDropdown({query,diseases,onSelect}){if(!query||query.length<1)return null;const q=query.toLowerCase(),matches=diseases.filter(d=>d.label.toLowerCase().includes(q)).slice(0,8);if(!matches.length)return null;const mob=isMob();return(<div style={{position:'absolute',top:mob?80:40,left:mob?12:undefined,right:mob?12:260,zIndex:60,background:'rgba(10,16,30,0.96)',backdropFilter:'blur(16px)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,padding:4,fontFamily:'IBM Plex Mono,monospace',fontSize:11,minWidth:mob?undefined:200}}>{matches.map(d=>(<div key={d.id} onClick={()=>onSelect(d)} style={{padding:'5px 8px',cursor:'pointer',borderRadius:4,color:'#e2e8f0',display:'flex',alignItems:'center',gap:6}} onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.06)'}} onMouseLeave={e=>{e.currentTarget.style.background='none'}}><span style={{width:6,height:6,borderRadius:'50%',background:CC[d.category]}}/>{d.label}</div>))}</div>);}
+function SearchDropdown({query,diseases,onSelect}){if(!query||query.length<1)return null;const q=query.toLowerCase(),matches=diseases.filter(d=>d.label.toLowerCase().includes(q)).slice(0,8);if(!matches.length)return null;return(<div style={{position:'absolute',top:'100%',left:0,right:0,marginTop:4,zIndex:60,background:'rgba(10,16,30,0.96)',backdropFilter:'blur(16px)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,padding:4,fontFamily:'IBM Plex Mono,monospace',fontSize:11,minWidth:200}}>{matches.map(d=>(<div key={d.id} onClick={()=>onSelect(d)} style={{padding:'5px 8px',cursor:'pointer',borderRadius:4,color:'#e2e8f0',display:'flex',alignItems:'center',gap:6}} onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.06)'}} onMouseLeave={e=>{e.currentTarget.style.background='none'}}><span style={{width:6,height:6,borderRadius:'50%',background:CC[d.category]}}/>{d.label}</div>))}</div>);}
 
 
 function SpotlightCaption({text}){
@@ -1144,10 +1144,9 @@ export default function MedGalaxy() {
 
   return(
     <div ref={containerRef} style={{width:'100%',height:'100%',position:'relative',overflow:'hidden',cursor,touchAction:'none'}}>
-      <Header diseaseCount={diseasesData.length} edgeCount={connectionsData.length} searchQuery={searchQuery} onSearchChange={setSearchQuery} sizeMode={sizeMode} onSizeToggle={handleSize} sizeToggleRef={sizeToggleRef} onExplode={handleExplode} onConnections={handleConnections} onVelocity={handleVelocity} neglectMode={neglectMode} onNeglect={handleNeglect} spotlightActive={spotlightActive} onSpotlight={handleSpotlight}/>
+      <Header diseaseCount={diseasesData.length} edgeCount={connectionsData.length} searchQuery={searchQuery} onSearchChange={setSearchQuery} sizeMode={sizeMode} onSizeToggle={handleSize} sizeToggleRef={sizeToggleRef} onExplode={handleExplode} onConnections={handleConnections} onVelocity={handleVelocity} neglectMode={neglectMode} onNeglect={handleNeglect} spotlightActive={spotlightActive} onSpotlight={handleSpotlight} searchDropdown={searchQuery&&dataRef.current?<SearchDropdown query={searchQuery} diseases={dataRef.current.diseases} onSelect={handleSearchSel}/>:null}/>
       <FilterBar activeCategories={activeCats} onToggle={toggleCat} neglectMode={neglectMode}/>
       <Legend sizeMode={sizeMode}/>
-      {searchQuery&&dataRef.current&&<SearchDropdown query={searchQuery} diseases={dataRef.current.diseases} onSelect={handleSearchSel}/>}
       {hoveredNode&&(isMob()||!selectedNode||hoveredNode.index!==selectedNode.index)&&(<Tooltip disease={hoveredNode.disease} connCount={dataRef.current?.connCounts.get(hoveredNode.index)||0} x={tipPos.x} y={tipPos.y}/>)}
       {selectedNode&&dataRef.current&&!isMob()&&(<Sidebar disease={selectedNode.disease} data={dataRef.current} onSelect={selectDisease} onClose={connFocusRef.current>=0?(()=>{setSelectedNode(null);}):deselect}/>)}
       {storyTip&&(<Tooltip disease={storyTip.disease} connCount={storyTip.connCount} x={storyTip.x} y={storyTip.y}/>)}
