@@ -947,6 +947,13 @@ export default function MedGalaxy() {
     const eMat=new THREE.LineBasicMaterial({vertexColors:true,transparent:true,opacity:0,depthWrite:false});
     const eMesh=new THREE.LineSegments(eGeo,eMat);eMesh.renderOrder=-1;scene.add(eMesh);edgeMeshRef.current=eMesh;
 
+    // Trail fade overlay (used during Random Pick spin)
+    const fadeCam=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
+    const fadeMat=new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:0.12,depthTest:false,depthWrite:false});
+    const fadeGeo=new THREE.PlaneGeometry(2,2);
+    const fadeMesh=new THREE.Mesh(fadeGeo,fadeMat);
+    const fadeScene=new THREE.Scene();fadeScene.add(fadeMesh);
+
     // Background particles
     if(cfg.particles>0){
       const pCount=cfg.particles,pPos=new Float32Array(pCount*3);
@@ -1209,7 +1216,14 @@ export default function MedGalaxy() {
         const ni=hits.length>0?hits[0].object.userData.idx:-1;
         if(ni!==hoverIdxRef.current){hoverIdxRef.current=ni;if(ni>=0){setHoveredNode({index:ni,disease:diseases[ni]});setCursor('pointer');}else{setHoveredNode(null);setCursor('default');}}
       }
-      if(composer)composer.render();else renderer.render(scene,camera);
+      // Trail effect during Random Pick spin (phases 1-2)
+      const trailActive=rp.phase===1||rp.phase===2;
+      if(trailActive){
+        renderer.autoClear=false;
+        renderer.render(fadeScene,fadeCam); // semi-transparent black overlay fades previous frame
+        renderer.render(scene,camera);
+        renderer.autoClear=true;
+      }else if(composer)composer.render();else renderer.render(scene,camera);
 
       // ── Node labels: project all positions to screen, update DOM directly ──
       const lc=labelsRef.current;
