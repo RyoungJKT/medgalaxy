@@ -913,13 +913,19 @@ export default function MedGalaxy() {
     renderer.domElement.addEventListener('touchstart',onTouchStart,{passive:true});renderer.domElement.addEventListener('touchmove',onTouchMove2,{passive:true});renderer.domElement.addEventListener('touchend',onTouchEnd,{passive:true});
 
     // Gyroscope parallax (iOS/mobile)
-    const gyro={x:0,y:0,enabled:false};
+    const gyro={x:0,y:0,enabled:false,permitted:false};
     function onDeviceOrientation(e){if(e.gamma===null)return;gyro.x=e.gamma/90;gyro.y=(e.beta-45)/90;gyro.enabled=true;}
     if(mob&&window.DeviceOrientationEvent){
       if(typeof DeviceOrientationEvent.requestPermission==='function'){
-        const reqGyro=()=>{DeviceOrientationEvent.requestPermission().then(s=>{if(s==='granted')window.addEventListener('deviceorientation',onDeviceOrientation);}).catch(()=>{});renderer.domElement.removeEventListener('touchstart',reqGyro);};
-        renderer.domElement.addEventListener('touchstart',reqGyro,{once:true});
-      }else{window.addEventListener('deviceorientation',onDeviceOrientation);}
+        // iOS: must request from user gesture — use touchend on document
+        const reqGyro=()=>{if(gyro.permitted)return;gyro.permitted=true;
+          DeviceOrientationEvent.requestPermission().then(s=>{if(s==='granted')window.addEventListener('deviceorientation',onDeviceOrientation);}).catch(()=>{gyro.permitted=false;});
+          document.removeEventListener('touchend',reqGyro);};
+        document.addEventListener('touchend',reqGyro);
+      }else{
+        // Android: no permission needed
+        window.addEventListener('deviceorientation',onDeviceOrientation);
+      }
     }
 
     // Start oscillation immediately — no entrance stagger
@@ -1006,7 +1012,7 @@ export default function MedGalaxy() {
       }
 
       controls.update();
-      if(gyro.enabled){const str=controls.radius*0.12;const r=new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld,0);const u=new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld,1);camera.position.addScaledVector(r,gyro.x*str);camera.position.addScaledVector(u,-gyro.y*str);camera.lookAt(controls.target);}
+      if(gyro.enabled){const str=controls.radius*0.25;const r=new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld,0);const u=new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld,1);camera.position.addScaledVector(r,gyro.x*str);camera.position.addScaledVector(u,-gyro.y*str);camera.lookAt(controls.target);}
       ptL.position.copy(camera.position);
 
       // Story tooltip — project focused node to screen coords
