@@ -1086,7 +1086,7 @@ export default function MedGalaxy() {
           // Ramp over 220 frames, sustain max for 180 frames (~3s at top speed)
           const rampT=Math.min(rp.f/220,1);
           const rampEase=rampT*rampT*rampT;
-          controls.tV=0.013+rampEase*0.097;
+          controls.tV=0.013+rampEase*0.187; // 0.013 → 0.2
           // Camera shake builds in final 60 frames
           const shakeT=Math.max(0,(rp.f-340)/60);
           if(shakeT>0){const sk=shakeT*0.5;controls.target.x=Math.sin(rp.f*1.7)*sk;controls.target.y=Math.cos(rp.f*2.3)*sk;}
@@ -1114,7 +1114,7 @@ export default function MedGalaxy() {
         }else if(rp.phase===3){
           // Phase 3: Physics explosion — velocity + drag (90 frames)
           const t=Math.min(rp.f/90,1);
-          controls.tV=0.11*Math.pow(1-t,3)+0.0006; // decelerate rotation
+          controls.tV=0.2*Math.pow(1-t,3)+0.0006; // decelerate rotation from new max
           const drag=0.96; // per-frame velocity damping
           const vels=rp.velocities;
           for(let i=0;i<count;i++){
@@ -1138,6 +1138,12 @@ export default function MedGalaxy() {
           }
         }else if(rp.phase===4){
           // Phase 4: Reveal — holding on chosen disease
+        }
+        // Update edge positions during random pick so white lines track nodes
+        if(eMat.opacity>0){
+          const ep=eGeo.getAttribute('position').array;
+          for(let i=0;i<eC;i++){const e=displayEdges[i],s=cur[e.si],t2=cur[e.ti],o=i*6;ep[o]=s[0];ep[o+1]=s[1];ep[o+2]=s[2];ep[o+3]=t2[0];ep[o+4]=t2[1];ep[o+5]=t2[2];}
+          eGeo.getAttribute('position').needsUpdate=true;
         }
       }
 
