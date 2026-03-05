@@ -485,7 +485,7 @@ function StoryChips({onChip,onRandomPick,visible}){
     {id:'richpoor',label:'Rich vs Poor',desc:'Who gets the research?'},
     {id:'mismatch',label:'See the Mismatch',desc:'The 2,000:1 research gap'},
   ];
-  const btnStyle={padding:mob?'6px 4px':'8px 16px',borderRadius:8,border:'1px solid rgba(255,255,255,0.1)',background:'rgba(10,16,30,0.9)',backdropFilter:'blur(12px)',color:'#e2e8f0',fontSize:mob?9:11,cursor:'pointer',fontFamily:'inherit',transition:'background 0.2s, box-shadow 0.3s, border-color 0.3s'};
+  const btnStyle={padding:mob?'6px 4px':'8px 16px',borderRadius:8,border:'1px solid rgba(255,255,255,0.1)',background:'rgba(10,16,30,0.92)',color:'#e2e8f0',fontSize:mob?9:11,cursor:'pointer',fontFamily:'inherit',transition:'background 0.2s, box-shadow 0.3s, border-color 0.3s'};
   const hIn=e=>{const s=e.currentTarget.style;s.boxShadow='0 0 8px 1px rgba(57,255,20,0.4), 0 0 20px 3px rgba(57,255,20,0.15)';s.borderColor='rgba(57,255,20,0.6)';};
   const hOut=e=>{const s=e.currentTarget.style;s.boxShadow='none';s.borderColor='rgba(255,255,255,0.1)';};
   return(<div style={{position:'absolute',bottom:mob?32:50,left:'50%',transform:'translateX(-50%)',zIndex:45,display:mob?'grid':'flex',gridTemplateColumns:mob?'repeat(4,1fr)':undefined,gap:mob?6:10,fontFamily:'IBM Plex Mono,monospace',opacity:show?1:0,visibility:show?'visible':'hidden',pointerEvents:show?'auto':'none',transition:'opacity 0.4s ease, visibility 0.4s ease',width:mob?'92vw':undefined}}>
