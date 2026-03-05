@@ -949,10 +949,28 @@ export default function MedGalaxy() {
 
     // Trail fade overlay (used during Random Pick spin)
     const fadeCam=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
-    const fadeMat=new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:0.12,depthTest:false,depthWrite:false});
+    const fadeMat=new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:0.04,depthTest:false,depthWrite:false});
     const fadeGeo=new THREE.PlaneGeometry(2,2);
     const fadeMesh=new THREE.Mesh(fadeGeo,fadeMat);
     const fadeScene=new THREE.Scene();fadeScene.add(fadeMesh);
+
+    // Tornado swirl particles (used during Random Pick spin)
+    const tornadoCount=200;
+    const tornadoGeo=new THREE.BufferGeometry();
+    const tornadoPos=new Float32Array(tornadoCount*3);
+    const tornadoData=[];// {angle, height, radius, speed}
+    for(let i=0;i<tornadoCount;i++){
+      const a=Math.random()*Math.PI*2;
+      const h=(Math.random()-0.5)*2; // -1 to 1
+      const r=0.3+Math.random()*0.7; // radius factor
+      const spd=0.8+Math.random()*1.2;
+      tornadoData.push({a,h,r,spd});
+      tornadoPos[i*3]=0;tornadoPos[i*3+1]=0;tornadoPos[i*3+2]=0;
+    }
+    tornadoGeo.setAttribute('position',new THREE.BufferAttribute(tornadoPos,3));
+    const tornadoMat=new THREE.PointsMaterial({color:0x8899bb,size:1.2,transparent:true,opacity:0,depthWrite:false,blending:THREE.AdditiveBlending});
+    const tornadoMesh=new THREE.Points(tornadoGeo,tornadoMat);
+    tornadoMesh.renderOrder=10;scene.add(tornadoMesh);
 
     // Background particles
     if(cfg.particles>0){
@@ -1152,7 +1170,33 @@ export default function MedGalaxy() {
           for(let i=0;i<eC;i++){const e=displayEdges[i],s=cur[e.si],t2=cur[e.ti],o=i*6;ep[o]=s[0];ep[o+1]=s[1];ep[o+2]=s[2];ep[o+3]=t2[0];ep[o+4]=t2[1];ep[o+5]=t2[2];}
           eGeo.getAttribute('position').needsUpdate=true;
         }
+        // Tornado swirl particles — visible during phases 1-2, fade out in phase 3
+        const ballR=controls.defaultRadius*0.28;
+        const tSpd=controls.tV/0.2; // 0→1 normalized spin speed
+        if(rp.phase<=2){
+          tornadoMat.opacity=Math.min(tSpd*0.6,0.5);
+          const tp=tornadoGeo.getAttribute('position').array;
+          for(let i=0;i<tornadoCount;i++){
+            const d=tornadoData[i];
+            d.a+=d.spd*tSpd*0.12; // swirl speed tracks spin
+            const wideR=ballR*(0.8+d.r*1.8); // wider than cluster
+            const h=d.h*ballR*2.5; // taller than cluster
+            // Funnel shape: wider at top, narrower at bottom
+            const funnel=0.5+0.5*(d.h+1)*0.5; // 0.5 at bottom → 0.75 at top
+            tp[i*3]=Math.cos(d.a)*wideR*funnel;
+            tp[i*3+1]=h;
+            tp[i*3+2]=Math.sin(d.a)*wideR*funnel;
+          }
+          tornadoGeo.getAttribute('position').needsUpdate=true;
+        }else if(rp.phase===3){
+          tornadoMat.opacity*=0.9; // fade out during explosion
+        }else{
+          tornadoMat.opacity=0;
+        }
       }
+
+      // Clear tornado if not in random pick
+      if(rp.phase===0&&tornadoMat.opacity>0)tornadoMat.opacity=0;
 
       // Plasma animation — update time uniform (desktop only)
       if(sMat.uniforms)sMat.uniforms.time.value=frame*0.016;
