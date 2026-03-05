@@ -886,7 +886,7 @@ export default function MedGalaxy() {
       composer.addPass(fxaa);
     }
     const controls=new OC(camera,renderer.domElement);
-    controls.radius=camDist*0.75;controls.defaultRadius=camDist;
+    controls.radius=camDist*0.4;controls.defaultRadius=camDist;
     controlsRef.current=controls;
 
     // Lighting: lower ambient to preserve color saturation
@@ -1005,7 +1005,7 @@ export default function MedGalaxy() {
     // Start oscillation immediately — no entrance stagger
     const entrance={phase:2,f:0,nodesDone:count};
     controls.tV=0.0006; // gentle initial rotation
-    flyRef.current={st:new THREE.Vector3(0,0,0),et:new THREE.Vector3(0,0,0),sr:camDist*0.75,er:camDist,f:0,total:90};
+    flyRef.current={st:new THREE.Vector3(0,0,0),et:new THREE.Vector3(0,0,0),sr:camDist*0.4,er:camDist,f:0,total:140};
     let alive=true;
     function animate(){
       if(!alive)return;
