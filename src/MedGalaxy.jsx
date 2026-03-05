@@ -472,8 +472,11 @@ function Legend({sizeMode}){const mob=isMob();return(<div style={{position:'abso
 
 // ─── Story Mode Component ────────────────────────────────────────────────────
 function StoryChips({onChip,onRandomPick,visible}){
-  if(!visible) return null;
+  const [mounted,setMounted]=useState(false);
+  useEffect(()=>{const t=setTimeout(()=>setMounted(true),2800);return()=>clearTimeout(t);},[]);
+  if(!visible&&mounted) return null;
   const mob=isMob();
+  const show=visible&&mounted;
   const chips=[
     {id:'researched',label:'Most Researched',desc:'See the biggest research spheres'},
     {id:'killers',label:'Biggest Killers',desc:'Diseases with highest mortality'},
@@ -482,11 +485,10 @@ function StoryChips({onChip,onRandomPick,visible}){
     {id:'richpoor',label:'Rich vs Poor',desc:'Who gets the research?'},
     {id:'mismatch',label:'See the Mismatch',desc:'The 2,000:1 research gap'},
   ];
-  const btnStyle={padding:mob?'6px 4px':'8px 16px',borderRadius:8,border:'1px solid rgba(255,255,255,0.1)',background:'rgba(10,16,30,0.9)',backdropFilter:'blur(12px)',color:'#e2e8f0',fontSize:mob?9:11,cursor:'pointer',fontFamily:'inherit',animation:'none',transition:'background 0.2s, box-shadow 0.3s, border-color 0.3s'};
+  const btnStyle={padding:mob?'6px 4px':'8px 16px',borderRadius:8,border:'1px solid rgba(255,255,255,0.1)',background:'rgba(10,16,30,0.9)',backdropFilter:'blur(12px)',color:'#e2e8f0',fontSize:mob?9:11,cursor:'pointer',fontFamily:'inherit',transition:'background 0.2s, box-shadow 0.3s, border-color 0.3s'};
   const hIn=e=>{const s=e.currentTarget.style;s.boxShadow='0 0 8px 1px rgba(57,255,20,0.4), 0 0 20px 3px rgba(57,255,20,0.15)';s.borderColor='rgba(57,255,20,0.6)';};
   const hOut=e=>{const s=e.currentTarget.style;s.boxShadow='none';s.borderColor='rgba(255,255,255,0.1)';};
-  const [mounted,setMounted]=useState(false);useEffect(()=>{const t=setTimeout(()=>setMounted(true),2800);return()=>clearTimeout(t);},[]);
-  return(<div style={{position:'absolute',bottom:mob?32:50,left:'50%',transform:'translateX(-50%)',zIndex:45,display:mob?'grid':'flex',gridTemplateColumns:mob?'repeat(4,1fr)':undefined,gap:mob?6:10,fontFamily:'IBM Plex Mono,monospace',opacity:mounted?1:0,transition:mounted?'opacity 0.4s ease':'none',width:mob?'92vw':undefined}}>
+  return(<div style={{position:'absolute',bottom:mob?32:50,left:'50%',transform:'translateX(-50%)',zIndex:45,display:mob?'grid':'flex',gridTemplateColumns:mob?'repeat(4,1fr)':undefined,gap:mob?6:10,fontFamily:'IBM Plex Mono,monospace',opacity:show?1:0,pointerEvents:show?'auto':'none',transition:'opacity 0.4s ease',width:mob?'92vw':undefined}}>
     {chips.map(c=>(<button key={c.id} onClick={()=>onChip(c.id)} style={btnStyle} onMouseEnter={hIn} onMouseLeave={hOut}>{c.label}</button>))}
     <button onClick={onRandomPick} style={{...btnStyle,border:'1px solid rgba(245,158,11,0.3)',color:'#f59e0b'}} onMouseEnter={e=>{const s=e.currentTarget.style;s.boxShadow='0 0 8px 1px rgba(245,158,11,0.4), 0 0 20px 3px rgba(245,158,11,0.15)';s.borderColor='rgba(245,158,11,0.6)';}} onMouseLeave={e=>{const s=e.currentTarget.style;s.boxShadow='none';s.borderColor='rgba(245,158,11,0.3)';}}>⟳ Random Pick</button>
   </div>);
