@@ -747,9 +747,10 @@ export default function MedGalaxy() {
     rp.origPositions=cur.map(p=>[...p]);
     rp.origRadius=ctrl.radius;
 
-    // Phase 1: Spin up + cluster (90 frames ~1.5s)
     rp.phase=1;rp.f=0;
-    setStoryVisible(false);setRandomPickCaption(null);
+    // Snapshot current positions fresh and deselect to avoid jump
+    rp.origPositions=curPosRef.current.map(p=>[...p]);
+    setStoryVisible(false);setRandomPickCaption(null);setSelectedNode(null);
     explodeActiveRef.current=true; // block idle drift
   },[]);
 
@@ -764,7 +765,7 @@ export default function MedGalaxy() {
     rp.phase=0;rp.f=0;rp.chosenIdx=-1;
     setRandomPickCaption(null);setStoryVisible(true);setSelectedNode(null);
     const ctrl=controlsRef.current;
-    if(ctrl){ctrl.tV=0.0006;flyRef.current={st:ctrl.target.clone(),et:new THREE.Vector3(0,0,0),sr:ctrl.radius,er:ctrl.defaultRadius,f:0,total:70};}
+    if(ctrl){ctrl.target.set(0,0,0);ctrl.tV=0.0006;flyRef.current={st:ctrl.target.clone(),et:new THREE.Vector3(0,0,0),sr:ctrl.radius,er:ctrl.defaultRadius,f:0,total:70};}
   },[]);
 
   const handleConnSelect=useCallback((diseaseId)=>{
@@ -1062,39 +1063,45 @@ export default function MedGalaxy() {
           if(rp.f%3===0&&controls.radius>controls.defaultRadius*0.7)controls.radius-=0.3;
           if(rp.f>=150){rp.phase=2;rp.f=0;}
         }else if(rp.phase===2){
-          // Phase 2: Hyperspace spin — tight ball spinning intensely (100 frames ~1.7s)
+          // Phase 2: Hyperspace spin — tight ball spinning intensely (220 frames ~3.7s)
           controls.tV=0.1;
-          // Pulsing cluster: subtle breathe at high speed
+          // Pulsing cluster: subtle breathe at high speed + growing intensity
           const pulse=1+Math.sin(rp.f*0.3)*0.04;
+          // Slight camera shake in last second for tension
+          const shakeT=Math.max(0,(rp.f-160)/60); // ramps 0→1 in last 60 frames
+          if(shakeT>0){const sk=shakeT*0.4;controls.target.x=Math.sin(rp.f*1.7)*sk;controls.target.y=Math.cos(rp.f*2.3)*sk;}
           const orig=rp.origPositions;
           for(let i=0;i<count;i++){
             const base=0.25*pulse;
             cur[i][0]=orig[i][0]*base;cur[i][1]=orig[i][1]*base*0.85;cur[i][2]=orig[i][2]*base;
             v3.set(cur[i][0],cur[i][1],cur[i][2]);const r=proxies[i].scale.x;s3.set(r,r,r);m4.compose(v3,q4,s3);iMesh.setMatrixAt(i,m4);proxies[i].position.set(cur[i][0],cur[i][1],cur[i][2]);if(glowSprites[i])glowSprites[i].position.set(cur[i][0],cur[i][1],cur[i][2]);}
           iMesh.instanceMatrix.needsUpdate=true;
-          if(rp.f>=100){rp.phase=3;rp.f=0;}
+          if(rp.f>=220){rp.phase=3;rp.f=0;controls.target.set(0,0,0);}
         }else if(rp.phase===3){
-          // Phase 3: Hyperspace jump explosion (80 frames)
+          // Phase 3: Hyperspace jump — 360° spherical explosion (80 frames)
           const t=Math.min(rp.f/80,1);
-          // Fast initial burst, then ease out (exponential-ish)
-          const ease=1-Math.pow(1-t,4);
-          // Rotation: snap-decelerate from hyperspeed
+          const ease=1-Math.pow(1-t,4); // fast burst, ease out
           controls.tV=0.1*Math.pow(1-t,2)+0.0006;
+          // Golden angle spherical distribution for even 360° scatter
+          const GA=2.399963; // golden angle in radians
           for(let i=0;i<count;i++){
             if(i===rp.chosenIdx){
-              // Chosen: move to dead center with dramatic convergence
-              const ce=t<0.3?0:Math.min((t-0.3)/0.4,1); // delay then fast converge
-              const ce2=ce*ce*(3-2*ce); // smoothstep
+              const ce=t<0.3?0:Math.min((t-0.3)/0.4,1);
+              const ce2=ce*ce*(3-2*ce);
               cur[i][0]=cur[i][0]*(1-ce2);cur[i][1]=cur[i][1]*(1-ce2);cur[i][2]=cur[i][2]*(1-ce2);
             }else{
-              // Others: streaking outward like star lines
-              const angle=Math.atan2(catPosRef.current[i][2],catPosRef.current[i][0])+i*0.01;
-              const factor=4+Math.sin(i*7.3)*2;
-              const streak=ease*factor;
-              const tx=Math.cos(angle)*controls.defaultRadius*streak+(Math.sin(i*3.7)*60*ease);
-              const ty=catPosRef.current[i][1]*0.3*ease+(Math.cos(i*2.3)*40*ease);
-              const tz=Math.sin(angle)*controls.defaultRadius*streak+(Math.sin(i*5.1)*60*ease);
-              cur[i][0]=cur[i][0]+(tx-cur[i][0])*Math.min(ease*1.5,1);cur[i][1]=cur[i][1]+(ty-cur[i][1])*Math.min(ease*1.5,1);cur[i][2]=cur[i][2]+(tz-cur[i][2])*Math.min(ease*1.5,1);
+              // Fibonacci sphere: even distribution across full sphere
+              const idx=i<rp.chosenIdx?i:i-1; // skip chosen in sequence
+              const tot=count-1;
+              const phi2=Math.acos(1-2*(idx+0.5)/tot); // polar angle 0→π
+              const theta2=GA*idx; // azimuthal angle
+              const dist=controls.defaultRadius*(3.5+Math.sin(i*7.3)*1.2);
+              const tx=Math.sin(phi2)*Math.cos(theta2)*dist*ease;
+              const ty=Math.cos(phi2)*dist*ease;
+              const tz=Math.sin(phi2)*Math.sin(theta2)*dist*ease;
+              cur[i][0]=cur[i][0]+(tx-cur[i][0])*Math.min(ease*1.5,1);
+              cur[i][1]=cur[i][1]+(ty-cur[i][1])*Math.min(ease*1.5,1);
+              cur[i][2]=cur[i][2]+(tz-cur[i][2])*Math.min(ease*1.5,1);
             }
             v3.set(cur[i][0],cur[i][1],cur[i][2]);const r=proxies[i].scale.x;s3.set(r,r,r);m4.compose(v3,q4,s3);iMesh.setMatrixAt(i,m4);proxies[i].position.set(cur[i][0],cur[i][1],cur[i][2]);if(glowSprites[i])glowSprites[i].position.set(cur[i][0],cur[i][1],cur[i][2]);
           }
