@@ -643,16 +643,42 @@ export default function MedGalaxy() {
     if(spotlightActive){stopSpotlight();return;}
     if(explodeActiveRef.current||connectionsActiveRef.current||connFocusRef.current>=0)return;
     const data=dataRef.current;if(!data)return;
-    const fmt=n=>n>=1e6?(n/1e6).toFixed(1).replace(/\.0$/,'')+'M':n>=1e3?(n/1e3).toFixed(0)+'K':String(n);
-    const ranked=[...data.diseases.map((d,i)=>({d,i}))].sort((a,b)=>b.d.papers-a.d.papers).slice(0,25);
-    const list=ranked.map(({d,i})=>{
-      const parts=[d.label];
-      if(d.mortality>0)parts.push(fmt(d.mortality)+' deaths/yr');
-      parts.push(fmt(d.papers)+' papers');
-      if(d.trend>0)parts.push('trending +'+d.trend+'%');
-      else if(d.trend<0)parts.push('declining '+d.trend+'%');
-      return{id:i,caption:parts.join(' · ')};
-    });
+    const find=id=>data.idMap[id];
+    const list=[
+      // Most researched
+      {id:find('breast-cancer'),caption:'Breast Cancer · 430K papers · Most researched cancer'},
+      {id:find('heart-disease'),caption:'Heart Disease · 9.1M deaths/yr · #1 killer globally'},
+      {id:find('type-2-diabetes'),caption:'Type 2 Diabetes · 380K papers · 1.6M deaths/yr'},
+      {id:find('hiv-aids'),caption:'HIV/AIDS · 350K papers · Reshaped modern medicine'},
+      {id:find('lung-cancer'),caption:'Lung Cancer · 1.8M deaths/yr · Deadliest cancer'},
+      // Most deadly
+      {id:find('sepsis'),caption:'Sepsis · 11M deaths/yr but only 95K papers · 115 deaths per paper'},
+      {id:find('stroke'),caption:'Stroke · 7.3M deaths/yr · Every 3 seconds someone has one'},
+      {id:find('copd'),caption:'COPD · 3.5M deaths/yr · 41 deaths per paper published'},
+      {id:find('pneumonia'),caption:'Pneumonia · 2.2M deaths/yr · Leading killer of children'},
+      {id:find('alzheimers-disease'),caption:"Alzheimer's · 1.9M deaths/yr · Research surging +6%"},
+      // Most neglected
+      {id:find('rheumatic-heart-disease'),caption:'Rheumatic Heart Disease · 373K deaths, only 9K papers · 41 deaths per paper'},
+      {id:find('norovirus'),caption:'Norovirus · 200K deaths/yr · World\'s most common stomach bug'},
+      {id:find('sickle-cell-disease'),caption:'Sickle Cell · 376K deaths/yr · Most common genetic disease in Africa'},
+      {id:find('hepatitis-b'),caption:'Hepatitis B · 1.1M deaths/yr · 15 deaths for every paper'},
+      // Most researched per death
+      {id:find('cystic-fibrosis'),caption:'Cystic Fibrosis · 48 papers per death · Most researched per capita'},
+      {id:find('ebola'),caption:'Ebola · 40 papers per death · Fear drives funding'},
+      {id:find('west-nile-virus'),caption:'West Nile Virus · 45 papers per death · Heavily studied, rarely fatal'},
+      // Trending
+      {id:find('nafld'),caption:'Fatty Liver Disease · Research up 15% · Fastest growing liver disease'},
+      {id:find('myocarditis'),caption:'Myocarditis · Research up 10% · Heart inflammation gaining attention'},
+      {id:find('dengue'),caption:'Dengue · Research up 12% · Half the world at risk'},
+      // Declining research
+      {id:find('covid-19'),caption:'COVID-19 · 300K papers · Research declining 10% as pandemic fades'},
+      {id:find('rotavirus'),caption:'Rotavirus · 200K child deaths/yr · Research declining despite mortality'},
+      // Zero mortality, high impact
+      {id:find('depression'),caption:'Depression · 280K papers · Zero mortality metric, massive burden'},
+      {id:find('obesity'),caption:'Obesity · 200K papers · Affects 1 billion people worldwide'},
+      // Unique story
+      {id:find('malaria'),caption:'Malaria · 608K deaths/yr · 94% of deaths in Africa'},
+    ].filter(s=>s.id!==undefined);
     for(let i=list.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[list[i],list[j]]=[list[j],list[i]];}
     sp.list=list;sp.step=0;
     setSpotlightActive(true);
