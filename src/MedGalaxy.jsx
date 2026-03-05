@@ -1046,42 +1046,61 @@ export default function MedGalaxy() {
       if(rp.phase>0){
         rp.f++;const cur=curPosRef.current;
         if(rp.phase===1){
-          // Phase 1: Spin up + cluster toward center (90 frames)
-          const t=Math.min(rp.f/90,1);
-          controls.tV=0.0006+t*0.08; // ramp rotation speed
-          const shrink=1-t*0.7; // shrink orbit to 30%
+          // Phase 1: Slow gravitational pull inward (150 frames ~2.5s)
+          const t=Math.min(rp.f/150,1);
+          const easeIn=t*t*t; // cubic ease-in: slow start, accelerating
+          controls.tV=0.0006+easeIn*0.1; // gradual spin buildup
+          const shrink=1-easeIn*0.75; // compress to 25% orbit
           const orig=rp.origPositions;
-          for(let i=0;i<count;i++){cur[i][0]=orig[i][0]*shrink;cur[i][1]=orig[i][1]*shrink;cur[i][2]=orig[i][2]*shrink;
+          // Spiral inward with slight vertical compression
+          for(let i=0;i<count;i++){
+            const wobble=Math.sin(rp.f*0.08+i*1.7)*shrink*2; // swirling wobble that fades as cluster tightens
+            cur[i][0]=orig[i][0]*shrink+wobble;cur[i][1]=orig[i][1]*shrink*0.85;cur[i][2]=orig[i][2]*shrink+Math.cos(rp.f*0.08+i*2.3)*shrink*2;
             v3.set(cur[i][0],cur[i][1],cur[i][2]);const r=proxies[i].scale.x;s3.set(r,r,r);m4.compose(v3,q4,s3);iMesh.setMatrixAt(i,m4);proxies[i].position.set(cur[i][0],cur[i][1],cur[i][2]);if(glowSprites[i])glowSprites[i].position.set(cur[i][0],cur[i][1],cur[i][2]);}
           iMesh.instanceMatrix.needsUpdate=true;
-          if(rp.f>=90){rp.phase=2;rp.f=0;}
+          // Camera slowly pulls in during cluster
+          if(rp.f%3===0&&controls.radius>controls.defaultRadius*0.7)controls.radius-=0.3;
+          if(rp.f>=150){rp.phase=2;rp.f=0;}
         }else if(rp.phase===2){
-          // Phase 2: Hold tight cluster spinning fast (40 frames)
-          controls.tV=0.08;
-          if(rp.f>=40){rp.phase=3;rp.f=0;}
+          // Phase 2: Hyperspace spin — tight ball spinning intensely (100 frames ~1.7s)
+          controls.tV=0.1;
+          // Pulsing cluster: subtle breathe at high speed
+          const pulse=1+Math.sin(rp.f*0.3)*0.04;
+          const orig=rp.origPositions;
+          for(let i=0;i<count;i++){
+            const base=0.25*pulse;
+            cur[i][0]=orig[i][0]*base;cur[i][1]=orig[i][1]*base*0.85;cur[i][2]=orig[i][2]*base;
+            v3.set(cur[i][0],cur[i][1],cur[i][2]);const r=proxies[i].scale.x;s3.set(r,r,r);m4.compose(v3,q4,s3);iMesh.setMatrixAt(i,m4);proxies[i].position.set(cur[i][0],cur[i][1],cur[i][2]);if(glowSprites[i])glowSprites[i].position.set(cur[i][0],cur[i][1],cur[i][2]);}
+          iMesh.instanceMatrix.needsUpdate=true;
+          if(rp.f>=100){rp.phase=3;rp.f=0;}
         }else if(rp.phase===3){
-          // Phase 3: Explode outward (60 frames)
-          const t=Math.min(rp.f/60,1),ease=1-Math.pow(1-t,3);
-          controls.tV=0.08*(1-t)+0.0006*t; // slow rotation back down
-          const chosenPos=catPosRef.current[rp.chosenIdx];
+          // Phase 3: Hyperspace jump explosion (80 frames)
+          const t=Math.min(rp.f/80,1);
+          // Fast initial burst, then ease out (exponential-ish)
+          const ease=1-Math.pow(1-t,4);
+          // Rotation: snap-decelerate from hyperspeed
+          controls.tV=0.1*Math.pow(1-t,2)+0.0006;
           for(let i=0;i<count;i++){
             if(i===rp.chosenIdx){
-              // Chosen: move to center
-              cur[i][0]=cur[i][0]*(1-ease);cur[i][1]=cur[i][1]*(1-ease);cur[i][2]=cur[i][2]*(1-ease);
+              // Chosen: move to dead center with dramatic convergence
+              const ce=t<0.3?0:Math.min((t-0.3)/0.4,1); // delay then fast converge
+              const ce2=ce*ce*(3-2*ce); // smoothstep
+              cur[i][0]=cur[i][0]*(1-ce2);cur[i][1]=cur[i][1]*(1-ce2);cur[i][2]=cur[i][2]*(1-ce2);
             }else{
-              // Others: scatter far out
-              const factor=3+Math.sin(i*7.3)*1.5;
-              const tx=catPosRef.current[i][0]*factor+(Math.sin(i*3.7)*80);
-              const ty=catPosRef.current[i][1]*factor+(Math.cos(i*2.3)*80);
-              const tz=catPosRef.current[i][2]*factor+(Math.sin(i*5.1)*80);
-              cur[i][0]=cur[i][0]+(tx-cur[i][0])*ease;cur[i][1]=cur[i][1]+(ty-cur[i][1])*ease;cur[i][2]=cur[i][2]+(tz-cur[i][2])*ease;
+              // Others: streaking outward like star lines
+              const angle=Math.atan2(catPosRef.current[i][2],catPosRef.current[i][0])+i*0.01;
+              const factor=4+Math.sin(i*7.3)*2;
+              const streak=ease*factor;
+              const tx=Math.cos(angle)*controls.defaultRadius*streak+(Math.sin(i*3.7)*60*ease);
+              const ty=catPosRef.current[i][1]*0.3*ease+(Math.cos(i*2.3)*40*ease);
+              const tz=Math.sin(angle)*controls.defaultRadius*streak+(Math.sin(i*5.1)*60*ease);
+              cur[i][0]=cur[i][0]+(tx-cur[i][0])*Math.min(ease*1.5,1);cur[i][1]=cur[i][1]+(ty-cur[i][1])*Math.min(ease*1.5,1);cur[i][2]=cur[i][2]+(tz-cur[i][2])*Math.min(ease*1.5,1);
             }
             v3.set(cur[i][0],cur[i][1],cur[i][2]);const r=proxies[i].scale.x;s3.set(r,r,r);m4.compose(v3,q4,s3);iMesh.setMatrixAt(i,m4);proxies[i].position.set(cur[i][0],cur[i][1],cur[i][2]);if(glowSprites[i])glowSprites[i].position.set(cur[i][0],cur[i][1],cur[i][2]);
           }
           iMesh.instanceMatrix.needsUpdate=true;
-          if(rp.f>=60){
+          if(rp.f>=80){
             rp.phase=4;rp.f=0;controls.tV=0.0006;
-            // Fly camera to chosen disease
             selectDisease(rp.chosenIdx);
             setRandomPickCaption({disease:diseases[rp.chosenIdx],fact:rp.fact});
           }
