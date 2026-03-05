@@ -878,7 +878,7 @@ export default function MedGalaxy() {
 
     // Mouse
     const raycaster=new THREE.Raycaster(),mouse=new THREE.Vector2(-9999,-9999);
-    function onMM(e){const rc=renderer.domElement.getBoundingClientRect();mouse.x=((e.clientX-rc.left)/rc.width)*2-1;mouse.y=-((e.clientY-rc.top)/rc.height)*2+1;setTipPos({x:e.clientX,y:e.clientY});idleRef.current=0;}
+    function onMM(e){const rc=renderer.domElement.getBoundingClientRect();mouse.x=((e.clientX-rc.left)/rc.width)*2-1;mouse.y=-((e.clientY-rc.top)/rc.height)*2+1;setTipPos({x:e.clientX,y:e.clientY});}
     function onMD(e){mdRef.current={x:e.clientX,y:e.clientY};idleRef.current=0;if(spotlightRef.current.timer){clearInterval(spotlightRef.current.timer);spotlightRef.current.timer=null;setSpotlightActive(false);setSpotlightCaption('');}}
     function onMU(e){const dx=e.clientX-mdRef.current.x,dy=e.clientY-mdRef.current.y;if(Math.sqrt(dx*dx+dy*dy)<5){if(hoverIdxRef.current>=0)selectDisease(hoverIdxRef.current);else deselect();}}
     function onDblClick(e){
