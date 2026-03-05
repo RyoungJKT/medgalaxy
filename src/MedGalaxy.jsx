@@ -984,6 +984,12 @@ export default function MedGalaxy() {
             if(glowSprites[i])glowSprites[i].position.set(px,py,pz);
           }
           iMesh.instanceMatrix.needsUpdate=true;
+          // Update edge positions to track drifting nodes
+          if(eMat.opacity>0){
+            const ep=eGeo.getAttribute('position').array;
+            for(let i=0;i<eC;i++){const e=displayEdges[i],s=cur[e.si],t2=cur[e.ti],o=i*6;ep[o]=s[0];ep[o+1]=s[1];ep[o+2]=s[2];ep[o+3]=t2[0];ep[o+4]=t2[1];ep[o+5]=t2[2];}
+            eGeo.getAttribute('position').needsUpdate=true;
+          }
         }
         q4.set(0,0,0,1);
       }
