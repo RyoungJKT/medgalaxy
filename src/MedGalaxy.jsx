@@ -1082,13 +1082,13 @@ export default function MedGalaxy() {
           if(rp.f%3===0&&controls.radius>controls.defaultRadius*0.7)controls.radius-=0.3;
           if(rp.f>=150){rp.phase=2;rp.f=0;}
         }else if(rp.phase===2){
-          // Phase 2: Spin ramp slow→max + hold (400 frames ~6.7s)
-          // Ramp over 220 frames, sustain max for 180 frames (~3s at top speed)
+          // Phase 2: Spin ramp slow→max + hold (460 frames ~7.7s)
+          // Ramp over 220 frames, sustain max for 240 frames (~4s at top speed)
           const rampT=Math.min(rp.f/220,1);
           const rampEase=rampT*rampT*rampT;
           controls.tV=0.013+rampEase*0.187; // 0.013 → 0.2
           // Camera shake builds in final 60 frames
-          const shakeT=Math.max(0,(rp.f-340)/60);
+          const shakeT=Math.max(0,(rp.f-400)/60);
           if(shakeT>0){const sk=shakeT*0.5;controls.target.x=Math.sin(rp.f*1.7)*sk;controls.target.y=Math.cos(rp.f*2.3)*sk;}
           // Hold stable cluster positions — no pulse, no bounce
           const cp=rp.clusterPos;
@@ -1096,7 +1096,7 @@ export default function MedGalaxy() {
             cur[i][0]=cp[i][0];cur[i][1]=cp[i][1];cur[i][2]=cp[i][2];
             v3.set(cur[i][0],cur[i][1],cur[i][2]);const r=proxies[i].scale.x;s3.set(r,r,r);m4.compose(v3,q4,s3);iMesh.setMatrixAt(i,m4);proxies[i].position.set(cur[i][0],cur[i][1],cur[i][2]);if(glowSprites[i])glowSprites[i].position.set(cur[i][0],cur[i][1],cur[i][2]);}
           iMesh.instanceMatrix.needsUpdate=true;
-          if(rp.f>=400){
+          if(rp.f>=460){
             rp.phase=3;rp.f=0;controls.target.set(0,0,0);
             // Initialize per-node velocities for physics explosion
             const vels=[];
