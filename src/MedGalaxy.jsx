@@ -765,7 +765,7 @@ export default function MedGalaxy() {
     const currentPos=cur.map(p=>[...p]);
     const src=catPosRef.current;
     explodeAnimRef.current={from:currentPos,to:src.map(p=>[...p]),f:0,total:60,returning:true};
-    rp.phase=0;rp.f=0;rp.chosenIdx=-1;
+    rp.phase=0;rp.f=0;rp.chosenIdx=-1;rp.clusterPos=null;
     setRandomPickCaption(null);setStoryVisible(true);setSelectedNode(null);
     const ctrl=controlsRef.current;
     if(ctrl){ctrl.target.set(0,0,0);ctrl.tV=0.0006;flyRef.current={st:ctrl.target.clone(),et:new THREE.Vector3(0,0,0),sr:ctrl.radius,er:ctrl.defaultRadius,f:0,total:70};}
@@ -1050,53 +1050,53 @@ export default function MedGalaxy() {
       if(rp.phase>0){
         rp.f++;const cur=curPosRef.current;
         if(rp.phase===1){
-          // Phase 1: Collapse into a sphere (150 frames ~2.5s)
-          // Spin: very slow start, barely perceptible
+          // Phase 1: Collapse directly to cluster positions (150 frames ~2.5s)
           const t=Math.min(rp.f/150,1);
-          const easeIn=t*t; // quadratic — gentle
-          controls.tV=0.0006+easeIn*0.012; // idle → 0.013 (very slow spin)
-          const shrink=1-easeIn*0.6; // compress to 40% orbit
+          const easeIn=t*t;
+          controls.tV=0.0006+easeIn*0.012;
           const orig=rp.origPositions;
-          // Lerp each node toward a jittered sphere position as it collapses
-          const GA=2.399963,ballR=controls.defaultRadius*0.28;
+          // Compute cluster targets on first frame
+          if(!rp.clusterPos){
+            const GA=2.399963,ballR=controls.defaultRadius*0.28;
+            const jit=ballR*0.35;
+            rp.clusterPos=[];
+            for(let i=0;i<count;i++){
+              const phi2=Math.acos(1-2*(i+0.5)/count);
+              const theta2=GA*i;
+              rp.clusterPos.push([
+                Math.sin(phi2)*Math.cos(theta2)*ballR+Math.sin(i*3.7)*jit,
+                Math.cos(phi2)*ballR+Math.cos(i*5.3)*jit,
+                Math.sin(phi2)*Math.sin(theta2)*ballR+Math.sin(i*7.1)*jit
+              ]);
+            }
+          }
+          const cp=rp.clusterPos;
+          // Smoothstep blend from original → cluster
+          const blend=t*t*(3-2*t);
           for(let i=0;i<count;i++){
-            // Sphere target with per-node jitter for organic look
-            const phi2=Math.acos(1-2*(i+0.5)/count);
-            const theta2=GA*i;
-            const jit=ballR*0.35; // 35% radius jitter
-            const sx=Math.sin(phi2)*Math.cos(theta2)*ballR+Math.sin(i*3.7)*jit;
-            const sy=Math.cos(phi2)*ballR+Math.cos(i*5.3)*jit;
-            const sz=Math.sin(phi2)*Math.sin(theta2)*ballR+Math.sin(i*7.1)*jit;
-            // Blend: start from original scaled position, end at sphere position
-            const blend=easeIn*easeIn; // slow blend at start, fast at end
-            cur[i][0]=orig[i][0]*shrink*(1-blend)+sx*blend;
-            cur[i][1]=orig[i][1]*shrink*(1-blend)+sy*blend;
-            cur[i][2]=orig[i][2]*shrink*(1-blend)+sz*blend;
+            cur[i][0]=orig[i][0]*(1-blend)+cp[i][0]*blend;
+            cur[i][1]=orig[i][1]*(1-blend)+cp[i][1]*blend;
+            cur[i][2]=orig[i][2]*(1-blend)+cp[i][2]*blend;
             v3.set(cur[i][0],cur[i][1],cur[i][2]);const r=proxies[i].scale.x;s3.set(r,r,r);m4.compose(v3,q4,s3);iMesh.setMatrixAt(i,m4);proxies[i].position.set(cur[i][0],cur[i][1],cur[i][2]);if(glowSprites[i])glowSprites[i].position.set(cur[i][0],cur[i][1],cur[i][2]);}
           iMesh.instanceMatrix.needsUpdate=true;
           if(rp.f%3===0&&controls.radius>controls.defaultRadius*0.7)controls.radius-=0.3;
           if(rp.f>=150){rp.phase=2;rp.f=0;}
         }else if(rp.phase===2){
-          // Phase 2: Sphere spins, speed ramps slow→max + hold (340 frames ~5.7s)
-          // Ramp over 220 frames, sustain max for 120 frames (~2s at top speed)
+          // Phase 2: Spin ramp slow→max + hold (400 frames ~6.7s)
+          // Ramp over 220 frames, sustain max for 180 frames (~3s at top speed)
           const rampT=Math.min(rp.f/220,1);
           const rampEase=rampT*rampT*rampT;
-          controls.tV=0.013+rampEase*0.097; // 0.013 → 0.11
-          const pulse=1+Math.sin(rp.f*0.3)*0.03;
+          controls.tV=0.013+rampEase*0.097;
           // Camera shake builds in final 60 frames
-          const shakeT=Math.max(0,(rp.f-280)/60);
+          const shakeT=Math.max(0,(rp.f-340)/60);
           if(shakeT>0){const sk=shakeT*0.5;controls.target.x=Math.sin(rp.f*1.7)*sk;controls.target.y=Math.cos(rp.f*2.3)*sk;}
-          const GA=2.399963,ballR=controls.defaultRadius*0.28*pulse;
-          const jit=ballR*0.35;
+          // Hold stable cluster positions — no pulse, no bounce
+          const cp=rp.clusterPos;
           for(let i=0;i<count;i++){
-            const phi2=Math.acos(1-2*(i+0.5)/count);
-            const theta2=GA*i;
-            cur[i][0]=Math.sin(phi2)*Math.cos(theta2)*ballR+Math.sin(i*3.7)*jit;
-            cur[i][1]=Math.cos(phi2)*ballR+Math.cos(i*5.3)*jit;
-            cur[i][2]=Math.sin(phi2)*Math.sin(theta2)*ballR+Math.sin(i*7.1)*jit;
+            cur[i][0]=cp[i][0];cur[i][1]=cp[i][1];cur[i][2]=cp[i][2];
             v3.set(cur[i][0],cur[i][1],cur[i][2]);const r=proxies[i].scale.x;s3.set(r,r,r);m4.compose(v3,q4,s3);iMesh.setMatrixAt(i,m4);proxies[i].position.set(cur[i][0],cur[i][1],cur[i][2]);if(glowSprites[i])glowSprites[i].position.set(cur[i][0],cur[i][1],cur[i][2]);}
           iMesh.instanceMatrix.needsUpdate=true;
-          if(rp.f>=340){
+          if(rp.f>=400){
             rp.phase=3;rp.f=0;controls.target.set(0,0,0);
             // Initialize per-node velocities for physics explosion
             const vels=[];
