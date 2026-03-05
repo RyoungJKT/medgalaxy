@@ -1050,34 +1050,48 @@ export default function MedGalaxy() {
       if(rp.phase>0){
         rp.f++;const cur=curPosRef.current;
         if(rp.phase===1){
-          // Phase 1: Gravitational pull inward (150 frames ~2.5s)
-          // Spin ramps smoothly from idle → medium using cubic ease-in
+          // Phase 1: Collapse into a sphere (150 frames ~2.5s)
+          // Spin: very slow start, barely perceptible
           const t=Math.min(rp.f/150,1);
-          const easeIn=t*t*t;
-          controls.tV=0.0006+easeIn*0.035; // ramp to ~0.036 (medium speed)
-          const shrink=1-easeIn*0.75;
+          const easeIn=t*t; // quadratic — gentle
+          controls.tV=0.0006+easeIn*0.012; // idle → 0.013 (very slow spin)
+          const shrink=1-easeIn*0.6; // compress to 40% orbit
           const orig=rp.origPositions;
+          // Lerp each node toward its fibonacci sphere position as it collapses
+          const GA=2.399963,ballR=controls.defaultRadius*0.4;
           for(let i=0;i<count;i++){
-            const wobble=Math.sin(rp.f*0.08+i*1.7)*shrink*2;
-            cur[i][0]=orig[i][0]*shrink+wobble;cur[i][1]=orig[i][1]*shrink*0.85;cur[i][2]=orig[i][2]*shrink+Math.cos(rp.f*0.08+i*2.3)*shrink*2;
+            // Sphere target position for this node
+            const phi2=Math.acos(1-2*(i+0.5)/count);
+            const theta2=GA*i;
+            const sx=Math.sin(phi2)*Math.cos(theta2)*ballR;
+            const sy=Math.cos(phi2)*ballR;
+            const sz=Math.sin(phi2)*Math.sin(theta2)*ballR;
+            // Blend: start from original scaled position, end at sphere position
+            const blend=easeIn*easeIn; // slow blend at start, fast at end
+            cur[i][0]=orig[i][0]*shrink*(1-blend)+sx*blend;
+            cur[i][1]=orig[i][1]*shrink*(1-blend)+sy*blend;
+            cur[i][2]=orig[i][2]*shrink*(1-blend)+sz*blend;
             v3.set(cur[i][0],cur[i][1],cur[i][2]);const r=proxies[i].scale.x;s3.set(r,r,r);m4.compose(v3,q4,s3);iMesh.setMatrixAt(i,m4);proxies[i].position.set(cur[i][0],cur[i][1],cur[i][2]);if(glowSprites[i])glowSprites[i].position.set(cur[i][0],cur[i][1],cur[i][2]);}
           iMesh.instanceMatrix.needsUpdate=true;
           if(rp.f%3===0&&controls.radius>controls.defaultRadius*0.7)controls.radius-=0.3;
           if(rp.f>=150){rp.phase=2;rp.f=0;}
         }else if(rp.phase===2){
-          // Phase 2: Ramp spin to max + hold (280 frames ~4.7s)
-          // First 80 frames: ramp from medium→max. Remaining 200: sustain at max with tension buildup.
-          const rampT=Math.min(rp.f/80,1);
-          const rampEase=rampT*rampT; // quadratic ramp-up
-          controls.tV=0.036+rampEase*0.074; // 0.036 → 0.11 over 80 frames
-          const pulse=1+Math.sin(rp.f*0.3)*0.04;
+          // Phase 2: Sphere spins, speed ramps slow→max over full duration (280 frames ~4.7s)
+          // Continuous ramp: slow quadratic buildup over 220 frames, then sustain max for 60
+          const rampT=Math.min(rp.f/220,1);
+          const rampEase=rampT*rampT*rampT; // cubic ease-in: very slow start, accelerating
+          controls.tV=0.013+rampEase*0.097; // 0.013 → 0.11
+          const pulse=1+Math.sin(rp.f*0.3)*0.03;
           // Camera shake builds in final 60 frames
           const shakeT=Math.max(0,(rp.f-220)/60);
           if(shakeT>0){const sk=shakeT*0.5;controls.target.x=Math.sin(rp.f*1.7)*sk;controls.target.y=Math.cos(rp.f*2.3)*sk;}
-          const orig=rp.origPositions;
+          const GA=2.399963,ballR=controls.defaultRadius*0.4*pulse;
           for(let i=0;i<count;i++){
-            const base=0.25*pulse;
-            cur[i][0]=orig[i][0]*base;cur[i][1]=orig[i][1]*base*0.85;cur[i][2]=orig[i][2]*base;
+            const phi2=Math.acos(1-2*(i+0.5)/count);
+            const theta2=GA*i;
+            cur[i][0]=Math.sin(phi2)*Math.cos(theta2)*ballR;
+            cur[i][1]=Math.cos(phi2)*ballR;
+            cur[i][2]=Math.sin(phi2)*Math.sin(theta2)*ballR;
             v3.set(cur[i][0],cur[i][1],cur[i][2]);const r=proxies[i].scale.x;s3.set(r,r,r);m4.compose(v3,q4,s3);iMesh.setMatrixAt(i,m4);proxies[i].position.set(cur[i][0],cur[i][1],cur[i][2]);if(glowSprites[i])glowSprites[i].position.set(cur[i][0],cur[i][1],cur[i][2]);}
           iMesh.instanceMatrix.needsUpdate=true;
           if(rp.f>=280){
