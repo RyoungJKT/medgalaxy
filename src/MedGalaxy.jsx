@@ -786,7 +786,7 @@ export default function MedGalaxy() {
     curPosRef.current=catPos.map(p=>[...p]);
 
     // Camera distance scales with layout size
-    const camDist=rawMax*2.0;
+    const camDist=rawMax*(mob?2.4:2.0);
     const scene=new THREE.Scene();
     const camera=new THREE.PerspectiveCamera(60,container.clientWidth/container.clientHeight,1,camDist*4);
     camera.position.set(0,0,camDist);cameraRef.current=camera;
@@ -915,17 +915,12 @@ export default function MedGalaxy() {
     // Gyroscope parallax (iOS/mobile)
     const gyro={x:0,y:0,enabled:false,permitted:false};
     function onDeviceOrientation(e){if(e.gamma===null)return;gyro.x=e.gamma/90;gyro.y=(e.beta-45)/90;gyro.enabled=true;}
-    if(mob&&window.DeviceOrientationEvent){
-      if(typeof DeviceOrientationEvent.requestPermission==='function'){
-        // iOS: must request from user gesture — use touchend on document
-        const reqGyro=()=>{if(gyro.permitted)return;gyro.permitted=true;
-          DeviceOrientationEvent.requestPermission().then(s=>{if(s==='granted')window.addEventListener('deviceorientation',onDeviceOrientation);}).catch(()=>{gyro.permitted=false;});
-          document.removeEventListener('touchend',reqGyro);};
-        document.addEventListener('touchend',reqGyro);
-      }else{
-        // Android: no permission needed
-        window.addEventListener('deviceorientation',onDeviceOrientation);
-      }
+    if(mob&&window.DeviceOrientationEvent&&typeof DeviceOrientationEvent.requestPermission==='function'){
+      // iOS only: request gyro permission on first tap
+      const reqGyro=()=>{if(gyro.permitted)return;gyro.permitted=true;
+        DeviceOrientationEvent.requestPermission().then(s=>{if(s==='granted')window.addEventListener('deviceorientation',onDeviceOrientation);}).catch(()=>{gyro.permitted=false;});
+        document.removeEventListener('touchend',reqGyro);};
+      document.addEventListener('touchend',reqGyro);
     }
 
     // Start oscillation immediately — no entrance stagger
