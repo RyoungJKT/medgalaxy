@@ -644,7 +644,8 @@ export default function MedGalaxy() {
     if(explodeActiveRef.current||connectionsActiveRef.current||connFocusRef.current>=0)return;
     const data=dataRef.current;if(!data)return;
     const fmt=n=>n>=1e6?(n/1e6).toFixed(1).replace(/\.0$/,'')+'M':n>=1e3?(n/1e3).toFixed(0)+'K':String(n);
-    const list=data.diseases.map((d,i)=>{
+    const ranked=[...data.diseases.map((d,i)=>({d,i}))].sort((a,b)=>b.d.papers-a.d.papers).slice(0,25);
+    const list=ranked.map(({d,i})=>{
       const parts=[d.label];
       if(d.mortality>0)parts.push(fmt(d.mortality)+' deaths/yr');
       parts.push(fmt(d.papers)+' papers');
