@@ -912,6 +912,16 @@ export default function MedGalaxy() {
     function onTouchMove2(){idleRef.current=0;}
     renderer.domElement.addEventListener('touchstart',onTouchStart,{passive:true});renderer.domElement.addEventListener('touchmove',onTouchMove2,{passive:true});renderer.domElement.addEventListener('touchend',onTouchEnd,{passive:true});
 
+    // Gyroscope parallax (iOS/mobile)
+    const gyro={x:0,y:0,enabled:false};
+    function onDeviceOrientation(e){if(e.gamma===null)return;gyro.x=e.gamma/90;gyro.y=(e.beta-45)/90;gyro.enabled=true;}
+    if(mob&&window.DeviceOrientationEvent){
+      if(typeof DeviceOrientationEvent.requestPermission==='function'){
+        const reqGyro=()=>{DeviceOrientationEvent.requestPermission().then(s=>{if(s==='granted')window.addEventListener('deviceorientation',onDeviceOrientation);}).catch(()=>{});renderer.domElement.removeEventListener('touchstart',reqGyro);};
+        renderer.domElement.addEventListener('touchstart',reqGyro,{once:true});
+      }else{window.addEventListener('deviceorientation',onDeviceOrientation);}
+    }
+
     // Start oscillation immediately — no entrance stagger
     const entrance={phase:2,f:0,nodesDone:count};
     controls.tV=0.0006; // gentle initial rotation
@@ -995,7 +1005,9 @@ export default function MedGalaxy() {
         q4.set(0,0,0,1);
       }
 
-      controls.update();ptL.position.copy(camera.position);
+      controls.update();
+      if(gyro.enabled){const str=controls.radius*0.12;const r=new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld,0);const u=new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld,1);camera.position.addScaledVector(r,gyro.x*str);camera.position.addScaledVector(u,-gyro.y*str);camera.lookAt(controls.target);}
+      ptL.position.copy(camera.position);
 
       // Story tooltip — project focused node to screen coords
       const sni=storyRef.current.nodeIdx;
@@ -1071,7 +1083,7 @@ export default function MedGalaxy() {
     }}
     window.addEventListener('keydown',onKey);
 
-    return()=>{alive=false;ro.disconnect();controls.dispose();window.removeEventListener('keydown',onKey);if(spotlightRef.current.timer)clearInterval(spotlightRef.current.timer);renderer.domElement.removeEventListener('mousemove',onMM);renderer.domElement.removeEventListener('mousedown',onMD);renderer.domElement.removeEventListener('mouseup',onMU);renderer.domElement.removeEventListener('dblclick',onDblClick);renderer.domElement.removeEventListener('touchstart',onTouchStart);renderer.domElement.removeEventListener('touchmove',onTouchMove2);renderer.domElement.removeEventListener('touchend',onTouchEnd);sGeo.dispose();sMat.dispose();pGeo.dispose();pMat.dispose();eGeo.dispose();eMat.dispose();iMesh.dispose();glowTex.dispose();if(composer)composer.dispose();renderer.dispose();if(container.contains(renderer.domElement))container.removeChild(renderer.domElement);};
+    return()=>{alive=false;ro.disconnect();controls.dispose();window.removeEventListener('keydown',onKey);window.removeEventListener('deviceorientation',onDeviceOrientation);if(spotlightRef.current.timer)clearInterval(spotlightRef.current.timer);renderer.domElement.removeEventListener('mousemove',onMM);renderer.domElement.removeEventListener('mousedown',onMD);renderer.domElement.removeEventListener('mouseup',onMU);renderer.domElement.removeEventListener('dblclick',onDblClick);renderer.domElement.removeEventListener('touchstart',onTouchStart);renderer.domElement.removeEventListener('touchmove',onTouchMove2);renderer.domElement.removeEventListener('touchend',onTouchEnd);sGeo.dispose();sMat.dispose();pGeo.dispose();pMat.dispose();eGeo.dispose();eMat.dispose();iMesh.dispose();glowTex.dispose();if(composer)composer.dispose();renderer.dispose();if(container.contains(renderer.domElement))container.removeChild(renderer.domElement);};
   },[selectDisease,deselect]);
 
   // Highlight effect — deferred via rAF to avoid blocking the frame that triggers state change
