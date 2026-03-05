@@ -162,7 +162,7 @@
   },
   {
     "id": "sleeping-sickness",
-    "label": "Sleeping Sickness",
+    "label": "Sleeping Sickness (African Trypanosomiasis)",
     "category": "tropical",
     "description": "Tsetse fly-transmitted parasitic disease affecting the central nervous system.",
     "papers": 6500,
