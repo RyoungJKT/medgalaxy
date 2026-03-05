@@ -458,10 +458,20 @@ function SpotlightCaption({text}){
   return(<div key={text} style={{position:'absolute',bottom:mob?90:110,left:'50%',transform:'translateX(-50%)',zIndex:46,background:'rgba(10,16,30,0.95)',backdropFilter:'blur(16px)',border:'1px solid rgba(255,255,255,0.15)',borderRadius:12,padding:mob?'12px 18px':'16px 28px',fontFamily:'IBM Plex Mono,monospace',textAlign:'center',opacity:0,animation:'fadeIn 0.4s ease forwards',boxShadow:'0 8px 32px rgba(0,0,0,0.5)'}}><div style={{fontSize:8,color:'#f59e0b',fontWeight:600,textTransform:'uppercase',letterSpacing:2,marginBottom:6}}>Spotlight</div><div style={{fontSize:mob?12:14,color:'#f1f5f9',lineHeight:1.5,whiteSpace:mob?'normal':'nowrap',maxWidth:mob?'85vw':'none'}}>{text}</div></div>);
 }
 
+function RandomPickCaption({data,onDismiss}){
+  if(!data)return null;const mob=isMob();
+  return(<div key={data.disease.id} style={{position:'absolute',bottom:mob?90:110,left:'50%',transform:'translateX(-50%)',zIndex:46,background:'rgba(10,16,30,0.95)',backdropFilter:'blur(16px)',border:'1px solid rgba(245,158,11,0.3)',borderRadius:12,padding:mob?'14px 20px':'20px 32px',fontFamily:'IBM Plex Mono,monospace',textAlign:'center',opacity:0,animation:'fadeIn 0.5s ease forwards',boxShadow:'0 8px 32px rgba(0,0,0,0.5), 0 0 20px rgba(245,158,11,0.1)',maxWidth:mob?'92vw':520,cursor:'pointer'}} onClick={onDismiss}>
+    <div style={{fontSize:8,color:'#f59e0b',fontWeight:600,textTransform:'uppercase',letterSpacing:2,marginBottom:8}}>⟳ Random Pick</div>
+    <div style={{fontSize:mob?15:18,color:'#f1f5f9',fontWeight:600,marginBottom:10}}>{data.disease.label}</div>
+    <div style={{fontSize:mob?11:13,color:'#cbd5e1',lineHeight:1.6}}>{data.fact}</div>
+    <div style={{color:'#64748b',fontSize:10,marginTop:12}}>{mob?'tap':'click'} to dismiss</div>
+  </div>);
+}
+
 function Legend({sizeMode}){const mob=isMob();return(<div style={{position:'absolute',bottom:0,left:0,right:0,zIndex:40,padding:mob?'8px 12px':'8px 16px',display:'flex',gap:mob?8:16,fontFamily:'IBM Plex Mono,monospace',fontSize:9,color:'#cbd5e1',background:'linear-gradient(0deg,rgba(6,8,13,0.85) 0%,rgba(6,8,13,0) 100%)',pointerEvents:'none',transform:'translateY(100%)',animation:'slideUp 0.5s ease 2.1s forwards'}}>{mob?<span>Tap to explore · Pinch to zoom</span>:(<><span>Node size = {sizeMode==='papers'?'publications':'mortality'}</span><span>Drag to rotate · Scroll to zoom · Right-drag to pan · Double-click to re-center</span></>)}<span style={{marginLeft:'auto'}}>Data: PubMed · WHO Global Health Estimates 2021 · Project by Russell J. Young</span></div>);}
 
 // ─── Story Mode Component ────────────────────────────────────────────────────
-function StoryChips({onChip,visible}){
+function StoryChips({onChip,onRandomPick,visible}){
   if(!visible) return null;
   const mob=isMob();
   const chips=[
@@ -472,8 +482,12 @@ function StoryChips({onChip,visible}){
     {id:'richpoor',label:'Rich vs Poor',desc:'Who gets the research?'},
     {id:'mismatch',label:'See the Mismatch',desc:'The 2,000:1 research gap'},
   ];
-  return(<div style={{position:'absolute',bottom:mob?32:50,left:'50%',transform:'translateX(-50%)',zIndex:45,display:mob?'grid':'flex',gridTemplateColumns:mob?'repeat(3,1fr)':undefined,gap:mob?6:10,fontFamily:'IBM Plex Mono,monospace',opacity:0,animation:'fadeIn 0.5s ease 2.8s forwards',width:mob?'92vw':undefined}}>
-    {chips.map(c=>(<button key={c.id} onClick={()=>onChip(c.id)} style={{padding:mob?'6px 4px':'8px 16px',borderRadius:8,border:'1px solid rgba(255,255,255,0.1)',background:'rgba(10,16,30,0.9)',backdropFilter:'blur(12px)',color:'#e2e8f0',fontSize:mob?9:11,cursor:'pointer',fontFamily:'inherit',animation:'none',transition:'background 0.2s, box-shadow 0.3s, border-color 0.3s'}} onMouseEnter={e=>{const s=e.currentTarget.style;s.boxShadow='0 0 8px 1px rgba(57,255,20,0.4), 0 0 20px 3px rgba(57,255,20,0.15)';s.borderColor='rgba(57,255,20,0.6)';}} onMouseLeave={e=>{const s=e.currentTarget.style;s.boxShadow='none';s.borderColor='rgba(255,255,255,0.1)';}}>{c.label}</button>))}
+  const btnStyle={padding:mob?'6px 4px':'8px 16px',borderRadius:8,border:'1px solid rgba(255,255,255,0.1)',background:'rgba(10,16,30,0.9)',backdropFilter:'blur(12px)',color:'#e2e8f0',fontSize:mob?9:11,cursor:'pointer',fontFamily:'inherit',animation:'none',transition:'background 0.2s, box-shadow 0.3s, border-color 0.3s'};
+  const hIn=e=>{const s=e.currentTarget.style;s.boxShadow='0 0 8px 1px rgba(57,255,20,0.4), 0 0 20px 3px rgba(57,255,20,0.15)';s.borderColor='rgba(57,255,20,0.6)';};
+  const hOut=e=>{const s=e.currentTarget.style;s.boxShadow='none';s.borderColor='rgba(255,255,255,0.1)';};
+  return(<div style={{position:'absolute',bottom:mob?32:50,left:'50%',transform:'translateX(-50%)',zIndex:45,display:mob?'grid':'flex',gridTemplateColumns:mob?'repeat(4,1fr)':undefined,gap:mob?6:10,fontFamily:'IBM Plex Mono,monospace',opacity:0,animation:'fadeIn 0.5s ease 2.8s forwards',width:mob?'92vw':undefined}}>
+    {chips.map(c=>(<button key={c.id} onClick={()=>onChip(c.id)} style={btnStyle} onMouseEnter={hIn} onMouseLeave={hOut}>{c.label}</button>))}
+    <button onClick={onRandomPick} style={{...btnStyle,border:'1px solid rgba(245,158,11,0.3)',color:'#f59e0b'}} onMouseEnter={e=>{const s=e.currentTarget.style;s.boxShadow='0 0 8px 1px rgba(245,158,11,0.4), 0 0 20px 3px rgba(245,158,11,0.15)';s.borderColor='rgba(245,158,11,0.6)';}} onMouseLeave={e=>{const s=e.currentTarget.style;s.boxShadow='none';s.borderColor='rgba(245,158,11,0.3)';}}>⟳ Random Pick</button>
   </div>);
 }
 
@@ -518,6 +532,8 @@ export default function MedGalaxy() {
   const [spotlightCaption,setSpotlightCaption]=useState('');
   const spotlightRef=useRef({step:0,timer:null});
   const labelsRef=useRef(null); // DOM container for node labels
+  const [randomPickCaption,setRandomPickCaption]=useState(null);
+  const randomPickRef=useRef({phase:0,timer:null,chosenIdx:-1,origPositions:null});
 
   const ppdData=React.useMemo(()=>{const wr=diseasesData.filter(d=>d.mortality>0).map(d=>({...d,ppd:d.papers/d.mortality}));const s=[...wr].sort((a,b)=>b.ppd-a.ppd);return{highest:s.slice(0,10),lowest:s.slice(-10).reverse()};},[]);
 
@@ -700,6 +716,57 @@ export default function MedGalaxy() {
       sp.step++;
     },6000);
   },[spotlightActive,stopSpotlight,selectDisease]);
+
+  const RANDOM_PICK_DISEASES=[
+    {id:'sepsis',fact:'Sepsis kills 11M people per year — more than all cancers combined — yet has only 95K papers. That\'s 115 deaths for every paper published.'},
+    {id:'breast-cancer',fact:'Breast Cancer has 430,000 papers — more research than any other cancer. Yet it\'s only the 5th deadliest cancer globally.'},
+    {id:'rheumatic-heart-disease',fact:'Rheumatic Heart Disease kills 373,000 people per year but has only 9,000 papers. It\'s a disease of poverty — virtually eliminated in wealthy nations.'},
+    {id:'cystic-fibrosis',fact:'Cystic Fibrosis has 48 papers for every death — the most researched disease per capita. It primarily affects people of European descent.'},
+    {id:'malaria',fact:'Malaria kills 608,000 people per year, 94% in Africa. A child dies of malaria every minute, yet it receives a fraction of cancer research funding.'},
+    {id:'alzheimers-disease',fact:'Alzheimer\'s kills 1.9M people per year and research is surging +6%. There is still no cure — only treatments that slow progression.'},
+    {id:'covid-19',fact:'COVID-19 generated 300,000 papers in just a few years — the fastest research ramp in scientific history. Research is now declining 10% as the pandemic fades.'},
+    {id:'ebola',fact:'Ebola has 40 papers per death — fear drives funding. Despite killing only 300 people per year on average, it receives massive research attention.'},
+    {id:'depression',fact:'Depression has 280,000 papers and zero mortality metric. It affects 280M people worldwide and is the leading cause of disability globally.'},
+    {id:'tuberculosis',fact:'Tuberculosis kills 1.25M people per year with only 0.09 papers per death. It\'s the deadliest infectious disease and has existed for thousands of years.'},
+    {id:'sickle-cell-disease',fact:'Sickle Cell Disease kills 376,000 people per year — mostly in Africa. It\'s the most common genetic disease globally but remains severely under-researched.'},
+    {id:'rotavirus',fact:'Rotavirus kills 200,000 children per year, and research is declining. A vaccine exists but remains inaccessible in the countries that need it most.'},
+  ];
+
+  const handleRandomPick=useCallback(()=>{
+    const rp=randomPickRef.current;
+    if(rp.phase>0)return; // already running
+    if(explodeActiveRef.current||connectionsActiveRef.current||connFocusRef.current>=0)return;
+    const data=dataRef.current,ctrl=controlsRef.current;if(!data||!ctrl)return;
+    const cur=curPosRef.current;if(!cur)return;
+
+    // Pick a random disease from the curated list
+    const pick=RANDOM_PICK_DISEASES[Math.floor(Math.random()*RANDOM_PICK_DISEASES.length)];
+    const chosenIdx=data.idMap[pick.id];
+    if(chosenIdx===undefined)return;
+    rp.chosenIdx=chosenIdx;rp.fact=pick.fact;
+    rp.origPositions=cur.map(p=>[...p]);
+    rp.origRadius=ctrl.radius;
+
+    // Phase 1: Spin up + cluster (90 frames ~1.5s)
+    rp.phase=1;rp.f=0;
+    setStoryVisible(false);setRandomPickCaption(null);
+    explodeActiveRef.current=true; // block idle drift
+  },[]);
+
+  const stopRandomPick=useCallback(()=>{
+    const rp=randomPickRef.current;
+    if(rp.phase===0)return;
+    const cur=curPosRef.current;if(!cur)return;
+    // Animate back to original positions
+    const currentPos=cur.map(p=>[...p]);
+    const src=catPosRef.current;
+    explodeAnimRef.current={from:currentPos,to:src.map(p=>[...p]),f:0,total:60,returning:true};
+    rp.phase=0;rp.f=0;rp.chosenIdx=-1;
+    setRandomPickCaption(null);setStoryVisible(true);setSelectedNode(null);
+    const ctrl=controlsRef.current;
+    if(ctrl){ctrl.tV=0.0006;flyRef.current={st:ctrl.target.clone(),et:new THREE.Vector3(0,0,0),sr:ctrl.radius,er:ctrl.defaultRadius,f:0,total:70};}
+  },[]);
+
   const handleConnSelect=useCallback((diseaseId)=>{
     const data=dataRef.current;if(!data)return;
     const idx=data.idMap[diseaseId];if(idx===undefined)return;
@@ -888,7 +955,7 @@ export default function MedGalaxy() {
     // Mouse
     const raycaster=new THREE.Raycaster(),mouse=new THREE.Vector2(-9999,-9999);
     function onMM(e){const rc=renderer.domElement.getBoundingClientRect();mouse.x=((e.clientX-rc.left)/rc.width)*2-1;mouse.y=-((e.clientY-rc.top)/rc.height)*2+1;setTipPos({x:e.clientX,y:e.clientY});}
-    function onMD(e){mdRef.current={x:e.clientX,y:e.clientY};idleRef.current=0;if(spotlightRef.current.timer){clearInterval(spotlightRef.current.timer);spotlightRef.current.timer=null;setSpotlightActive(false);setSpotlightCaption('');}}
+    function onMD(e){mdRef.current={x:e.clientX,y:e.clientY};idleRef.current=0;if(spotlightRef.current.timer){clearInterval(spotlightRef.current.timer);spotlightRef.current.timer=null;setSpotlightActive(false);setSpotlightCaption('');}if(randomPickRef.current.phase>0)stopRandomPick();}
     function onMU(e){const dx=e.clientX-mdRef.current.x,dy=e.clientY-mdRef.current.y;if(Math.sqrt(dx*dx+dy*dy)<5){if(hoverIdxRef.current>=0)selectDisease(hoverIdxRef.current);else deselect();}}
     function onDblClick(e){
       e.preventDefault();idleRef.current=0;deselect();
@@ -900,7 +967,7 @@ export default function MedGalaxy() {
 
     // Touch: tap-to-select, double-tap-to-recenter
     let _tapStart={x:0,y:0,t:0},_lastTap=0;
-    function onTouchStart(e){if(spotlightRef.current.timer){clearInterval(spotlightRef.current.timer);spotlightRef.current.timer=null;setSpotlightActive(false);setSpotlightCaption('');}if(e.touches.length===1){_tapStart={x:e.touches[0].clientX,y:e.touches[0].clientY,t:Date.now()};idleRef.current=0;}else{idleRef.current=0;}}
+    function onTouchStart(e){if(spotlightRef.current.timer){clearInterval(spotlightRef.current.timer);spotlightRef.current.timer=null;setSpotlightActive(false);setSpotlightCaption('');}if(randomPickRef.current.phase>0)stopRandomPick();if(e.touches.length===1){_tapStart={x:e.touches[0].clientX,y:e.touches[0].clientY,t:Date.now()};idleRef.current=0;}else{idleRef.current=0;}}
     function onTouchEnd(e){if(e.touches.length>0)return;
       const dt=Date.now()-_tapStart.t;if(dt>300)return; // not a tap
       const cx=_tapStart.x,cy=_tapStart.y;
@@ -972,6 +1039,55 @@ export default function MedGalaxy() {
         for(let i=0;i<eC;i++){const e2=displayEdges[i],s2=cur[e2.si],t2=cur[e2.ti],o=i*6;ep[o]=s2[0];ep[o+1]=s2[1];ep[o+2]=s2[2];ep[o+3]=t2[0];ep[o+4]=t2[1];ep[o+5]=t2[2];}
         eGeo.getAttribute('position').needsUpdate=true;
         if(t>=1){explodeAnimRef.current=null;if(ea.returning){explodeActiveRef.current=false;driftBlendRef.current=0;}if(ea.connReturning){connFocusRef.current=-1;setConnFocusActive(false);}}
+      }
+
+      // Random Pick animation
+      const rp=randomPickRef.current;
+      if(rp.phase>0){
+        rp.f++;const cur=curPosRef.current;
+        if(rp.phase===1){
+          // Phase 1: Spin up + cluster toward center (90 frames)
+          const t=Math.min(rp.f/90,1);
+          controls.tV=0.0006+t*0.08; // ramp rotation speed
+          const shrink=1-t*0.7; // shrink orbit to 30%
+          const orig=rp.origPositions;
+          for(let i=0;i<count;i++){cur[i][0]=orig[i][0]*shrink;cur[i][1]=orig[i][1]*shrink;cur[i][2]=orig[i][2]*shrink;
+            v3.set(cur[i][0],cur[i][1],cur[i][2]);const r=proxies[i].scale.x;s3.set(r,r,r);m4.compose(v3,q4,s3);iMesh.setMatrixAt(i,m4);proxies[i].position.set(cur[i][0],cur[i][1],cur[i][2]);if(glowSprites[i])glowSprites[i].position.set(cur[i][0],cur[i][1],cur[i][2]);}
+          iMesh.instanceMatrix.needsUpdate=true;
+          if(rp.f>=90){rp.phase=2;rp.f=0;}
+        }else if(rp.phase===2){
+          // Phase 2: Hold tight cluster spinning fast (40 frames)
+          controls.tV=0.08;
+          if(rp.f>=40){rp.phase=3;rp.f=0;}
+        }else if(rp.phase===3){
+          // Phase 3: Explode outward (60 frames)
+          const t=Math.min(rp.f/60,1),ease=1-Math.pow(1-t,3);
+          controls.tV=0.08*(1-t)+0.0006*t; // slow rotation back down
+          const chosenPos=catPosRef.current[rp.chosenIdx];
+          for(let i=0;i<count;i++){
+            if(i===rp.chosenIdx){
+              // Chosen: move to center
+              cur[i][0]=cur[i][0]*(1-ease);cur[i][1]=cur[i][1]*(1-ease);cur[i][2]=cur[i][2]*(1-ease);
+            }else{
+              // Others: scatter far out
+              const factor=3+Math.sin(i*7.3)*1.5;
+              const tx=catPosRef.current[i][0]*factor+(Math.sin(i*3.7)*80);
+              const ty=catPosRef.current[i][1]*factor+(Math.cos(i*2.3)*80);
+              const tz=catPosRef.current[i][2]*factor+(Math.sin(i*5.1)*80);
+              cur[i][0]=cur[i][0]+(tx-cur[i][0])*ease;cur[i][1]=cur[i][1]+(ty-cur[i][1])*ease;cur[i][2]=cur[i][2]+(tz-cur[i][2])*ease;
+            }
+            v3.set(cur[i][0],cur[i][1],cur[i][2]);const r=proxies[i].scale.x;s3.set(r,r,r);m4.compose(v3,q4,s3);iMesh.setMatrixAt(i,m4);proxies[i].position.set(cur[i][0],cur[i][1],cur[i][2]);if(glowSprites[i])glowSprites[i].position.set(cur[i][0],cur[i][1],cur[i][2]);
+          }
+          iMesh.instanceMatrix.needsUpdate=true;
+          if(rp.f>=60){
+            rp.phase=4;rp.f=0;controls.tV=0.0006;
+            // Fly camera to chosen disease
+            selectDisease(rp.chosenIdx);
+            setRandomPickCaption({disease:diseases[rp.chosenIdx],fact:rp.fact});
+          }
+        }else if(rp.phase===4){
+          // Phase 4: Reveal — holding on chosen disease
+        }
       }
 
       // Plasma animation — update time uniform (desktop only)
@@ -1080,6 +1196,7 @@ export default function MedGalaxy() {
       const sr=storyRef.current;if(sr.timer){clearTimeout(sr.timer);sr.timer=null;}sr.seq=null;sr.step=0;sr.nodeIdx=-1;
       setStoryCaption('');setStoryTip(null);
       if(spotlightRef.current.timer){clearInterval(spotlightRef.current.timer);spotlightRef.current.timer=null;setSpotlightActive(false);setSpotlightCaption('');}
+      if(randomPickRef.current.phase>0){stopRandomPick();return;}
       if(explodeActiveRef.current){
         const cur=curPosRef.current;if(cur){const cp=cur.map(p=>[...p]);const src=catPosRef.current;explodeAnimRef.current={from:cp,to:src.map(p=>[...p]),f:0,total:60,returning:true};}
         explodeActiveRef.current=false;setExplodeActive(false);setVelocityActive(false);
@@ -1162,9 +1279,10 @@ export default function MedGalaxy() {
         {diseasesData.map((d,i)=>(<div key={d.id} className="node-lbl" style={{position:'absolute',transform:'translateX(-50%)',fontFamily:'IBM Plex Mono,monospace',fontSize:isMob()?7:9,color:neglectMode?neglectColor(d.mortality>0?d.papers/d.mortality:0):CC[d.category],textAlign:'center',whiteSpace:'nowrap',textShadow:'0 0 4px rgba(0,0,0,0.8),0 1px 2px rgba(0,0,0,0.9)'}}><span className="lbl-name">{d.label}</span>{!isMob()&&<span className="lbl-detail" style={{display:'none',color:'#94a3b8',fontSize:8}}><br/>{fmt(d.papers)} papers</span>}</div>))}
       </div>
       <style>{`.node-lbl{transition:opacity 0.15s}.lbl-hover .lbl-name{font-size:11px!important;font-weight:600;color:#e2e8f0!important}.lbl-hover .lbl-detail{display:inline!important}`}</style>
-      <StoryChips onChip={handleStory} visible={storyVisible}/>
+      <StoryChips onChip={handleStory} onRandomPick={handleRandomPick} visible={storyVisible}/>
       {storyCaption&&<StoryCaption text={storyCaption} onClick={advanceStory}/>}
       {spotlightActive&&<SpotlightCaption text={spotlightCaption}/>}
+      <RandomPickCaption data={randomPickCaption} onDismiss={stopRandomPick}/>
       {explodeActive&&<ExplodeOverlay data={ppdData} onClose={handleUnexplode}/>}
       {connectionsActive&&<ConnectionsOverlay data={connData} onClose={handleCloseConnections} onSelect={handleConnSelect}/>}
       {velocityActive&&<VelocityOverlay data={velocityData} onClose={handleCloseVelocity}/>}
