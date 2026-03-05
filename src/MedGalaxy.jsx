@@ -786,6 +786,7 @@ export default function MedGalaxy() {
     curPosRef.current=catPos.map(p=>[...p]);
 
     // Camera distance scales with layout size
+    const mob=isMob();
     const camDist=rawMax*(mob?2.4:2.0);
     const scene=new THREE.Scene();
     const camera=new THREE.PerspectiveCamera(60,container.clientWidth/container.clientHeight,1,camDist*4);
@@ -890,7 +891,6 @@ export default function MedGalaxy() {
     renderer.domElement.addEventListener('mousemove',onMM);renderer.domElement.addEventListener('mousedown',onMD);renderer.domElement.addEventListener('mouseup',onMU);renderer.domElement.addEventListener('dblclick',onDblClick);
 
     // Touch: tap-to-select, double-tap-to-recenter
-    const mob=isMob();
     let _tapStart={x:0,y:0,t:0},_lastTap=0;
     function onTouchStart(e){if(spotlightRef.current.timer){clearInterval(spotlightRef.current.timer);spotlightRef.current.timer=null;setSpotlightActive(false);setSpotlightCaption('');}if(e.touches.length===1){_tapStart={x:e.touches[0].clientX,y:e.touches[0].clientY,t:Date.now()};idleRef.current=0;}else{idleRef.current=0;}}
     function onTouchEnd(e){if(e.touches.length>0)return;
