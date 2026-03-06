@@ -19,7 +19,7 @@ const float FRESNEL_INT = 0.3;
 const float PLASMA_MIX  = 0.55;
 const float SSS_INT     = 0.12;
 const float CRATER_DEPTH = 0.35;                             // crater shadow depth
-const float CRATER_SCALE = 5.5;                              // crater density
+const float CRATER_SCALE = 3.5;                              // crater density (was 5.5)
 
 // ── Noise ──
 float hash(vec3 p){ p = fract(p * vec3(443.897, 441.423, 437.195)); p += dot(p, p.yzx + 19.19); return fract((p.x + p.y) * p.z); }
