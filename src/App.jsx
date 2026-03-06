@@ -21,6 +21,7 @@ import Spotlight from './components/Spotlight';
 import SelectionDOF from './components/SelectionDOF';
 import SelectionRipple from './components/SelectionRipple';
 import IntroSequence from './components/IntroSequence';
+import AdaptiveDpr from './components/AdaptiveDpr';
 import { sceneRefs } from './sceneRefs';
 
 export default function App() {
@@ -90,7 +91,7 @@ export default function App() {
       onDoubleClick={handleDoubleClick}
     >
       <Canvas
-        dpr={[1, CFG.dprCap === 99 ? window.devicePixelRatio : CFG.dprCap]}
+        dpr={[1, CFG.dprCap]}
         camera={{
           fov: 60,
           near: 1,
@@ -139,6 +140,7 @@ export default function App() {
           <SelectionDOF />
           <SelectionRipple />
           <IntroSequence />
+          <AdaptiveDpr />
         </Suspense>
       </Canvas>
 

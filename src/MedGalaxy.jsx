@@ -431,7 +431,7 @@ function Header({diseaseCount,edgeCount,searchQuery,onSearchChange,sizeMode,onSi
       <button onClick={onSpotlight} style={{padding:'6px 12px',fontSize:11,fontFamily:'inherit',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,cursor:'pointer',background:spotlightActive?'rgba(255,255,255,0.12)':'transparent',color:spotlightActive?'#f59e0b':'#e2e8f0',pointerEvents:'auto',whiteSpace:'nowrap'}}>{spotlightActive?'✕ Spotlight':'Spotlight'}</button>
       <div style={{position:'relative',pointerEvents:'auto'}}><input value={searchQuery} onChange={e=>onSearchChange(e.target.value)} placeholder="Search diseases..." style={{background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,padding:'7px 12px',color:'#e2e8f0',fontSize:12,fontFamily:'inherit',width:200,outline:'none'}}/>{searchDropdown}</div>
     </>)}
-    <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}@keyframes slideDown{to{transform:translateY(0)}}@keyframes slideUp{to{transform:translateY(0)}}@keyframes fadeIn{to{opacity:1}}@keyframes chipPulse{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,0.4)}50%{box-shadow:0 0 12px 4px rgba(34,197,94,0.15)}}`}</style>
+    <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}@keyframes slideDown{to{transform:translateY(0)}}@keyframes slideUp{to{transform:translateY(0)}}@keyframes fadeIn{to{opacity:1}}@keyframes chipPulse{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,0.4)}50%{box-shadow:0 0 12px 4px rgba(34,197,94,0.15)}}@keyframes storyPulse{0%,100%{box-shadow:0 0 4px 1px rgba(255,255,255,0.1)}50%{box-shadow:0 0 18px 5px rgba(255,255,255,0.45)}}`}</style>
   </div>);
 }
 

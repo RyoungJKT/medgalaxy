@@ -31,6 +31,7 @@ const hOut = e => {
 
 export default function StoryChips() {
   const storyVisible = useStore(s => s.storyVisible);
+  const storyActive = useStore(s => s.storyActive);
   const setStoryActive = useStore(s => s.setStoryActive);
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
@@ -54,15 +55,23 @@ export default function StoryChips() {
       transition: 'opacity 0.4s ease, visibility 0.4s ease',
       width: mob ? '92vw' : undefined,
     }}>
-      {chips.map(c => (
-        <button
-          key={c.id}
-          onClick={() => setStoryActive(c.id)}
-          style={{ ...chipBtnStyle, padding: mob ? '6px 4px' : '8px 16px', fontSize: mob ? 9 : 11 }}
-          onMouseEnter={hIn}
-          onMouseLeave={hOut}
-        >{c.label}</button>
-      ))}
+      {chips.map(c => {
+        const active = storyActive === c.id;
+        return (
+          <button
+            key={c.id}
+            onClick={() => setStoryActive(c.id)}
+            style={{
+              ...chipBtnStyle,
+              padding: mob ? '6px 4px' : '8px 16px',
+              fontSize: mob ? 10 : 12,
+              ...(active ? {} : {}),
+            }}
+            onMouseEnter={hIn}
+            onMouseLeave={hOut}
+          >{c.label}</button>
+        );
+      })}
     </div>
   );
 }

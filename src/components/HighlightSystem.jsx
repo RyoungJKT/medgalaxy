@@ -68,7 +68,7 @@ export default function HighlightSystem() {
           if (hubSet.has(i)) _color.multiplyScalar(1.3);
           else _color.multiplyScalar(0.4);
         } else if (aIdx >= 0) {
-          if (i === aIdx) _color.multiplyScalar(1.15);
+          if (i === aIdx) { /* was: _color.multiplyScalar(1.15) */ }
           else if (nbrs && nbrs.has(i)) {
             /* keep original color */
           } else _color.multiplyScalar(0.25);

@@ -1,4 +1,5 @@
 uniform float time;
+uniform float usePlasma;
 uniform vec3 fogColor;
 uniform float fogNear;
 uniform float fogFar;
@@ -23,7 +24,7 @@ const float CRATER_SCALE = 5.5;                              // crater density
 // ── Noise ──
 float hash(vec3 p){ p = fract(p * vec3(443.897, 441.423, 437.195)); p += dot(p, p.yzx + 19.19); return fract((p.x + p.y) * p.z); }
 float nse(vec3 p){ vec3 i = floor(p), f = fract(p); f = f*f*(3.0-2.0*f); return mix(mix(mix(hash(i),hash(i+vec3(1,0,0)),f.x),mix(hash(i+vec3(0,1,0)),hash(i+vec3(1,1,0)),f.x),f.y),mix(mix(hash(i+vec3(0,0,1)),hash(i+vec3(1,0,1)),f.x),mix(hash(i+vec3(0,1,1)),hash(i+vec3(1,1,1)),f.x),f.y),f.z); }
-float fbm(vec3 p){ float v = 0.0, a = 0.5; for(int i = 0; i < 4; i++){ v += a * nse(p); p *= 2.1; a *= 0.48; } return v; }
+float fbm(vec3 p){ float v = 0.0, a = 0.5; for(int i = 0; i < 2; i++){ v += a * nse(p); p *= 2.1; a *= 0.48; } return v; }
 
 // ── Voronoi for craters ──
 vec2 voronoi(vec3 p) {
@@ -48,54 +49,29 @@ void main(){
   vec3 V = normalize(-vViewPos);
   float NdotV = max(dot(vNormal, V), 0.0);
 
-  // ── 1. Multi-octave crater surface texture ──
-  vec3 objN = normalize(vObjPos);
-  vec3 phaseOff = vec3(vPhase * 10.0);
-
-  // Large craters (visible from distance)
-  vec3 cp1 = objN * CRATER_SCALE + phaseOff;
-  vec2 vor1 = voronoi(cp1);
-
-  // Small craters (visible up close)
-  vec3 cp2 = objN * CRATER_SCALE * 3.0 + phaseOff + vec3(7.31);
-  vec2 vor2 = voronoi(cp2);
-
-  // Blend: large craters dominant, small craters add fine detail
-  float d1 = vor1.x;
-  float d2 = vor2.x;
-  float vorD = d1 * 0.7 + d2 * 0.3;
-
-  float craterBowl = smoothstep(0.0, 0.45, vorD);
-  float craterRim = smoothstep(0.35, 0.45, vorD) * 0.15;
-
-  // Bump map from blended craters
-  float eps = 0.015;
-  vec2 v1Dx = voronoi(cp1 + vec3(eps, 0.0, 0.0));
-  vec2 v2Dx = voronoi(cp2 + vec3(eps, 0.0, 0.0));
-  vec2 v1Dz = voronoi(cp1 + vec3(0.0, 0.0, eps));
-  vec2 v2Dz = voronoi(cp2 + vec3(0.0, 0.0, eps));
-  float blendDx = (v1Dx.x * 0.7 + v2Dx.x * 0.3) - vorD;
-  float blendDz = (v1Dz.x * 0.7 + v2Dz.x * 0.3) - vorD;
-  float bumpX = blendDx / eps;
-  float bumpZ = blendDz / eps;
-  vec3 bumpN = normalize(N + vec3(bumpX, 0.0, bumpZ) * CRATER_DEPTH);
-
-  // ── 2. Directional lighting with bumped normal ──
-  float NdotL = max(dot(bumpN, KEY_DIR), 0.0);
-  float wrap = max(dot(bumpN, KEY_DIR) * 0.5 + 0.5, 0.0);
+  // ── 1. Directional lighting ──
+  float NdotL = max(dot(N, KEY_DIR), 0.0);
+  float wrap = max(dot(N, KEY_DIR) * 0.5 + 0.5, 0.0);
   float key = pow(wrap, 1.3) * KEY_INT;
-  float fill = max(dot(bumpN, -KEY_DIR) * 0.5 + 0.5, 0.0) * FILL_INT;
+  float fill = max(dot(N, -KEY_DIR) * 0.5 + 0.5, 0.0) * FILL_INT;
   float diffuse = key + fill + AMB_INT;
 
-  // Darken crater interiors
-  diffuse *= mix(1.0 - CRATER_DEPTH, 1.0, craterBowl);
+  // ── 2. Crater texture (HIGH tier only) ──
+  if (usePlasma > 0.5) {
+    vec3 objN = normalize(vObjPos);
+    vec3 phaseOff = vec3(vPhase * 10.0);
+    vec3 cp1 = objN * CRATER_SCALE + phaseOff;
+    vec2 vor1 = voronoi(cp1);
+    float vorD = vor1.x;
+    float craterBowl = smoothstep(0.0, 0.45, vorD);
+    float craterRim = smoothstep(0.35, 0.45, vorD) * 0.15;
+    diffuse *= mix(1.0 - CRATER_DEPTH, 1.0, craterBowl);
+  }
 
-  // ── 3. Specular with bumped normal ──
+  // ── 3. Specular ──
   vec3 H = normalize(KEY_DIR + V);
-  float NdotH = max(dot(bumpN, H), 0.0);
+  float NdotH = max(dot(N, H), 0.0);
   float spec = pow(NdotH, SPEC_POW) * SPEC_INT * NdotL;
-  // Boost specular on crater rims
-  spec += craterRim * NdotL;
   vec3 specCol = mix(vColor, vec3(1.0), 0.3) * spec;
 
   // ── 4. Fresnel rim ──
@@ -104,14 +80,18 @@ void main(){
   // ── 5. Subsurface scattering ──
   float sss = pow(max(dot(V, -KEY_DIR), 0.0), 2.0) * SSS_INT * (1.0 - NdotV);
 
-  // ── 6. Plasma noise (secondary) ──
-  vec3 np = vWorldPos * 1.8 + vec3(time * 0.35 + vPhase);
-  float plasma = fbm(np) + fbm(np * 1.5 + vec3(0.0, time * 0.25, 0.0));
-  plasma = pow(plasma * 0.5, 0.7);
-
-  // Combine
+  // ── 6. Plasma noise (currently disabled for testing — was gated on usePlasma > 0.5) ──
   vec3 baseCol = vColor * diffuse;
-  vec3 col = mix(baseCol, baseCol * (0.7 + plasma * 0.6), PLASMA_MIX);
+  vec3 col;
+  // TO RESTORE: change `false` back to `usePlasma > 0.5`
+  if (false) {
+    vec3 np = vWorldPos * 1.8 + vec3(time * 0.35 + vPhase);
+    float plasma = fbm(np) + fbm(np * 1.5 + vec3(0.0, time * 0.25, 0.0));
+    plasma = pow(plasma * 0.5, 0.7);
+    col = mix(baseCol, baseCol * (0.7 + plasma * 0.6), PLASMA_MIX);
+  } else {
+    col = baseCol;
+  }
 
   col += specCol;
   col += vColor * fresnel;
