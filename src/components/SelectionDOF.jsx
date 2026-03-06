@@ -20,12 +20,13 @@ export default function SelectionDOF() {
 
     const { selectedNode, curPos } = useStore.getState();
     const cam = sceneRefs.camera;
+    const targetBokeh = 3.0;
 
     if (selectedNode && cam) {
       const pos = curPos[selectedNode.index];
       _target.set(pos[0], pos[1], pos[2]);
       if (effect.target) effect.target.copy(_target);
-      curBokeh.current += (3.0 - curBokeh.current) * 0.06;
+      curBokeh.current += (targetBokeh - curBokeh.current) * 0.06;
     } else {
       curBokeh.current += (0 - curBokeh.current) * 0.1;
     }

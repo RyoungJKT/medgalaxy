@@ -100,6 +100,7 @@ export default function Header() {
   const setShaderMode = useStore(s => s.setShaderMode);
   const selectDisease = useStore(s => s.selectDisease);
   const idMap = useStore(s => s.idMap);
+  const introStarted = useStore(s => s.introStarted);
 
   const mob = isMob();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -127,7 +128,7 @@ export default function Header() {
       padding: mob ? '10px 12px' : '14px 20px', display: 'flex', alignItems: 'center',
       gap: mob ? 8 : 14, fontFamily: 'IBM Plex Mono,monospace', fontSize: 12,
       color: '#e2e8f0', background: 'linear-gradient(180deg,rgba(6,8,13,0.9) 0%,rgba(6,8,13,0) 100%)',
-      pointerEvents: 'none', transform: 'translateY(-100%)', animation: 'slideDown 0.6s ease 1.8s forwards',
+      pointerEvents: 'none', transform: 'translateY(-100%)', animation: introStarted ? 'slideDown 0.6s ease 3.0s forwards' : 'none',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, pointerEvents: 'auto' }}>
         <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 6px #22c55e', animation: 'pulse 2s infinite' }} />

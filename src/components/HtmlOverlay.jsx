@@ -8,10 +8,10 @@ import Sidebar from './ui/Sidebar';
 import StoryChips from './ui/StoryChips';
 import StoryCaption from './ui/StoryCaption';
 import SpotlightCaption from './ui/SpotlightCaption';
-import RandomPickCaption from './ui/RandomPickCaption';
 import ExplodeOverlay from './ui/ExplodeOverlay';
 import ConnectionsOverlay from './ui/ConnectionsOverlay';
 import VelocityOverlay from './ui/VelocityOverlay';
+import LandingOverlay from './ui/LandingOverlay';
 
 export default function HtmlOverlay() {
   return (
@@ -30,10 +30,10 @@ export default function HtmlOverlay() {
       <StoryChips />
       <StoryCaption />
       <SpotlightCaption />
-      <RandomPickCaption />
       <ExplodeOverlay />
       <ConnectionsOverlay />
       <VelocityOverlay />
+      <LandingOverlay />
       <style>{`
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
         @keyframes slideDown{to{transform:translateY(0)}}

@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
+import * as THREE from 'three';
 import gsap from 'gsap';
 import useStore from '../store';
 import { sceneRefs } from '../sceneRefs';
@@ -15,20 +16,45 @@ export default function CameraRig({ camDist }) {
   const idleFrames = useRef(0);
   const mouseRef = useRef({ x: 0, y: 0 });
   const parallaxOffset = useRef({ x: 0, y: 0 });
+  const introStarted = useRef(false);
 
   // Expose camera to sceneRefs for NodeLabels projection
   useEffect(() => {
     sceneRefs.camera = camera;
   }, [camera]);
 
-  // Initial zoom-out animation
+  // Cinematic intro: start close, delayed pullback
   useEffect(() => {
-    camera.position.set(0, 0, camDist * 0.4);
-    gsap.to(camera.position, {
+    // Start camera close to hero, slightly off-axis for cinematic angle
+    camera.position.set(8, 5, camDist * 0.3);
+
+    // Delayed pullback: wait 1.0s for hero to emerge, then pull back over 2.5s
+    // Animate all axes so camera settles smoothly to final position
+    const pullbackTween = gsap.to(camera.position, {
+      x: 0,
+      y: 0,
       z: camDist,
-      duration: 2.3,
+      duration: 2.5,
+      delay: 1.0,
       ease: 'power2.out',
     });
+
+    // Listen for skip: if intro is skipped, fast-forward camera
+    const unsub = useStore.subscribe(
+      s => s.introPhase,
+      (phase) => {
+        if (phase >= 5 && !introStarted.current) {
+          pullbackTween.kill();
+          gsap.to(camera.position, {
+            x: 0, y: 0, z: camDist,
+            duration: 0.5,
+            ease: 'power2.out',
+          });
+        }
+      }
+    );
+
+    return () => { pullbackTween.kill(); unsub(); };
   }, [camera, camDist]);
 
   // Subscribe to flyTarget changes
@@ -56,8 +82,10 @@ export default function CameraRig({ camDist }) {
         );
 
         if (flyTarget.radius) {
-          const dir = camera.position.clone().sub(controls.target).normalize();
-          const targetPos = controls.target.clone().add(dir.multiplyScalar(flyTarget.radius));
+          // Fly toward node from current viewing angle
+          const nodePos = new THREE.Vector3(flyTarget.position[0], flyTarget.position[1], flyTarget.position[2]);
+          const dir = camera.position.clone().sub(nodePos).normalize();
+          const targetPos = nodePos.clone().add(dir.multiplyScalar(flyTarget.radius));
           tweenRef.current.push(
             gsap.to(camera.position, {
               x: targetPos.x,
@@ -68,12 +96,14 @@ export default function CameraRig({ camDist }) {
             })
           );
         } else {
-          // No radius = reset to default zoom (fly back to camDist on z-axis)
+          // Fly back: maintain current viewing direction toward origin
+          const dir = camera.position.clone().normalize();
+          const targetPos = dir.multiplyScalar(camDist);
           tweenRef.current.push(
             gsap.to(camera.position, {
-              x: 0,
-              y: 0,
-              z: camDist,
+              x: targetPos.x,
+              y: targetPos.y,
+              z: targetPos.z,
               duration: dur,
               ease: 'power3.inOut',
             })
@@ -95,23 +125,26 @@ export default function CameraRig({ camDist }) {
     return () => window.removeEventListener('mousemove', onMove);
   }, []);
 
-  useFrame(() => {
+  useFrame((state) => {
+    const introPhase = useStore.getState().introPhase;
+
     if (controlsRef.current) {
-      idleFrames.current++;
-      controlsRef.current.autoRotate = idleFrames.current > 300;
+      if (introPhase < 5) {
+        controlsRef.current.autoRotate = false;
+      } else {
+        if (!introStarted.current) introStarted.current = true;
+        idleFrames.current++;
+        controlsRef.current.autoRotate = idleFrames.current > 300;
+      }
     }
 
-    // Subtle cursor parallax: offset camera position slightly based on mouse
-    if (TIER !== 'LOW') {
+    // Subtle cursor parallax (desktop only, after intro)
+    if (TIER !== 'LOW' && introPhase >= 5) {
       const targetX = mouseRef.current.x * PARALLAX_STRENGTH;
       const targetY = -mouseRef.current.y * PARALLAX_STRENGTH;
-      // Smooth lerp
       const prev = parallaxOffset.current;
-      const dx = targetX - prev.x;
-      const dy = targetY - prev.y;
-      prev.x += dx * 0.05;
-      prev.y += dy * 0.05;
-      // Apply as small camera offset (additive, won't fight orbit controls)
+      prev.x += (targetX - prev.x) * 0.05;
+      prev.y += (targetY - prev.y) * 0.05;
       camera.position.x += (prev.x - (camera.userData.lastParX || 0));
       camera.position.y += (prev.y - (camera.userData.lastParY || 0));
       camera.userData.lastParX = prev.x;

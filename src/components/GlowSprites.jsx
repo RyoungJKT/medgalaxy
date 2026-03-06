@@ -23,6 +23,8 @@ function makeGlowTexture() {
 export default function GlowSprites() {
   const diseases = useStore(s => s.diseases);
   const count = diseases.length;
+  const glowOpacityRef = useRef(0);
+  const groupRef = useRef();
 
   const { tex, glowIndices } = useMemo(() => {
     const t = makeGlowTexture();
@@ -38,15 +40,28 @@ export default function GlowSprites() {
   const refsMap = useRef({});
 
   useFrame(() => {
-    const curPos = useStore.getState().curPos;
+    const { curPos, introPhase } = useStore.getState();
+
+    // Intro gating: invisible until phase 4, then fade in
+    const targetOpacity = introPhase >= 4 ? 0.35 : 0;
+    glowOpacityRef.current += (targetOpacity - glowOpacityRef.current) * 0.06;
+
+    // Update visibility
+    if (groupRef.current) {
+      groupRef.current.visible = glowOpacityRef.current > 0.005;
+    }
+
     for (const idx of glowIndices) {
       const ref = refsMap.current[idx];
-      if (ref) ref.position.set(curPos[idx][0], curPos[idx][1], curPos[idx][2]);
+      if (ref) {
+        ref.position.set(curPos[idx][0], curPos[idx][1], curPos[idx][2]);
+        if (ref.material) ref.material.opacity = glowOpacityRef.current;
+      }
     }
   });
 
   return (
-    <group renderOrder={-2}>
+    <group ref={groupRef} renderOrder={-2} visible={false}>
       {glowIndices.map(idx => {
         const r = nR(diseases[idx].papers) * 3.5;
         return (
@@ -62,7 +77,7 @@ export default function GlowSprites() {
               blending={THREE.AdditiveBlending}
               depthTest={false}
               depthWrite={false}
-              opacity={0.35}
+              opacity={0}
             />
           </sprite>
         );

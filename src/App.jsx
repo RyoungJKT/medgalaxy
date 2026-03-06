@@ -16,26 +16,39 @@ import ExplodeView from './components/ExplodeView';
 import ConnectionsView from './components/ConnectionsView';
 import VelocityMap from './components/VelocityMap';
 import AttentionMap from './components/AttentionMap';
-import RandomPick from './components/RandomPick';
 import Spotlight from './components/Spotlight';
 import SelectionDOF from './components/SelectionDOF';
+import SelectionRipple from './components/SelectionRipple';
+import IntroSequence from './components/IntroSequence';
 import { sceneRefs } from './sceneRefs';
 
 export default function App() {
   const rawMax = useStore(s => s.rawMax);
   const camDist = rawMax ? rawMax * 1.4 : 900;
 
+  // Single click on blank area: deselect + fly back (only on clean click, not drag)
+  const pointerDownRef = React.useRef({ x: 0, y: 0, time: 0 });
+  const handlePointerMissed = useCallback((e) => {
+    const dx = e.clientX - pointerDownRef.current.x;
+    const dy = e.clientY - pointerDownRef.current.y;
+    const dt = Date.now() - pointerDownRef.current.time;
+    // Only treat as click if mouse barely moved and was quick
+    if (Math.abs(dx) > 5 || Math.abs(dy) > 5 || dt > 300) return;
+    // Only left click
+    if (e.button !== 0) return;
+    const s = useStore.getState();
+    if (s.selectedNode) s.deselect();
+  }, []);
+
   // Double-click to reset view (deselect + fly back to origin)
   const handleDoubleClick = useCallback(() => {
     const { deselect, setActiveMode, activeMode, selectedNode,
       spotlightActive, setSpotlightActive, setSpotlightCaption,
-      stopRandomPick, randomPickPhase, storyActive, setStoryActive,
+      storyActive, setStoryActive,
       setStoryCaption, setStoryStep, setStoryVisible,
       setNeglectMode, neglectMode, setConnFocusIdx } = useStore.getState();
     // Stop spotlight
     if (spotlightActive) { setSpotlightActive(false); setSpotlightCaption(''); }
-    // Stop random pick
-    if (randomPickPhase > 0) stopRandomPick();
     // Stop story
     if (storyActive) { setStoryActive(null); setStoryCaption(''); setStoryStep(0); setStoryVisible(true); }
     // Close overlays
@@ -59,8 +72,6 @@ export default function App() {
       if (s.activeMode) { s.setActiveMode(null); return; }
       // Stop spotlight
       if (s.spotlightActive) { s.setSpotlightActive(false); s.setSpotlightCaption(''); return; }
-      // Stop random pick
-      if (s.randomPickPhase > 0) { s.stopRandomPick(); return; }
       // Stop story
       if (s.storyActive) { s.setStoryActive(null); s.setStoryCaption(''); s.setStoryStep(0); s.setStoryVisible(true); return; }
       // Exit neglect mode
@@ -73,6 +84,7 @@ export default function App() {
   return (
     <div
       style={{ width: '100%', height: '100%', position: 'relative' }}
+      onPointerDown={(e) => { pointerDownRef.current = { x: e.clientX, y: e.clientY, time: Date.now() }; }}
       onDoubleClick={handleDoubleClick}
     >
       <Canvas
@@ -91,6 +103,7 @@ export default function App() {
         }}
         style={{ background: '#000000' }}
         onCreated={({ gl }) => { sceneRefs.canvasElement = gl.domElement; }}
+        onPointerMissed={handlePointerMissed}
       >
         <ambientLight intensity={0.3} />
         <pointLight intensity={0.6} />
@@ -113,9 +126,10 @@ export default function App() {
           <ConnectionsView />
           <VelocityMap />
           <AttentionMap />
-          <RandomPick />
           <Spotlight />
           <SelectionDOF />
+          <SelectionRipple />
+          <IntroSequence />
         </Suspense>
       </Canvas>
 
