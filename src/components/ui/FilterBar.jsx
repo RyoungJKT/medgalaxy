@@ -1,5 +1,4 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 import useStore from '../../store';
 import { CC, CL, CATS } from '../../utils/constants';
 import { isMob } from '../../utils/helpers';
@@ -13,54 +12,59 @@ export default function FilterBar() {
 
   if (neglectMode) {
     return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="absolute top-[50px] left-0 right-0 z-40 px-5 flex items-center gap-2.5
-          text-[10px] pointer-events-none"
-      >
-        <span className="text-red-500 font-semibold">OVERLOOKED</span>
-        <div className="w-[180px] h-2 rounded bg-gradient-to-r from-red-500 via-amber-500 to-green-500" />
-        <span className="text-green-500 font-semibold">HIGH ATTENTION</span>
-        <span className="text-slate-500 ml-2">&middot;</span>
-        <span className="text-slate-500">Papers per death (log scale)</span>
-      </motion.div>
+      <div style={{
+        position: 'absolute', top: 50, left: 0, right: 0, zIndex: 40,
+        padding: '0 20px', display: 'flex', alignItems: 'center', gap: 10,
+        fontFamily: 'IBM Plex Mono,monospace', fontSize: 10, pointerEvents: 'none',
+        opacity: 0, animation: 'fadeIn 0.4s ease forwards',
+      }}>
+        <span style={{ color: '#ef4444', fontWeight: 600 }}>OVERLOOKED</span>
+        <div style={{ width: 180, height: 8, borderRadius: 4, background: 'linear-gradient(90deg,#ef4444,#f59e0b,#eab308,#22c55e)' }} />
+        <span style={{ color: '#22c55e', fontWeight: 600 }}>HIGH ATTENTION</span>
+        <span style={{ color: '#64748b', marginLeft: 8 }}>&middot;</span>
+        <span style={{ color: '#64748b' }}>Papers per death (log scale)</span>
+      </div>
     );
   }
 
   const allActive = activeCats.size === CATS.length;
 
   return (
-    <motion.div
-      initial={{ y: -60 }}
-      animate={{ y: 0 }}
-      transition={{ duration: 0.5, delay: 1.95, ease: 'easeOut' }}
-      className="absolute top-[50px] left-0 right-0 z-40 px-5 flex flex-wrap gap-1.5
-        text-[11px] pointer-events-none"
-    >
+    <div style={{
+      position: 'absolute', top: 50, left: 0, right: 0, zIndex: 40,
+      padding: '0 20px', display: 'flex', flexWrap: 'wrap', gap: 5,
+      fontFamily: 'IBM Plex Mono,monospace', fontSize: 11, pointerEvents: 'none',
+      transform: 'translateY(-60px)', animation: 'slideDown 0.5s ease 1.95s forwards',
+    }}>
       <button
         onClick={() => toggleCat('ALL')}
-        className={`pointer-events-auto px-3 py-1 rounded border border-white/[0.08]
-          cursor-pointer text-[10px] transition-colors
-          ${allActive ? 'bg-white/[0.12] text-slate-200' : 'bg-transparent text-slate-500'}`}
-      >
-        ALL
-      </button>
+        style={{
+          pointerEvents: 'auto', padding: '4px 12px', borderRadius: 4,
+          border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer',
+          fontFamily: 'inherit', fontSize: 10,
+          background: allActive ? 'rgba(255,255,255,0.12)' : 'transparent',
+          color: allActive ? '#e2e8f0' : '#64748b',
+        }}
+      >ALL</button>
       {CATS.map(cat => {
         const on = activeCats.has(cat);
         return (
           <button
             key={cat}
             onClick={() => toggleCat(cat)}
-            className={`pointer-events-auto px-3 py-1 rounded border border-white/[0.08]
-              cursor-pointer text-[10px] flex items-center gap-1 transition-colors
-              ${on ? 'bg-white/[0.08] text-slate-200' : 'bg-transparent text-slate-500 opacity-50'}`}
+            style={{
+              pointerEvents: 'auto', padding: '4px 12px', borderRadius: 4,
+              border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer',
+              fontFamily: 'inherit', fontSize: 10, display: 'flex', alignItems: 'center', gap: 4,
+              background: on ? 'rgba(255,255,255,0.08)' : 'transparent',
+              color: on ? '#e2e8f0' : '#475569', opacity: on ? 1 : 0.5,
+            }}
           >
-            <span className="w-1.5 h-1.5 rounded-full" style={{ background: CC[cat] }} />
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: CC[cat] }} />
             {CL[cat]}
           </button>
         );
       })}
-    </motion.div>
+    </div>
   );
 }

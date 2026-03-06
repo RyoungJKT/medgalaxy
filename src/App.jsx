@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import * as THREE from 'three';
 import { TIER, CFG } from './utils/tiers';
@@ -18,14 +18,63 @@ import VelocityMap from './components/VelocityMap';
 import AttentionMap from './components/AttentionMap';
 import RandomPick from './components/RandomPick';
 import Spotlight from './components/Spotlight';
+import SelectionDOF from './components/SelectionDOF';
 import { sceneRefs } from './sceneRefs';
 
 export default function App() {
   const rawMax = useStore(s => s.rawMax);
-  const camDist = rawMax ? rawMax * 1.1 : 700;
+  const camDist = rawMax ? rawMax * 1.4 : 900;
+
+  // Double-click to reset view (deselect + fly back to origin)
+  const handleDoubleClick = useCallback(() => {
+    const { deselect, setActiveMode, activeMode, selectedNode,
+      spotlightActive, setSpotlightActive, setSpotlightCaption,
+      stopRandomPick, randomPickPhase, storyActive, setStoryActive,
+      setStoryCaption, setStoryStep, setStoryVisible,
+      setNeglectMode, neglectMode, setConnFocusIdx } = useStore.getState();
+    // Stop spotlight
+    if (spotlightActive) { setSpotlightActive(false); setSpotlightCaption(''); }
+    // Stop random pick
+    if (randomPickPhase > 0) stopRandomPick();
+    // Stop story
+    if (storyActive) { setStoryActive(null); setStoryCaption(''); setStoryStep(0); setStoryVisible(true); }
+    // Close overlays
+    if (activeMode) setActiveMode(null);
+    // Exit neglect mode
+    if (neglectMode) setNeglectMode(false);
+    // Reset connection focus
+    setConnFocusIdx(-1);
+    // Deselect node and fly back
+    deselect();
+  }, []);
+
+  // Escape key to exit focus view, close overlays, stop tours
+  useEffect(() => {
+    const onKeyDown = (e) => {
+      if (e.key !== 'Escape') return;
+      const s = useStore.getState();
+      // Close sidebar (deselect node) first
+      if (s.selectedNode) { s.deselect(); return; }
+      // Close overlay modals
+      if (s.activeMode) { s.setActiveMode(null); return; }
+      // Stop spotlight
+      if (s.spotlightActive) { s.setSpotlightActive(false); s.setSpotlightCaption(''); return; }
+      // Stop random pick
+      if (s.randomPickPhase > 0) { s.stopRandomPick(); return; }
+      // Stop story
+      if (s.storyActive) { s.setStoryActive(null); s.setStoryCaption(''); s.setStoryStep(0); s.setStoryVisible(true); return; }
+      // Exit neglect mode
+      if (s.neglectMode) { s.setNeglectMode(false); return; }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
 
   return (
-    <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+    <div
+      style={{ width: '100%', height: '100%', position: 'relative' }}
+      onDoubleClick={handleDoubleClick}
+    >
       <Canvas
         dpr={[1, CFG.dprCap === 99 ? window.devicePixelRatio : CFG.dprCap]}
         camera={{
@@ -66,6 +115,7 @@ export default function App() {
           <AttentionMap />
           <RandomPick />
           <Spotlight />
+          <SelectionDOF />
         </Suspense>
       </Canvas>
 

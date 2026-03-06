@@ -38,14 +38,18 @@ export default function NodeLabels() {
       const rc = canvas.getBoundingClientRect();
       const kids = container.children;
 
-      // Approximate camera distance for screen-size estimation
-      const camDist = camera.position.length();
+      const tanHalfFov = Math.tan(Math.PI / 6); // fov=60 → half=30°
 
       for (let i = 0; i < diseases.length; i++) {
         const el = kids[i];
         if (!el) continue;
 
-        pv.set(curPos[i][0], curPos[i][1], curPos[i][2]).project(camera);
+        pv.set(curPos[i][0], curPos[i][1], curPos[i][2]);
+
+        // Distance from camera to this specific node
+        const nodeDist = pv.distanceTo(camera.position);
+
+        pv.project(camera);
 
         // Behind camera or off-screen
         if (pv.z > 1 || pv.z < -1) {
@@ -60,8 +64,7 @@ export default function NodeLabels() {
         sx = Math.max(40, Math.min(rc.width - 40, sx));
 
         const nodeR = nR(diseases[i].papers);
-        const screenR =
-          nodeR * rc.height / (2 * camDist * Math.tan(Math.PI / 6));
+        const screenR = nodeR * rc.height / (2 * nodeDist * tanHalfFov);
 
         // Hide very tiny labels when zoomed out
         if (screenR < 0.3 && i !== hovIdx) {
@@ -71,7 +74,7 @@ export default function NodeLabels() {
 
         el.style.display = '';
         el.style.left = sx + 'px';
-        el.style.top = sy - Math.max(screenR * 1.2, 4) - 12 + 'px';
+        el.style.top = sy - Math.max(screenR * 1.1, 3) - 10 + 'px';
         el.style.opacity = i === hovIdx ? '1' : '0.75';
 
         const nameEl = el.firstChild;

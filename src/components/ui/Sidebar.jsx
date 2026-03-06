@@ -1,17 +1,14 @@
 import React, { useRef, useState, useCallback } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
 import useStore from '../../store';
 import { CC, CL } from '../../utils/constants';
 import { fmt, isMob } from '../../utils/helpers';
 import Sparkline from './Sparkline';
 
-function StatBox({ label, value, suffix, valueColor }) {
+function SB({ l, v, s, vc }) {
   return (
-    <div className="bg-white/[0.03] rounded-md p-2 border border-white/[0.04]">
-      <div className="text-slate-400 text-[9px] mb-0.5">{label}</div>
-      <div className="text-sm font-semibold" style={{ color: valueColor || '#e2e8f0' }}>
-        {value} {suffix && <span className="text-[10px] font-normal">{suffix}</span>}
-      </div>
+    <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 6, padding: '8px 10px', border: '1px solid rgba(255,255,255,0.04)' }}>
+      <div style={{ color: '#94a3b8', fontSize: 9, marginBottom: 2 }}>{l}</div>
+      <div style={{ fontSize: 14, fontWeight: 600, color: vc || '#e2e8f0' }}>{v} {s && <span style={{ fontSize: 10, fontWeight: 400 }}>{s}</span>}</div>
     </div>
   );
 }
@@ -29,9 +26,7 @@ export default function Sidebar() {
   const [panelH, setPanelH] = useState(60);
   const swipeRef = useRef({ startY: 0, curY: 0, swiping: false, startH: 60 });
 
-  const onClose = useCallback(() => {
-    deselect();
-  }, [deselect]);
+  const onClose = useCallback(() => { deselect(); }, [deselect]);
 
   const onSwipeStart = useCallback((e) => {
     if (!mob) return;
@@ -96,176 +91,77 @@ export default function Sidebar() {
     })
     .sort((a, b) => b.sp - a.sp);
 
-  return (
-    <AnimatePresence>
-      {mob ? (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            key="sidebar-backdrop"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 z-[49] bg-black/40 pointer-events-auto"
-            onClick={onClose}
-          />
-          {/* Bottom sheet */}
-          <motion.div
-            key="sidebar-mobile"
-            ref={panelRef}
-            initial={{ y: '100%' }}
-            animate={{ y: 0 }}
-            exit={{ y: '100%' }}
-            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="absolute bottom-0 left-0 right-0 z-50 pointer-events-auto
-              backdrop-blur-md bg-[rgba(10,16,30,0.96)]
-              border-t border-white/[0.08] rounded-t-2xl
-              text-slate-200 text-[11px] overflow-y-auto overflow-x-hidden"
-            style={{ height: panelH + 'vh', maxHeight: panelH + 'vh' }}
-          >
-            {/* Swipe handle */}
-            <div
-              onTouchStart={onSwipeStart}
-              onTouchMove={onSwipeMove}
-              onTouchEnd={onSwipeEnd}
-              className="flex justify-center py-4 cursor-grab touch-none min-h-[48px]"
-            >
-              <div className="w-10 h-1 rounded-full bg-white/30" />
-            </div>
-            <SidebarContent
-              disease={disease} c={c} cc={cc} t={t} ar={ar} tc={tc} gc={gc}
-              ppdStr={ppdStr} conns={conns} onClose={onClose} onSelect={selectDisease}
-            />
-          </motion.div>
-        </>
-      ) : (
-        <motion.div
-          key="sidebar-desktop"
-          initial={{ x: 320 }}
-          animate={{ x: 0 }}
-          exit={{ x: 320 }}
-          transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-          className="absolute top-[75px] right-0 w-80 z-50 pointer-events-auto
-            backdrop-blur-md bg-[rgba(10,16,30,0.94)]
-            border-l border-white/[0.06]
-            text-slate-200 text-[11px] overflow-y-auto overflow-x-hidden"
-          style={{ height: 'calc(100% - 75px)' }}
-        >
-          <SidebarContent
-            disease={disease} c={c} cc={cc} t={t} ar={ar} tc={tc} gc={gc}
-            ppdStr={ppdStr} conns={conns} onClose={onClose} onSelect={selectDisease}
-          />
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-}
+  const panelStyle = mob
+    ? { position: 'absolute', bottom: 0, left: 0, right: 0, height: panelH + 'vh', maxHeight: panelH + 'vh', background: 'rgba(10,16,30,0.96)', backdropFilter: 'blur(16px)', borderTop: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px 16px 0 0', fontFamily: 'IBM Plex Mono,monospace', color: '#e2e8f0', overflowY: 'auto', overflowX: 'hidden', zIndex: 50, fontSize: 11 }
+    : { position: 'absolute', top: 75, right: 0, width: 320, height: 'calc(100% - 75px)', background: 'rgba(10,16,30,0.94)', backdropFilter: 'blur(16px)', borderLeft: '1px solid rgba(255,255,255,0.06)', fontFamily: 'IBM Plex Mono,monospace', color: '#e2e8f0', overflowY: 'auto', overflowX: 'hidden', zIndex: 50, fontSize: 11 };
 
-function SidebarContent({ disease, c, cc, t, ar, tc, gc, ppdStr, conns, onClose, onSelect }) {
   return (
     <>
-      {/* Header */}
-      <div className="px-4 pt-4 pb-2 border-b border-white/[0.06]">
-        <div className="flex justify-between items-start">
-          <div>
-            <div className="text-[15px] font-semibold mb-1">{disease.label}</div>
-            <span
-              className="text-[9px] px-2 py-0.5 rounded"
-              style={{ background: c + '22', color: c }}
-            >
-              {CL[disease.category]}
-            </span>
+      {mob && <div onClick={onClose} style={{ position: 'absolute', inset: 0, zIndex: 49, background: 'rgba(0,0,0,0.4)', pointerEvents: 'auto' }} />}
+      <div ref={panelRef} style={{ ...panelStyle, pointerEvents: 'auto' }}>
+        {mob && (
+          <div onTouchStart={onSwipeStart} onTouchMove={onSwipeMove} onTouchEnd={onSwipeEnd}
+            style={{ display: 'flex', justifyContent: 'center', padding: '18px 0 14px', cursor: 'grab', touchAction: 'none', minHeight: 48 }}>
+            <div style={{ width: 40, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.3)' }} />
           </div>
-          <button
-            onClick={onClose}
-            className="bg-transparent border-none text-slate-500 cursor-pointer text-lg leading-none px-1
-              hover:text-slate-300 transition-colors"
-          >
-            &times;
-          </button>
+        )}
+        {/* Header */}
+        <div style={{ padding: '16px 16px 8px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div>
+              <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 4 }}>{disease.label}</div>
+              <span style={{ fontSize: 9, padding: '2px 8px', borderRadius: 4, background: c + '22', color: c }}>{CL[disease.category]}</span>
+            </div>
+            <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: 18, lineHeight: 1, padding: '0 4px' }}>&times;</button>
+          </div>
         </div>
-      </div>
-
-      {/* Description */}
-      <div className="px-4 py-2.5 text-slate-400 leading-relaxed">
-        {disease.description}
-      </div>
-
-      {/* Stats grid */}
-      <div className="px-4 pb-3 grid grid-cols-2 gap-2">
-        <StatBox
-          label="Publications"
-          value={fmt(disease.papers)}
-          suffix={<span style={{ color: tc }}>{ar}{Math.abs(t)}%</span>}
-        />
-        <StatBox label="Connections" value={cc} />
-        <StatBox
-          label="WHO Deaths/yr"
-          value={disease.mortality > 0 ? fmt(disease.mortality) : 'N/A'}
-        />
-        <StatBox
-          label="Funding Gap"
-          value={disease.fundingGap.toUpperCase()}
-          valueColor={gc[disease.fundingGap]}
-        />
-        <StatBox label="Papers/Death" value={ppdStr} />
-      </div>
-
-      {/* Sparkline */}
-      <div className="px-4 pb-3">
-        <div className="text-slate-400 text-[9px] mb-1">Publication Trend (2014-2024)</div>
-        <Sparkline data={disease.yearlyPapers} color={c} />
-      </div>
-
-      {/* PubMed link */}
-      <div className="px-4 pb-3">
-        <a
-          href={`https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(disease.label)}&sort=date`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block text-center py-2 rounded-md text-[11px] font-medium no-underline
-            hover:brightness-110 transition-all"
-          style={{ background: c + '22', color: c }}
-        >
-          View on PubMed &rarr;
-        </a>
-      </div>
-
-      {/* Connections */}
-      <div className="px-4 pb-4">
-        <div className="text-slate-400 text-[9px] mb-0.5">Connections ({conns.length})</div>
-        <div className="text-slate-500 text-[8px] mb-1.5">
-          Diseases that appear together in published medical research, suggesting shared biology,
-          risk factors, or clinical overlap
+        {/* Description */}
+        <div style={{ padding: '10px 16px', color: '#94a3b8', lineHeight: 1.5 }}>{disease.description}</div>
+        {/* Stats */}
+        <div style={{ padding: '0 16px 12px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+          <SB l="Publications" v={fmt(disease.papers)} s={<span style={{ color: tc }}>{ar}{Math.abs(t)}%</span>} />
+          <SB l="Connections" v={cc} />
+          <SB l="WHO Deaths/yr" v={disease.mortality > 0 ? fmt(disease.mortality) : 'N/A'} />
+          <SB l="Funding Gap" v={disease.fundingGap.toUpperCase()} vc={gc[disease.fundingGap]} />
+          <SB l="Papers/Death" v={ppdStr} />
         </div>
-        <div className="max-h-60 overflow-y-auto">
-          {conns.map((cn, i) => {
-            const cc2 = CC[cn.d.category];
-            const ta = cn.t === 'up' ? '\u2191' : cn.t === 'down' ? '\u2193' : '\u2192';
-            return (
-              <div
-                key={i}
-                onClick={() => onSelect(cn.oi)}
-                className="flex items-center gap-2 py-1 px-1.5 cursor-pointer rounded
-                  border-b border-white/[0.03] hover:bg-white/[0.04] transition-colors"
-              >
-                <span
-                  className="w-1.5 h-1.5 rounded-full shrink-0"
-                  style={{ background: cc2 }}
-                />
-                <span className="flex-1 text-slate-300">{cn.d.label}</span>
-                <span className="text-slate-400 text-[10px]">{fmt(cn.sp)}</span>
-                <span
-                  className="text-[10px]"
-                  style={{
-                    color: cn.t === 'up' ? '#22c55e' : cn.t === 'down' ? '#ef4444' : '#64748b',
-                  }}
+        {/* Sparkline */}
+        <div style={{ padding: '0 16px 12px' }}>
+          <div style={{ color: '#94a3b8', fontSize: 9, marginBottom: 4 }}>Publication Trend (2014–2024)</div>
+          <Sparkline data={disease.yearlyPapers} color={c} />
+        </div>
+        {/* PubMed link */}
+        <div style={{ padding: '0 16px 12px' }}>
+          <a
+            href={`https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(disease.label)}&sort=date`}
+            target="_blank" rel="noopener noreferrer"
+            style={{ display: 'block', textAlign: 'center', padding: '8px 0', borderRadius: 6, background: c + '22', color: c, textDecoration: 'none', fontSize: 11, fontWeight: 500 }}
+          >View on PubMed &rarr;</a>
+        </div>
+        {/* Connections */}
+        <div style={{ padding: '0 16px 16px' }}>
+          <div style={{ color: '#94a3b8', fontSize: 9, marginBottom: 2 }}>Connections ({conns.length})</div>
+          <div style={{ color: '#64748b', fontSize: 8, marginBottom: 6 }}>Diseases that appear together in published medical research, suggesting shared biology, risk factors, or clinical overlap</div>
+          <div style={{ maxHeight: 240, overflowY: 'auto' }}>
+            {conns.map((cn, i) => {
+              const cc2 = CC[cn.d.category];
+              const ta = cn.t === 'up' ? '\u2191' : cn.t === 'down' ? '\u2193' : '\u2192';
+              return (
+                <div
+                  key={i}
+                  onClick={() => selectDisease(cn.oi)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 6px', cursor: 'pointer', borderRadius: 4, borderBottom: '1px solid rgba(255,255,255,0.03)' }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'none'; }}
                 >
-                  {ta}
-                </span>
-              </div>
-            );
-          })}
+                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: cc2, flexShrink: 0 }} />
+                  <span style={{ flex: 1, color: '#cbd5e1' }}>{cn.d.label}</span>
+                  <span style={{ color: '#94a3b8', fontSize: 10 }}>{fmt(cn.sp)}</span>
+                  <span style={{ color: cn.t === 'up' ? '#22c55e' : cn.t === 'down' ? '#ef4444' : '#64748b', fontSize: 10 }}>{ta}</span>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
     </>
