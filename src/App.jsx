@@ -2,6 +2,7 @@ import React, { Suspense, useEffect, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import * as THREE from 'three';
 import { TIER, CFG } from './utils/tiers';
+import { isMob } from './utils/helpers';
 import useStore from './store';
 import DiseaseNodes from './components/DiseaseNodes';
 import EdgeNetwork from './components/EdgeNetwork';
@@ -24,7 +25,8 @@ import { sceneRefs } from './sceneRefs';
 
 export default function App() {
   const rawMax = useStore(s => s.rawMax);
-  const camDist = rawMax ? rawMax * 1.4 : 900;
+  const mob = isMob();
+  const camDist = rawMax ? rawMax * (mob ? 2.4 : 1.4) : 900;
 
   // Single click on blank area: deselect + fly back (only on clean click, not drag)
   const pointerDownRef = React.useRef({ x: 0, y: 0, time: 0 });
@@ -69,7 +71,7 @@ export default function App() {
       // Close sidebar (deselect node) first
       if (s.selectedNode) { s.deselect(); return; }
       // Close overlay modals
-      if (s.activeMode) { s.setActiveMode(null); return; }
+      if (s.activeMode) { s.setConnFocusIdx(-1); s.setActiveMode(null); return; }
       // Stop spotlight
       if (s.spotlightActive) { s.setSpotlightActive(false); s.setSpotlightCaption(''); return; }
       // Stop story
@@ -99,19 +101,26 @@ export default function App() {
           antialias: true,
           alpha: true,
           toneMapping: THREE.ACESFilmicToneMapping,
-          toneMappingExposure: 1.1,
+          toneMappingExposure: mob ? 1.4 : 1.1,
         }}
         style={{ background: '#000000' }}
         onCreated={({ gl }) => { sceneRefs.canvasElement = gl.domElement; }}
         onPointerMissed={handlePointerMissed}
       >
-        <ambientLight intensity={0.3} />
-        <pointLight intensity={0.6} />
+        <ambientLight intensity={mob ? 0.6 : 0.3} />
+        <pointLight intensity={mob ? 1.2 : 0.6} position={[0, 0, 0]} />
         <directionalLight
-          color={0x6699cc}
-          intensity={0.3}
-          position={[-200, 150, -300]}
+          color={mob ? 0xffffff : 0x6699cc}
+          intensity={mob ? 1.0 : 0.3}
+          position={[-200, 250, 300]}
         />
+        {mob && (
+          <directionalLight
+            color={0xffffff}
+            intensity={0.5}
+            position={[200, -100, -200]}
+          />
+        )}
 
         <Suspense fallback={null}>
           <DiseaseNodes />

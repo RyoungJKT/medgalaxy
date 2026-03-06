@@ -80,15 +80,15 @@ export default function NodeLabels() {
 
         const nameEl = el.firstChild;
         if (i === selIdx) {
-          nameEl.style.fontSize = mob ? '12px' : '15px';
+          nameEl.style.fontSize = mob ? Math.max(10, Math.min(18, screenR * 1.2)) + 'px' : '15px';
           nameEl.style.fontWeight = '700';
           nameEl.style.color = '#f1f5f9';
         } else if (i === hovIdx) {
-          nameEl.style.fontSize = '11px';
+          nameEl.style.fontSize = mob ? Math.max(9, Math.min(14, screenR * 1.0)) + 'px' : '11px';
           nameEl.style.fontWeight = '600';
           nameEl.style.color = '#e2e8f0';
         } else {
-          nameEl.style.fontSize = mob ? '7px' : '9px';
+          nameEl.style.fontSize = mob ? Math.max(5, Math.min(12, screenR * 0.8)) + 'px' : '9px';
           nameEl.style.fontWeight = '400';
           nameEl.style.color = '';
         }

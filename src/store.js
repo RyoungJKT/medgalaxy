@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import diseasesData from '../data/diseases.json';
 import connectionsData from '../data/connections.json';
-import { processData, nR } from './utils/helpers';
+import { processData, nR, isMob } from './utils/helpers';
 import { computeLayouts } from './utils/layout';
 import { CATS } from './utils/constants';
 
@@ -75,7 +75,7 @@ const useStore = create(
       const pos = cp[idx] || cp2[idx];
       // Consistent zoom: camera stops at nodeRadius * multiplier from center
       const nodeRadius = nR(ds[idx].papers);
-      const zoomDist = nodeRadius * 5.0;
+      const zoomDist = nodeRadius * (isMob() ? 12.0 : 5.0);
       set({
         selectedNode: { index: idx, disease: ds[idx] },
         flyTarget: { position: [pos[0], pos[1], pos[2]], radius: zoomDist },

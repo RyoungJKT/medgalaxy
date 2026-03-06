@@ -120,7 +120,7 @@ export default function DiseaseNodes() {
 
   const fallbackMat = useMemo(() => {
     if (!mobDevice) return null;
-    return new THREE.MeshPhongMaterial({ transparent: true, opacity: 0.95, shininess: 60 });
+    return new THREE.MeshPhongMaterial({ transparent: true, opacity: 1.0, shininess: 90, specular: new THREE.Color(0x444444) });
   }, [mobDevice]);
 
   const mat = mobDevice ? fallbackMat : (shaderMode === 'pulse' ? pulseMat : plasmaMat);
