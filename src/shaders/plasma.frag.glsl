@@ -82,21 +82,21 @@ void main(){
 
   // ── 6. Surface texture ──
   vec3 baseCol = vColor * diffuse;
-  vec3 col;
-  // OPTION A: Static FBM rocky bump (no time cost). TO DISABLE: change `true` to `false`
+  vec3 col = baseCol;
+
+  // Static FBM rocky bump (no time cost). TO DISABLE: change `true` to `false`
   if (true) {
     vec3 bp = normalize(vObjPos) * 4.0 + vec3(vPhase * 10.0);
     float bump = fbm(bp) * 0.5 + fbm(bp * 2.5) * 0.25;
-    col = baseCol * (0.85 + bump * 0.35);
+    col = col * (0.85 + bump * 0.35);
   }
-  // OPTION B: Animated plasma. TO DISABLE: change `usePlasma > 0.5` to `false`
-  else if (usePlasma > 0.5) {
+
+  // Animated plasma (HIGH tier). TO DISABLE: change `usePlasma > 0.5` to `false`
+  if (usePlasma > 0.5) {
     vec3 np = vWorldPos * 1.8 + vec3(time * 0.35 + vPhase);
     float plasma = fbm(np) + fbm(np * 1.5 + vec3(0.0, time * 0.25, 0.0));
     plasma = pow(plasma * 0.5, 0.7);
-    col = mix(baseCol, baseCol * (0.7 + plasma * 0.6), PLASMA_MIX);
-  } else {
-    col = baseCol;
+    col = mix(col, col * (0.7 + plasma * 0.6), PLASMA_MIX);
   }
 
   col += specCol;
