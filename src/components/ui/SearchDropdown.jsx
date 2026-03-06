@@ -1,5 +1,4 @@
 import React from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
 import useStore from '../../store';
 import { CC } from '../../utils/constants';
 
@@ -15,28 +14,24 @@ export default function SearchDropdown({ onSelect }) {
   if (!matches.length) return null;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: -4 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0 }}
-      className="absolute top-full left-0 right-0 mt-1 z-[60]
-        backdrop-blur-md bg-[rgba(10,16,30,0.96)] border border-white/[0.08]
-        rounded-md p-1 text-[11px] min-w-[200px]"
-    >
+    <div style={{
+      position: 'absolute', top: '100%', left: 0, right: 0, marginTop: 4,
+      zIndex: 60, background: 'rgba(10,16,30,0.96)', backdropFilter: 'blur(16px)',
+      border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, padding: 4,
+      fontFamily: 'IBM Plex Mono,monospace', fontSize: 11, minWidth: 200,
+    }}>
       {matches.map(d => (
         <div
           key={d.id}
           onClick={() => onSelect(d)}
-          className="px-2 py-1.5 cursor-pointer rounded text-slate-200
-            flex items-center gap-1.5 hover:bg-white/[0.06] transition-colors"
+          style={{ padding: '5px 8px', cursor: 'pointer', borderRadius: 4, color: '#e2e8f0', display: 'flex', alignItems: 'center', gap: 6 }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'none'; }}
         >
-          <span
-            className="w-1.5 h-1.5 rounded-full shrink-0"
-            style={{ background: CC[d.category] }}
-          />
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: CC[d.category] }} />
           {d.label}
         </div>
       ))}
-    </motion.div>
+    </div>
   );
 }

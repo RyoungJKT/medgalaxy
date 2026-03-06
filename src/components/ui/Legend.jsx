@@ -1,5 +1,4 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 import useStore from '../../store';
 import { isMob } from '../../utils/helpers';
 
@@ -8,14 +7,13 @@ export default function Legend() {
   const mob = isMob();
 
   return (
-    <motion.div
-      initial={{ y: '100%' }}
-      animate={{ y: 0 }}
-      transition={{ duration: 0.5, delay: 2.1, ease: 'easeOut' }}
-      className={`absolute bottom-0 left-0 right-0 z-40 flex text-[9px] text-slate-300
-        bg-gradient-to-t from-[rgba(6,8,13,0.85)] to-transparent pointer-events-none
-        ${mob ? 'px-3 py-2 gap-2' : 'px-4 py-2 gap-4'}`}
-    >
+    <div style={{
+      position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 40,
+      padding: mob ? '8px 12px' : '8px 16px', display: 'flex', gap: mob ? 8 : 16,
+      fontFamily: 'IBM Plex Mono,monospace', fontSize: 9, color: '#cbd5e1',
+      background: 'linear-gradient(0deg,rgba(6,8,13,0.85) 0%,rgba(6,8,13,0) 100%)',
+      pointerEvents: 'none', transform: 'translateY(100%)', animation: 'slideUp 0.5s ease 2.1s forwards',
+    }}>
       {mob ? (
         <span>Tap to explore &middot; Pinch to zoom</span>
       ) : (
@@ -24,7 +22,7 @@ export default function Legend() {
           <span>Drag to rotate &middot; Scroll to zoom &middot; Right-drag to pan &middot; Double-click to re-center</span>
         </>
       )}
-      <span className="ml-auto">Data: PubMed &middot; WHO Global Health Estimates 2021 &middot; Project by Russell J. Young</span>
-    </motion.div>
+      <span style={{ marginLeft: 'auto' }}>Data: PubMed &middot; WHO Global Health Estimates 2021 &middot; Project by Russell J. Young</span>
+    </div>
   );
 }

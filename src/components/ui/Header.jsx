@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import useStore from '../../store';
 import { isMob } from '../../utils/helpers';
 import SearchDropdown from './SearchDropdown';
@@ -9,6 +8,7 @@ function SizeToggle() {
   const setSizeMode = useStore(s => s.setSizeMode);
   const [showTip, setShowTip] = useState(false);
   const timerRef = useRef(null);
+  const sizeToggleRef = useRef(null);
 
   const handleClick = (m) => {
     setSizeMode(m);
@@ -20,42 +20,69 @@ function SizeToggle() {
   useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current); }, []);
 
   return (
-    <div className="relative pointer-events-auto">
-      <div className="flex rounded-md overflow-hidden border border-white/[0.08]">
-        {['papers', 'mortality'].map(m => (
+    <div style={{ position: 'relative', pointerEvents: 'auto' }}>
+      <div ref={sizeToggleRef} style={{ display: 'flex', borderRadius: 6, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)' }}>
+        {'papers,mortality'.split(',').map(m => (
           <button
             key={m}
             onClick={() => handleClick(m)}
-            className={`px-3 py-1.5 text-[11px] border-none cursor-pointer transition-colors
-              ${sizeMode === m ? 'bg-white/[0.12] text-slate-200' : 'bg-transparent text-slate-500'}`}
+            style={{
+              padding: '6px 12px', fontSize: 11, fontFamily: 'inherit', border: 'none',
+              cursor: 'pointer', background: sizeMode === m ? 'rgba(255,255,255,0.12)' : 'transparent',
+              color: sizeMode === m ? '#e2e8f0' : '#64748b',
+            }}
           >
             {m === 'papers' ? 'Papers' : 'Mortality'}
           </button>
         ))}
       </div>
-      <AnimatePresence>
-        {showTip && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 px-3 py-2
-              backdrop-blur-xl bg-[rgba(10,16,30,0.95)] border border-white/[0.08]
-              rounded-md text-[10px] text-slate-400 w-[220px] leading-relaxed text-center whitespace-normal"
-          >
-            {sizeMode === 'papers'
-              ? 'Node size scaled by total publications on PubMed'
-              : 'Node size scaled by annual deaths reported by WHO'}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {showTip && (
+        <div style={{
+          position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)',
+          marginTop: 6, padding: '8px 12px', background: 'rgba(10,16,30,0.95)',
+          backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.08)',
+          borderRadius: 6, fontSize: 10, color: '#94a3b8', width: 220, lineHeight: 1.5,
+          opacity: 0, animation: 'fadeIn 0.4s ease forwards', textAlign: 'center', whiteSpace: 'normal',
+        }}>
+          {sizeMode === 'papers'
+            ? 'Node size scaled by total publications on PubMed'
+            : 'Node size scaled by annual deaths reported by WHO'}
+        </div>
+      )}
     </div>
   );
 }
 
-const BTN = `px-3 py-1.5 rounded-md border border-white/[0.08] cursor-pointer
-  bg-transparent text-slate-200 text-[11px] whitespace-nowrap pointer-events-auto
-  hover:bg-white/[0.04] hover:border-white/20 transition-all`;
+function ShaderToggle() {
+  const shaderMode = useStore(s => s.shaderMode);
+  const setShaderMode = useStore(s => s.setShaderMode);
+  return (
+    <div style={{ position: 'relative', pointerEvents: 'auto' }}>
+      <div style={{ display: 'flex', borderRadius: 6, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)' }}>
+        {['plasma', 'pulse'].map(m => (
+          <button
+            key={m}
+            onClick={() => setShaderMode(m)}
+            style={{
+              padding: '6px 12px', fontSize: 11, fontFamily: 'inherit', border: 'none',
+              cursor: 'pointer', background: shaderMode === m ? 'rgba(255,255,255,0.12)' : 'transparent',
+              color: shaderMode === m ? '#e2e8f0' : '#64748b',
+            }}
+          >
+            {m === 'plasma' ? 'Plasma' : 'Pulse'}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+const btnStyle = {
+  padding: '6px 12px', fontSize: 11, fontFamily: 'inherit',
+  border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6,
+  cursor: 'pointer', background: 'transparent', color: '#e2e8f0',
+  pointerEvents: 'auto', whiteSpace: 'nowrap',
+};
 
 export default function Header() {
   const diseases = useStore(s => s.diseases);
@@ -69,6 +96,8 @@ export default function Header() {
   const setActiveMode = useStore(s => s.setActiveMode);
   const sizeMode = useStore(s => s.sizeMode);
   const setSizeMode = useStore(s => s.setSizeMode);
+  const shaderMode = useStore(s => s.shaderMode);
+  const setShaderMode = useStore(s => s.setShaderMode);
   const selectDisease = useStore(s => s.selectDisease);
   const idMap = useStore(s => s.idMap);
 
@@ -93,201 +122,132 @@ export default function Header() {
   };
 
   return (
-    <motion.div
-      initial={{ y: '-100%' }}
-      animate={{ y: 0 }}
-      transition={{ duration: 0.6, delay: 1.8, ease: 'easeOut' }}
-      className={`absolute top-0 left-0 right-0 z-40 flex items-center pointer-events-none
-        bg-gradient-to-b from-[rgba(6,8,13,0.9)] to-transparent
-        ${mob ? 'px-3 py-2.5 gap-2' : 'px-5 py-3.5 gap-3.5'}`}
-    >
-      {/* Title */}
-      <div className="flex items-center gap-2 pointer-events-auto">
-        <span className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_6px_#22c55e] animate-pulse" />
-        <span className={`font-semibold ${mob ? 'text-[13px]' : 'text-[15px]'} text-slate-200`}>
-          MedGalaxy
-        </span>
+    <div style={{
+      position: 'absolute', top: 0, left: 0, right: 0, zIndex: 40,
+      padding: mob ? '10px 12px' : '14px 20px', display: 'flex', alignItems: 'center',
+      gap: mob ? 8 : 14, fontFamily: 'IBM Plex Mono,monospace', fontSize: 12,
+      color: '#e2e8f0', background: 'linear-gradient(180deg,rgba(6,8,13,0.9) 0%,rgba(6,8,13,0) 100%)',
+      pointerEvents: 'none', transform: 'translateY(-100%)', animation: 'slideDown 0.6s ease 1.8s forwards',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, pointerEvents: 'auto' }}>
+        <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 6px #22c55e', animation: 'pulse 2s infinite' }} />
+        <span style={{ fontWeight: 600, fontSize: mob ? 13 : 15 }}>MedGalaxy</span>
         {!mob && (
           <>
-            <span className="text-slate-400 text-[11px]">
-              3D visualization of global disease research
-            </span>
-            <span className="text-slate-400 text-[11px]">&middot;</span>
-            <span className="text-slate-400 text-[11px]">
-              {diseases.length} diseases &middot; {displayEdges.length} connections
-            </span>
+            <span style={{ color: '#94a3b8', fontSize: 11 }}>3D visualization of global disease research</span>
+            <span style={{ color: '#94a3b8', fontSize: 11 }}>&middot;</span>
+            <span style={{ color: '#94a3b8', fontSize: 11 }}>{diseases.length} diseases &middot; {displayEdges.length} connections</span>
           </>
         )}
       </div>
-
-      <div className="flex-1" />
-
+      <div style={{ flex: 1 }} />
       {mob ? (
         <>
-          {/* Mobile search bar */}
-          <AnimatePresence>
-            {searchOpen && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="absolute top-full left-0 right-0 px-3 py-2 bg-[rgba(6,8,13,0.95)] pointer-events-auto"
-              >
-                <input
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  placeholder="Search diseases..."
-                  autoFocus
-                  onBlur={() => { if (!searchQuery) setSearchOpen(false); }}
-                  className="bg-white/[0.06] border border-white/[0.08] rounded-md px-3 py-1.5
-                    text-slate-200 text-xs w-full outline-none"
-                />
-                <SearchDropdown onSelect={handleSearchSelect} />
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Mobile search button */}
+          {searchOpen && (
+            <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, padding: '8px 12px', background: 'rgba(6,8,13,0.95)', pointerEvents: 'auto' }}>
+              <input
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Search diseases..."
+                autoFocus
+                onBlur={() => { if (!searchQuery) setSearchOpen(false); }}
+                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, padding: '7px 12px', color: '#e2e8f0', fontSize: 12, fontFamily: 'inherit', width: '100%', outline: 'none' }}
+              />
+              <SearchDropdown onSelect={handleSearchSelect} />
+            </div>
+          )}
           <button
             onClick={() => { setSearchOpen(!searchOpen); setMenuOpen(false); }}
-            className="pointer-events-auto bg-transparent border border-white/[0.08] rounded-md
-              px-2 py-1 text-slate-400 text-sm cursor-pointer"
+            style={{ pointerEvents: 'auto', background: 'none', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, padding: '5px 8px', color: '#94a3b8', fontSize: 14, cursor: 'pointer', fontFamily: 'inherit' }}
           >
             &#x1F50D;
           </button>
-
-          {/* Mobile menu */}
-          <div ref={menuRef} className="relative pointer-events-auto">
+          <div ref={menuRef} style={{ position: 'relative', pointerEvents: 'auto' }}>
             <button
               onClick={() => { setMenuOpen(!menuOpen); setSearchOpen(false); }}
-              className="bg-transparent border border-white/[0.08] rounded-md px-3.5 py-2
-                text-slate-200 text-base cursor-pointer font-medium"
+              style={{ background: 'none', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, padding: '8px 14px', color: '#e2e8f0', fontSize: 16, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 500 }}
             >
               Menu
             </button>
-            <AnimatePresence>
-              {menuOpen && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.15 }}
-                  className="absolute top-full right-0 mt-1 backdrop-blur-md
-                    bg-[rgba(10,16,30,0.96)] border border-white/[0.08] rounded-md
-                    p-2 min-w-[160px] flex flex-col gap-1.5"
-                >
-                  <div className="text-slate-500 text-[9px] px-1">Size by</div>
-                  <div className="flex rounded-md overflow-hidden border border-white/[0.08]">
-                    {['papers', 'mortality'].map(m => (
-                      <button
-                        key={m}
-                        onClick={() => { setSizeMode(m); setMenuOpen(false); }}
-                        className={`flex-1 px-2.5 py-1.5 text-[10px] border-none cursor-pointer
-                          ${sizeMode === m ? 'bg-white/[0.12] text-slate-200' : 'bg-transparent text-slate-500'}`}
-                      >
-                        {m === 'papers' ? 'Papers' : 'Mortality'}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="text-slate-500 text-[9px] px-1 pt-1">Analysis</div>
-                  {[
-                    { label: 'Research Gap', action: () => setActiveMode('explode') },
-                    { label: 'Connections', action: () => setActiveMode('connections') },
-                    { label: 'Trends', action: () => setActiveMode('velocity') },
-                  ].map(item => (
-                    <button
-                      key={item.label}
-                      onClick={() => { item.action(); setMenuOpen(false); }}
-                      className="px-2.5 py-1.5 text-[10px] border border-white/[0.08]
-                        rounded-md cursor-pointer bg-transparent text-slate-200 w-full text-left
-                        hover:bg-white/[0.04] transition-colors"
-                    >
-                      {item.label}
-                    </button>
+            {menuOpen && (
+              <div style={{
+                position: 'absolute', top: '100%', right: 0, marginTop: 4,
+                background: 'rgba(10,16,30,0.96)', backdropFilter: 'blur(16px)',
+                border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6,
+                padding: 8, minWidth: 160, display: 'flex', flexDirection: 'column', gap: 6,
+              }}>
+                <div style={{ color: '#64748b', fontSize: 9, padding: '0 4px' }}>Size by</div>
+                <div style={{ display: 'flex', borderRadius: 6, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  {['papers', 'mortality'].map(m => (
+                    <button key={m} onClick={() => { setSizeMode(m); setMenuOpen(false); }}
+                      style={{ flex: 1, padding: '6px 10px', fontSize: 10, fontFamily: 'inherit', border: 'none', cursor: 'pointer', background: sizeMode === m ? 'rgba(255,255,255,0.12)' : 'transparent', color: sizeMode === m ? '#e2e8f0' : '#64748b' }}
+                    >{m === 'papers' ? 'Papers' : 'Mortality'}</button>
                   ))}
-                  <button
-                    onClick={() => { setNeglectMode(!neglectMode); setMenuOpen(false); }}
-                    className={`px-2.5 py-1.5 text-[10px] border border-white/[0.08]
-                      rounded-md cursor-pointer w-full text-left transition-colors
-                      ${neglectMode ? 'bg-white/[0.12] text-red-500' : 'bg-transparent text-slate-200 hover:bg-white/[0.04]'}`}
-                  >
-                    {neglectMode ? '\u2715 Attention Map' : 'Attention Map'}
-                  </button>
-                  <button
-                    onClick={() => { setSpotlightActive(!spotlightActive); setMenuOpen(false); }}
-                    className={`px-2.5 py-1.5 text-[10px] border border-white/[0.08]
-                      rounded-md cursor-pointer w-full text-left transition-colors
-                      ${spotlightActive ? 'bg-white/[0.12] text-amber-500' : 'bg-transparent text-slate-200 hover:bg-white/[0.04]'}`}
-                  >
-                    {spotlightActive ? '\u2715 Spotlight' : 'Spotlight'}
-                  </button>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                </div>
+                <div style={{ color: '#64748b', fontSize: 9, padding: '4px 4px 0' }}>Shader</div>
+                <div style={{ display: 'flex', borderRadius: 6, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  {['plasma', 'pulse'].map(m => (
+                    <button key={m} onClick={() => { setShaderMode(m); setMenuOpen(false); }}
+                      style={{ flex: 1, padding: '6px 10px', fontSize: 10, fontFamily: 'inherit', border: 'none', cursor: 'pointer', background: shaderMode === m ? 'rgba(255,255,255,0.12)' : 'transparent', color: shaderMode === m ? '#e2e8f0' : '#64748b' }}
+                    >{m === 'plasma' ? 'Plasma' : 'Pulse'}</button>
+                  ))}
+                </div>
+                <div style={{ color: '#64748b', fontSize: 9, padding: '4px 4px 0' }}>Analysis</div>
+                <button onClick={() => { setActiveMode('explode'); setMenuOpen(false); }}
+                  style={{ padding: '6px 10px', fontSize: 10, fontFamily: 'inherit', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, cursor: 'pointer', background: 'transparent', color: '#e2e8f0', width: '100%', textAlign: 'left' }}
+                >Research Gap</button>
+                <button onClick={() => { setActiveMode('connections'); setMenuOpen(false); }}
+                  style={{ padding: '6px 10px', fontSize: 10, fontFamily: 'inherit', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, cursor: 'pointer', background: 'transparent', color: '#e2e8f0', width: '100%', textAlign: 'left' }}
+                >Connections</button>
+                <button onClick={() => { setActiveMode('velocity'); setMenuOpen(false); }}
+                  style={{ padding: '6px 10px', fontSize: 10, fontFamily: 'inherit', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, cursor: 'pointer', background: 'transparent', color: '#e2e8f0', width: '100%', textAlign: 'left' }}
+                >Trends</button>
+                <button onClick={() => { setNeglectMode(!neglectMode); setMenuOpen(false); }}
+                  style={{ padding: '6px 10px', fontSize: 10, fontFamily: 'inherit', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, cursor: 'pointer', background: neglectMode ? 'rgba(255,255,255,0.12)' : 'transparent', color: neglectMode ? '#ef4444' : '#e2e8f0', width: '100%', textAlign: 'left' }}
+                >{neglectMode ? '✕ Attention Map' : 'Attention Map'}</button>
+                <button onClick={() => { setSpotlightActive(!spotlightActive); setMenuOpen(false); }}
+                  style={{ padding: '6px 10px', fontSize: 10, fontFamily: 'inherit', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, cursor: 'pointer', background: spotlightActive ? 'rgba(255,255,255,0.12)' : 'transparent', color: spotlightActive ? '#f59e0b' : '#e2e8f0', width: '100%', textAlign: 'left' }}
+                >{spotlightActive ? '✕ Spotlight' : 'Spotlight'}</button>
+              </div>
+            )}
           </div>
         </>
       ) : (
         <>
-          {/* Desktop: Attention Map */}
-          <div className="relative pointer-events-auto">
-            <button
-              onClick={() => setNeglectMode(!neglectMode)}
-              className={`${BTN} ${neglectMode ? 'bg-white/[0.12] !text-red-500' : ''}`}
-            >
-              {neglectMode ? '\u2715 Attention Map' : 'Attention Map'}
-            </button>
-            <AnimatePresence>
-              {neglectMode && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="absolute top-full left-0 mt-1.5 px-3 py-2
-                    backdrop-blur-xl bg-[rgba(10,16,30,0.95)] border border-white/[0.08]
-                    rounded-md text-[10px] text-slate-400 w-[260px] leading-relaxed"
-                >
-                  Nodes colored by research papers per death.{' '}
-                  <span className="text-green-500">Green</span> = high attention.{' '}
-                  <span className="text-amber-500">Yellow</span> = moderate.{' '}
-                  <span className="text-red-500">Red</span> = overlooked.
-                </motion.div>
-              )}
-            </AnimatePresence>
+          <div style={{ position: 'relative', pointerEvents: 'auto' }}>
+            <button onClick={() => setNeglectMode(!neglectMode)}
+              style={{ ...btnStyle, background: neglectMode ? 'rgba(255,255,255,0.12)' : 'transparent', color: neglectMode ? '#ef4444' : '#e2e8f0' }}
+            >{neglectMode ? '✕ Attention Map' : 'Attention Map'}</button>
+            {neglectMode && (
+              <div style={{
+                position: 'absolute', top: '100%', left: 0, marginTop: 6,
+                padding: '8px 12px', background: 'rgba(10,16,30,0.95)', backdropFilter: 'blur(12px)',
+                border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, fontSize: 10,
+                color: '#94a3b8', width: 260, lineHeight: 1.5, opacity: 0, animation: 'fadeIn 0.4s ease forwards',
+              }}>
+                Nodes colored by research papers per death. <span style={{ color: '#22c55e' }}>Green</span> = high attention. <span style={{ color: '#f59e0b' }}>Yellow</span> = moderate. <span style={{ color: '#ef4444' }}>Red</span> = overlooked.
+              </div>
+            )}
           </div>
-
-          {/* Desktop: Size Toggle */}
           <SizeToggle />
-
-          {/* Desktop: Analysis buttons */}
-          <button onClick={() => setActiveMode('explode')} className={BTN}>
-            Research Gap
-          </button>
-          <button onClick={() => setActiveMode('connections')} className={BTN}>
-            Connections
-          </button>
-          <button onClick={() => setActiveMode('velocity')} className={BTN}>
-            Trends
-          </button>
-          <button
-            onClick={() => setSpotlightActive(!spotlightActive)}
-            className={`${BTN} ${spotlightActive ? 'bg-white/[0.12] !text-amber-500' : ''}`}
-          >
-            {spotlightActive ? '\u2715 Spotlight' : 'Spotlight'}
-          </button>
-
-          {/* Desktop: Search */}
-          <div className="relative pointer-events-auto">
+          <ShaderToggle />
+          <button onClick={() => setActiveMode('explode')} style={btnStyle}>Research Gap</button>
+          <button onClick={() => setActiveMode('connections')} style={btnStyle}>Connections</button>
+          <button onClick={() => setActiveMode('velocity')} style={btnStyle}>Trends</button>
+          <button onClick={() => setSpotlightActive(!spotlightActive)}
+            style={{ ...btnStyle, background: spotlightActive ? 'rgba(255,255,255,0.12)' : 'transparent', color: spotlightActive ? '#f59e0b' : '#e2e8f0' }}
+          >{spotlightActive ? '✕ Spotlight' : 'Spotlight'}</button>
+          <div style={{ position: 'relative', pointerEvents: 'auto' }}>
             <input
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="Search diseases..."
-              className="bg-white/[0.06] border border-white/[0.08] rounded-md px-3 py-1.5
-                text-slate-200 text-xs w-[200px] outline-none focus:border-white/20 transition-colors"
+              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, padding: '7px 12px', color: '#e2e8f0', fontSize: 12, fontFamily: 'inherit', width: 200, outline: 'none' }}
             />
             <SearchDropdown onSelect={handleSearchSelect} />
           </div>
         </>
       )}
-    </motion.div>
+    </div>
   );
 }

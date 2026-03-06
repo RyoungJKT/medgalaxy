@@ -16,8 +16,10 @@ import VelocityOverlay from './ui/VelocityOverlay';
 export default function HtmlOverlay() {
   return (
     <div
-      className="absolute inset-0 pointer-events-none z-10 overflow-hidden"
-      style={{ fontFamily: "'IBM Plex Mono', monospace" }}
+      style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 10,
+        overflow: 'hidden', fontFamily: "'IBM Plex Mono', monospace",
+      }}
     >
       <NodeLabels />
       <Header />
@@ -32,6 +34,13 @@ export default function HtmlOverlay() {
       <ExplodeOverlay />
       <ConnectionsOverlay />
       <VelocityOverlay />
+      <style>{`
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+        @keyframes slideDown{to{transform:translateY(0)}}
+        @keyframes slideUp{to{transform:translateY(0)}}
+        @keyframes fadeIn{to{opacity:1}}
+        @keyframes chipPulse{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,0.4)}50%{box-shadow:0 0 12px 4px rgba(34,197,94,0.15)}}
+      `}</style>
     </div>
   );
 }

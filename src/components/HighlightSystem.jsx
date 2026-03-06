@@ -30,6 +30,7 @@ export default function HighlightSystem() {
     const raf = requestAnimationFrame(() => {
       const iMesh = sceneRefs.instancedMesh;
       const edgeMesh = sceneRefs.edgeMesh;
+      const edgeMeta = sceneRefs.edgeMeta;
       if (!iMesh) return;
 
       const { diseases, displayEdges, neighbors, connCounts, idMap } =
@@ -100,42 +101,36 @@ export default function HighlightSystem() {
       iMesh.instanceColor.needsUpdate = true;
       iMesh.instanceMatrix.needsUpdate = true;
 
-      // ── Edge highlighting ──
-      if (edgeMesh && displayEdges) {
-        const colorAttr = edgeMesh.geometry.getAttribute('color');
-        if (colorAttr) {
-          const ca = colorAttr.array;
-          const hasActive = aIdx >= 0;
+      // ── Edge highlighting (ribbon geometry) ──
+      if (edgeMeta && displayEdges) {
+        const { geo, visArr, vertsPerEdge } = edgeMeta;
+        const visAttr = geo.getAttribute('aVis');
+        if (!visAttr) return;
 
-          for (let i = 0; i < displayEdges.length; i++) {
-            const e = displayEdges[i];
-            const o = i * 6;
-            const sv = activeCats.has(diseases[e.si].category);
-            const tv = activeCats.has(diseases[e.ti].category);
-            let v = 0;
+        const hasActive = aIdx >= 0;
 
-            if (connMode && sv && tv) {
-              const isHub = hubSet.has(e.si) || hubSet.has(e.ti);
-              v = isHub ? 1.0 : 0.3;
-            } else {
-              const isNb = hasActive && (e.si === aIdx || e.ti === aIdx);
-              v = isNb && sv && tv ? 1.0 : 0.0;
-            }
+        for (let i = 0; i < displayEdges.length; i++) {
+          const e = displayEdges[i];
+          const sv = activeCats.has(diseases[e.si].category);
+          const tv = activeCats.has(diseases[e.ti].category);
+          let v = 0;
 
-            ca[o] = v;
-            ca[o + 1] = v;
-            ca[o + 2] = v;
-            ca[o + 3] = v;
-            ca[o + 4] = v;
-            ca[o + 5] = v;
+          if (connMode && sv && tv) {
+            const isHub = hubSet.has(e.si) || hubSet.has(e.ti);
+            v = isHub ? 1.0 : 0.3;
+          } else if (hasActive) {
+            const isNb = e.si === aIdx || e.ti === aIdx;
+            v = isNb && sv && tv ? 1.0 : 0.0;
           }
 
-          colorAttr.needsUpdate = true;
+          // Set visibility for all vertices of this edge
+          const vBase = i * vertsPerEdge;
+          for (let vi = 0; vi < vertsPerEdge; vi++) {
+            visArr[vBase + vi] = v;
+          }
         }
 
-        if (edgeMesh.material) {
-          edgeMesh.material.opacity = connMode || aIdx >= 0 ? 0.55 : 0;
-        }
+        visAttr.needsUpdate = true;
       }
     });
 

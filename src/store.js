@@ -50,8 +50,9 @@ const useStore = create(
     // ── Connection focus ──
     connFocusIdx: -1,
 
-    // ── Size / filter ──
+    // ── Size / filter / shader ──
     sizeMode: 'papers',
+    shaderMode: 'plasma', // 'plasma' | 'pulse'
     activeCats: new Set(CATS),
     searchQuery: '',
 
@@ -95,6 +96,7 @@ const useStore = create(
     },
 
     setSizeMode: (mode) => set({ sizeMode: mode }),
+    setShaderMode: (mode) => set({ shaderMode: mode }),
     setSearchQuery: (q) => set({ searchQuery: q }),
 
     toggleCat: (cat) => {

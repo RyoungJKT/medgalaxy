@@ -1,5 +1,4 @@
 import React, { useMemo } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
 import useStore from '../../store';
 import { CC } from '../../utils/constants';
 import { fmt, isMob } from '../../utils/helpers';
@@ -72,107 +71,71 @@ export default function ConnectionsOverlay() {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5, delay: 0.3 }}
-      className="absolute inset-0 z-[55] flex items-center justify-center
-        bg-black/50 backdrop-blur-sm pointer-events-auto"
-    >
-      <div
-        className={`bg-[rgba(10,16,30,0.97)] border border-white/10 rounded-xl relative
-          overflow-y-auto ${mob ? 'p-4 max-w-[95vw]' : 'p-7 max-w-[880px]'} w-full max-h-[85vh]`}
-      >
-        <button
-          onClick={() => setActiveMode(null)}
-          className="absolute top-3 right-3.5 bg-white/[0.06] border border-white/10
-            rounded-md text-slate-400 cursor-pointer text-sm leading-none px-2 py-1
-            hover:bg-white/[0.1] transition-colors"
-        >
-          &#x2715; Close
-        </button>
-
-        <div className={`font-semibold text-slate-200 mb-1 ${mob ? 'text-sm' : 'text-lg'}`}>
-          Connection Clusters
+    <div style={{
+      position: 'absolute', inset: 0, zIndex: 55, display: 'flex', alignItems: 'center',
+      justifyContent: 'center', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
+      fontFamily: 'IBM Plex Mono,monospace', opacity: 0, animation: 'fadeIn 0.5s ease 0.3s forwards',
+      pointerEvents: 'auto',
+    }}>
+      <div style={{
+        background: 'rgba(10,16,30,0.97)', border: '1px solid rgba(255,255,255,0.1)',
+        borderRadius: 12, padding: mob ? 16 : 28, maxWidth: mob ? '95vw' : 880,
+        width: '100%', maxHeight: '85vh', overflowY: 'auto', position: 'relative',
+      }}>
+        <button onClick={() => setActiveMode(null)} style={{
+          position: 'absolute', top: 12, right: 14, background: 'rgba(255,255,255,0.06)',
+          border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, color: '#94a3b8',
+          cursor: 'pointer', fontSize: 14, lineHeight: 1, padding: '4px 8px', fontFamily: 'inherit',
+        }}>&#x2715; Close</button>
+        <div style={{ fontSize: mob ? 14 : 18, fontWeight: 600, color: '#e2e8f0', marginBottom: 4 }}>Connection Clusters</div>
+        <div style={{ fontSize: mob ? 9 : 12, color: '#64748b', marginBottom: mob ? 16 : 24 }}>
+          Diseases that appear together in published medical research, suggesting shared biology, risk factors, or clinical overlap — revealing comorbidities, shared biology, and research overlap
         </div>
-        <div className={`text-slate-500 ${mob ? 'text-[9px] mb-4' : 'text-xs mb-6'}`}>
-          Diseases that appear together in published medical research, suggesting shared biology,
-          risk factors, or clinical overlap — revealing comorbidities, shared biology, and research overlap
-        </div>
-
-        <div className={`flex ${mob ? 'flex-col gap-5' : 'flex-row gap-9'}`}>
-          {/* Hub diseases */}
-          <div className="flex-1">
-            <div className="text-[10px] text-[#3399ff] font-semibold mb-1 uppercase tracking-wider">
-              Hub Diseases
-            </div>
-            <div className="text-[8px] text-slate-600 mb-3">Most connected — tap to explore</div>
+        <div style={{ display: 'flex', flexDirection: mob ? 'column' : 'row', gap: mob ? 20 : 36 }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 10, color: '#3399ff', fontWeight: 600, marginBottom: 4, textTransform: 'uppercase', letterSpacing: 1 }}>Hub Diseases</div>
+            <div style={{ fontSize: 8, color: '#475569', marginBottom: 12 }}>Most connected — tap to explore</div>
             {connData.hubs.map((d, i) => (
-              <motion.div
+              <div
                 key={d.id}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.5 + i * 0.05 }}
                 onClick={() => handleSelect(d.id)}
-                className="mb-2 cursor-pointer group"
+                style={{ marginBottom: 8, cursor: 'pointer', opacity: 0, animation: `fadeIn 0.3s ease ${0.5 + i * 0.05}s forwards` }}
+                onMouseEnter={e => { e.currentTarget.querySelector('.hub-bar').style.filter = 'brightness(1.3)'; }}
+                onMouseLeave={e => { e.currentTarget.querySelector('.hub-bar').style.filter = 'none'; }}
               >
-                <div className="flex justify-between items-baseline mb-0.5">
-                  <span className={`text-slate-300 flex items-center gap-1.5 ${mob ? 'text-[9px]' : 'text-[11px]'}`}>
-                    <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: CC[d.category] }} />
-                    {d.label}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 3 }}>
+                  <span style={{ fontSize: mob ? 9 : 11, color: '#cbd5e1', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: CC[d.category], flexShrink: 0 }} />{d.label}
                   </span>
-                  <span className={`text-[#3399ff] font-semibold ml-2 whitespace-nowrap ${mob ? 'text-[9px]' : 'text-[11px]'}`}>
-                    {d.count}
-                  </span>
+                  <span style={{ fontSize: mob ? 9 : 11, color: '#3399ff', fontWeight: 600, marginLeft: 8, whiteSpace: 'nowrap' }}>{d.count}</span>
                 </div>
-                <div className="h-1.5 bg-white/[0.04] rounded-sm overflow-hidden">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${Math.max((d.count / maxConn) * 100, 2)}%` }}
-                    transition={{ duration: 0.6, delay: 0.5 + i * 0.05 }}
-                    className="h-full rounded-sm bg-gradient-to-r from-[#3399ff] to-[#1d6fcf]
-                      group-hover:brightness-130 transition-[filter]"
-                  />
+                <div style={{ height: 6, background: 'rgba(255,255,255,0.04)', borderRadius: 3, overflow: 'hidden' }}>
+                  <div className="hub-bar" style={{ height: '100%', width: `${Math.max((d.count / maxConn) * 100, 2)}%`, background: 'linear-gradient(90deg,#3399ff,#1d6fcf)', borderRadius: 3, transition: 'width 0.6s ease,filter 0.2s' }} />
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
-
-          {!mob && <div className="w-px bg-white/[0.06]" />}
-
-          {/* Cross-category links */}
-          <div className="flex-1">
-            <div className="text-[10px] text-[#ffd500] font-semibold mb-1 uppercase tracking-wider">
-              Surprising Links
-            </div>
-            <div className="text-[8px] text-slate-600 mb-3">Cross-category connections with most shared research</div>
+          <div style={{ width: 1, background: 'rgba(255,255,255,0.06)', display: mob ? 'none' : 'block' }} />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 10, color: '#ffd500', fontWeight: 600, marginBottom: 4, textTransform: 'uppercase', letterSpacing: 1 }}>Surprising Links</div>
+            <div style={{ fontSize: 8, color: '#475569', marginBottom: 12 }}>Cross-category connections with most shared research</div>
             {connData.crossLinks.map((d, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.5 + i * 0.05 }}
-                className="mb-2.5"
-              >
-                <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
-                  <span className={`text-slate-300 flex items-center gap-1 ${mob ? 'text-[9px]' : 'text-[11px]'}`}>
-                    <span className="w-[5px] h-[5px] rounded-full" style={{ background: CC[d.sCat] }} />
-                    {d.sLabel}
+              <div key={i} style={{ marginBottom: 10, opacity: 0, animation: `fadeIn 0.3s ease ${0.5 + i * 0.05}s forwards` }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2, flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: mob ? 9 : 11, color: '#cbd5e1', display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <span style={{ width: 5, height: 5, borderRadius: '50%', background: CC[d.sCat] }} />{d.sLabel}
                   </span>
-                  <span className="text-[9px] text-[#ffd500]">&#x27f7;</span>
-                  <span className={`text-slate-300 flex items-center gap-1 ${mob ? 'text-[9px]' : 'text-[11px]'}`}>
-                    <span className="w-[5px] h-[5px] rounded-full" style={{ background: CC[d.tCat] }} />
-                    {d.tLabel}
+                  <span style={{ fontSize: 9, color: '#ffd500' }}>&#x27f7;</span>
+                  <span style={{ fontSize: mob ? 9 : 11, color: '#cbd5e1', display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <span style={{ width: 5, height: 5, borderRadius: '50%', background: CC[d.tCat] }} />{d.tLabel}
                   </span>
                 </div>
-                <div className={`text-slate-500 ${mob ? 'text-[8px]' : 'text-[9px]'}`}>
-                  {fmt(d.shared)} shared papers &middot; {d.reason}
-                </div>
-              </motion.div>
+                <div style={{ fontSize: mob ? 8 : 9, color: '#64748b' }}>{fmt(d.shared)} shared papers &middot; {d.reason}</div>
+              </div>
             ))}
           </div>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
