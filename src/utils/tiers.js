@@ -1,5 +1,5 @@
 export const TC = {
-  HIGH:  { dprCap: 99, particles: 400, glowAll: true, pulse: true },
+  HIGH:  { dprCap: 1.5, particles: 400, glowAll: true, pulse: true },
   MEDIUM:{ dprCap: 1.5, particles: 150, glowAll: false, pulse: true },
   LOW:   { dprCap: 1, particles: 0, glowAll: false, pulse: false },
 };

@@ -80,7 +80,7 @@ export default function DiseaseNodes() {
   const introDoneRef = useRef(false);
 
   const geo = useMemo(() => {
-    const g = new THREE.SphereGeometry(1, mobDevice ? 16 : 64, mobDevice ? 16 : 64);
+    const g = new THREE.SphereGeometry(1, mobDevice ? 16 : 32, mobDevice ? 16 : 32);
     const phases = new Float32Array(count);
     const catIds = new Float32Array(count);
     for (let i = 0; i < count; i++) {
@@ -101,7 +101,7 @@ export default function DiseaseNodes() {
   const plasmaMat = useMemo(() => {
     if (mobDevice) return null;
     return new THREE.ShaderMaterial({
-      uniforms: { time: { value: 0 }, ...fogUniforms },
+      uniforms: { time: { value: 0 }, usePlasma: { value: TIER === 'HIGH' ? 1.0 : 0.0 }, ...fogUniforms },
       vertexShader: plasmaVert,
       fragmentShader: plasmaFrag,
       transparent: true,

@@ -8,14 +8,14 @@ import insights from '../../../data/disease-insights.json';
 function SB({ l, v, s, vc }) {
   return (
     <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 6, padding: '8px 10px', border: '1px solid rgba(255,255,255,0.04)' }}>
-      <div style={{ color: '#94a3b8', fontSize: 9, marginBottom: 2 }}>{l}</div>
-      <div style={{ fontSize: 14, fontWeight: 600, color: vc || '#e2e8f0' }}>{v} {s && <span style={{ fontSize: 10, fontWeight: 400 }}>{s}</span>}</div>
+      <div style={{ color: '#94a3b8', fontSize: 11, marginBottom: 2 }}>{l}</div>
+      <div style={{ fontSize: 16, fontWeight: 600, color: vc || '#e2e8f0' }}>{v} {s && <span style={{ fontSize: 12, fontWeight: 400 }}>{s}</span>}</div>
     </div>
   );
 }
 
-const SH = { fontSize: 9, color: '#3399ff', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4 };
-const SP = { color: '#94a3b8', fontSize: 10, lineHeight: 1.55 };
+const SH = { fontSize: 11, color: '#3399ff', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4 };
+const SP = { color: '#94a3b8', fontSize: 13, lineHeight: 1.55 };
 const SD = { padding: '0 16px 10px' };
 
 export default function Sidebar() {
@@ -97,9 +97,11 @@ export default function Sidebar() {
     })
     .sort((a, b) => b.sp - a.sp);
 
+
+
   const panelStyle = mob
     ? { position: 'absolute', bottom: 0, left: 0, right: 0, height: panelH + 'vh', maxHeight: panelH + 'vh', background: 'rgba(10,16,30,0.96)', backdropFilter: 'blur(16px)', borderTop: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px 16px 0 0', fontFamily: 'IBM Plex Mono,monospace', color: '#e2e8f0', overflowY: 'auto', overflowX: 'hidden', zIndex: 50, fontSize: 11 }
-    : { position: 'absolute', top: 75, right: 0, width: 320, height: 'calc(100% - 75px)', background: 'rgba(10,16,30,0.94)', backdropFilter: 'blur(16px)', borderLeft: '1px solid rgba(255,255,255,0.06)', fontFamily: 'IBM Plex Mono,monospace', color: '#e2e8f0', overflowY: 'auto', overflowX: 'hidden', zIndex: 50, fontSize: 11 };
+    : { position: 'absolute', top: 75, right: 0, width: 333, height: 'calc(100% - 75px)', background: 'rgba(10,16,30,0.94)', backdropFilter: 'blur(16px)', borderLeft: '1px solid rgba(255,255,255,0.06)', fontFamily: 'IBM Plex Mono,monospace', color: '#e2e8f0', overflowY: 'auto', overflowX: 'hidden', zIndex: 50, fontSize: 13 };
 
   return (
     <>
@@ -115,14 +117,14 @@ export default function Sidebar() {
         <div style={{ padding: '16px 16px 8px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
-              <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 4 }}>{disease.label}</div>
-              <span style={{ fontSize: 9, padding: '2px 8px', borderRadius: 4, background: c + '22', color: c }}>{CL[disease.category]}</span>
+              <div style={{ fontSize: 17, fontWeight: 600, marginBottom: 4 }}>{disease.label}</div>
+              <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, background: c + '22', color: c }}>{CL[disease.category]}</span>
             </div>
             <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: 18, lineHeight: 1, padding: '0 4px' }}>&times;</button>
           </div>
         </div>
         {/* Description */}
-        <div style={{ padding: '10px 16px', color: '#94a3b8', lineHeight: 1.5 }}>{disease.description}</div>
+        <div style={{ padding: '10px 16px', color: '#94a3b8', lineHeight: 1.5, fontSize: 13 }}>{disease.description}</div>
         {/* Stats */}
         <div style={{ padding: '0 16px 12px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
           <SB l="Publications" v={fmt(disease.papers)} s={<span style={{ color: tc }}>{ar}{Math.abs(t)}%</span>} />
@@ -133,7 +135,7 @@ export default function Sidebar() {
         </div>
         {/* Sparkline */}
         <div style={{ padding: '0 16px 12px' }}>
-          <div style={{ color: '#94a3b8', fontSize: 9, marginBottom: 4 }}>Publication Trend (2014–2024)</div>
+          <div style={{ color: '#94a3b8', fontSize: 11, marginBottom: 4 }}>Publication Trend (2014–2024)</div>
           <Sparkline data={disease.yearlyPapers} color={c} />
         </div>
         {/* PubMed link */}
@@ -141,13 +143,13 @@ export default function Sidebar() {
           <a
             href={`https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(disease.label)}&sort=date`}
             target="_blank" rel="noopener noreferrer"
-            style={{ display: 'block', textAlign: 'center', padding: '8px 0', borderRadius: 6, background: c + '22', color: c, textDecoration: 'none', fontSize: 11, fontWeight: 500 }}
+            style={{ display: 'block', textAlign: 'center', padding: '8px 0', borderRadius: 6, background: c + '22', color: c, textDecoration: 'none', fontSize: 13, fontWeight: 500 }}
           >View on PubMed &rarr;</a>
         </div>
         {/* Connections */}
         <div style={{ padding: '0 16px 16px' }}>
-          <div style={{ color: '#94a3b8', fontSize: 9, marginBottom: 2 }}>Connections ({conns.length})</div>
-          <div style={{ color: '#64748b', fontSize: 8, marginBottom: 6 }}>Diseases that appear together in published medical research, suggesting shared biology, risk factors, or clinical overlap</div>
+          <div style={{ color: '#94a3b8', fontSize: 11, marginBottom: 2 }}>Connections ({conns.length})</div>
+          <div style={{ color: '#64748b', fontSize: 11, marginBottom: 6 }}>Diseases that appear together in published medical research, suggesting shared biology, risk factors, or clinical overlap</div>
           <div style={{ maxHeight: 240, overflowY: 'auto' }}>
             {conns.map((cn, i) => {
               const cc2 = CC[cn.d.category];
@@ -162,8 +164,8 @@ export default function Sidebar() {
                 >
                   <span style={{ width: 6, height: 6, borderRadius: '50%', background: cc2, flexShrink: 0 }} />
                   <span style={{ flex: 1, color: '#cbd5e1' }}>{cn.d.label}</span>
-                  <span style={{ color: '#94a3b8', fontSize: 10 }}>{fmt(cn.sp)}</span>
-                  <span style={{ color: cn.t === 'up' ? '#22c55e' : cn.t === 'down' ? '#ef4444' : '#64748b', fontSize: 10 }}>{ta}</span>
+                  <span style={{ color: '#94a3b8', fontSize: 12 }}>{fmt(cn.sp)}</span>
+                  <span style={{ color: cn.t === 'up' ? '#22c55e' : cn.t === 'down' ? '#ef4444' : '#64748b', fontSize: 12 }}>{ta}</span>
                 </div>
               );
             })}
@@ -196,8 +198,8 @@ export default function Sidebar() {
                 <div style={SH}>Top 3 Connected Diseases</div>
                 {Object.entries(ins.top3Reasons).map(([did, reason]) => (
                   <div key={did} style={{ marginBottom: 6 }}>
-                    <div style={{ fontSize: 10, color: '#e2e8f0', fontWeight: 500 }}>{diseases.find(d => d.id === did)?.label || did}</div>
-                    <div style={{ fontSize: 9, color: '#64748b', lineHeight: 1.4 }}>{reason}</div>
+                    <div style={{ fontSize: 12, color: '#e2e8f0', fontWeight: 500 }}>{diseases.find(d => d.id === did)?.label || did}</div>
+                    <div style={{ fontSize: 11, color: '#64748b', lineHeight: 1.4 }}>{reason}</div>
                   </div>
                 ))}
               </div>
@@ -210,12 +212,12 @@ export default function Sidebar() {
                 <div style={{ ...SP, fontStyle: 'italic' }}>{ins.questionRaised}</div>
               </div>
               <div style={{ ...SD, background: 'rgba(255,255,255,0.02)', borderRadius: 6, margin: '0 12px 10px', padding: '8px 10px' }}>
-                <div style={{ fontSize: 9, color: '#ffd500', fontWeight: 600, marginBottom: 4 }}>Why is this burden not matched by attention?</div>
-                <div style={{ fontSize: 9, color: '#94a3b8', lineHeight: 1.5 }}>{ins.burdenAnswer}</div>
+                <div style={{ fontSize: 11, color: '#ffd500', fontWeight: 600, marginBottom: 4 }}>Why is this burden not matched by attention?</div>
+                <div style={{ fontSize: 12, color: '#94a3b8', lineHeight: 1.5 }}>{ins.burdenAnswer}</div>
               </div>
               <div style={{ ...SD, background: 'rgba(255,255,255,0.02)', borderRadius: 6, margin: '0 12px 16px', padding: '8px 10px' }}>
-                <div style={{ fontSize: 9, color: '#3399ff', fontWeight: 600, marginBottom: 4 }}>Could related disease research accelerate progress here?</div>
-                <div style={{ fontSize: 9, color: '#94a3b8', lineHeight: 1.5 }}>{ins.accelerateAnswer}</div>
+                <div style={{ fontSize: 11, color: '#3399ff', fontWeight: 600, marginBottom: 4 }}>Could related disease research accelerate progress here?</div>
+                <div style={{ fontSize: 12, color: '#94a3b8', lineHeight: 1.5 }}>{ins.accelerateAnswer}</div>
               </div>
             </>
           );

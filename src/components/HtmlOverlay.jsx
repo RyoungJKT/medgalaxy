@@ -12,6 +12,7 @@ import ExplodeOverlay from './ui/ExplodeOverlay';
 import ConnectionsOverlay from './ui/ConnectionsOverlay';
 import VelocityOverlay from './ui/VelocityOverlay';
 import LandingOverlay from './ui/LandingOverlay';
+import CompareCards from './ui/CompareCards';
 
 export default function HtmlOverlay() {
   return (
@@ -26,6 +27,7 @@ export default function HtmlOverlay() {
       <FilterBar />
       <Legend />
       <Tooltip />
+      <CompareCards />
       <Sidebar />
       <StoryChips />
       <StoryCaption />
