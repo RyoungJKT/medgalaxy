@@ -3,6 +3,7 @@ import useStore from '../../store';
 import { CC, CL } from '../../utils/constants';
 import { fmt, isMob } from '../../utils/helpers';
 import Sparkline from './Sparkline';
+import insights from '../../../data/disease-insights.json';
 
 function SB({ l, v, s, vc }) {
   return (
@@ -12,6 +13,10 @@ function SB({ l, v, s, vc }) {
     </div>
   );
 }
+
+const SH = { fontSize: 9, color: '#3399ff', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4 };
+const SP = { color: '#94a3b8', fontSize: 10, lineHeight: 1.55 };
+const SD = { padding: '0 16px 10px' };
 
 export default function Sidebar() {
   const selectedNode = useStore(s => s.selectedNode);
@@ -71,6 +76,7 @@ export default function Sidebar() {
   }, [mob, onClose]);
 
   if (!selectedNode) return null;
+  if (mob) return null;
 
   const disease = selectedNode.disease;
   const idx = selectedNode.index;
@@ -163,6 +169,57 @@ export default function Sidebar() {
             })}
           </div>
         </div>
+        {/* Insights */}
+        {(() => {
+          const ins = insights[disease.id];
+          if (!ins) return null;
+          return (
+            <>
+              <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', margin: '4px 0 0' }} />
+              <div style={{ ...SD, paddingTop: 12 }}>
+                <div style={SH}>What It Is</div>
+                <div style={SP}>{ins.whatItIs}</div>
+              </div>
+              <div style={SD}>
+                <div style={SH}>Why It Matters</div>
+                <div style={SP}>{ins.whyItMatters}</div>
+              </div>
+              <div style={SD}>
+                <div style={SH}>Why It May Be Neglected</div>
+                <div style={SP}>{ins.whyNeglected}</div>
+              </div>
+              <div style={SD}>
+                <div style={{ ...SH, color: '#ffd500' }}>Mismatch Insight</div>
+                <div style={{ ...SP, color: '#cbd5e1', fontStyle: 'italic' }}>{ins.mismatchInsight}</div>
+              </div>
+              <div style={SD}>
+                <div style={SH}>Top 3 Connected Diseases</div>
+                {Object.entries(ins.top3Reasons).map(([did, reason]) => (
+                  <div key={did} style={{ marginBottom: 6 }}>
+                    <div style={{ fontSize: 10, color: '#e2e8f0', fontWeight: 500 }}>{diseases.find(d => d.id === did)?.label || did}</div>
+                    <div style={{ fontSize: 9, color: '#64748b', lineHeight: 1.4 }}>{reason}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={SD}>
+                <div style={{ ...SH, color: '#22c55e' }}>Memorable Fact</div>
+                <div style={SP}>{ins.memorableFact}</div>
+              </div>
+              <div style={SD}>
+                <div style={SH}>Question This Node Raises</div>
+                <div style={{ ...SP, fontStyle: 'italic' }}>{ins.questionRaised}</div>
+              </div>
+              <div style={{ ...SD, background: 'rgba(255,255,255,0.02)', borderRadius: 6, margin: '0 12px 10px', padding: '8px 10px' }}>
+                <div style={{ fontSize: 9, color: '#ffd500', fontWeight: 600, marginBottom: 4 }}>Why is this burden not matched by attention?</div>
+                <div style={{ fontSize: 9, color: '#94a3b8', lineHeight: 1.5 }}>{ins.burdenAnswer}</div>
+              </div>
+              <div style={{ ...SD, background: 'rgba(255,255,255,0.02)', borderRadius: 6, margin: '0 12px 16px', padding: '8px 10px' }}>
+                <div style={{ fontSize: 9, color: '#3399ff', fontWeight: 600, marginBottom: 4 }}>Could related disease research accelerate progress here?</div>
+                <div style={{ fontSize: 9, color: '#94a3b8', lineHeight: 1.5 }}>{ins.accelerateAnswer}</div>
+              </div>
+            </>
+          );
+        })()}
       </div>
     </>
   );

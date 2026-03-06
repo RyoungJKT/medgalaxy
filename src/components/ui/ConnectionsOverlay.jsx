@@ -6,6 +6,7 @@ import { fmt, isMob } from '../../utils/helpers';
 export default function ConnectionsOverlay() {
   const activeMode = useStore(s => s.activeMode);
   const setActiveMode = useStore(s => s.setActiveMode);
+  const setConnFocusIdx = useStore(s => s.setConnFocusIdx);
   const diseases = useStore(s => s.diseases);
   const displayEdges = useStore(s => s.displayEdges);
   const connFocusSelect = useStore(s => s.connFocusSelect);
@@ -82,7 +83,7 @@ export default function ConnectionsOverlay() {
         borderRadius: 12, padding: mob ? 16 : 28, maxWidth: mob ? '95vw' : 880,
         width: '100%', maxHeight: '85vh', overflowY: 'auto', position: 'relative',
       }}>
-        <button onClick={() => setActiveMode(null)} style={{
+        <button onClick={() => { setConnFocusIdx(-1); setActiveMode(null); }} style={{
           position: 'absolute', top: 12, right: 14, background: 'rgba(255,255,255,0.06)',
           border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, color: '#94a3b8',
           cursor: 'pointer', fontSize: 14, lineHeight: 1, padding: '4px 8px', fontFamily: 'inherit',

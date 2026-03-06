@@ -20,7 +20,6 @@ export default function ConnectionsView() {
         tweensRef.current = [];
 
         if (connFocusIdx >= 0 && activeMode === 'connections') {
-          // Build connected set: hub + all its neighbors
           const nbrs = neighbors.get(connFocusIdx);
           const connSet = new Set([connFocusIdx]);
           if (nbrs) nbrs.forEach((n) => connSet.add(n));
@@ -33,10 +32,8 @@ export default function ConnectionsView() {
             let tx, ty, tz;
 
             if (i === connFocusIdx) {
-              // Hub at center
               tx = 0; ty = 0; tz = 0;
             } else if (connSet.has(i)) {
-              // Fibonacci sphere layout for neighbors
               const ni = nbrList.indexOf(i);
               const ft = (ni + 0.5) / N;
               const uz = 1 - 2 * ft;
@@ -50,7 +47,6 @@ export default function ConnectionsView() {
               ty = rXY * Math.sin(theta) * orbit;
               tz = uz * orbit;
             } else {
-              // Push non-connected nodes far away
               const p = curPos[i];
               const d = Math.sqrt(p[0] * p[0] + p[1] * p[1] + p[2] * p[2]) || 100;
               tx = (p[0] / d) * 2500;
@@ -60,36 +56,21 @@ export default function ConnectionsView() {
 
             tweensRef.current.push(
               gsap.to(curPos[i], {
-                0: tx,
-                1: ty,
-                2: tz,
+                0: tx, 1: ty, 2: tz,
                 duration: 1.0,
                 ease: 'power2.out',
               })
             );
           }
 
-          // Fly camera to see full layout
           const camRadius = Math.max(600, 350 + N * 6);
           useStore.getState().setFlyTarget({
             position: [0, 0, 0],
             radius: camRadius,
             duration: 0.9,
           });
-        } else if (connFocusIdx < 0) {
-          // Return to category positions
-          for (let i = 0; i < curPos.length; i++) {
-            tweensRef.current.push(
-              gsap.to(curPos[i], {
-                0: catPos[i][0],
-                1: catPos[i][1],
-                2: catPos[i][2],
-                duration: 1.0,
-                ease: 'power2.inOut',
-              })
-            );
-          }
         }
+        // Reverse is handled by IdleDrift's lerp when activeMode becomes null
       }
     );
 
