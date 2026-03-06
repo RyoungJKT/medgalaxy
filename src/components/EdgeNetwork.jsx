@@ -173,9 +173,18 @@ export default function EdgeNetwork() {
   const _perp = [0, 0, 0];
   const _ctrl = [0, 0, 0];
 
+  const edgeOpacityRef = useRef(0);
+
   useFrame((state) => {
     if (!meshRef.current) return;
-    const curPos = useStore.getState().curPos;
+    const { curPos, introPhase } = useStore.getState();
+
+    // Intro gating: hidden until phase 4, then fade in
+    const targetOpacity = introPhase >= 4 ? 1.0 : 0;
+    edgeOpacityRef.current += (targetOpacity - edgeOpacityRef.current) * 0.06;
+    meshRef.current.visible = edgeOpacityRef.current > 0.01;
+    mat.opacity = edgeOpacityRef.current;
+
     mat.uniforms.time.value = state.clock.getElapsedTime();
 
     for (let ei = 0; ei < eC; ei++) {

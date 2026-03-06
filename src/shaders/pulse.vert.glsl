@@ -1,6 +1,6 @@
 attribute float aPhase;
 attribute float aCatId;
-varying vec3 vNormal, vWorldPos, vColor, vViewPos;
+varying vec3 vNormal, vWorldPos, vColor, vViewPos, vWorldNormal;
 varying float vPhase, vFogDepth, vCatId;
 
 void main(){
@@ -22,6 +22,7 @@ void main(){
   #ifdef USE_INSTANCING
     tn = mat3(instanceMatrix) * tn;
   #endif
+  vWorldNormal = normalize(mat3(modelMatrix) * tn);
   vNormal = normalize(normalMatrix * tn);
   vFogDepth = -mv.z;
   gl_Position = projectionMatrix * mv;

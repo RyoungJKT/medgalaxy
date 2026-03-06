@@ -1,6 +1,6 @@
 attribute float aPhase;
 attribute float aCatId;
-varying vec3 vNormal, vWorldPos, vColor, vViewPos;
+varying vec3 vNormal, vWorldPos, vColor, vViewPos, vWorldNormal, vObjPos;
 varying float vPhase, vFogDepth, vCatId;
 
 void main(){
@@ -11,6 +11,7 @@ void main(){
   #else
     vColor = vec3(1.0);
   #endif
+  vObjPos = position;  // raw unit-sphere vertex
   vec4 wp = vec4(position, 1.0);
   #ifdef USE_INSTANCING
     wp = instanceMatrix * wp;
@@ -22,6 +23,7 @@ void main(){
   #ifdef USE_INSTANCING
     tn = mat3(instanceMatrix) * tn;
   #endif
+  vWorldNormal = normalize(mat3(modelMatrix) * tn);
   vNormal = normalize(normalMatrix * tn);
   vFogDepth = -mv.z;
   gl_Position = projectionMatrix * mv;

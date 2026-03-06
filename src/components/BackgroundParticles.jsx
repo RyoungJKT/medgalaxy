@@ -1,9 +1,11 @@
-import { useMemo } from 'react';
+import { useRef, useMemo } from 'react';
+import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { CFG } from '../utils/tiers';
 
 export default function BackgroundParticles({ camDist }) {
   const count = CFG.particles;
+  const groupRef = useRef();
 
   const positions = useMemo(() => {
     if (count === 0) return null;
@@ -20,14 +22,23 @@ export default function BackgroundParticles({ camDist }) {
     return pos;
   }, [count, camDist]);
 
+  // Slow ambient rotation for cinematic feel
+  useFrame(() => {
+    if (groupRef.current) {
+      groupRef.current.rotation.y += 0.0003;
+    }
+  });
+
   if (!positions) return null;
 
   return (
-    <points>
-      <bufferGeometry>
-        <bufferAttribute attach="attributes-position" count={count} array={positions} itemSize={3} />
-      </bufferGeometry>
-      <pointsMaterial color={0x334155} size={1.5} transparent opacity={0.6} />
-    </points>
+    <group ref={groupRef}>
+      <points>
+        <bufferGeometry>
+          <bufferAttribute attach="attributes-position" count={count} array={positions} itemSize={3} />
+        </bufferGeometry>
+        <pointsMaterial color={0x334155} size={1.5} transparent opacity={0.6} />
+      </points>
+    </group>
   );
 }

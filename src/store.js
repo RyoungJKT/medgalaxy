@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import diseasesData from '../data/diseases.json';
 import connectionsData from '../data/connections.json';
-import { processData } from './utils/helpers';
+import { processData, nR } from './utils/helpers';
 import { computeLayouts } from './utils/layout';
 import { CATS } from './utils/constants';
 
@@ -35,17 +35,13 @@ const useStore = create(
     hoveredNode: null,
 
     // ── Active modes ──
-    activeMode: null, // null | 'explode' | 'connections' | 'velocity' | 'attention' | 'randomPick'
+    activeMode: null, // null | 'explode' | 'connections' | 'velocity' | 'attention'
 
     // ── Story ──
     storyActive: null,
     storyStep: 0,
     storyCaption: '',
     storyVisible: true,
-
-    // ── Random pick ──
-    randomPickPhase: 0,
-    randomPickCaption: null,
 
     // ── Connection focus ──
     connFocusIdx: -1,
@@ -64,6 +60,11 @@ const useStore = create(
     // ── Refs (non-reactive, shared between components) ──
     meshRef: null,
 
+    // ── Intro ──
+    introStarted: false, // true after user clicks landing overlay
+    introPhase: 0,     // 0=dark, 1=hero, 2=constellation, 3=galaxy, 4=effects, 5=done
+    introProgress: 0,  // continuous 0→1 for smooth interpolation
+
     // ── Camera ──
     flyTarget: null,
 
@@ -72,9 +73,12 @@ const useStore = create(
       const { diseases: ds, curPos: cp, catPos: cp2 } = get();
       if (idx == null || idx < 0 || idx >= ds.length) return;
       const pos = cp[idx] || cp2[idx];
+      // Consistent zoom: camera stops at nodeRadius * multiplier from center
+      const nodeRadius = nR(ds[idx].papers);
+      const zoomDist = nodeRadius * 5.0;
       set({
         selectedNode: { index: idx, disease: ds[idx] },
-        flyTarget: { position: [pos[0], pos[1], pos[2]], radius: 150 },
+        flyTarget: { position: [pos[0], pos[1], pos[2]], radius: zoomDist },
       });
     },
 
@@ -115,8 +119,6 @@ const useStore = create(
     setNeglectMode: (v) => set({ neglectMode: v }),
     setStoryVisible: (v) => set({ storyVisible: v }),
     setStoryCaption: (v) => set({ storyCaption: v }),
-    setRandomPickPhase: (v) => set({ randomPickPhase: v }),
-    setRandomPickCaption: (v) => set({ randomPickCaption: v }),
     setConnFocusIdx: (v) => set({ connFocusIdx: v }),
     setSpotlightActive: (v) => set({ spotlightActive: v }),
     setSpotlightCaption: (v) => set({ spotlightCaption: v }),
@@ -125,17 +127,10 @@ const useStore = create(
     setCurPos: (v) => set({ curPos: v }),
     setStoryActive: (v) => set({ storyActive: v }),
     setStoryStep: (v) => set({ storyStep: v }),
-
-    startRandomPick: () => {
-      const { activeMode, randomPickPhase } = get();
-      if (randomPickPhase > 0) return;
-      if (activeMode === 'explode' || activeMode === 'connections') return;
-      set({ randomPickPhase: 1 }); // signal to animation system
-    },
-
-    stopRandomPick: () => {
-      set({ randomPickPhase: 0, randomPickCaption: null });
-    },
+    setIntroStarted: () => set({ introStarted: true }),
+    setIntroPhase: (v) => set({ introPhase: v }),
+    setIntroProgress: (v) => set({ introProgress: v }),
+    skipIntro: () => set({ introStarted: true, introPhase: 5, introProgress: 1 }),
 
     connFocusSelect: (diseaseId) => {
       const { idMap: im, diseases: ds, neighbors: nb, curPos: cp, sizeMode: sm } = get();

@@ -32,8 +32,6 @@ const hOut = e => {
 export default function StoryChips() {
   const storyVisible = useStore(s => s.storyVisible);
   const setStoryActive = useStore(s => s.setStoryActive);
-  const startRandomPick = useStore(s => s.startRandomPick);
-
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 2800);
@@ -65,20 +63,6 @@ export default function StoryChips() {
           onMouseLeave={hOut}
         >{c.label}</button>
       ))}
-      <button
-        onClick={startRandomPick}
-        style={{ ...chipBtnStyle, padding: mob ? '6px 4px' : '8px 16px', fontSize: mob ? 9 : 11, border: '1px solid rgba(245,158,11,0.3)', color: '#f59e0b' }}
-        onMouseEnter={e => {
-          const s = e.currentTarget.style;
-          s.boxShadow = '0 0 8px 1px rgba(245,158,11,0.4), 0 0 20px 3px rgba(245,158,11,0.15)';
-          s.borderColor = 'rgba(245,158,11,0.6)';
-        }}
-        onMouseLeave={e => {
-          const s = e.currentTarget.style;
-          s.boxShadow = 'none';
-          s.borderColor = 'rgba(245,158,11,0.3)';
-        }}
-      >&#x27f3; Random Pick</button>
     </div>
   );
 }

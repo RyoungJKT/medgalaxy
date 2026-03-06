@@ -7,6 +7,7 @@ export default function FilterBar() {
   const activeCats = useStore(s => s.activeCats);
   const toggleCat = useStore(s => s.toggleCat);
   const neglectMode = useStore(s => s.neglectMode);
+  const introStarted = useStore(s => s.introStarted);
 
   if (isMob()) return null;
 
@@ -34,7 +35,7 @@ export default function FilterBar() {
       position: 'absolute', top: 50, left: 0, right: 0, zIndex: 40,
       padding: '0 20px', display: 'flex', flexWrap: 'wrap', gap: 5,
       fontFamily: 'IBM Plex Mono,monospace', fontSize: 11, pointerEvents: 'none',
-      transform: 'translateY(-60px)', animation: 'slideDown 0.5s ease 1.95s forwards',
+      transform: 'translateY(-60px)', animation: introStarted ? 'slideDown 0.5s ease 3.15s forwards' : 'none',
     }}>
       <button
         onClick={() => toggleCat('ALL')}
