@@ -89,8 +89,8 @@ void main(){
     float bump = fbm(bp) * 0.5 + fbm(bp * 2.5) * 0.25;
     col = baseCol * (0.85 + bump * 0.35);
   }
-  // OPTION B: Animated plasma (GPU-heavy). TO RESTORE: change `false` to `usePlasma > 0.5`
-  else if (false) {
+  // OPTION B: Animated plasma. TO DISABLE: change `usePlasma > 0.5` to `false`
+  else if (usePlasma > 0.5) {
     vec3 np = vWorldPos * 1.8 + vec3(time * 0.35 + vPhase);
     float plasma = fbm(np) + fbm(np * 1.5 + vec3(0.0, time * 0.25, 0.0));
     plasma = pow(plasma * 0.5, 0.7);
