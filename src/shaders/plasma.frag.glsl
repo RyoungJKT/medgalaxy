@@ -80,11 +80,17 @@ void main(){
   // ── 5. Subsurface scattering ──
   float sss = pow(max(dot(V, -KEY_DIR), 0.0), 2.0) * SSS_INT * (1.0 - NdotV);
 
-  // ── 6. Plasma noise (currently disabled for testing — was gated on usePlasma > 0.5) ──
+  // ── 6. Surface texture ──
   vec3 baseCol = vColor * diffuse;
   vec3 col;
-  // TO RESTORE: change `false` back to `usePlasma > 0.5`
-  if (false) {
+  // OPTION A: Static FBM rocky bump (no time cost). TO DISABLE: change `true` to `false`
+  if (true) {
+    vec3 bp = normalize(vObjPos) * 4.0 + vec3(vPhase * 10.0);
+    float bump = fbm(bp) * 0.5 + fbm(bp * 2.5) * 0.25;
+    col = baseCol * (0.85 + bump * 0.35);
+  }
+  // OPTION B: Animated plasma (GPU-heavy). TO RESTORE: change `false` to `usePlasma > 0.5`
+  else if (false) {
     vec3 np = vWorldPos * 1.8 + vec3(time * 0.35 + vPhase);
     float plasma = fbm(np) + fbm(np * 1.5 + vec3(0.0, time * 0.25, 0.0));
     plasma = pow(plasma * 0.5, 0.7);
