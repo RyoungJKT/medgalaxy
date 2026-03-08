@@ -68,6 +68,7 @@ export default function SelectionRipple() {
   const progressRef = useRef(-1); // -1 = inactive
   const startRadiusRef = useRef(0);
   const posRef = useRef([0, 0, 0]);
+  const supernovaRef = useRef(false);
 
   const geo = useMemo(() => buildRingGeometry(96), []);
 
@@ -98,6 +99,8 @@ export default function SelectionRipple() {
         posRef.current = [pos[0], pos[1], pos[2]];
         startRadiusRef.current = nR(disease.papers);
         mat.uniforms.uColor.value.set(CC[disease.category]);
+        const { supernovaPhase } = useStore.getState();
+        supernovaRef.current = supernovaPhase === 'burst';
         progressRef.current = 0; // trigger
       }
     );
@@ -113,15 +116,19 @@ export default function SelectionRipple() {
     }
 
     meshRef.current.visible = true;
-    progressRef.current += delta / RIPPLE_DURATION;
+    const isSN = supernovaRef.current;
+    const maxR = isSN ? 220 : MAX_RADIUS;
+    const ringW = isSN ? 10 : RING_WIDTH;
+    const duration = isSN ? 0.7 : RIPPLE_DURATION;
+    progressRef.current += delta / duration;
     const p = Math.min(progressRef.current, 1);
 
     // Ease-out cubic
     const eased = 1 - Math.pow(1 - p, 3);
 
     // Current ring radius
-    const innerR = startRadiusRef.current + eased * MAX_RADIUS;
-    const outerR = innerR + RING_WIDTH * (1 - p * 0.5); // ring thins as it expands
+    const innerR = startRadiusRef.current + eased * maxR;
+    const outerR = innerR + ringW * (1 - p * 0.5); // ring thins as it expands
 
     // Rebuild positions for inner/outer ring
     const positions = geo.attributes.position;
