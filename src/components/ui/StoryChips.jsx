@@ -28,11 +28,24 @@ const hOut = e => {
   s.boxShadow = 'none';
   s.borderColor = 'rgba(255,255,255,0.1)';
 };
+const rHIn = e => {
+  const s = e.currentTarget.style;
+  s.boxShadow = '0 0 8px 1px rgba(245,158,11,0.5), 0 0 20px 3px rgba(245,158,11,0.2)';
+  s.borderColor = 'rgba(245,158,11,0.7)';
+};
+const rHOut = e => {
+  const s = e.currentTarget.style;
+  s.boxShadow = 'none';
+  s.borderColor = 'rgba(255,255,255,0.1)';
+};
 
 export default function StoryChips() {
   const storyVisible = useStore(s => s.storyVisible);
   const storyActive = useStore(s => s.storyActive);
   const setStoryActive = useStore(s => s.setStoryActive);
+  const roulettePhase = useStore(s => s.roulettePhase);
+  const startRoulette = useStore(s => s.startRoulette);
+  const isRouletteActive = roulettePhase !== 'idle';
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 2800);
@@ -55,23 +68,33 @@ export default function StoryChips() {
       transition: 'opacity 0.4s ease, visibility 0.4s ease',
       width: mob ? '92vw' : undefined,
     }}>
-      {chips.map(c => {
-        const active = storyActive === c.id;
-        return (
-          <button
-            key={c.id}
-            onClick={() => setStoryActive(c.id)}
-            style={{
-              ...chipBtnStyle,
-              padding: mob ? '6px 4px' : '8px 16px',
-              fontSize: mob ? 10 : 12,
-              ...(active ? {} : {}),
-            }}
-            onMouseEnter={hIn}
-            onMouseLeave={hOut}
-          >{c.label}</button>
-        );
-      })}
+      {chips.map(c => (
+        <button
+          key={c.id}
+          onClick={() => setStoryActive(c.id)}
+          style={{
+            ...chipBtnStyle,
+            padding: mob ? '6px 4px' : '8px 16px',
+            fontSize: mob ? 10 : 12,
+          }}
+          onMouseEnter={hIn}
+          onMouseLeave={hOut}
+        >{c.label}</button>
+      ))}
+      <button
+        onClick={() => { if (!isRouletteActive) startRoulette(); }}
+        disabled={isRouletteActive}
+        style={{
+          ...chipBtnStyle,
+          padding: mob ? '6px 4px' : '8px 16px',
+          fontSize: mob ? 10 : 12,
+          color: isRouletteActive ? '#f59e0b' : '#e2e8f0',
+          borderColor: isRouletteActive ? 'rgba(245,158,11,0.5)' : 'rgba(255,255,255,0.1)',
+          opacity: isRouletteActive ? 0.7 : 1,
+        }}
+        onMouseEnter={rHIn}
+        onMouseLeave={rHOut}
+      >{isRouletteActive ? 'Spinning...' : 'Galaxy Roulette'}</button>
     </div>
   );
 }

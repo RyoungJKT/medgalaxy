@@ -5,4 +5,5 @@ export const sceneRefs = {
   edgeMesh: null,
   camera: null,
   canvasElement: null,
+  introScales: null, // Float32Array from DiseaseNodes intro animation
 };

@@ -11,9 +11,10 @@ export default function ConnectionsView() {
       (s) => s.connFocusIdx,
       (connFocusIdx) => {
         const {
-          curPos, catPos, diseases, neighbors, sizeMode, activeMode,
+          curPos, catPos, diseases, neighbors, sizeMode, activeMode, roulettePhase,
         } = useStore.getState();
         if (!curPos) return;
+        if (roulettePhase !== 'idle') return;
 
         // Kill any running tweens
         tweensRef.current.forEach((t) => t.kill());

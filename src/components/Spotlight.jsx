@@ -57,6 +57,7 @@ export default function Spotlight() {
       (s) => s.spotlightActive,
       (active) => {
         const sr = stateRef.current;
+        if (useStore.getState().roulettePhase !== 'idle') return;
 
         if (active) {
           const { idMap } = useStore.getState();

@@ -197,7 +197,7 @@ export default function Header() {
                 <button onClick={() => { setActiveMode('explode'); setMenuOpen(false); }}
                   style={{ padding: '6px 10px', fontSize: 10, fontFamily: 'inherit', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, cursor: 'pointer', background: 'transparent', color: '#e2e8f0', width: '100%', textAlign: 'left' }}
                 >Research Gap</button>
-                <button onClick={() => { setActiveMode('connections'); setMenuOpen(false); }}
+                <button onClick={() => { useStore.getState().setConnFocusIdx(-1); setActiveMode('connections'); setMenuOpen(false); }}
                   style={{ padding: '6px 10px', fontSize: 10, fontFamily: 'inherit', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, cursor: 'pointer', background: 'transparent', color: '#e2e8f0', width: '100%', textAlign: 'left' }}
                 >Connections</button>
                 <button onClick={() => { setActiveMode('velocity'); setMenuOpen(false); }}
@@ -233,7 +233,7 @@ export default function Header() {
           <SizeToggle />
           <ShaderToggle />
           <button onClick={() => setActiveMode('explode')} style={btnStyle}>Research Gap</button>
-          <button onClick={() => setActiveMode('connections')} style={btnStyle}>Connections</button>
+          <button onClick={() => { useStore.getState().setConnFocusIdx(-1); setActiveMode('connections'); }} style={btnStyle}>Connections</button>
           <button onClick={() => setActiveMode('velocity')} style={btnStyle}>Trends</button>
           <button onClick={() => setSpotlightActive(!spotlightActive)}
             style={{ ...btnStyle, background: spotlightActive ? 'rgba(255,255,255,0.12)' : 'transparent', color: spotlightActive ? '#f59e0b' : '#e2e8f0' }}

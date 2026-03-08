@@ -137,6 +137,7 @@ export default function DiseaseNodes() {
     if (introDoneRef.current) {
       introScalesRef.current.fill(1);
     }
+    sceneRefs.introScales = introScalesRef.current;
 
     for (let i = 0; i < count; i++) {
       _v3.set(catPos[i][0], catPos[i][1], catPos[i][2]);
@@ -176,7 +177,9 @@ export default function DiseaseNodes() {
     const curPos = store.curPos;
     const sizeMode = store.sizeMode;
 
-    if (mat.uniforms) mat.uniforms.time.value = state.clock.getElapsedTime();
+    if (mat.uniforms) {
+      mat.uniforms.time.value = state.clock.getElapsedTime();
+    }
 
     // Intro scale logic
     if (!introDoneRef.current) {
@@ -235,6 +238,7 @@ export default function DiseaseNodes() {
 
   const onPointerOver = (e) => {
     e.stopPropagation();
+    if (useStore.getState().roulettePhase !== 'idle') return;
     if (e.instanceId !== undefined) {
       useStore.getState().setHovered(e.instanceId);
       document.body.style.cursor = 'pointer';
@@ -246,6 +250,7 @@ export default function DiseaseNodes() {
   };
   const onClick = (e) => {
     e.stopPropagation();
+    if (useStore.getState().roulettePhase !== 'idle') return;
     if (e.instanceId !== undefined) {
       useStore.getState().selectDisease(e.instanceId);
     }

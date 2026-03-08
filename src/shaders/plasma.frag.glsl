@@ -49,28 +49,36 @@ void main(){
   vec3 V = normalize(-vViewPos);
   float NdotV = max(dot(vNormal, V), 0.0);
 
-  // ── 1. Directional lighting ──
-  float NdotL = max(dot(N, KEY_DIR), 0.0);
-  float wrap = max(dot(N, KEY_DIR) * 0.5 + 0.5, 0.0);
-  float key = pow(wrap, 1.3) * KEY_INT;
-  float fill = max(dot(N, -KEY_DIR) * 0.5 + 0.5, 0.0) * FILL_INT;
-  float diffuse = key + fill + AMB_INT;
-
-  // ── 2. Crater texture (HIGH tier only) ──
+  // ── 1. Crater texture + bump normal (HIGH tier only) ──
+  vec3 bumpN = N;
+  float craterBowl = 1.0;
   if (usePlasma > 0.5) {
     vec3 objN = normalize(vObjPos);
     vec3 phaseOff = vec3(vPhase * 10.0);
     vec3 cp1 = objN * CRATER_SCALE + phaseOff;
     vec2 vor1 = voronoi(cp1);
-    float vorD = vor1.x;
-    float craterBowl = smoothstep(0.0, 0.45, vorD);
-    float craterRim = smoothstep(0.35, 0.45, vorD) * 0.15;
-    diffuse *= mix(1.0 - CRATER_DEPTH, 1.0, craterBowl);
+    craterBowl = smoothstep(0.0, 0.45, vor1.x);
+
+    // Bump-map normal from finite differences
+    float eps = 0.02;
+    float hC = vor1.x;
+    float hX = voronoi(cp1 + vec3(eps, 0.0, 0.0)).x;
+    float hY = voronoi(cp1 + vec3(0.0, eps, 0.0)).x;
+    float hZ = voronoi(cp1 + vec3(0.0, 0.0, eps)).x;
+    vec3 grad = vec3(hX - hC, hY - hC, hZ - hC) / eps;
+    bumpN = normalize(N - grad * 0.35);
   }
+
+  // ── 2. Directional lighting ──
+  float NdotL = max(dot(bumpN, KEY_DIR), 0.0);
+  float wrap = max(dot(bumpN, KEY_DIR) * 0.5 + 0.5, 0.0);
+  float key = pow(wrap, 1.3) * KEY_INT;
+  float fill = max(dot(bumpN, -KEY_DIR) * 0.5 + 0.5, 0.0) * FILL_INT;
+  float diffuse = (key + fill + AMB_INT) * mix(1.0 - CRATER_DEPTH, 1.0, craterBowl);
 
   // ── 3. Specular ──
   vec3 H = normalize(KEY_DIR + V);
-  float NdotH = max(dot(N, H), 0.0);
+  float NdotH = max(dot(bumpN, H), 0.0);
   float spec = pow(NdotH, SPEC_POW) * SPEC_INT * NdotL;
   vec3 specCol = mix(vColor, vec3(1.0), 0.3) * spec;
 
@@ -91,8 +99,8 @@ void main(){
     col = col * (0.85 + bump * 0.35);
   }
 
-  // Animated plasma (HIGH tier). TO DISABLE: change `usePlasma > 0.5` to `false`
-  if (usePlasma > 0.5) {
+  // Animated plasma (HIGH tier). TO ENABLE: change `false` to `usePlasma > 0.5`
+  if (false) {
     vec3 np = vWorldPos * 1.8 + vec3(time * 0.35 + vPhase);
     float plasma = fbm(np) + fbm(np * 1.5 + vec3(0.0, time * 0.25, 0.0));
     plasma = pow(plasma * 0.5, 0.7);

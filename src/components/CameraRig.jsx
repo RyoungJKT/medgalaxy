@@ -69,7 +69,12 @@ export default function CameraRig({ camDist }) {
         tweenRef.current.forEach(t => t.kill());
         tweenRef.current = [];
 
+        // Pause autoRotate during fly to prevent fighting GSAP
+        controls.autoRotate = false;
+        idleFrames.current = 0;
+
         const dur = flyTarget.duration || 1.2;
+        const onUpdate = () => controls.update();
 
         tweenRef.current.push(
           gsap.to(controls.target, {
@@ -78,6 +83,7 @@ export default function CameraRig({ camDist }) {
             z: flyTarget.position[2],
             duration: dur,
             ease: 'power3.inOut',
+            onUpdate,
           })
         );
 
@@ -93,6 +99,7 @@ export default function CameraRig({ camDist }) {
               z: targetPos.z,
               duration: dur,
               ease: 'power3.inOut',
+              onUpdate,
             })
           );
         } else {
@@ -106,6 +113,7 @@ export default function CameraRig({ camDist }) {
               z: targetPos.z,
               duration: dur,
               ease: 'power3.inOut',
+              onUpdate,
             })
           );
         }
@@ -126,11 +134,13 @@ export default function CameraRig({ camDist }) {
   }, []);
 
   useFrame((state) => {
-    const introPhase = useStore.getState().introPhase;
+    const { introPhase, roulettePhase } = useStore.getState();
 
     if (controlsRef.current) {
       if (introPhase < 5) {
         controlsRef.current.autoRotate = false;
+      } else if (roulettePhase === 'reveal') {
+        controlsRef.current.autoRotate = true;
       } else {
         if (!introStarted.current) introStarted.current = true;
         idleFrames.current++;

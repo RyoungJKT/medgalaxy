@@ -59,16 +59,17 @@ export default function ConnectionsOverlay() {
     return { hubs, crossLinks };
   }, [diseases, displayEdges]);
 
-  const show = activeMode === 'connections';
+  const connFocusIdx = useStore(s => s.connFocusIdx);
   const mob = isMob();
 
-  if (!show) return null;
+  // Show overlay only when connections mode is active but no hub is focused yet
+  if (activeMode !== 'connections' || connFocusIdx >= 0) return null;
 
   const maxConn = connData.hubs[0]?.count || 1;
 
   const handleSelect = (id) => {
     if (connFocusSelect) connFocusSelect(id);
-    setActiveMode(null);
+    // Don't setActiveMode(null) — keep connections mode active so the hub layout works
   };
 
   return (

@@ -44,7 +44,7 @@ export default function GlowSprites() {
 
     // Intro gating: invisible until phase 4, then fade in
     const targetOpacity = introPhase >= 4 ? 0.35 : 0;
-    glowOpacityRef.current += (targetOpacity - glowOpacityRef.current) * 0.06;
+    glowOpacityRef.current += (targetOpacity - glowOpacityRef.current) * 0.08;
 
     // Update visibility
     if (groupRef.current) {

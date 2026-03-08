@@ -39,7 +39,7 @@ export default function CompareCards() {
         const screenR = nodeR * rc.height / (2 * nodeDist * tanHalfFov);
         const sx = (pv.x * 0.5 + 0.5) * rc.width;
         const sy = (-pv.y * 0.5 + 0.5) * rc.height;
-        setPos({ x: sx - screenR - 16, y: sy, visible: true });
+        setPos({ x: sx - screenR - 16, y: sy + screenR * 0.5 + 20, visible: true });
       }
       rafRef.current = requestAnimationFrame(track);
     }

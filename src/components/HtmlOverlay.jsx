@@ -8,6 +8,7 @@ import Sidebar from './ui/Sidebar';
 import StoryChips from './ui/StoryChips';
 import StoryCaption from './ui/StoryCaption';
 import SpotlightCaption from './ui/SpotlightCaption';
+import RouletteCaption from './ui/RouletteCaption';
 import ExplodeOverlay from './ui/ExplodeOverlay';
 import ConnectionsOverlay from './ui/ConnectionsOverlay';
 import VelocityOverlay from './ui/VelocityOverlay';
@@ -32,6 +33,7 @@ export default function HtmlOverlay() {
       <StoryChips />
       <StoryCaption />
       <SpotlightCaption />
+      <RouletteCaption />
       <ExplodeOverlay />
       <ConnectionsOverlay />
       <VelocityOverlay />
