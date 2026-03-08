@@ -65,6 +65,14 @@ const useStore = create(
     rouletteCaption: '',
     _rouletteSnapshot: null, // pre-roulette state for clean restore
 
+    // ── Supernova Reveal ──
+    supernovaPhase: 'idle', // 'idle' | 'prefocus' | 'charge' | 'burst' | 'linkwave' | 'settle' | 'complete'
+    supernovaTargetIdx: -1,
+    supernovaNeighborBatches: [], // [[idx,idx,...], [idx,...], [idx,...]] — cached at trigger time
+    supernovaRevealedLinks: [],   // flat array of revealed neighbor indices (updated per-batch)
+    supernovaStartTime: 0,
+    supernovaCaption: '',
+
     // ── Refs (non-reactive, shared between components) ──
     meshRef: null,
 
@@ -184,6 +192,84 @@ const useStore = create(
         storyVisible: snapshot ? snapshot.storyVisible : true,
       });
     },
+
+    triggerSupernova: (idx) => {
+      const s = get();
+      if (s.supernovaPhase !== 'idle') return;
+      if (idx == null || idx < 0 || idx >= s.diseases.length) return;
+
+      // Pause conflicting systems
+      if (s.spotlightActive) {
+        set({ spotlightActive: false, spotlightCaption: '' });
+      }
+      if (s.storyActive) {
+        set({ storyActive: null, storyCaption: '', storyStep: 0 });
+      }
+      if (s.roulettePhase !== 'idle') {
+        s.stopRoulette();
+      }
+
+      // Cache ranked neighbor batches at trigger time
+      const { displayEdges, diseases } = s;
+      const neighbors = [];
+      for (let i = 0; i < displayEdges.length; i++) {
+        const e = displayEdges[i];
+        let nIdx;
+        if (e.si === idx) nIdx = e.ti;
+        else if (e.ti === idx) nIdx = e.si;
+        else continue;
+        if (nIdx === idx) continue;
+        neighbors.push({ idx: nIdx, score: e.score || e.sharedPapers });
+      }
+      neighbors.sort((a, b) => b.score - a.score);
+
+      // Tier-based cap
+      const tierCap = typeof window !== 'undefined' && window.innerWidth < 768 ? 7 : 12;
+      const top = neighbors.slice(0, tierCap);
+
+      // Split into 3 ranked batches
+      const batches = [];
+      const b1 = Math.min(3, top.length);
+      const b2 = Math.min(b1 + 3, top.length);
+      if (b1 > 0) batches.push(top.slice(0, b1).map(n => n.idx));
+      if (b2 > b1) batches.push(top.slice(b1, b2).map(n => n.idx));
+      if (top.length > b2) batches.push(top.slice(b2).map(n => n.idx));
+
+      set({
+        supernovaPhase: 'prefocus',
+        supernovaTargetIdx: idx,
+        supernovaNeighborBatches: batches,
+        supernovaRevealedLinks: [],
+        supernovaStartTime: 0, // will be set on first frame
+        supernovaCaption: diseases[idx].label,
+      });
+    },
+
+    cancelSupernova: () => {
+      const s = get();
+      if (s.supernovaPhase === 'idle' || s.supernovaPhase === 'complete') return;
+      // Jump straight to settle if mid-sequence, or just reset if already settling
+      if (s.supernovaPhase === 'settle') {
+        set({
+          supernovaPhase: 'complete',
+          supernovaCaption: '',
+        });
+      } else {
+        // Select the disease normally so user has the panel, then clean up
+        const idx = s.supernovaTargetIdx;
+        if (idx >= 0) s.selectDisease(idx);
+        set({
+          supernovaPhase: 'complete',
+          supernovaRevealedLinks: [],
+          supernovaNeighborBatches: [],
+          supernovaCaption: '',
+        });
+      }
+    },
+
+    setSupernovaPhase: (v) => set({ supernovaPhase: v }),
+    setSupernovaRevealedLinks: (v) => set({ supernovaRevealedLinks: v }),
+    setSupernovaCaption: (v) => set({ supernovaCaption: v }),
 
     connFocusSelect: (diseaseId) => {
       const { idMap: im, diseases: ds, neighbors: nb, curPos: cp, sizeMode: sm } = get();
