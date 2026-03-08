@@ -14,6 +14,7 @@ import ConnectionsOverlay from './ui/ConnectionsOverlay';
 import VelocityOverlay from './ui/VelocityOverlay';
 import LandingOverlay from './ui/LandingOverlay';
 import CompareCards from './ui/CompareCards';
+import SupernovaOverlay from './ui/SupernovaOverlay';
 
 export default function HtmlOverlay() {
   return (
@@ -38,6 +39,7 @@ export default function HtmlOverlay() {
       <ConnectionsOverlay />
       <VelocityOverlay />
       <LandingOverlay />
+      <SupernovaOverlay />
       <style>{`
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
         @keyframes slideDown{to{transform:translateY(0)}}

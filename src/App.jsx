@@ -25,6 +25,8 @@ import AdaptiveDpr from './components/AdaptiveDpr';
 import GravityLens from './components/GravityLens';
 import GalaxyRoulette from './components/GalaxyRoulette';
 import RouletteDust from './components/RouletteDust';
+import SupernovaReveal from './components/SupernovaReveal';
+import SupernovaDust from './components/SupernovaDust';
 import { sceneRefs } from './sceneRefs';
 
 export default function App() {
@@ -82,6 +84,11 @@ export default function App() {
     const onKeyDown = (e) => {
       if (e.key !== 'Escape') return;
       const s = useStore.getState();
+      // Cancel supernova
+      if (s.supernovaPhase !== 'idle' && s.supernovaPhase !== 'complete') {
+        s.cancelSupernova();
+        return;
+      }
       // Cancel roulette (highest priority)
       if (s.roulettePhase !== 'idle') {
         if (!s.selectedNode) s.deselect(); // only deselect if no winner selected yet
@@ -170,6 +177,8 @@ export default function App() {
           <AdaptiveDpr />
           <GalaxyRoulette />
           <RouletteDust />
+          <SupernovaReveal />
+          <SupernovaDust />
         </Suspense>
       </Canvas>
 
