@@ -40,7 +40,7 @@ export default function GlowSprites() {
   const refsMap = useRef({});
 
   useFrame(() => {
-    const { curPos, introPhase } = useStore.getState();
+    const { curPos, introPhase, supernovaPhase, supernovaTargetIdx } = useStore.getState();
 
     // Intro gating: invisible until phase 4, then fade in
     const targetOpacity = introPhase >= 4 ? 0.35 : 0;
@@ -56,6 +56,17 @@ export default function GlowSprites() {
       if (ref) {
         ref.position.set(curPos[idx][0], curPos[idx][1], curPos[idx][2]);
         if (ref.material) ref.material.opacity = glowOpacityRef.current;
+      }
+    }
+
+    // Supernova: boost target glow
+    const supernovaActive = supernovaPhase !== 'idle' && supernovaPhase !== 'complete';
+    if (supernovaActive && supernovaTargetIdx >= 0) {
+      const targetRef = refsMap.current[supernovaTargetIdx];
+      if (targetRef && targetRef.material) {
+        const boostPhases = { charge: 0.8, burst: 1.0, linkwave: 0.5, prefocus: 0.5 };
+        const boost = boostPhases[supernovaPhase] || 0;
+        targetRef.material.opacity = Math.max(glowOpacityRef.current, boost);
       }
     }
   });
