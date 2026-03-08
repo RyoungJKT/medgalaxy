@@ -8,7 +8,7 @@ const PULL_FRACTION = 1.40;
 const MAX_PULL_UNITS = 220;
 const MIN_PULL_UNITS = 30;
 const MIN_DIST = 1.0;
-const ANIM_IN_MS = 1800;
+const ANIM_IN_MS = 2800;
 const ANIM_OUT_MS = 1400;
 const SELECTED_DAMPEN = 0.4;
 
@@ -20,9 +20,9 @@ export const gravOwnedNodes = new Set();
 let _nodes = new Map(); // idx -> { phase, startPos, targetPos, releaseStartPos, releaseTargetPos, elapsed }
 let _activeHovIdx = -1;
 
-// Soft braking: fast initial move, very long gentle deceleration
-function easeOutSoft(t) {
-  return 1 - Math.pow(1 - t, 6);
+// Smooth S-curve: gentle start, peak speed in middle, gentle landing
+function easeInOutCubic(t) {
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 }
 function easeOutQuart(t) {
   return 1 - Math.pow(1 - t, 4);
@@ -108,12 +108,12 @@ export default function GravityLens() {
   useFrame((state, delta) => {
     const {
       hoveredNode, selectedNode, curPos, displayEdges, diseases,
-      activeMode, roulettePhase, introPhase, spotlightActive,
+      activeMode, roulettePhase, introPhase, spotlightActive, supernovaPhase,
     } = useStore.getState();
 
     const dt = Math.min(delta, 0.05) * 1000; // ms
 
-    const guarded = activeMode || roulettePhase !== 'idle' || introPhase < 5 || spotlightActive;
+    const guarded = activeMode || roulettePhase !== 'idle' || introPhase < 5 || spotlightActive || supernovaPhase !== 'idle';
     const hIdx = (!guarded && hoveredNode) ? hoveredNode.index : -1;
 
     // Hover changed or became guarded
@@ -178,7 +178,7 @@ export default function GravityLens() {
 
       if (node.phase === 'in') {
         const u = Math.min(node.elapsed / ANIM_IN_MS, 1);
-        const p = easeOutSoft(u);
+        const p = easeInOutCubic(u);
         curPos[idx][0] = node.startPos[0] + (node.targetPos[0] - node.startPos[0]) * p;
         curPos[idx][1] = node.startPos[1] + (node.targetPos[1] - node.startPos[1]) * p;
         curPos[idx][2] = node.startPos[2] + (node.targetPos[2] - node.startPos[2]) * p;
