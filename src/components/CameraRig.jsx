@@ -63,6 +63,10 @@ export default function CameraRig({ camDist }) {
       s => s.flyTarget,
       (flyTarget) => {
         if (!flyTarget || !controlsRef.current) return;
+        // During supernova, only allow the prefocus camera move (phase will be 'prefocus')
+        // Block the selectDisease flyTarget during burst/linkwave/settle
+        const sp = useStore.getState().supernovaPhase;
+        if (sp === 'charge' || sp === 'burst' || sp === 'linkwave') return;
         const controls = controlsRef.current;
 
         // Kill existing tweens
@@ -134,10 +138,12 @@ export default function CameraRig({ camDist }) {
   }, []);
 
   useFrame((state) => {
-    const { introPhase, roulettePhase } = useStore.getState();
+    const { introPhase, roulettePhase, supernovaPhase } = useStore.getState();
 
     if (controlsRef.current) {
       if (introPhase < 5) {
+        controlsRef.current.autoRotate = false;
+      } else if (supernovaPhase !== 'idle' && supernovaPhase !== 'complete') {
         controlsRef.current.autoRotate = false;
       } else if (roulettePhase === 'reveal') {
         controlsRef.current.autoRotate = true;
