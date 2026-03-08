@@ -33,9 +33,15 @@ export default function NodeLabels() {
         return;
       }
 
-      const curPos = useStore.getState().curPos;
-      const hovIdx = useStore.getState().hoveredNode?.index ?? -1;
-      const selIdx = useStore.getState().selectedNode?.index ?? -1;
+      const storeState = useStore.getState();
+      const curPos = storeState.curPos;
+      const hovIdx = storeState.hoveredNode?.index ?? -1;
+      const selIdx = storeState.selectedNode?.index ?? -1;
+      const rPhase = storeState.roulettePhase;
+      const ringNodes = storeState.rouletteRingNodes;
+      const rouletteActive = rPhase !== 'idle';
+      const ringSet = rouletteActive && ringNodes.length > 0 ? new Set(ringNodes) : null;
+      const introScales = sceneRefs.introScales;
       const rc = canvas.getBoundingClientRect();
       const kids = container.children;
 
@@ -66,6 +72,23 @@ export default function NodeLabels() {
 
         const nodeR = nR(diseases[i].papers);
         const screenR = nodeR * rc.height / (2 * nodeDist * tanHalfFov);
+
+        // Hide labels for nodes not yet revealed during intro
+        if (introScales && introScales[i] < 0.1) {
+          el.style.display = 'none';
+          continue;
+        }
+
+        // Hide all labels during spin (motion too fast for labels to read)
+        // Hide non-ring-node labels during other roulette phases
+        if (rPhase === 'spinup') {
+          el.style.display = 'none';
+          continue;
+        }
+        if (ringSet && !ringSet.has(i)) {
+          el.style.display = 'none';
+          continue;
+        }
 
         // Hide very tiny labels when zoomed out
         if (screenR < 0.3 && i !== hovIdx) {

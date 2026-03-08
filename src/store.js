@@ -57,6 +57,14 @@ const useStore = create(
     spotlightActive: false,
     spotlightCaption: '',
 
+    // ── Galaxy Roulette (separate from activeMode to avoid conflicts) ──
+    roulettePhase: 'idle', // 'idle' | 'assembling' | 'spinup' | 'reveal'
+    rouletteWinner: null,
+    rouletteEligible: [],
+    rouletteRingNodes: [], // subset actually placed in orbital rings
+    rouletteCaption: '',
+    _rouletteSnapshot: null, // pre-roulette state for clean restore
+
     // ── Refs (non-reactive, shared between components) ──
     meshRef: null,
 
@@ -70,9 +78,9 @@ const useStore = create(
 
     // ── Actions ──
     selectDisease: (idx) => {
-      const { diseases: ds, curPos: cp, catPos: cp2 } = get();
+      const { diseases: ds, catPos: cp2 } = get();
       if (idx == null || idx < 0 || idx >= ds.length) return;
-      const pos = cp[idx] || cp2[idx];
+      const pos = cp2[idx];
       // Consistent zoom: camera stops at nodeRadius * multiplier from center
       const nodeRadius = nR(ds[idx].papers);
       const zoomDist = nodeRadius * (isMob() ? 12.0 : 5.0);
@@ -131,6 +139,51 @@ const useStore = create(
     setIntroPhase: (v) => set({ introPhase: v }),
     setIntroProgress: (v) => set({ introProgress: v }),
     skipIntro: () => set({ introStarted: true, introPhase: 5, introProgress: 1 }),
+
+    setRoulettePhase: (v) => set({ roulettePhase: v }),
+    setRouletteWinner: (v) => set({ rouletteWinner: v }),
+    setRouletteCaption: (v) => set({ rouletteCaption: v }),
+
+    startRoulette: () => {
+      const { diseases: ds, activeCats, searchQuery, spotlightActive, storyActive,
+              storyVisible, selectedNode } = get();
+      const sq = searchQuery.toLowerCase();
+      const eligible = [];
+      for (let i = 0; i < ds.length; i++) {
+        if (!activeCats.has(ds[i].category)) continue;
+        if (sq && !ds[i].label.toLowerCase().includes(sq)) continue;
+        eligible.push(i);
+      }
+      if (eligible.length < 6) return;
+      // Snapshot pre-roulette state for restore
+      const snapshot = { spotlightActive, storyActive, storyVisible, selectedNode };
+      set({
+        roulettePhase: 'assembling',
+        rouletteWinner: null,
+        rouletteEligible: eligible,
+        rouletteCaption: '',
+        _rouletteSnapshot: snapshot,
+        spotlightActive: false,
+        spotlightCaption: '',
+        storyVisible: false,
+      });
+      if (storyActive) {
+        set({ storyActive: null, storyCaption: '', storyStep: 0 });
+      }
+    },
+
+    stopRoulette: () => {
+      const snapshot = get()._rouletteSnapshot;
+      set({
+        roulettePhase: 'idle',
+        rouletteWinner: null,
+        rouletteEligible: [],
+        rouletteRingNodes: [],
+        rouletteCaption: '',
+        _rouletteSnapshot: null,
+        storyVisible: snapshot ? snapshot.storyVisible : true,
+      });
+    },
 
     connFocusSelect: (diseaseId) => {
       const { idMap: im, diseases: ds, neighbors: nb, curPos: cp, sizeMode: sm } = get();

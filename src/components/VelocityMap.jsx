@@ -8,6 +8,7 @@ export default function VelocityMap() {
   const prevModeRef = useRef(null);
 
   useFrame(() => {
+    if (useStore.getState().roulettePhase !== 'idle') return;
     const mode = useStore.getState().activeMode;
     const prev = prevModeRef.current;
     if (mode === prev) return;

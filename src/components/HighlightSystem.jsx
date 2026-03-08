@@ -25,6 +25,10 @@ export default function HighlightSystem() {
   const connFocusIdx = useStore(s => s.connFocusIdx);
   const activeMode = useStore(s => s.activeMode);
   const sizeMode = useStore(s => s.sizeMode);
+  const roulettePhase = useStore(s => s.roulettePhase);
+  const rouletteWinner = useStore(s => s.rouletteWinner);
+  const rouletteEligible = useStore(s => s.rouletteEligible);
+  const rouletteRingNodes = useStore(s => s.rouletteRingNodes);
 
   useEffect(() => {
     const raf = requestAnimationFrame(() => {
@@ -53,6 +57,8 @@ export default function HighlightSystem() {
       }
 
       const neg = neglectMode;
+      const rouletteActive = roulettePhase !== 'idle';
+      const ringSet = rouletteActive ? new Set(rouletteRingNodes) : null;
 
       for (let i = 0; i < diseases.length; i++) {
         const d = diseases[i];
@@ -62,8 +68,29 @@ export default function HighlightSystem() {
         const catVis = activeCats.has(d.category);
         const searchMatch = !sq || d.label.toLowerCase().includes(sq);
 
-        if (!neg && !catVis) {
+        if (rouletteActive) {
+          // Roulette overrides all other highlight logic
+          if (!ringSet.has(i)) {
+            _color.multiplyScalar(0.02); // aggressively dim non-ring nodes
+            // Shrink non-ring nodes to near-invisible
+            iMesh.getMatrixAt(i, _m4);
+            _m4.decompose(_p, _q, _s);
+            _s.set(0.001, 0.001, 0.001);
+            _m4.compose(_p, _q, _s);
+            iMesh.setMatrixAt(i, _m4);
+          } else if (i === rouletteWinner && roulettePhase === 'reveal') {
+            _color.multiplyScalar(1.6); // strong hero brightness, category color preserved
+          } else {
+            // Ring non-winner: slightly dim to make winner stand out more
+            _color.multiplyScalar(0.55);
+          }
+        } else if (!neg && !catVis) {
           _color.multiplyScalar(0.05);
+        } else if (connMode && connFocusIdx >= 0) {
+          // Hub focused — highlight focused node and its neighbors
+          if (i === connFocusIdx) { /* full color */ }
+          else if (nbrs && nbrs.has(i)) { /* keep original */ }
+          else _color.multiplyScalar(0.15);
         } else if (connMode) {
           if (hubSet.has(i)) _color.multiplyScalar(1.3);
           else _color.multiplyScalar(0.4);
@@ -79,7 +106,20 @@ export default function HighlightSystem() {
         iMesh.setColorAt(i, _color);
 
         // Shrink filtered-out nodes to near-invisible size
-        if (!neg && !catVis) {
+        // (roulette non-ring shrinking handled above in the roulette block)
+        if (rouletteActive && ringSet.has(i)) {
+          // Ensure ring nodes have proper scale (restore if previously shrunk)
+          iMesh.getMatrixAt(i, _m4);
+          _m4.decompose(_p, _q, _s);
+          const r = nR(d.papers);
+          if (_s.x < 0.01) {
+            _s.set(r, r, r);
+            _m4.compose(_p, _q, _s);
+            iMesh.setMatrixAt(i, _m4);
+          }
+        } else if (rouletteActive) {
+          // Non-ring nodes already shrunk above — skip normal size logic
+        } else if (!neg && !catVis) {
           iMesh.getMatrixAt(i, _m4);
           _m4.decompose(_p, _q, _s);
           _s.set(0.001, 0.001, 0.001);
@@ -115,7 +155,14 @@ export default function HighlightSystem() {
           const tv = activeCats.has(diseases[e.ti].category);
           let v = 0;
 
-          if (connMode && sv && tv) {
+          if (rouletteActive) {
+            v = 0; // Hide all edges during roulette
+          } else if (connMode && connFocusIdx >= 0 && sv && tv) {
+            // Hub focused — only show edges connected to the focused node
+            const isFocused = e.si === connFocusIdx || e.ti === connFocusIdx;
+            v = isFocused ? 1.0 : 0.0;
+          } else if (connMode && sv && tv) {
+            // Overlay showing (no hub focused) — show hub edges brighter
             const isHub = hubSet.has(e.si) || hubSet.has(e.ti);
             v = isHub ? 1.0 : 0.3;
           } else if (hasActive) {
@@ -144,6 +191,10 @@ export default function HighlightSystem() {
     connFocusIdx,
     activeMode,
     sizeMode,
+    roulettePhase,
+    rouletteWinner,
+    rouletteEligible,
+    rouletteRingNodes,
   ]);
 
   return null;

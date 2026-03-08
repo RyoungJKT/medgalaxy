@@ -22,6 +22,9 @@ import SelectionDOF from './components/SelectionDOF';
 import SelectionRipple from './components/SelectionRipple';
 import IntroSequence from './components/IntroSequence';
 import AdaptiveDpr from './components/AdaptiveDpr';
+import GravityLens from './components/GravityLens';
+import GalaxyRoulette from './components/GalaxyRoulette';
+import RouletteDust from './components/RouletteDust';
 import { sceneRefs } from './sceneRefs';
 
 export default function App() {
@@ -40,6 +43,13 @@ export default function App() {
     // Only left click
     if (e.button !== 0) return;
     const s = useStore.getState();
+    if (s.roulettePhase !== 'idle') return;
+    if (s.activeMode === 'connections') {
+      s.setConnFocusIdx(-1);
+      s.setActiveMode(null);
+      s.deselect();
+      return;
+    }
     if (s.selectedNode) s.deselect();
   }, []);
 
@@ -49,7 +59,10 @@ export default function App() {
       spotlightActive, setSpotlightActive, setSpotlightCaption,
       storyActive, setStoryActive,
       setStoryCaption, setStoryStep, setStoryVisible,
-      setNeglectMode, neglectMode, setConnFocusIdx } = useStore.getState();
+      setNeglectMode, neglectMode, setConnFocusIdx,
+      roulettePhase, stopRoulette } = useStore.getState();
+    // Cancel roulette if active
+    if (roulettePhase !== 'idle') { deselect(); stopRoulette(); return; }
     // Stop spotlight
     if (spotlightActive) { setSpotlightActive(false); setSpotlightCaption(''); }
     // Stop story
@@ -69,10 +82,23 @@ export default function App() {
     const onKeyDown = (e) => {
       if (e.key !== 'Escape') return;
       const s = useStore.getState();
+      // Cancel roulette (highest priority)
+      if (s.roulettePhase !== 'idle') {
+        if (!s.selectedNode) s.deselect(); // only deselect if no winner selected yet
+        s.stopRoulette();
+        return;
+      }
+      // Exit connections hub view — reset everything at once
+      if (s.activeMode === 'connections') {
+        s.setConnFocusIdx(-1);
+        s.setActiveMode(null);
+        s.deselect();
+        return;
+      }
       // Close sidebar (deselect node) first
       if (s.selectedNode) { s.deselect(); return; }
       // Close overlay modals
-      if (s.activeMode) { s.setConnFocusIdx(-1); s.setActiveMode(null); return; }
+      if (s.activeMode) { s.setActiveMode(null); return; }
       // Stop spotlight
       if (s.spotlightActive) { s.setSpotlightActive(false); s.setSpotlightCaption(''); return; }
       // Stop story
@@ -129,6 +155,7 @@ export default function App() {
           <GlowSprites />
           <CameraRig camDist={camDist} />
           <IdleDrift />
+          <GravityLens />
           <BackgroundParticles camDist={camDist} />
           <HighlightSystem />
           <StoryEngine />
@@ -141,6 +168,8 @@ export default function App() {
           <SelectionRipple />
           <IntroSequence />
           <AdaptiveDpr />
+          <GalaxyRoulette />
+          <RouletteDust />
         </Suspense>
       </Canvas>
 
