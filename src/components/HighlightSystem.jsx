@@ -29,6 +29,10 @@ export default function HighlightSystem() {
   const rouletteWinner = useStore(s => s.rouletteWinner);
   const rouletteEligible = useStore(s => s.rouletteEligible);
   const rouletteRingNodes = useStore(s => s.rouletteRingNodes);
+  const supernovaPhase = useStore(s => s.supernovaPhase);
+  const supernovaTargetIdx = useStore(s => s.supernovaTargetIdx);
+  const supernovaRevealedLinks = useStore(s => s.supernovaRevealedLinks);
+  const supernovaNeighborBatches = useStore(s => s.supernovaNeighborBatches);
 
   useEffect(() => {
     const raf = requestAnimationFrame(() => {
@@ -57,6 +61,16 @@ export default function HighlightSystem() {
       }
 
       const neg = neglectMode;
+
+      // Build supernova neighbor set for highlighting
+      const supernovaActive = supernovaPhase !== 'idle' && supernovaPhase !== 'complete';
+      const supernovaAllNeighbors = supernovaActive
+        ? new Set(supernovaNeighborBatches.flat())
+        : null;
+      const supernovaRevealed = supernovaActive
+        ? new Set(supernovaRevealedLinks)
+        : null;
+
       const rouletteActive = roulettePhase !== 'idle';
       const ringSet = rouletteActive ? new Set(rouletteRingNodes) : null;
 
@@ -68,7 +82,29 @@ export default function HighlightSystem() {
         const catVis = activeCats.has(d.category);
         const searchMatch = !sq || d.label.toLowerCase().includes(sq);
 
-        if (rouletteActive) {
+        if (supernovaActive) {
+          if (i === supernovaTargetIdx) {
+            // Target node: bright during charge/burst
+            const boost = (supernovaPhase === 'charge' || supernovaPhase === 'burst') ? 1.6 : 1.0;
+            _color.multiplyScalar(boost);
+          } else if (supernovaPhase === 'linkwave' || supernovaPhase === 'settle') {
+            // During linkwave: revealed neighbors at full color, others dimmed
+            if (supernovaRevealed.has(i)) {
+              _color.multiplyScalar(1.0); // full color
+            } else if (supernovaAllNeighbors.has(i)) {
+              _color.multiplyScalar(0.15); // not yet revealed
+            } else {
+              _color.multiplyScalar(0.08);
+            }
+          } else {
+            // Prefocus/charge: target neighbors faintly visible, others heavily dimmed
+            if (supernovaAllNeighbors.has(i)) {
+              _color.multiplyScalar(0.2);
+            } else {
+              _color.multiplyScalar(0.08);
+            }
+          }
+        } else if (rouletteActive) {
           // Roulette overrides all other highlight logic
           if (!ringSet.has(i)) {
             _color.multiplyScalar(0.02); // aggressively dim non-ring nodes
@@ -155,7 +191,15 @@ export default function HighlightSystem() {
           const tv = activeCats.has(diseases[e.ti].category);
           let v = 0;
 
-          if (rouletteActive) {
+          if (supernovaActive) {
+            if (supernovaPhase === 'linkwave' || supernovaPhase === 'settle') {
+              const isTarget = e.si === supernovaTargetIdx || e.ti === supernovaTargetIdx;
+              const otherIdx = e.si === supernovaTargetIdx ? e.ti : e.si;
+              v = isTarget && supernovaRevealed.has(otherIdx) ? 1.0 : 0;
+            } else {
+              v = 0; // hide edges during prefocus/charge/burst
+            }
+          } else if (rouletteActive) {
             v = 0; // Hide all edges during roulette
           } else if (connMode && connFocusIdx >= 0 && sv && tv) {
             // Hub focused — only show edges connected to the focused node
@@ -195,6 +239,10 @@ export default function HighlightSystem() {
     rouletteWinner,
     rouletteEligible,
     rouletteRingNodes,
+    supernovaPhase,
+    supernovaTargetIdx,
+    supernovaRevealedLinks,
+    supernovaNeighborBatches,
   ]);
 
   return null;
