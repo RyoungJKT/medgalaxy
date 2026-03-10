@@ -61,7 +61,7 @@ export default function StoryCaption() {
         zIndex: 46, background: 'rgba(10,16,30,0.95)', backdropFilter: 'blur(16px)',
         border: '1px solid rgba(255,255,255,0.15)', borderRadius: 12,
         padding: mob ? '14px 20px' : '18px 32px',
-        fontFamily: 'IBM Plex Mono,monospace', fontSize: mob ? 14 : 17,
+        fontFamily: 'IBM Plex Mono,monospace', fontSize: mob ? 18 : 22,
         color: '#f1f5f9', whiteSpace: mob ? 'normal' : 'nowrap',
         maxWidth: mob ? '92vw' : 'none', textAlign: 'center',
         cursor: supernovaBusy ? 'default' : 'pointer', opacity: 0,
@@ -70,8 +70,12 @@ export default function StoryCaption() {
         pointerEvents: 'auto',
       }}
     >
-      {storyCaption}
-      <div style={{ color: '#94a3b8', fontSize: mob ? 11 : 12, marginTop: 8 }}>
+      {storyCaption.split('\n').map((line, i) => (
+        <div key={i} style={i === 0 ? { fontWeight: 600 } : { fontSize: mob ? 14 : 17, color: '#cbd5e1', marginTop: 4 }}>
+          {line}
+        </div>
+      ))}
+      <div style={{ color: '#cbd5e1', fontSize: mob ? 13 : 15, marginTop: 10, letterSpacing: '0.03em' }}>
         {supernovaBusy ? 'revealing connections\u2026' : `${mob ? 'tap' : 'click'} to continue \u00b7 esc to exit`}
       </div>
     </div>
