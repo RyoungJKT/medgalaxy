@@ -149,7 +149,25 @@ export default function SupernovaReveal() {
     // ── BURST ──
     else if (supernovaPhase === 'burst') {
       if (elapsed >= BURST_MS) {
-        useStore.setState({ supernovaPhase: 'linkwave' });
+        // During story mode, skip linkwave/settle — go straight to complete
+        if (s.storyActive) {
+          s.selectDisease(idx);
+          useStore.setState({
+            supernovaPhase: 'complete',
+            supernovaCaption: '',
+          });
+          setTimeout(() => {
+            const cur = useStore.getState();
+            if (cur.supernovaPhase !== 'complete') return;
+            useStore.setState({
+              supernovaPhase: 'idle',
+              supernovaNeighborBatches: [],
+              supernovaRevealedLinks: [],
+            });
+          }, 50);
+        } else {
+          useStore.setState({ supernovaPhase: 'linkwave' });
+        }
       }
     }
 
