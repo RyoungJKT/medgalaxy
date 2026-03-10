@@ -12,7 +12,7 @@ const LINKWAVE_MS  = 1200;
 const SETTLE_MS    = 800;
 
 // ── Tremble config ──
-const TREMBLE_MAX_AMP = TIER === 'LOW' ? 0.4 : 0.8; // world units
+const TREMBLE_FRACTION = TIER === 'LOW' ? 0.12 : 0.25; // fraction of node radius
 
 // ── Easing helpers ──
 function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
@@ -56,9 +56,15 @@ export default function SupernovaReveal() {
         // Compute a camera position elevated ~30° above the XY plane,
         // approaching from the outward direction (node relative to galaxy center)
         const nx = pos[0], ny = pos[1], nz = pos[2];
-        const outLen = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1;
-        // Outward direction from galaxy center through the node
-        const ox = nx / outLen, oy = ny / outLen, oz = nz / outLen;
+        const outLen = Math.sqrt(nx * nx + ny * ny + nz * nz);
+        // Fallback direction for nodes at/near the center (e.g. Heart Disease)
+        let ox, oy, oz;
+        if (outLen < nodeRadius * 0.5) {
+          // Node is at galaxy center — use a fixed scenic angle (front-right + elevated)
+          ox = 0.6; oy = 0.0; oz = 0.8;
+        } else {
+          ox = nx / outLen; oy = ny / outLen; oz = nz / outLen;
+        }
         // Up component (lift camera above the disk plane)
         const elevY = 0.5; // ~30° elevation
         // Camera direction: outward + up, normalized, then scaled to zoomDist
@@ -110,9 +116,10 @@ export default function SupernovaReveal() {
       const u = Math.min(elapsed / CHARGE_MS, 1);
       const uEase = easeOutCubic(u);
 
-      // Tremble: layered sin with growing amplitude
+      // Tremble: layered sin with amplitude scaled to node size
       if (basePosRef.current) {
-        const amp = TREMBLE_MAX_AMP * uEase;
+        const nodeRadius = nR(diseases[idx].papers);
+        const amp = nodeRadius * TREMBLE_FRACTION * uEase;
         const freq = 1 + uEase * 2; // frequency increases with charge
         const ox = amp * (
           0.6 * Math.sin(t * 23 * freq + 1.1) +
