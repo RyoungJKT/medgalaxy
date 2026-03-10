@@ -48,12 +48,30 @@ export default function SupernovaReveal() {
         // Store base position for tremble reference
         basePosRef.current = [catPos[idx][0], catPos[idx][1], catPos[idx][2]];
 
-        // Camera: gentle drift toward target (use flyTarget with longer duration)
+        // Camera: cinematic approach from elevated angle to avoid node occlusion
         const pos = catPos[idx];
         const nodeRadius = nR(diseases[idx].papers);
-        const zoomDist = nodeRadius * 8.0; // wider than normal select (5x) for cinematic framing
+        const zoomDist = nodeRadius * 8.0;
+
+        // Compute a camera position elevated ~30° above the XY plane,
+        // approaching from the outward direction (node relative to galaxy center)
+        const nx = pos[0], ny = pos[1], nz = pos[2];
+        const outLen = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1;
+        // Outward direction from galaxy center through the node
+        const ox = nx / outLen, oy = ny / outLen, oz = nz / outLen;
+        // Up component (lift camera above the disk plane)
+        const elevY = 0.5; // ~30° elevation
+        // Camera direction: outward + up, normalized, then scaled to zoomDist
+        const dx = ox, dy = oy + elevY, dz = oz;
+        const dLen = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1;
+        const camPos = [
+          nx + (dx / dLen) * zoomDist,
+          ny + (dy / dLen) * zoomDist,
+          nz + (dz / dLen) * zoomDist,
+        ];
+
         useStore.setState({
-          flyTarget: { position: [pos[0], pos[1], pos[2]], radius: zoomDist, duration: 1.8 },
+          flyTarget: { position: [pos[0], pos[1], pos[2]], cameraPos: camPos, duration: 1.8 },
         });
       }
 
@@ -165,12 +183,24 @@ export default function SupernovaReveal() {
         });
         // After a tick, clean up to idle
         setTimeout(() => {
-          useStore.setState({
-            supernovaPhase: 'idle',
-            supernovaTargetIdx: -1,
-            supernovaNeighborBatches: [],
-            supernovaRevealedLinks: [],
-          });
+          const cur = useStore.getState();
+          // Guard: don't clobber a newly-started supernova (race with story advance click)
+          if (cur.supernovaPhase !== 'complete') return;
+          // During story: keep supernovaTargetIdx so dust persists until story advances
+          if (cur.storyActive) {
+            useStore.setState({
+              supernovaPhase: 'idle',
+              supernovaNeighborBatches: [],
+              supernovaRevealedLinks: [],
+            });
+          } else {
+            useStore.setState({
+              supernovaPhase: 'idle',
+              supernovaTargetIdx: -1,
+              supernovaNeighborBatches: [],
+              supernovaRevealedLinks: [],
+            });
+          }
         }, 50);
       }
     }

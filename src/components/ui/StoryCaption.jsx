@@ -4,7 +4,7 @@ import { isMob } from '../../utils/helpers';
 
 function endStory() {
   useStore.getState().setStoryCaption('');
-  useStore.setState({ selectedNode: null });
+  useStore.setState({ selectedNode: null, supernovaTargetIdx: -1 });
   useStore.getState().setFlyTarget({ position: [0, 0, 0], radius: null, duration: 2.0 });
   setTimeout(() => {
     useStore.setState({ storyActive: null, storyStep: 0, storyVisible: true });
@@ -15,6 +15,7 @@ export default function StoryCaption() {
   const storyCaption = useStore(s => s.storyCaption);
   const setStoryStep = useStore(s => s.setStoryStep);
   const storyStep = useStore(s => s.storyStep);
+  const supernovaPhase = useStore(s => s.supernovaPhase);
   const boxRef = useRef(null);
   const rafRef = useRef(null);
 
@@ -44,7 +45,10 @@ export default function StoryCaption() {
   if (!storyCaption) return null;
   const mob = isMob();
 
+  const supernovaBusy = supernovaPhase !== 'idle' && supernovaPhase !== 'complete';
+
   const handleClick = () => {
+    if (supernovaBusy) return; // wait for supernova to finish
     setStoryStep(storyStep + 1);
   };
 
@@ -60,7 +64,7 @@ export default function StoryCaption() {
         fontFamily: 'IBM Plex Mono,monospace', fontSize: mob ? 14 : 17,
         color: '#f1f5f9', whiteSpace: mob ? 'normal' : 'nowrap',
         maxWidth: mob ? '92vw' : 'none', textAlign: 'center',
-        cursor: 'pointer', opacity: 0,
+        cursor: supernovaBusy ? 'default' : 'pointer', opacity: 0,
         animation: 'fadeIn 0.4s ease forwards',
         letterSpacing: '0.01em', lineHeight: 1.5,
         pointerEvents: 'auto',
@@ -68,7 +72,7 @@ export default function StoryCaption() {
     >
       {storyCaption}
       <div style={{ color: '#94a3b8', fontSize: mob ? 11 : 12, marginTop: 8 }}>
-        {mob ? 'tap' : 'click'} to continue &middot; esc to exit
+        {supernovaBusy ? 'revealing connections\u2026' : `${mob ? 'tap' : 'click'} to continue \u00b7 esc to exit`}
       </div>
     </div>
   );

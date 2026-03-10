@@ -4,10 +4,12 @@ import useStore from '../../store';
 export default function SupernovaOverlay() {
   const phase = useStore(s => s.supernovaPhase);
   const caption = useStore(s => s.supernovaCaption);
+  const storyActive = useStore(s => s.storyActive);
 
   const active = phase !== 'idle' && phase !== 'complete';
   const showVignette = phase === 'prefocus' || phase === 'charge' || phase === 'burst';
-  const showCaption = phase === 'prefocus' || phase === 'charge';
+  // Hide telemetry caption when story is driving — story caption provides context instead
+  const showCaption = (phase === 'prefocus' || phase === 'charge') && !storyActive;
 
   if (!active) return null;
 

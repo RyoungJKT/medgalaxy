@@ -7,7 +7,7 @@ import { nR } from '../utils/helpers';
 import { CC } from '../utils/constants';
 
 const PARTICLE_COUNT = TIER === 'HIGH' ? 200 : TIER === 'MEDIUM' ? 100 : 0;
-const ORBIT_RADIUS = 40; // initial spread radius
+const ORBIT_SCALE = 4.0; // orbit radius as multiple of node radius (scales with node size)
 const CHARGE_TIGHTEN = 0.4; // how much dust tightens during charge (fraction of orbit)
 const BURST_EXPAND = 2.5; // expansion multiplier during burst
 
@@ -50,11 +50,13 @@ export default function SupernovaDust() {
   useFrame((state) => {
     if (!geo || !pointsRef.current) return;
 
-    const { supernovaPhase, supernovaTargetIdx, catPos, diseases } = useStore.getState();
-    const active = supernovaPhase !== 'idle' && supernovaPhase !== 'complete' && supernovaTargetIdx >= 0;
+    const { supernovaPhase, supernovaTargetIdx, catPos, diseases, storyActive } = useStore.getState();
+    // Keep dust visible during story mode even after supernova completes (until user advances)
+    const storyHold = storyActive && supernovaTargetIdx >= 0;
+    const active = storyHold || (supernovaPhase !== 'idle' && supernovaPhase !== 'complete' && supernovaTargetIdx >= 0);
 
-    // Fade opacity
-    const targetOpacity = active ? 0.7 : 0;
+    // Fade opacity — hide during prefocus (camera flying to new node), fade in during charge
+    const targetOpacity = (active && supernovaPhase === 'prefocus') ? 0 : (active ? 0.7 : 0);
     opacityRef.current += (targetOpacity - opacityRef.current) * 0.1;
     pointsRef.current.visible = opacityRef.current > 0.01;
     if (!pointsRef.current.visible) return;
@@ -66,6 +68,10 @@ export default function SupernovaDust() {
 
     const cx = catPos[idx][0], cy = catPos[idx][1], cz = catPos[idx][2];
     const nodeR = nR(diseases[idx].papers);
+
+    // Scale particle size with nodeR so apparent screen size stays consistent
+    // (sizeAttenuation divides by distance, which also scales with nodeR → cancels out)
+    pointsRef.current.material.size = nodeR * 0.5;
     const t = state.clock.getElapsedTime();
     const positions = geo.attributes.position;
 
@@ -79,12 +85,13 @@ export default function SupernovaDust() {
     } else if (supernovaPhase === 'burst') {
       radiusMult = BURST_EXPAND;
       speedMult = 3.0;
-    } else if (supernovaPhase === 'settle' || supernovaPhase === 'linkwave') {
+    } else if (supernovaPhase === 'settle' || supernovaPhase === 'linkwave' || storyHold) {
+      // storyHold: maintain settle params to avoid snap/stutter
       radiusMult = 1.5;
       speedMult = 0.5;
     }
 
-    const baseR = (ORBIT_RADIUS + nodeR) * radiusMult;
+    const baseR = nodeR * ORBIT_SCALE * radiusMult;
 
     for (let i = 0; i < PARTICLE_COUNT; i++) {
       const s = seeds[i];
@@ -111,7 +118,7 @@ export default function SupernovaDust() {
   if (PARTICLE_COUNT === 0) return null;
 
   return (
-    <points ref={pointsRef} visible={false}>
+    <points ref={pointsRef} visible={false} frustumCulled={false}>
       <primitive object={geo} attach="geometry" />
       <pointsMaterial
         map={tex}

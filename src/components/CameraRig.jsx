@@ -91,7 +91,19 @@ export default function CameraRig({ camDist }) {
           })
         );
 
-        if (flyTarget.radius) {
+        if (flyTarget.cameraPos) {
+          // Explicit camera position (e.g. supernova cinematic angle)
+          tweenRef.current.push(
+            gsap.to(camera.position, {
+              x: flyTarget.cameraPos[0],
+              y: flyTarget.cameraPos[1],
+              z: flyTarget.cameraPos[2],
+              duration: dur,
+              ease: 'power3.inOut',
+              onUpdate,
+            })
+          );
+        } else if (flyTarget.radius) {
           // Fly toward node from current viewing angle
           const nodePos = new THREE.Vector3(flyTarget.position[0], flyTarget.position[1], flyTarget.position[2]);
           const dir = camera.position.clone().sub(nodePos).normalize();
