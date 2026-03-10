@@ -193,16 +193,19 @@ const useStore = create(
       });
     },
 
-    triggerSupernova: (idx) => {
+    triggerSupernova: (idx, opts) => {
       const s = get();
-      if (s.supernovaPhase !== 'idle') return;
+      // Allow re-trigger from 'complete' (e.g. story advancing to next supernova step)
+      if (s.supernovaPhase !== 'idle' && s.supernovaPhase !== 'complete') return;
       if (idx == null || idx < 0 || idx >= s.diseases.length) return;
+
+      const keepStory = opts && opts.keepStory;
 
       // Pause conflicting systems
       if (s.spotlightActive) {
         set({ spotlightActive: false, spotlightCaption: '' });
       }
-      if (s.storyActive) {
+      if (s.storyActive && !keepStory) {
         set({ storyActive: null, storyCaption: '', storyStep: 0 });
       }
       if (s.roulettePhase !== 'idle') {
@@ -284,5 +287,8 @@ const useStore = create(
     },
   }))
 );
+
+// Expose store for console testing (e.g. window._store.getState().triggerSupernova(0))
+if (typeof window !== 'undefined') window._store = useStore;
 
 export default useStore;
