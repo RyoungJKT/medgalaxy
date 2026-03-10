@@ -83,7 +83,8 @@ export default function SupernovaReveal() {
 
       if (supernovaPhase === 'burst') {
         // Select the disease now (opens sidebar during linkwave)
-        s.selectDisease(idx);
+        // Skip during story mode — story shortcut handles selection in burst end
+        if (!s.storyActive) s.selectDisease(idx);
         batchTimerRef.current = 0;
         batchIdxRef.current = 0;
       }
