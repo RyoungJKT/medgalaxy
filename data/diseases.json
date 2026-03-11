@@ -1777,7 +1777,7 @@
     "description": "Highly contagious bacterial respiratory infection known as whooping cough.",
     "papers": 36399,
     "trend": -14,
-    "mortality": 160000,
+    "mortality": 59000,
     "fundingGap": "high",
     "yearlyPapers": [
       738,
@@ -3502,7 +3502,7 @@
     "description": "Leading cause of severe diarrheal disease in children under five worldwide, killing 200,000 children annually despite availability of effective vaccines.",
     "papers": 19161,
     "trend": -13,
-    "mortality": 200000,
+    "mortality": 128000,
     "fundingGap": "high",
     "yearlyPapers": [
       697,

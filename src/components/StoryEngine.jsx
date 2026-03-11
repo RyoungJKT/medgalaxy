@@ -6,10 +6,10 @@ function buildSequences(idMap) {
   const find = (id) => idMap[id];
   return {
     researched: [
-      { id: find('breast-cancer'), supernova: true, caption: 'Breast Cancer\n430,000 published papers' },
-      { id: find('lung-cancer'), supernova: true, caption: 'Lung Cancer\n350,000 published papers' },
-      { id: find('type-2-diabetes'), supernova: true, caption: 'Type 2 Diabetes\n380,000 published papers' },
-      { caption: 'Over 1 million papers combined.\nScience is paying attention here.' },
+      { id: find('breast-cancer'), supernova: true, caption: 'Breast Cancer\n574,000 published papers' },
+      { id: find('lung-cancer'), supernova: true, caption: 'Lung Cancer\n494,000 published papers' },
+      { id: find('type-2-diabetes'), supernova: true, caption: 'Type 2 Diabetes\n273,000 published papers' },
+      { caption: 'Over 1.3 million papers combined.\nScience is paying attention here.' },
     ],
     killers: [
       { id: find('heart-disease'), supernova: true, caption: 'Heart Disease\n9.1 million deaths every year' },
@@ -18,29 +18,29 @@ function buildSequences(idMap) {
       { caption: 'Together, nearly 20 million lives lost annually.' },
     ],
     forgotten: [
-      { id: find('rotavirus'), supernova: true, caption: 'Rotavirus\n200,000 children die yearly — research down 4%' },
-      { id: find('tetanus'), supernova: true, caption: 'Tetanus\n35,000 deaths yearly — research down 3%' },
-      { id: find('hepatitis-c'), supernova: true, caption: 'Hepatitis C\n242,000 deaths yearly — research down 2%' },
-      { caption: '470,000+ deaths a year.\nAnd the world is looking away.' },
+      { id: find('rotavirus'), supernova: true, caption: 'Rotavirus\n128,000 children die yearly — research down 13%' },
+      { id: find('tetanus'), supernova: true, caption: 'Tetanus\n35,000 deaths yearly — research down 10%' },
+      { id: find('hepatitis-c'), supernova: true, caption: 'Hepatitis C\n242,000 deaths yearly — research down 44%' },
+      { caption: '405,000+ deaths a year.\nAnd the world is looking away.' },
     ],
     silent: [
-      { id: find('rheumatic-heart-disease'), supernova: true, caption: 'Rheumatic Heart Disease\n373,000 deaths — only 9,000 papers' },
-      { id: find('norovirus'), supernova: true, caption: 'Norovirus\n200,000 deaths — only 12,000 papers' },
-      { id: find('pertussis'), supernova: true, caption: 'Pertussis\n160,000 deaths — only 14,000 papers' },
-      { id: find('rotavirus'), supernova: true, caption: 'Rotavirus\n200,000 child deaths — research declining' },
-      { caption: '930,000+ people die every year.\nAlmost no one is studying why.' },
+      { id: find('rheumatic-heart-disease'), supernova: true, caption: 'Rheumatic Heart Disease\n373,000 deaths — only 19,000 papers' },
+      { id: find('norovirus'), supernova: true, caption: 'Norovirus\n200,000 deaths — only 9,000 papers' },
+      { id: find('pertussis'), supernova: true, caption: 'Pertussis\n59,000 deaths — only 36,000 papers' },
+      { id: find('rotavirus'), supernova: true, caption: 'Rotavirus\n128,000 child deaths — research declining' },
+      { caption: '760,000+ people die every year.\nAlmost no one is studying why.' },
     ],
     richpoor: [
-      { id: find('cystic-fibrosis'), supernova: true, caption: 'Cystic Fibrosis\n48 papers per death — wealthy nations' },
-      { id: find('multiple-sclerosis'), supernova: true, caption: 'Multiple Sclerosis\n16 papers per death — wealthy nations' },
-      { id: find('tuberculosis'), supernova: true, caption: 'Tuberculosis\n0.09 papers per death — 1.25M die yearly' },
-      { id: find('malaria'), supernova: true, caption: 'Malaria\n0.16 papers per death — 608,000 die yearly' },
+      { id: find('cystic-fibrosis'), supernova: true, caption: 'Cystic Fibrosis\n68 papers per death — wealthy nations' },
+      { id: find('multiple-sclerosis'), supernova: true, caption: 'Multiple Sclerosis\n26 papers per death — wealthy nations' },
+      { id: find('tuberculosis'), supernova: true, caption: 'Tuberculosis\n0.25 papers per death — 1.25M die yearly' },
+      { id: find('malaria'), supernova: true, caption: 'Malaria\n0.20 papers per death — 608,000 die yearly' },
       { caption: 'Where you are born decides\nhow much science fights for your life.' },
     ],
     mismatch: [
-      { id: find('cystic-fibrosis'), supernova: true, caption: 'Cystic Fibrosis\n48,000 papers for 1,000 deaths' },
-      { id: find('rheumatic-heart-disease'), supernova: true, caption: 'Rheumatic Heart Disease\n9,000 papers for 373,000 deaths' },
-      { caption: 'A 2,000x research gap.\nNow toggle Mortality at the top of the page.' },
+      { id: find('cystic-fibrosis'), supernova: true, caption: 'Cystic Fibrosis\n68,000 papers for 1,000 deaths' },
+      { id: find('rheumatic-heart-disease'), supernova: true, caption: 'Rheumatic Heart Disease\n19,000 papers for 373,000 deaths' },
+      { caption: 'A 1,300x research gap.\nNow toggle Mortality at the top of the page.' },
     ],
   };
 }

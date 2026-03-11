@@ -673,36 +673,36 @@ export default function MedGalaxy() {
     const find=id=>data.idMap[id];
     const list=[
       // Most researched
-      {id:find('breast-cancer'),caption:'Breast Cancer · 430K papers · Most researched cancer'},
+      {id:find('breast-cancer'),caption:'Breast Cancer · 574K papers · Most researched cancer'},
       {id:find('heart-disease'),caption:'Heart Disease · 9.1M deaths/yr · #1 killer globally'},
-      {id:find('type-2-diabetes'),caption:'Type 2 Diabetes · 380K papers · 1.6M deaths/yr'},
-      {id:find('hiv-aids'),caption:'HIV/AIDS · 350K papers · Reshaped modern medicine'},
+      {id:find('type-2-diabetes'),caption:'Type 2 Diabetes · 273K papers · 1.6M deaths/yr'},
+      {id:find('hiv-aids'),caption:'HIV/AIDS · 191K papers · Reshaped modern medicine'},
       {id:find('lung-cancer'),caption:'Lung Cancer · 1.8M deaths/yr · Deadliest cancer'},
       // Most deadly
-      {id:find('sepsis'),caption:'Sepsis · 11M deaths/yr but only 95K papers · 115 deaths per paper'},
+      {id:find('sepsis'),caption:'Sepsis · 11M deaths/yr but only 243K papers · 45 deaths per paper'},
       {id:find('stroke'),caption:'Stroke · 7.3M deaths/yr · Every 3 seconds someone has one'},
-      {id:find('copd'),caption:'COPD · 3.5M deaths/yr · 41 deaths per paper published'},
+      {id:find('copd'),caption:'COPD · 3.5M deaths/yr · 31 deaths per paper published'},
       {id:find('pneumonia'),caption:'Pneumonia · 2.2M deaths/yr · Leading killer of children'},
-      {id:find('alzheimers-disease'),caption:"Alzheimer's · 1.9M deaths/yr · Research surging +6%"},
+      {id:find('alzheimers-disease'),caption:"Alzheimer's · 1.9M deaths/yr · Research surging +66%"},
       // Most neglected
-      {id:find('rheumatic-heart-disease'),caption:'Rheumatic Heart Disease · 373K deaths, only 9K papers · 41 deaths per paper'},
+      {id:find('rheumatic-heart-disease'),caption:'Rheumatic Heart Disease · 373K deaths, only 19K papers · 19 deaths per paper'},
       {id:find('norovirus'),caption:'Norovirus · 200K deaths/yr · World\'s most common stomach bug'},
       {id:find('sickle-cell-disease'),caption:'Sickle Cell · 376K deaths/yr · Most common genetic disease in Africa'},
-      {id:find('hepatitis-b'),caption:'Hepatitis B · 1.1M deaths/yr · 15 deaths for every paper'},
+      {id:find('hepatitis-b'),caption:'Hepatitis B · 1.1M deaths/yr · 9 deaths for every paper'},
       // Most researched per death
-      {id:find('cystic-fibrosis'),caption:'Cystic Fibrosis · 48 papers per death · Most researched per capita'},
-      {id:find('ebola'),caption:'Ebola · 40 papers per death · Fear drives funding'},
-      {id:find('west-nile-virus'),caption:'West Nile Virus · 45 papers per death · Heavily studied, rarely fatal'},
+      {id:find('cystic-fibrosis'),caption:'Cystic Fibrosis · 68 papers per death · Most researched per capita'},
+      {id:find('ebola'),caption:'Ebola · 43 papers per death · Fear drives funding'},
+      {id:find('west-nile-virus'),caption:'West Nile Virus · 50 papers per death · Heavily studied, rarely fatal'},
       // Trending
-      {id:find('nafld'),caption:'Fatty Liver Disease · Research up 15% · Fastest growing liver disease'},
-      {id:find('myocarditis'),caption:'Myocarditis · Research up 10% · Heart inflammation gaining attention'},
-      {id:find('dengue'),caption:'Dengue · Research up 12% · Half the world at risk'},
+      {id:find('nafld'),caption:'Fatty Liver Disease · Research up 124% · Fastest growing liver disease'},
+      {id:find('myocarditis'),caption:'Myocarditis · Research up 152% · Heart inflammation gaining attention'},
+      {id:find('dengue'),caption:'Dengue · Research up 10% · Half the world at risk'},
       // Declining research
-      {id:find('covid-19'),caption:'COVID-19 · 300K papers · Research declining 10% as pandemic fades'},
-      {id:find('rotavirus'),caption:'Rotavirus · 200K child deaths/yr · Research declining despite mortality'},
+      {id:find('covid-19'),caption:'COVID-19 · 505K papers · Research declining as pandemic fades'},
+      {id:find('rotavirus'),caption:'Rotavirus · 128K child deaths/yr · Research declining despite mortality'},
       // Zero mortality, high impact
-      {id:find('depression'),caption:'Depression · 280K papers · Zero mortality metric, massive burden'},
-      {id:find('obesity'),caption:'Obesity · 200K papers · Affects 1 billion people worldwide'},
+      {id:find('depression'),caption:'Depression · 719K papers · Zero mortality metric, massive burden'},
+      {id:find('obesity'),caption:'Obesity · 537K papers · Affects 1 billion people worldwide'},
       // Unique story
       {id:find('malaria'),caption:'Malaria · 608K deaths/yr · 94% of deaths in Africa'},
     ].filter(s=>s.id!==undefined);
@@ -721,18 +721,18 @@ export default function MedGalaxy() {
   },[spotlightActive,stopSpotlight,selectDisease]);
 
   const RANDOM_PICK_DISEASES=[
-    {id:'sepsis',fact:'Sepsis kills 11M people per year — more than all cancers combined — yet has only 95K papers. That\'s 115 deaths for every paper published.'},
-    {id:'breast-cancer',fact:'Breast Cancer has 430,000 papers — more research than any other cancer. Yet it\'s only the 5th deadliest cancer globally.'},
-    {id:'rheumatic-heart-disease',fact:'Rheumatic Heart Disease kills 373,000 people per year but has only 9,000 papers. It\'s a disease of poverty — virtually eliminated in wealthy nations.'},
-    {id:'cystic-fibrosis',fact:'Cystic Fibrosis has 48 papers for every death — the most researched disease per capita. It primarily affects people of European descent.'},
+    {id:'sepsis',fact:'Sepsis kills 11M people per year — more than all cancers combined — yet has only 243K papers. That\'s 45 deaths for every paper published.'},
+    {id:'breast-cancer',fact:'Breast Cancer has 574,000 papers — more research than any other cancer. Yet it\'s only the 5th deadliest cancer globally.'},
+    {id:'rheumatic-heart-disease',fact:'Rheumatic Heart Disease kills 373,000 people per year but has only 19,000 papers. It\'s a disease of poverty — virtually eliminated in wealthy nations.'},
+    {id:'cystic-fibrosis',fact:'Cystic Fibrosis has 68 papers for every death — the most researched disease per capita. It primarily affects people of European descent.'},
     {id:'malaria',fact:'Malaria kills 608,000 people per year, 94% in Africa. A child dies of malaria every minute, yet it receives a fraction of cancer research funding.'},
-    {id:'alzheimers-disease',fact:'Alzheimer\'s kills 1.9M people per year and research is surging +6%. There is still no cure — only treatments that slow progression.'},
-    {id:'covid-19',fact:'COVID-19 generated 300,000 papers in just a few years — the fastest research ramp in scientific history. Research is now declining 10% as the pandemic fades.'},
-    {id:'ebola',fact:'Ebola has 40 papers per death — fear drives funding. Despite killing only 300 people per year on average, it receives massive research attention.'},
-    {id:'depression',fact:'Depression has 280,000 papers and zero mortality metric. It affects 280M people worldwide and is the leading cause of disability globally.'},
-    {id:'tuberculosis',fact:'Tuberculosis kills 1.25M people per year with only 0.09 papers per death. It\'s the deadliest infectious disease and has existed for thousands of years.'},
+    {id:'alzheimers-disease',fact:'Alzheimer\'s kills 1.9M people per year and research is surging +66%. There is still no cure — only treatments that slow progression.'},
+    {id:'covid-19',fact:'COVID-19 generated 505,000 papers in just a few years — the fastest research ramp in scientific history. Research is now declining as the pandemic fades.'},
+    {id:'ebola',fact:'Ebola has 43 papers per death — fear drives funding. Despite killing only 300 people per year on average, it receives massive research attention.'},
+    {id:'depression',fact:'Depression has 719,000 papers and zero mortality metric. It affects 280M people worldwide and is the leading cause of disability globally.'},
+    {id:'tuberculosis',fact:'Tuberculosis kills 1.25M people per year with only 0.25 papers per death. It\'s the deadliest infectious disease and has existed for thousands of years.'},
     {id:'sickle-cell-disease',fact:'Sickle Cell Disease kills 376,000 people per year — mostly in Africa. It\'s the most common genetic disease globally but remains severely under-researched.'},
-    {id:'rotavirus',fact:'Rotavirus kills 200,000 children per year, and research is declining. A vaccine exists but remains inaccessible in the countries that need it most.'},
+    {id:'rotavirus',fact:'Rotavirus kills 128,000 children per year, and research is declining. A vaccine exists but remains inaccessible in the countries that need it most.'},
   ];
 
   const handleRandomPick=useCallback(()=>{
@@ -843,12 +843,12 @@ export default function MedGalaxy() {
     const data=dataRef.current;if(!data)return;
     const find=id=>data.idMap[id];
     const sequences={
-      researched:[{id:find('breast-cancer'),caption:'Breast Cancer — 430K papers'},{id:find('lung-cancer'),caption:'Lung Cancer — 350K papers'},{id:find('type-2-diabetes'),caption:'Type 2 Diabetes — 380K papers'},{caption:'These diseases each have 300,000+ papers.'}],
+      researched:[{id:find('breast-cancer'),caption:'Breast Cancer — 574K papers'},{id:find('lung-cancer'),caption:'Lung Cancer — 494K papers'},{id:find('type-2-diabetes'),caption:'Type 2 Diabetes — 273K papers'},{caption:'These diseases each have 270,000+ papers.'}],
       killers:[{id:find('heart-disease'),caption:'Heart Disease — 9.1M deaths/yr'},{id:find('stroke'),caption:'Stroke — 7.3M deaths/yr'},{id:find('copd'),caption:'COPD — 3.5M deaths/yr'},{caption:'These diseases kill millions per year.'}],
-      forgotten:[{id:find('rotavirus'),caption:'Rotavirus — 200K child deaths/yr, research declining 18%'},{id:find('tetanus'),caption:'Tetanus — 35K deaths/yr, research declining 10%'},{id:find('hepatitis-c'),caption:'Hepatitis C — 242K deaths/yr, research declining'},{caption:'These diseases still kill 470,000+ yearly while the world looks away.'}],
-      silent:[{id:find('rheumatic-heart-disease'),caption:'Rheumatic Heart Disease — 373K deaths/yr, only 9K papers (41 deaths per paper)'},{id:find('norovirus'),caption:'Norovirus — 200K deaths/yr, only 12K papers'},{id:find('pertussis'),caption:'Pertussis — 160K deaths/yr, only 14K papers'},{id:find('rotavirus'),caption:'Rotavirus — 200K child deaths/yr, research declining'},{caption:'These diseases kill 930,000+ people every year in near-silence.'}],
-      richpoor:[{id:find('cystic-fibrosis'),caption:'Cystic Fibrosis — 48 papers per death (wealthy nation disease)'},{id:find('multiple-sclerosis'),caption:'Multiple Sclerosis — 16 papers per death (wealthy nation disease)'},{id:find('tuberculosis'),caption:'Tuberculosis — 0.09 papers per death, 1.25M deaths/yr (developing nation)'},{id:find('malaria'),caption:'Malaria — 0.16 papers per death, 608K deaths/yr (developing nation)'},{caption:'Where you are born determines how much science fights for your life.'}],
-      mismatch:[{id:find('cystic-fibrosis'),caption:'Cystic Fibrosis — 48K papers, 1K deaths (48 papers per death)'},{id:find('rheumatic-heart-disease'),caption:'Rheumatic Heart Disease — 9K papers, 373K deaths (0.02 papers per death)'},{caption:'2,000× research intensity gap. Now toggle Mortality at the top of the page →'}],
+      forgotten:[{id:find('rotavirus'),caption:'Rotavirus — 128K child deaths/yr, research declining 13%'},{id:find('tetanus'),caption:'Tetanus — 35K deaths/yr, research declining 10%'},{id:find('hepatitis-c'),caption:'Hepatitis C — 242K deaths/yr, research declining 44%'},{caption:'These diseases still kill 405,000+ yearly while the world looks away.'}],
+      silent:[{id:find('rheumatic-heart-disease'),caption:'Rheumatic Heart Disease — 373K deaths/yr, only 19K papers (19 deaths per paper)'},{id:find('norovirus'),caption:'Norovirus — 200K deaths/yr, only 9K papers'},{id:find('pertussis'),caption:'Pertussis — 59K deaths/yr, only 36K papers'},{id:find('rotavirus'),caption:'Rotavirus — 128K child deaths/yr, research declining'},{caption:'These diseases kill 760,000+ people every year in near-silence.'}],
+      richpoor:[{id:find('cystic-fibrosis'),caption:'Cystic Fibrosis — 68 papers per death (wealthy nation disease)'},{id:find('multiple-sclerosis'),caption:'Multiple Sclerosis — 26 papers per death (wealthy nation disease)'},{id:find('tuberculosis'),caption:'Tuberculosis — 0.25 papers per death, 1.25M deaths/yr (developing nation)'},{id:find('malaria'),caption:'Malaria — 0.20 papers per death, 608K deaths/yr (developing nation)'},{caption:'Where you are born determines how much science fights for your life.'}],
+      mismatch:[{id:find('cystic-fibrosis'),caption:'Cystic Fibrosis — 68K papers, 1K deaths (68 papers per death)'},{id:find('rheumatic-heart-disease'),caption:'Rheumatic Heart Disease — 19K papers, 373K deaths (0.05 papers per death)'},{caption:'1,300× research intensity gap. Now toggle Mortality at the top of the page →'}],
     };
     sr.seq=sequences[chipId];sr.step=0;sr.chipId=chipId;
     if(!sr.seq)return;

@@ -82,9 +82,8 @@ export default function SupernovaReveal() {
       }
 
       if (supernovaPhase === 'burst') {
-        // Select the disease now (opens sidebar during linkwave)
-        // Skip during story mode — story shortcut handles selection in burst end
-        if (!s.storyActive) s.selectDisease(idx);
+        // Select the disease now — triggers ripple ring at burst start
+        s.selectDisease(idx);
         batchTimerRef.current = 0;
         batchIdxRef.current = 0;
       }
@@ -152,7 +151,6 @@ export default function SupernovaReveal() {
       if (elapsed >= BURST_MS) {
         // During story mode, skip linkwave/settle — go straight to complete
         if (s.storyActive) {
-          s.selectDisease(idx);
           useStore.setState({
             supernovaPhase: 'complete',
             supernovaCaption: '',
