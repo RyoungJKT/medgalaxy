@@ -4,7 +4,7 @@
     "label": "Dengue",
     "category": "tropical",
     "description": "Mosquito-borne viral infection endemic to tropical and subtropical regions worldwide.",
-    "papers": 35620,
+    "papers": 35676,
     "trend": 10,
     "mortality": 40000,
     "fundingGap": "high",
@@ -18,7 +18,7 @@
       2219,
       2013,
       1992,
-      2296
+      2295
     ],
     "region": "SEAR"
   },
@@ -27,7 +27,7 @@
     "label": "Malaria",
     "category": "tropical",
     "description": "Parasitic disease transmitted by Anopheles mosquitoes, causing fever and organ damage.",
-    "papers": 123423,
+    "papers": 123500,
     "trend": 3,
     "mortality": 608000,
     "fundingGap": "high",
@@ -40,7 +40,7 @@
       4823,
       5188,
       5033,
-      4513,
+      4510,
       4622
     ],
     "region": "AFR"
@@ -50,7 +50,7 @@
     "label": "Chagas Disease",
     "category": "tropical",
     "description": "Parasitic illness caused by Trypanosoma cruzi, spread by triatomine bugs.",
-    "papers": 24557,
+    "papers": 24572,
     "trend": 14,
     "mortality": 12000,
     "fundingGap": "high",
@@ -73,7 +73,7 @@
     "label": "Leprosy",
     "category": "tropical",
     "description": "Chronic bacterial infection affecting skin, nerves, and mucous membranes.",
-    "papers": 33490,
+    "papers": 33506,
     "trend": 31,
     "mortality": 0,
     "fundingGap": "medium",
@@ -96,7 +96,7 @@
     "label": "Buruli Ulcer",
     "category": "tropical",
     "description": "Necrotizing skin infection caused by Mycobacterium ulcerans, mainly in West Africa.",
-    "papers": 1426,
+    "papers": 1427,
     "trend": -3,
     "mortality": 0,
     "fundingGap": "high",
@@ -119,7 +119,7 @@
     "label": "Schistosomiasis",
     "category": "tropical",
     "description": "Parasitic disease caused by blood flukes acquired through contaminated freshwater.",
-    "papers": 31500,
+    "papers": 31524,
     "trend": -10,
     "mortality": 13000,
     "fundingGap": "high",
@@ -142,7 +142,7 @@
     "label": "Leishmaniasis",
     "category": "tropical",
     "description": "Parasitic disease spread by sandfly bites, causing skin or visceral organ damage.",
-    "papers": 36543,
+    "papers": 36563,
     "trend": 1,
     "mortality": 26000,
     "fundingGap": "high",
@@ -165,7 +165,7 @@
     "label": "Sleeping Sickness (African Trypanosomiasis)",
     "category": "tropical",
     "description": "Tsetse fly-transmitted parasitic disease affecting the central nervous system.",
-    "papers": 9114,
+    "papers": 9116,
     "trend": -25,
     "mortality": 500,
     "fundingGap": "high",
@@ -211,7 +211,7 @@
     "label": "Lymphatic Filariasis",
     "category": "tropical",
     "description": "Mosquito-transmitted parasitic disease causing severe lymphatic system swelling.",
-    "papers": 5305,
+    "papers": 5306,
     "trend": -2,
     "mortality": 0,
     "fundingGap": "high",
@@ -234,7 +234,7 @@
     "label": "Trachoma",
     "category": "tropical",
     "description": "Bacterial eye infection and leading infectious cause of preventable blindness.",
-    "papers": 5662,
+    "papers": 5663,
     "trend": -3,
     "mortality": 0,
     "fundingGap": "high",
@@ -280,7 +280,7 @@
     "label": "Rabies",
     "category": "tropical",
     "description": "Fatal viral disease transmitted through animal bites, nearly 100% lethal once symptomatic.",
-    "papers": 19355,
+    "papers": 19382,
     "trend": 17,
     "mortality": 59000,
     "fundingGap": "high",
@@ -326,7 +326,7 @@
     "label": "Chikungunya",
     "category": "tropical",
     "description": "Mosquito-borne viral disease causing fever and severe joint pain.",
-    "papers": 9501,
+    "papers": 9522,
     "trend": 2,
     "mortality": 500,
     "fundingGap": "medium",
@@ -349,7 +349,7 @@
     "label": "Leptospirosis",
     "category": "tropical",
     "description": "Bacterial disease spread through animal urine-contaminated water or soil.",
-    "papers": 12280,
+    "papers": 12290,
     "trend": 13,
     "mortality": 58900,
     "fundingGap": "high",
@@ -372,7 +372,7 @@
     "label": "Mycetoma",
     "category": "tropical",
     "description": "Chronic subcutaneous fungal or bacterial infection affecting limbs.",
-    "papers": 3184,
+    "papers": 3185,
     "trend": 49,
     "mortality": 0,
     "fundingGap": "high",
@@ -395,7 +395,7 @@
     "label": "Echinococcosis",
     "category": "tropical",
     "description": "Parasitic cyst-forming disease caused by Echinococcus tapeworms.",
-    "papers": 23892,
+    "papers": 23908,
     "trend": 12,
     "mortality": 1400,
     "fundingGap": "high",
@@ -406,7 +406,7 @@
       508,
       555,
       570,
-      664,
+      663,
       597,
       532,
       590
@@ -418,7 +418,7 @@
     "label": "Fascioliasis",
     "category": "tropical",
     "description": "Liver fluke infection acquired from contaminated aquatic plants or water.",
-    "papers": 4950,
+    "papers": 4953,
     "trend": -16,
     "mortality": 0,
     "fundingGap": "high",
@@ -429,7 +429,7 @@
       134,
       144,
       157,
-      140,
+      138,
       99,
       111,
       119
@@ -441,7 +441,7 @@
     "label": "Soil-transmitted Helminths",
     "category": "tropical",
     "description": "Intestinal worm infections affecting over a billion people in developing regions.",
-    "papers": 2763,
+    "papers": 2769,
     "trend": 19,
     "mortality": 3500,
     "fundingGap": "high",
@@ -454,7 +454,7 @@
       193,
       222,
       198,
-      167,
+      166,
       204
     ],
     "region": "SEAR"
@@ -464,21 +464,21 @@
     "label": "Breast Cancer",
     "category": "cancer",
     "description": "Most commonly diagnosed cancer worldwide, arising from breast tissue cells.",
-    "papers": 578900,
+    "papers": 579535,
     "trend": 33,
     "mortality": 666000,
     "fundingGap": "low",
     "yearlyPapers": [
-      22663,
-      23041,
+      22664,
+      23042,
       23869,
       24934,
       26365,
       29773,
       31594,
-      30982,
-      30517,
-      31253
+      30984,
+      30513,
+      31263
     ],
     "region": "EUR"
   },
@@ -487,7 +487,7 @@
     "label": "Lung Cancer",
     "category": "cancer",
     "description": "Leading cause of cancer death, strongly linked to smoking and air pollution.",
-    "papers": 498386,
+    "papers": 498956,
     "trend": 44,
     "mortality": 1817000,
     "fundingGap": "medium",
@@ -497,11 +497,11 @@
       19939,
       21532,
       22869,
-      26668,
+      26667,
       28302,
       28011,
-      26792,
-      27910
+      26791,
+      27915
     ],
     "region": "WPR"
   },
@@ -510,7 +510,7 @@
     "label": "Colon Cancer",
     "category": "cancer",
     "description": "Cancer of the large intestine, highly treatable when detected early via screening.",
-    "papers": 178912,
+    "papers": 179040,
     "trend": 15,
     "mortality": 904000,
     "fundingGap": "medium",
@@ -524,7 +524,7 @@
       7980,
       7915,
       7569,
-      6835
+      6838
     ],
     "region": "EUR"
   },
@@ -533,7 +533,7 @@
     "label": "Pancreatic Cancer",
     "category": "cancer",
     "description": "Aggressive cancer with low survival rates due to late-stage diagnosis.",
-    "papers": 163080,
+    "papers": 163305,
     "trend": 61,
     "mortality": 467000,
     "fundingGap": "high",
@@ -544,10 +544,10 @@
       7103,
       8014,
       9566,
-      10342,
+      10343,
       10543,
-      10073,
-      10329
+      10074,
+      10332
     ],
     "region": "EUR"
   },
@@ -556,7 +556,7 @@
     "label": "Leukemia",
     "category": "cancer",
     "description": "Blood cancer affecting white blood cells in bone marrow and lymphatic system.",
-    "papers": 399976,
+    "papers": 400248,
     "trend": 9,
     "mortality": 305000,
     "fundingGap": "low",
@@ -565,12 +565,12 @@
       11664,
       11809,
       11795,
-      12334,
+      12335,
       13326,
       14092,
-      13247,
+      13249,
       12525,
-      12544
+      12551
     ],
     "region": "EUR"
   },
@@ -579,7 +579,7 @@
     "label": "Lymphoma",
     "category": "cancer",
     "description": "Cancer of the lymphatic system including Hodgkin and non-Hodgkin types.",
-    "papers": 343230,
+    "papers": 343474,
     "trend": 10,
     "mortality": 251000,
     "fundingGap": "low",
@@ -592,8 +592,8 @@
       13197,
       13988,
       13100,
-      12405,
-      12521
+      12403,
+      12524
     ],
     "region": "EUR"
   },
@@ -602,7 +602,7 @@
     "label": "Prostate Cancer",
     "category": "cancer",
     "description": "Most common cancer in men, often slow-growing but variable in aggressiveness.",
-    "papers": 238333,
+    "papers": 238559,
     "trend": 11,
     "mortality": 397000,
     "fundingGap": "low",
@@ -615,8 +615,8 @@
       12204,
       12743,
       11978,
-      11515,
-      11894
+      11514,
+      11899
     ],
     "region": "EUR"
   },
@@ -625,7 +625,7 @@
     "label": "Ovarian Cancer",
     "category": "cancer",
     "description": "Gynecological cancer often diagnosed at advanced stages with poor prognosis.",
-    "papers": 156411,
+    "papers": 156551,
     "trend": 22,
     "mortality": 207000,
     "fundingGap": "medium",
@@ -637,9 +637,9 @@
       6424,
       7214,
       7502,
-      7203,
-      6817,
-      7128
+      7204,
+      6815,
+      7134
     ],
     "region": "EUR"
   },
@@ -648,7 +648,7 @@
     "label": "Melanoma",
     "category": "cancer",
     "description": "Deadliest form of skin cancer, strongly associated with UV radiation exposure.",
-    "papers": 181675,
+    "papers": 181850,
     "trend": 21,
     "mortality": 59000,
     "fundingGap": "low",
@@ -659,10 +659,10 @@
       7502,
       7781,
       8779,
-      9285,
+      9287,
       8561,
       8422,
-      8438
+      8440
     ],
     "region": "EUR"
   },
@@ -671,7 +671,7 @@
     "label": "Liver Cancer",
     "category": "cancer",
     "description": "Cancer closely linked to hepatitis infections and chronic liver disease.",
-    "papers": 372767,
+    "papers": 373116,
     "trend": 42,
     "mortality": 759000,
     "fundingGap": "medium",
@@ -680,12 +680,12 @@
       13672,
       13997,
       14700,
-      16090,
+      16089,
       18155,
       19825,
       19848,
-      19335,
-      19630
+      19334,
+      19632
     ],
     "region": "WPR"
   },
@@ -694,7 +694,7 @@
     "label": "Stomach Cancer",
     "category": "cancer",
     "description": "Gastric cancer associated with H. pylori infection and dietary factors.",
-    "papers": 148990,
+    "papers": 149070,
     "trend": 18,
     "mortality": 660000,
     "fundingGap": "high",
@@ -707,8 +707,8 @@
       5992,
       6074,
       6175,
-      5923,
-      5891
+      5922,
+      5892
     ],
     "region": "WPR"
   },
@@ -717,7 +717,7 @@
     "label": "Cervical Cancer",
     "category": "cancer",
     "description": "HPV-linked cancer of the cervix, largely preventable through vaccination.",
-    "papers": 143900,
+    "papers": 144032,
     "trend": 37,
     "mortality": 349000,
     "fundingGap": "high",
@@ -730,8 +730,8 @@
       6447,
       6974,
       7009,
-      6443,
-      7019
+      6441,
+      7022
     ],
     "region": "AFR"
   },
@@ -740,7 +740,7 @@
     "label": "Bladder Cancer",
     "category": "cancer",
     "description": "Cancer of the urinary bladder, linked to smoking and chemical exposures.",
-    "papers": 109410,
+    "papers": 109528,
     "trend": 48,
     "mortality": 221000,
     "fundingGap": "medium",
@@ -753,8 +753,8 @@
       4850,
       5532,
       5501,
-      5274,
-      5425
+      5271,
+      5426
     ],
     "region": "EUR"
   },
@@ -763,7 +763,7 @@
     "label": "Brain Cancer",
     "category": "cancer",
     "description": "Primary tumors of the brain and central nervous system with poor survival.",
-    "papers": 288756,
+    "papers": 289005,
     "trend": 36,
     "mortality": 249000,
     "fundingGap": "medium",
@@ -771,13 +771,13 @@
       10164,
       10417,
       10896,
-      11494,
+      11493,
       12176,
-      13611,
+      13610,
       14581,
       13799,
-      13944,
-      15072
+      13945,
+      15078
     ],
     "region": "EUR"
   },
@@ -786,7 +786,7 @@
     "label": "Kidney Cancer",
     "category": "cancer",
     "description": "Renal cell carcinoma accounting for most adult kidney cancers.",
-    "papers": 167314,
+    "papers": 167434,
     "trend": 31,
     "mortality": 156000,
     "fundingGap": "medium",
@@ -794,13 +794,13 @@
       5697,
       5832,
       6017,
-      6091,
+      6090,
       6536,
-      7387,
-      7781,
-      7720,
+      7386,
+      7782,
+      7719,
       7526,
-      7674
+      7676
     ],
     "region": "EUR"
   },
@@ -809,7 +809,7 @@
     "label": "Thyroid Cancer",
     "category": "cancer",
     "description": "Endocrine cancer with rising incidence but generally favorable prognosis.",
-    "papers": 112474,
+    "papers": 112597,
     "trend": 46,
     "mortality": 48000,
     "fundingGap": "low",
@@ -822,8 +822,8 @@
       5686,
       6121,
       6111,
-      5947,
-      6299
+      5944,
+      6300
     ],
     "region": "WPR"
   },
@@ -832,8 +832,8 @@
     "label": "Esophageal Cancer",
     "category": "cancer",
     "description": "Cancer of the esophagus with high mortality and regional variation.",
-    "papers": 91940,
-    "trend": 38,
+    "papers": 92035,
+    "trend": 39,
     "mortality": 445000,
     "fundingGap": "high",
     "yearlyPapers": [
@@ -846,7 +846,7 @@
       5062,
       5056,
       4694,
-      4759
+      4763
     ],
     "region": "WPR"
   },
@@ -855,7 +855,7 @@
     "label": "Multiple Myeloma",
     "category": "cancer",
     "description": "Blood cancer of plasma cells in bone marrow causing bone lesions.",
-    "papers": 70878,
+    "papers": 70938,
     "trend": 34,
     "mortality": 121000,
     "fundingGap": "medium",
@@ -868,7 +868,7 @@
       3354,
       3588,
       3392,
-      3394,
+      3395,
       3439
     ],
     "region": "EUR"
@@ -878,7 +878,7 @@
     "label": "Heart Disease",
     "category": "cardiovascular",
     "description": "Leading global cause of death encompassing coronary and ischemic conditions.",
-    "papers": 1713890,
+    "papers": 1715019,
     "trend": 16,
     "mortality": 9100000,
     "fundingGap": "medium",
@@ -888,11 +888,11 @@
       59143,
       61232,
       63263,
-      72630,
-      76040,
-      71265,
-      67222,
-      67472
+      72631,
+      76041,
+      71268,
+      67213,
+      67479
     ],
     "region": "EUR"
   },
@@ -901,21 +901,21 @@
     "label": "Stroke",
     "category": "cardiovascular",
     "description": "Sudden interruption of blood supply to the brain causing cell death.",
-    "papers": 523667,
+    "papers": 524350,
     "trend": 51,
     "mortality": 7300000,
     "fundingGap": "medium",
     "yearlyPapers": [
       21533,
       22671,
-      23875,
+      23876,
       25072,
-      26942,
-      31320,
-      35047,
-      35315,
-      33450,
-      34195
+      26941,
+      31321,
+      35048,
+      35321,
+      33445,
+      34196
     ],
     "region": "WPR"
   },
@@ -924,7 +924,7 @@
     "label": "Hypertension",
     "category": "cardiovascular",
     "description": "Chronically elevated blood pressure and major risk factor for heart disease.",
-    "papers": 711818,
+    "papers": 712477,
     "trend": 37,
     "mortality": 1330000,
     "fundingGap": "low",
@@ -936,9 +936,9 @@
       26306,
       31324,
       34368,
-      33904,
-      32026,
-      33285
+      33909,
+      32016,
+      33292
     ],
     "region": "EUR"
   },
@@ -947,7 +947,7 @@
     "label": "Atherosclerosis",
     "category": "cardiovascular",
     "description": "Buildup of plaque in artery walls restricting blood flow to organs.",
-    "papers": 197304,
+    "papers": 197457,
     "trend": 11,
     "mortality": 0,
     "fundingGap": "low",
@@ -959,8 +959,8 @@
       8576,
       9391,
       10068,
-      9772,
-      9319,
+      9773,
+      9318,
       9289
     ],
     "region": "EUR"
@@ -970,7 +970,7 @@
     "label": "Heart Failure",
     "category": "cardiovascular",
     "description": "Chronic condition where the heart cannot pump blood effectively.",
-    "papers": 372181,
+    "papers": 372606,
     "trend": 49,
     "mortality": 86000,
     "fundingGap": "medium",
@@ -982,9 +982,9 @@
       16843,
       19877,
       22152,
-      21949,
-      21274,
-      22225
+      21950,
+      21267,
+      22227
     ],
     "region": "EUR"
   },
@@ -993,7 +993,7 @@
     "label": "Arrhythmia",
     "category": "cardiovascular",
     "description": "Irregular heart rhythms including atrial fibrillation and tachycardia.",
-    "papers": 323750,
+    "papers": 323982,
     "trend": 17,
     "mortality": 340000,
     "fundingGap": "medium",
@@ -1006,7 +1006,7 @@
       13159,
       13741,
       13084,
-      12905,
+      12902,
       11856
     ],
     "region": "EUR"
@@ -1016,7 +1016,7 @@
     "label": "Peripheral Artery Disease",
     "category": "cardiovascular",
     "description": "Narrowing of peripheral arteries reducing blood flow to the limbs.",
-    "papers": 56925,
+    "papers": 56966,
     "trend": 26,
     "mortality": 65000,
     "fundingGap": "medium",
@@ -1030,7 +1030,7 @@
       3300,
       3061,
       2905,
-      3062
+      3063
     ],
     "region": "EUR"
   },
@@ -1039,7 +1039,7 @@
     "label": "Aortic Aneurysm",
     "category": "cardiovascular",
     "description": "Dangerous widening of the aorta that may rupture without warning.",
-    "papers": 86156,
+    "papers": 86196,
     "trend": 9,
     "mortality": 154000,
     "fundingGap": "medium",
@@ -1052,7 +1052,7 @@
       3852,
       4049,
       3808,
-      3408,
+      3407,
       3592
     ],
     "region": "EUR"
@@ -1062,7 +1062,7 @@
     "label": "Cardiomyopathy",
     "category": "cardiovascular",
     "description": "Disease of the heart muscle affecting its ability to pump blood.",
-    "papers": 173327,
+    "papers": 173479,
     "trend": 32,
     "mortality": 370000,
     "fundingGap": "medium",
@@ -1075,7 +1075,7 @@
       7960,
       8701,
       8606,
-      8198,
+      8194,
       8648
     ],
     "region": "AFR"
@@ -1085,7 +1085,7 @@
     "label": "Deep Vein Thrombosis",
     "category": "cardiovascular",
     "description": "Blood clot formation in deep veins, usually in the legs, risking embolism.",
-    "papers": 114403,
+    "papers": 114506,
     "trend": 26,
     "mortality": 10000,
     "fundingGap": "medium",
@@ -1098,8 +1098,8 @@
       4998,
       5658,
       5279,
-      4806,
-      4690
+      4804,
+      4691
     ],
     "region": "EUR"
   },
@@ -1108,7 +1108,7 @@
     "label": "Pulmonary Embolism",
     "category": "cardiovascular",
     "description": "Blockage of a pulmonary artery by a blood clot from a deep vein.",
-    "papers": 73543,
+    "papers": 73614,
     "trend": 29,
     "mortality": 400000,
     "fundingGap": "medium",
@@ -1131,7 +1131,7 @@
     "label": "Rheumatic Heart Disease",
     "category": "cardiovascular",
     "description": "Heart valve damage from rheumatic fever, prevalent in low-income countries.",
-    "papers": 19368,
+    "papers": 19373,
     "trend": 35,
     "mortality": 373000,
     "fundingGap": "high",
@@ -1144,8 +1144,8 @@
       496,
       557,
       488,
-      492,
-      569
+      490,
+      568
     ],
     "region": "AFR"
   },
@@ -1154,7 +1154,7 @@
     "label": "Endocarditis",
     "category": "cardiovascular",
     "description": "Infection of the heart's inner lining, typically affecting heart valves.",
-    "papers": 50202,
+    "papers": 50228,
     "trend": 34,
     "mortality": 17000,
     "fundingGap": "medium",
@@ -1177,7 +1177,7 @@
     "label": "Myocarditis",
     "category": "cardiovascular",
     "description": "Inflammation of the heart muscle often caused by viral infections.",
-    "papers": 30677,
+    "papers": 30712,
     "trend": 152,
     "mortality": 32000,
     "fundingGap": "medium",
@@ -1189,9 +1189,9 @@
       944,
       1602,
       1979,
-      2326,
+      2327,
       1855,
-      1670
+      1671
     ],
     "region": "EUR"
   },
@@ -1200,7 +1200,7 @@
     "label": "Alzheimer's Disease",
     "category": "neurological",
     "description": "Progressive neurodegenerative disorder and leading cause of dementia.",
-    "papers": 251600,
+    "papers": 251947,
     "trend": 66,
     "mortality": 1900000,
     "fundingGap": "medium",
@@ -1213,8 +1213,8 @@
       14229,
       15845,
       16321,
-      17111,
-      18447
+      17112,
+      18448
     ],
     "region": "EUR"
   },
@@ -1223,7 +1223,7 @@
     "label": "Parkinson's Disease",
     "category": "neurological",
     "description": "Degenerative movement disorder caused by loss of dopamine-producing neurons.",
-    "papers": 170246,
+    "papers": 170476,
     "trend": 43,
     "mortality": 388000,
     "fundingGap": "medium",
@@ -1234,10 +1234,10 @@
       7902,
       8289,
       9717,
-      10465,
-      10332,
+      10464,
+      10331,
       10053,
-      10819
+      10818
     ],
     "region": "EUR"
   },
@@ -1246,7 +1246,7 @@
     "label": "Epilepsy",
     "category": "neurological",
     "description": "Neurological disorder marked by recurrent unprovoked seizures.",
-    "papers": 203257,
+    "papers": 203434,
     "trend": 32,
     "mortality": 140000,
     "fundingGap": "medium",
@@ -1259,8 +1259,8 @@
       9225,
       10115,
       9360,
-      9148,
-      9689
+      9147,
+      9691
     ],
     "region": "AFR"
   },
@@ -1269,7 +1269,7 @@
     "label": "Multiple Sclerosis",
     "category": "neurological",
     "description": "Autoimmune disease damaging nerve cell insulation in the brain and spine.",
-    "papers": 126101,
+    "papers": 126240,
     "trend": 26,
     "mortality": 4700,
     "fundingGap": "low",
@@ -1281,9 +1281,9 @@
       6088,
       6958,
       7420,
-      7254,
+      7256,
       6514,
-      6822
+      6824
     ],
     "region": "EUR"
   },
@@ -1292,7 +1292,7 @@
     "label": "ALS",
     "category": "neurological",
     "description": "Fatal motor neuron disease causing progressive muscle paralysis.",
-    "papers": 40659,
+    "papers": 40707,
     "trend": 34,
     "mortality": 39000,
     "fundingGap": "medium",
@@ -1315,7 +1315,7 @@
     "label": "Huntington's Disease",
     "category": "neurological",
     "description": "Inherited neurodegenerative disorder causing progressive motor and cognitive decline.",
-    "papers": 28355,
+    "papers": 28377,
     "trend": 13,
     "mortality": 5000,
     "fundingGap": "medium",
@@ -1329,7 +1329,7 @@
       1502,
       1432,
       1300,
-      1378
+      1377
     ],
     "region": "EUR"
   },
@@ -1338,7 +1338,7 @@
     "label": "Migraine",
     "category": "neurological",
     "description": "Recurring severe headache disorder often with sensory disturbances.",
-    "papers": 54447,
+    "papers": 54498,
     "trend": 44,
     "mortality": 0,
     "fundingGap": "medium",
@@ -1350,8 +1350,8 @@
       2240,
       2562,
       2782,
-      2690,
-      2729,
+      2691,
+      2727,
       2830
     ],
     "region": "EUR"
@@ -1361,7 +1361,7 @@
     "label": "Neuropathy",
     "category": "neurological",
     "description": "Damage or dysfunction of peripheral nerves causing pain and numbness.",
-    "papers": 123269,
+    "papers": 123410,
     "trend": 39,
     "mortality": 0,
     "fundingGap": "medium",
@@ -1374,7 +1374,7 @@
       5921,
       6417,
       6594,
-      6052,
+      6049,
       6515
     ],
     "region": "SEAR"
@@ -1384,7 +1384,7 @@
     "label": "Meningitis",
     "category": "neurological",
     "description": "Inflammation of brain and spinal cord membranes from infection.",
-    "papers": 147031,
+    "papers": 147123,
     "trend": 18,
     "mortality": 214000,
     "fundingGap": "high",
@@ -1396,9 +1396,9 @@
       4210,
       4372,
       4572,
-      4415,
-      4255,
-      4463
+      4416,
+      4252,
+      4465
     ],
     "region": "AFR"
   },
@@ -1407,7 +1407,7 @@
     "label": "Cerebral Palsy",
     "category": "neurological",
     "description": "Group of permanent movement disorders appearing in early childhood.",
-    "papers": 40532,
+    "papers": 40576,
     "trend": 33,
     "mortality": 0,
     "fundingGap": "medium",
@@ -1420,8 +1420,8 @@
       1922,
       2069,
       1997,
-      1977,
-      2077
+      1975,
+      2076
     ],
     "region": "EUR"
   },
@@ -1430,7 +1430,7 @@
     "label": "Spinal Cord Injury",
     "category": "neurological",
     "description": "Damage to the spinal cord causing loss of muscle function and sensation.",
-    "papers": 97396,
+    "papers": 97495,
     "trend": 15,
     "mortality": 0,
     "fundingGap": "medium",
@@ -1442,9 +1442,9 @@
       4178,
       4447,
       4834,
-      4802,
-      4578,
-      4565
+      4803,
+      4575,
+      4568
     ],
     "region": "AMR"
   },
@@ -1453,7 +1453,7 @@
     "label": "Traumatic Brain Injury",
     "category": "neurological",
     "description": "Brain damage caused by external mechanical force or impact to the head.",
-    "papers": 79537,
+    "papers": 79631,
     "trend": 29,
     "mortality": 500000,
     "fundingGap": "medium",
@@ -1466,8 +1466,8 @@
       5264,
       5472,
       5400,
-      5313,
-      5598
+      5311,
+      5599
     ],
     "region": "AMR"
   },
@@ -1476,7 +1476,7 @@
     "label": "Narcolepsy",
     "category": "neurological",
     "description": "Chronic sleep disorder causing overwhelming daytime drowsiness.",
-    "papers": 7327,
+    "papers": 7335,
     "trend": 18,
     "mortality": 0,
     "fundingGap": "medium",
@@ -1499,7 +1499,7 @@
     "label": "Essential Tremor",
     "category": "neurological",
     "description": "Common movement disorder causing involuntary rhythmic shaking.",
-    "papers": 6662,
+    "papers": 6674,
     "trend": 37,
     "mortality": 0,
     "fundingGap": "medium",
@@ -1522,7 +1522,7 @@
     "label": "Asthma",
     "category": "respiratory",
     "description": "Chronic airway inflammation causing reversible breathing difficulty.",
-    "papers": 241551,
+    "papers": 241735,
     "trend": 20,
     "mortality": 455000,
     "fundingGap": "low",
@@ -1532,11 +1532,11 @@
       8439,
       8671,
       8855,
-      10146,
+      10145,
       10932,
       10280,
-      9636,
-      9523
+      9633,
+      9524
     ],
     "region": "EUR"
   },
@@ -1545,7 +1545,7 @@
     "label": "COPD",
     "category": "respiratory",
     "description": "Progressive lung disease causing obstructed airflow and breathing difficulty.",
-    "papers": 112868,
+    "papers": 112976,
     "trend": 12,
     "mortality": 3500000,
     "fundingGap": "high",
@@ -1557,9 +1557,9 @@
       5362,
       6025,
       6292,
-      5778,
-      5458,
-      5653
+      5777,
+      5457,
+      5654
     ],
     "region": "WPR"
   },
@@ -1568,7 +1568,7 @@
     "label": "Pneumonia",
     "category": "respiratory",
     "description": "Lung infection causing inflammation of the air sacs, a major killer globally.",
-    "papers": 596476,
+    "papers": 597098,
     "trend": 656,
     "mortality": 2200000,
     "fundingGap": "high",
@@ -1581,8 +1581,8 @@
       77300,
       104542,
       93609,
-      67609,
-      49109
+      67612,
+      49126
     ],
     "region": "AFR"
   },
@@ -1591,7 +1591,7 @@
     "label": "Tuberculosis",
     "category": "respiratory",
     "description": "Bacterial lung infection and one of the deadliest infectious diseases worldwide.",
-    "papers": 317354,
+    "papers": 317539,
     "trend": 15,
     "mortality": 1250000,
     "fundingGap": "high",
@@ -1603,9 +1603,9 @@
       8875,
       10099,
       10405,
-      10101,
+      10102,
       9501,
-      10029
+      10031
     ],
     "region": "SEAR"
   },
@@ -1614,7 +1614,7 @@
     "label": "Lung Fibrosis",
     "category": "respiratory",
     "description": "Progressive scarring of lung tissue leading to respiratory failure.",
-    "papers": 90907,
+    "papers": 91008,
     "trend": 51,
     "mortality": 188000,
     "fundingGap": "medium",
@@ -1627,7 +1627,7 @@
       4906,
       5534,
       5279,
-      5097,
+      5095,
       5251
     ],
     "region": "EUR"
@@ -1637,7 +1637,7 @@
     "label": "Sleep Apnea",
     "category": "respiratory",
     "description": "Disorder causing repeated breathing interruptions during sleep.",
-    "papers": 68961,
+    "papers": 69050,
     "trend": 26,
     "mortality": 0,
     "fundingGap": "low",
@@ -1647,11 +1647,11 @@
       3344,
       3438,
       3586,
-      3872,
+      3871,
       4138,
       4167,
-      4114,
-      4087
+      4113,
+      4088
     ],
     "region": "AMR"
   },
@@ -1660,7 +1660,7 @@
     "label": "Bronchiectasis",
     "category": "respiratory",
     "description": "Permanent widening of the bronchi causing chronic cough and infections.",
-    "papers": 18429,
+    "papers": 18445,
     "trend": 49,
     "mortality": 1000,
     "fundingGap": "medium",
@@ -1673,7 +1673,7 @@
       722,
       838,
       828,
-      786,
+      785,
       921
     ],
     "region": "EUR"
@@ -1683,7 +1683,7 @@
     "label": "Sarcoidosis",
     "category": "respiratory",
     "description": "Inflammatory disease forming granulomas in lungs and other organs.",
-    "papers": 37558,
+    "papers": 37582,
     "trend": 17,
     "mortality": 1000,
     "fundingGap": "medium",
@@ -1696,7 +1696,7 @@
       1286,
       1317,
       1240,
-      1221,
+      1219,
       1179
     ],
     "region": "EUR"
@@ -1706,7 +1706,7 @@
     "label": "Pulmonary Hypertension",
     "category": "respiratory",
     "description": "High blood pressure in the pulmonary arteries straining the right heart.",
-    "papers": 93458,
+    "papers": 93553,
     "trend": 40,
     "mortality": 22000,
     "fundingGap": "medium",
@@ -1729,7 +1729,7 @@
     "label": "Pleural Effusion",
     "category": "respiratory",
     "description": "Abnormal fluid buildup between the lung and chest wall lining.",
-    "papers": 40071,
+    "papers": 40103,
     "trend": 35,
     "mortality": 0,
     "fundingGap": "low",
@@ -1742,7 +1742,7 @@
       1684,
       1792,
       1689,
-      1539,
+      1538,
       1694
     ],
     "region": "EUR"
@@ -1752,7 +1752,7 @@
     "label": "Acute Respiratory Distress",
     "category": "respiratory",
     "description": "Life-threatening lung condition causing severe shortness of breath.",
-    "papers": 40328,
+    "papers": 40381,
     "trend": 134,
     "mortality": 400000,
     "fundingGap": "medium",
@@ -1775,7 +1775,7 @@
     "label": "Pertussis",
     "category": "respiratory",
     "description": "Highly contagious bacterial respiratory infection known as whooping cough.",
-    "papers": 36516,
+    "papers": 36538,
     "trend": -14,
     "mortality": 160000,
     "fundingGap": "high",
@@ -1787,7 +1787,7 @@
       739,
       675,
       772,
-      638,
+      637,
       606,
       639
     ],
@@ -1798,7 +1798,7 @@
     "label": "Lupus",
     "category": "autoimmune",
     "description": "Systemic autoimmune disease where the body attacks its own tissues.",
-    "papers": 116195,
+    "papers": 116300,
     "trend": 33,
     "mortality": 35000,
     "fundingGap": "medium",
@@ -1811,8 +1811,8 @@
       4504,
       5021,
       4940,
-      4586,
-      4756
+      4583,
+      4757
     ],
     "region": "AMR"
   },
@@ -1821,7 +1821,7 @@
     "label": "Rheumatoid Arthritis",
     "category": "autoimmune",
     "description": "Chronic inflammatory disorder affecting the joints and connective tissue.",
-    "papers": 186121,
+    "papers": 186236,
     "trend": 18,
     "mortality": 38000,
     "fundingGap": "low",
@@ -1834,8 +1834,8 @@
       6955,
       7355,
       7045,
-      6798,
-      6842
+      6797,
+      6844
     ],
     "region": "EUR"
   },
@@ -1844,7 +1844,7 @@
     "label": "Crohn's Disease",
     "category": "autoimmune",
     "description": "Inflammatory bowel disease causing chronic digestive tract inflammation.",
-    "papers": 76140,
+    "papers": 76219,
     "trend": 33,
     "mortality": 20000,
     "fundingGap": "low",
@@ -1858,7 +1858,7 @@
       3850,
       3685,
       3653,
-      3933
+      3934
     ],
     "region": "EUR"
   },
@@ -1867,7 +1867,7 @@
     "label": "Celiac Disease",
     "category": "autoimmune",
     "description": "Autoimmune condition triggered by gluten ingestion damaging the small intestine.",
-    "papers": 32788,
+    "papers": 32803,
     "trend": 0,
     "mortality": 0,
     "fundingGap": "low",
@@ -1890,7 +1890,7 @@
     "label": "Type 1 Diabetes",
     "category": "autoimmune",
     "description": "Autoimmune destruction of insulin-producing beta cells in the pancreas.",
-    "papers": 113029,
+    "papers": 113119,
     "trend": 20,
     "mortality": 49000,
     "fundingGap": "low",
@@ -1904,7 +1904,7 @@
       5019,
       4839,
       4612,
-      4650
+      4651
     ],
     "region": "EUR"
   },
@@ -1913,7 +1913,7 @@
     "label": "Psoriasis",
     "category": "autoimmune",
     "description": "Chronic skin disease causing rapid cell buildup forming itchy dry patches.",
-    "papers": 74552,
+    "papers": 74635,
     "trend": 58,
     "mortality": 0,
     "fundingGap": "low",
@@ -1925,9 +1925,9 @@
       3414,
       4126,
       4410,
-      4344,
+      4345,
       4202,
-      4528
+      4527
     ],
     "region": "EUR"
   },
@@ -1936,7 +1936,7 @@
     "label": "Ulcerative Colitis",
     "category": "autoimmune",
     "description": "Inflammatory bowel disease causing chronic inflammation of the colon lining.",
-    "papers": 70532,
+    "papers": 70613,
     "trend": 75,
     "mortality": 20000,
     "fundingGap": "low",
@@ -1959,7 +1959,7 @@
     "label": "Sj\u00f6gren's Syndrome",
     "category": "autoimmune",
     "description": "Autoimmune disorder attacking moisture-producing glands causing dryness.",
-    "papers": 21733,
+    "papers": 21749,
     "trend": 42,
     "mortality": 0,
     "fundingGap": "medium",
@@ -1982,7 +1982,7 @@
     "label": "Vasculitis",
     "category": "autoimmune",
     "description": "Inflammation of blood vessels that can restrict blood flow to organs.",
-    "papers": 131352,
+    "papers": 131413,
     "trend": 28,
     "mortality": 4000,
     "fundingGap": "medium",
@@ -2005,7 +2005,7 @@
     "label": "Scleroderma",
     "category": "autoimmune",
     "description": "Autoimmune connective tissue disease causing skin and organ hardening.",
-    "papers": 33744,
+    "papers": 33762,
     "trend": 18,
     "mortality": 15000,
     "fundingGap": "medium",
@@ -2028,7 +2028,7 @@
     "label": "Myasthenia Gravis",
     "category": "autoimmune",
     "description": "Autoimmune disorder causing weakness in voluntary skeletal muscles.",
-    "papers": 23515,
+    "papers": 23537,
     "trend": 62,
     "mortality": 3000,
     "fundingGap": "medium",
@@ -2040,8 +2040,8 @@
       640,
       815,
       860,
-      871,
-      861,
+      870,
+      860,
       944
     ],
     "region": "EUR"
@@ -2051,7 +2051,7 @@
     "label": "Ankylosing Spondylitis",
     "category": "autoimmune",
     "description": "Chronic spinal arthritis that can cause vertebrae to fuse together.",
-    "papers": 24297,
+    "papers": 24312,
     "trend": 17,
     "mortality": 0,
     "fundingGap": "medium",
@@ -2074,7 +2074,7 @@
     "label": "Type 2 Diabetes",
     "category": "metabolic",
     "description": "Metabolic disorder characterized by insulin resistance and high blood sugar.",
-    "papers": 275941,
+    "papers": 276288,
     "trend": 31,
     "mortality": 1600000,
     "fundingGap": "low",
@@ -2086,9 +2086,9 @@
       14803,
       16411,
       17647,
-      17669,
-      17073,
-      17750
+      17670,
+      17072,
+      17753
     ],
     "region": "WPR"
   },
@@ -2097,21 +2097,21 @@
     "label": "Obesity",
     "category": "metabolic",
     "description": "Excessive body fat accumulation increasing risk of numerous diseases.",
-    "papers": 541756,
+    "papers": 542362,
     "trend": 25,
     "mortality": 0,
     "fundingGap": "medium",
     "yearlyPapers": [
-      26246,
+      26247,
       27029,
       27139,
       28069,
       28932,
       33255,
-      35440,
-      34658,
-      32630,
-      32983
+      35441,
+      34659,
+      32623,
+      32985
     ],
     "region": "AMR"
   },
@@ -2120,7 +2120,7 @@
     "label": "Gout",
     "category": "metabolic",
     "description": "Inflammatory arthritis from uric acid crystal deposits in joints.",
-    "papers": 25718,
+    "papers": 25749,
     "trend": 42,
     "mortality": 0,
     "fundingGap": "low",
@@ -2143,7 +2143,7 @@
     "label": "NAFLD",
     "category": "metabolic",
     "description": "Non-alcoholic fatty liver disease linked to obesity and metabolic syndrome.",
-    "papers": 47751,
+    "papers": 47815,
     "trend": 124,
     "mortality": 138000,
     "fundingGap": "medium",
@@ -2166,7 +2166,7 @@
     "label": "Metabolic Syndrome",
     "category": "metabolic",
     "description": "Cluster of conditions increasing risk of heart disease and diabetes.",
-    "papers": 126799,
+    "papers": 127016,
     "trend": 25,
     "mortality": 0,
     "fundingGap": "low",
@@ -2179,8 +2179,8 @@
       7598,
       8337,
       7884,
-      7458,
-      7717
+      7456,
+      7718
     ],
     "region": "AMR"
   },
@@ -2189,7 +2189,7 @@
     "label": "Hyperlipidemia",
     "category": "metabolic",
     "description": "Abnormally elevated blood lipid levels increasing cardiovascular risk.",
-    "papers": 99181,
+    "papers": 99231,
     "trend": 8,
     "mortality": 0,
     "fundingGap": "low",
@@ -2212,7 +2212,7 @@
     "label": "Hypothyroidism",
     "category": "metabolic",
     "description": "Underactive thyroid gland leading to slowed metabolism and fatigue.",
-    "papers": 58526,
+    "papers": 58567,
     "trend": 40,
     "mortality": 0,
     "fundingGap": "low",
@@ -2225,7 +2225,7 @@
       1880,
       2090,
       2085,
-      2101,
+      2100,
       2177
     ],
     "region": "EUR"
@@ -2235,7 +2235,7 @@
     "label": "Hyperthyroidism",
     "category": "metabolic",
     "description": "Overactive thyroid gland causing accelerated metabolism and weight loss.",
-    "papers": 57692,
+    "papers": 57707,
     "trend": 41,
     "mortality": 0,
     "fundingGap": "low",
@@ -2249,7 +2249,7 @@
       1465,
       1495,
       1413,
-      1439
+      1438
     ],
     "region": "EUR"
   },
@@ -2258,7 +2258,7 @@
     "label": "Osteoporosis",
     "category": "metabolic",
     "description": "Progressive bone density loss increasing fracture risk in older adults.",
-    "papers": 121504,
+    "papers": 121629,
     "trend": 29,
     "mortality": 0,
     "fundingGap": "low",
@@ -2271,7 +2271,7 @@
       5566,
       5975,
       5871,
-      5747,
+      5746,
       6391
     ],
     "region": "EUR"
@@ -2281,7 +2281,7 @@
     "label": "Phenylketonuria",
     "category": "metabolic",
     "description": "Inherited metabolic disorder preventing proper phenylalanine breakdown.",
-    "papers": 9244,
+    "papers": 9248,
     "trend": 28,
     "mortality": 0,
     "fundingGap": "medium",
@@ -2294,7 +2294,7 @@
       210,
       233,
       207,
-      217,
+      216,
       236
     ],
     "region": "EUR"
@@ -2304,7 +2304,7 @@
     "label": "Porphyria",
     "category": "metabolic",
     "description": "Group of disorders caused by abnormalities in heme production pathways.",
-    "papers": 11540,
+    "papers": 11542,
     "trend": 35,
     "mortality": 0,
     "fundingGap": "medium",
@@ -2317,7 +2317,7 @@
       178,
       222,
       227,
-      200,
+      199,
       193
     ],
     "region": "EUR"
@@ -2327,7 +2327,7 @@
     "label": "Wilson's Disease",
     "category": "metabolic",
     "description": "Genetic disorder causing toxic copper accumulation in liver and brain.",
-    "papers": 10264,
+    "papers": 10271,
     "trend": 39,
     "mortality": 500,
     "fundingGap": "medium",
@@ -2350,7 +2350,7 @@
     "label": "HIV/AIDS",
     "category": "infectious",
     "description": "Viral infection attacking the immune system, progressing to AIDS if untreated.",
-    "papers": 191793,
+    "papers": 191902,
     "trend": -12,
     "mortality": 630000,
     "fundingGap": "medium",
@@ -2362,9 +2362,9 @@
       6849,
       7092,
       7358,
-      6904,
-      6270,
-      6038
+      6903,
+      6269,
+      6039
     ],
     "region": "AFR"
   },
@@ -2373,8 +2373,8 @@
     "label": "COVID-19",
     "category": "infectious",
     "description": "Respiratory illness caused by SARS-CoV-2 that triggered a global pandemic.",
-    "papers": 509674,
-    "trend": 14083250,
+    "papers": 510216,
+    "trend": 14083900,
     "mortality": 1200000,
     "fundingGap": "low",
     "yearlyPapers": [
@@ -2384,10 +2384,10 @@
       8,
       289,
       94641,
-      141969,
-      131759,
+      141966,
+      131762,
       90339,
-      59569
+      59579
     ],
     "region": "EUR"
   },
@@ -2396,7 +2396,7 @@
     "label": "Hepatitis B",
     "category": "infectious",
     "description": "Viral liver infection transmitted through blood and body fluids.",
-    "papers": 122191,
+    "papers": 122273,
     "trend": -1,
     "mortality": 1100000,
     "fundingGap": "high",
@@ -2409,7 +2409,7 @@
       4368,
       4677,
       4336,
-      4026,
+      4025,
       4127
     ],
     "region": "WPR"
@@ -2419,7 +2419,7 @@
     "label": "Hepatitis C",
     "category": "infectious",
     "description": "Blood-borne viral infection causing chronic liver disease and cirrhosis.",
-    "papers": 109250,
+    "papers": 109300,
     "trend": -44,
     "mortality": 242000,
     "fundingGap": "medium",
@@ -2431,7 +2431,7 @@
       4415,
       4255,
       4007,
-      3456,
+      3455,
       2783,
       2640
     ],
@@ -2442,7 +2442,7 @@
     "label": "Influenza",
     "category": "infectious",
     "description": "Highly contagious respiratory virus causing seasonal epidemics worldwide.",
-    "papers": 174534,
+    "papers": 174684,
     "trend": 28,
     "mortality": 400000,
     "fundingGap": "medium",
@@ -2465,7 +2465,7 @@
     "label": "Measles",
     "category": "infectious",
     "description": "Highly contagious viral disease preventable by vaccination.",
-    "papers": 34382,
+    "papers": 34404,
     "trend": 5,
     "mortality": 108000,
     "fundingGap": "high",
@@ -2488,7 +2488,7 @@
     "label": "Ebola",
     "category": "infectious",
     "description": "Severe hemorrhagic fever virus with high fatality rates in outbreaks.",
-    "papers": 13073,
+    "papers": 13080,
     "trend": -59,
     "mortality": 300,
     "fundingGap": "medium",
@@ -2511,7 +2511,7 @@
     "label": "Cholera",
     "category": "infectious",
     "description": "Acute diarrheal illness caused by Vibrio cholerae contaminating water.",
-    "papers": 39749,
+    "papers": 39769,
     "trend": -12,
     "mortality": 95000,
     "fundingGap": "high",
@@ -2534,7 +2534,7 @@
     "label": "Typhoid",
     "category": "infectious",
     "description": "Bacterial infection from contaminated food or water causing sustained fever.",
-    "papers": 20228,
+    "papers": 20242,
     "trend": 30,
     "mortality": 110000,
     "fundingGap": "high",
@@ -2570,7 +2570,7 @@
       122,
       102,
       84,
-      80,
+      79,
       83
     ],
     "region": "AFR"
@@ -2580,8 +2580,8 @@
     "label": "MRSA",
     "category": "infectious",
     "description": "Methicillin-resistant Staphylococcus aureus causing hard-to-treat infections.",
-    "papers": 46754,
-    "trend": 13,
+    "papers": 46811,
+    "trend": 12,
     "mortality": 130000,
     "fundingGap": "medium",
     "yearlyPapers": [
@@ -2593,7 +2593,7 @@
       2526,
       2662,
       2553,
-      2449,
+      2448,
       2507
     ],
     "region": "EUR"
@@ -2603,7 +2603,7 @@
     "label": "C. difficile",
     "category": "infectious",
     "description": "Bacterial infection causing severe diarrhea, often hospital-acquired.",
-    "papers": 22238,
+    "papers": 22267,
     "trend": -6,
     "mortality": 16000,
     "fundingGap": "medium",
@@ -2626,7 +2626,7 @@
     "label": "Zika",
     "category": "infectious",
     "description": "Mosquito-borne virus linked to birth defects including microcephaly.",
-    "papers": 14419,
+    "papers": 14443,
     "trend": -23,
     "mortality": 0,
     "fundingGap": "medium",
@@ -2649,7 +2649,7 @@
     "label": "West Nile Virus",
     "category": "infectious",
     "description": "Mosquito-transmitted virus that can cause serious neurological disease.",
-    "papers": 10151,
+    "papers": 10158,
     "trend": -8,
     "mortality": 200,
     "fundingGap": "medium",
@@ -2672,7 +2672,7 @@
     "label": "Norovirus",
     "category": "infectious",
     "description": "Highly contagious virus causing acute gastroenteritis outbreaks worldwide.",
-    "papers": 9328,
+    "papers": 9338,
     "trend": -12,
     "mortality": 200000,
     "fundingGap": "high",
@@ -2695,7 +2695,7 @@
     "label": "HPV",
     "category": "infectious",
     "description": "Human papillomavirus, the most common sexually transmitted infection.",
-    "papers": 59908,
+    "papers": 59980,
     "trend": 24,
     "mortality": 0,
     "fundingGap": "low",
@@ -2708,7 +2708,7 @@
       3240,
       3445,
       3351,
-      3283,
+      3282,
       3491
     ],
     "region": "AFR"
@@ -2718,7 +2718,7 @@
     "label": "Cystic Fibrosis",
     "category": "genetic",
     "description": "Inherited disorder causing severe damage to lungs and digestive system.",
-    "papers": 68504,
+    "papers": 68554,
     "trend": 18,
     "mortality": 1000,
     "fundingGap": "low",
@@ -2732,7 +2732,7 @@
       3167,
       3010,
       2734,
-      2773
+      2772
     ],
     "region": "EUR"
   },
@@ -2741,7 +2741,7 @@
     "label": "Sickle Cell Disease",
     "category": "genetic",
     "description": "Inherited blood disorder producing abnormally shaped red blood cells.",
-    "papers": 36997,
+    "papers": 37052,
     "trend": 40,
     "mortality": 376000,
     "fundingGap": "high",
@@ -2764,7 +2764,7 @@
     "label": "Down Syndrome",
     "category": "genetic",
     "description": "Chromosomal condition caused by trisomy 21 affecting development.",
-    "papers": 49425,
+    "papers": 49457,
     "trend": 20,
     "mortality": 21000,
     "fundingGap": "medium",
@@ -2777,8 +2777,8 @@
       1993,
       2166,
       2035,
-      1911,
-      1800
+      1910,
+      1801
     ],
     "region": "EUR"
   },
@@ -2787,7 +2787,7 @@
     "label": "Hemophilia",
     "category": "genetic",
     "description": "Inherited bleeding disorder caused by deficient blood clotting factors.",
-    "papers": 37099,
+    "papers": 37115,
     "trend": 19,
     "mortality": 3000,
     "fundingGap": "medium",
@@ -2800,7 +2800,7 @@
       1457,
       1475,
       1414,
-      1421,
+      1420,
       1357
     ],
     "region": "EUR"
@@ -2810,7 +2810,7 @@
     "label": "Thalassemia",
     "category": "genetic",
     "description": "Inherited blood disorder reducing hemoglobin production.",
-    "papers": 35343,
+    "papers": 35370,
     "trend": 16,
     "mortality": 11000,
     "fundingGap": "high",
@@ -2833,7 +2833,7 @@
     "label": "Marfan Syndrome",
     "category": "genetic",
     "description": "Connective tissue disorder affecting the heart, eyes, and skeleton.",
-    "papers": 9915,
+    "papers": 9921,
     "trend": 7,
     "mortality": 1000,
     "fundingGap": "medium",
@@ -2856,7 +2856,7 @@
     "label": "Turner Syndrome",
     "category": "genetic",
     "description": "Chromosomal condition affecting females with partial or missing X chromosome.",
-    "papers": 13109,
+    "papers": 13112,
     "trend": 33,
     "mortality": 0,
     "fundingGap": "medium",
@@ -2869,7 +2869,7 @@
       384,
       437,
       396,
-      434,
+      433,
       413
     ],
     "region": "EUR"
@@ -2879,7 +2879,7 @@
     "label": "Duchenne Muscular Dystrophy",
     "category": "genetic",
     "description": "Severe progressive muscle degeneration caused by dystrophin gene mutations.",
-    "papers": 16434,
+    "papers": 16451,
     "trend": 25,
     "mortality": 1500,
     "fundingGap": "medium",
@@ -2892,7 +2892,7 @@
       761,
       808,
       755,
-      783,
+      782,
       774
     ],
     "region": "EUR"
@@ -2902,7 +2902,7 @@
     "label": "Fragile X Syndrome",
     "category": "genetic",
     "description": "Most common inherited cause of intellectual disability and autism.",
-    "papers": 8126,
+    "papers": 8138,
     "trend": -9,
     "mortality": 0,
     "fundingGap": "medium",
@@ -2948,7 +2948,7 @@
     "label": "Gaucher Disease",
     "category": "genetic",
     "description": "Lysosomal storage disorder causing organ enlargement and bone damage.",
-    "papers": 7316,
+    "papers": 7318,
     "trend": -7,
     "mortality": 500,
     "fundingGap": "medium",
@@ -2971,7 +2971,7 @@
     "label": "Ehlers-Danlos Syndrome",
     "category": "genetic",
     "description": "Connective tissue disorders causing hypermobile joints and fragile skin.",
-    "papers": 5680,
+    "papers": 5686,
     "trend": 91,
     "mortality": 0,
     "fundingGap": "medium",
@@ -2994,7 +2994,7 @@
     "label": "Depression",
     "category": "mental",
     "description": "Mood disorder causing persistent feelings of sadness and loss of interest.",
-    "papers": 725008,
+    "papers": 725854,
     "trend": 58,
     "mortality": 0,
     "fundingGap": "medium",
@@ -3007,8 +3007,8 @@
       36378,
       42456,
       43193,
-      40631,
-      41734
+      40622,
+      41757
     ],
     "region": "SEAR"
   },
@@ -3017,7 +3017,7 @@
     "label": "Schizophrenia",
     "category": "mental",
     "description": "Severe mental disorder affecting thinking, perception, and behavior.",
-    "papers": 179387,
+    "papers": 179505,
     "trend": 1,
     "mortality": 0,
     "fundingGap": "medium",
@@ -3025,13 +3025,13 @@
       6792,
       6693,
       6616,
-      6807,
+      6806,
       6663,
       7086,
       7321,
-      7096,
+      7097,
       6713,
-      6553
+      6554
     ],
     "region": "SEAR"
   },
@@ -3040,7 +3040,7 @@
     "label": "PTSD",
     "category": "mental",
     "description": "Trauma-induced disorder causing flashbacks, nightmares, and severe anxiety.",
-    "papers": 59473,
+    "papers": 59541,
     "trend": 43,
     "mortality": 0,
     "fundingGap": "medium",
@@ -3053,8 +3053,8 @@
       3803,
       4437,
       4439,
-      3996,
-      4081
+      3998,
+      4090
     ],
     "region": "AMR"
   },
@@ -3063,7 +3063,7 @@
     "label": "Anxiety Disorders",
     "category": "mental",
     "description": "Group of mental disorders characterized by excessive worry and fear.",
-    "papers": 201955,
+    "papers": 202190,
     "trend": 52,
     "mortality": 0,
     "fundingGap": "medium",
@@ -3071,13 +3071,13 @@
       7743,
       7745,
       7931,
-      8123,
+      8122,
       8481,
-      10264,
-      11866,
+      10263,
+      11865,
       12144,
-      11924,
-      11534
+      11925,
+      11549
     ],
     "region": "EUR"
   },
@@ -3086,7 +3086,7 @@
     "label": "Bipolar Disorder",
     "category": "mental",
     "description": "Mood disorder causing extreme emotional highs and depressive lows.",
-    "papers": 68088,
+    "papers": 68153,
     "trend": 8,
     "mortality": 0,
     "fundingGap": "medium",
@@ -3100,7 +3100,7 @@
       3290,
       3097,
       2980,
-      3014
+      3015
     ],
     "region": "SEAR"
   },
@@ -3109,7 +3109,7 @@
     "label": "OCD",
     "category": "mental",
     "description": "Disorder featuring unwanted repetitive thoughts and compulsive behaviors.",
-    "papers": 28028,
+    "papers": 28060,
     "trend": 21,
     "mortality": 0,
     "fundingGap": "medium",
@@ -3122,8 +3122,8 @@
       1343,
       1490,
       1441,
-      1311,
-      1309
+      1310,
+      1314
     ],
     "region": "EUR"
   },
@@ -3132,7 +3132,7 @@
     "label": "ADHD",
     "category": "mental",
     "description": "Neurodevelopmental disorder affecting attention, impulsivity, and activity levels.",
-    "papers": 53220,
+    "papers": 53289,
     "trend": 20,
     "mortality": 0,
     "fundingGap": "low",
@@ -3146,7 +3146,7 @@
       3206,
       3177,
       3094,
-      3221
+      3222
     ],
     "region": "AMR"
   },
@@ -3155,7 +3155,7 @@
     "label": "Autism Spectrum Disorder",
     "category": "mental",
     "description": "Neurodevelopmental condition affecting social communication and behavior.",
-    "papers": 68820,
+    "papers": 68939,
     "trend": 69,
     "mortality": 0,
     "fundingGap": "medium",
@@ -3169,7 +3169,7 @@
       6137,
       6131,
       5740,
-      6155
+      6157
     ],
     "region": "EUR"
   },
@@ -3178,8 +3178,8 @@
     "label": "Anorexia Nervosa",
     "category": "mental",
     "description": "Eating disorder characterized by extreme food restriction and weight loss.",
-    "papers": 21509,
-    "trend": 28,
+    "papers": 21524,
+    "trend": 29,
     "mortality": 1500,
     "fundingGap": "medium",
     "yearlyPapers": [
@@ -3192,7 +3192,7 @@
       1091,
       1001,
       927,
-      938
+      940
     ],
     "region": "EUR"
   },
@@ -3201,7 +3201,7 @@
     "label": "Substance Use Disorder",
     "category": "mental",
     "description": "Chronic condition involving compulsive use of substances despite harmful effects.",
-    "papers": 354200,
+    "papers": 354453,
     "trend": 1,
     "mortality": 137000,
     "fundingGap": "high",
@@ -3209,13 +3209,13 @@
       11656,
       11648,
       11877,
-      12123,
+      12122,
       12917,
       12950,
       12730,
       12266,
-      11407,
-      11891
+      11406,
+      11896
     ],
     "region": "AMR"
   },
@@ -3224,7 +3224,7 @@
     "label": "Borderline Personality Disorder",
     "category": "mental",
     "description": "Disorder marked by unstable moods, relationships, and self-image.",
-    "papers": 12952,
+    "papers": 12964,
     "trend": 14,
     "mortality": 0,
     "fundingGap": "medium",
@@ -3238,7 +3238,7 @@
       696,
       674,
       658,
-      642
+      645
     ],
     "region": "EUR"
   },
@@ -3247,7 +3247,7 @@
     "label": "Insomnia",
     "category": "mental",
     "description": "Persistent difficulty falling or staying asleep despite adequate opportunity.",
-    "papers": 44363,
+    "papers": 44454,
     "trend": 123,
     "mortality": 0,
     "fundingGap": "low",
@@ -3270,8 +3270,8 @@
     "label": "Endometrial Cancer",
     "category": "cancer",
     "description": "Cancer of the uterine lining, the most common gynecological malignancy.",
-    "papers": 53517,
-    "trend": 45,
+    "papers": 53570,
+    "trend": 46,
     "mortality": 98000,
     "fundingGap": "medium",
     "yearlyPapers": [
@@ -3280,11 +3280,11 @@
       1835,
       1936,
       2200,
-      2468,
+      2469,
       2752,
       2758,
       2816,
-      2882
+      2886
     ],
     "region": "EUR"
   },
@@ -3293,7 +3293,7 @@
     "label": "Congenital Heart Defects",
     "category": "cardiovascular",
     "description": "Structural heart abnormalities present at birth affecting blood flow.",
-    "papers": 188463,
+    "papers": 188524,
     "trend": -7,
     "mortality": 251000,
     "fundingGap": "medium",
@@ -3306,8 +3306,8 @@
       6848,
       6608,
       6198,
-      5513,
-      5421
+      5511,
+      5423
     ],
     "region": "SEAR"
   },
@@ -3316,7 +3316,7 @@
     "label": "Sepsis",
     "category": "infectious",
     "description": "Life-threatening organ dysfunction caused by the body's response to infection.",
-    "papers": 244590,
+    "papers": 244864,
     "trend": 29,
     "mortality": 11000000,
     "fundingGap": "high",
@@ -3326,11 +3326,11 @@
       9025,
       9373,
       9945,
-      11173,
+      11172,
       11696,
       11241,
-      11060,
-      11732
+      11058,
+      11733
     ],
     "region": "AFR"
   },
@@ -3339,7 +3339,7 @@
     "label": "Prion Disease",
     "category": "neurological",
     "description": "Fatal neurodegenerative disorders caused by misfolded prion proteins.",
-    "papers": 25074,
+    "papers": 25083,
     "trend": -17,
     "mortality": 2500,
     "fundingGap": "medium",
@@ -3362,7 +3362,7 @@
     "label": "Polycystic Kidney Disease",
     "category": "genetic",
     "description": "Inherited disorder causing fluid-filled cysts to grow in the kidneys.",
-    "papers": 16088,
+    "papers": 16105,
     "trend": 19,
     "mortality": 2000,
     "fundingGap": "medium",
@@ -3385,7 +3385,7 @@
     "label": "Chronic Kidney Disease",
     "category": "metabolic",
     "description": "Progressive loss of kidney function often caused by diabetes and hypertension, requiring dialysis or transplantation in advanced stages.",
-    "papers": 239053,
+    "papers": 239338,
     "trend": 34,
     "mortality": 1300000,
     "fundingGap": "high",
@@ -3396,10 +3396,10 @@
       10208,
       10716,
       12203,
-      13417,
+      13416,
       12722,
-      12448,
-      13517
+      12447,
+      13518
     ],
     "region": "SEAR"
   },
@@ -3408,7 +3408,7 @@
     "label": "Cirrhosis",
     "category": "metabolic",
     "description": "End-stage scarring of the liver caused by chronic hepatitis, alcohol use, or fatty liver disease, leading to liver failure.",
-    "papers": 490092,
+    "papers": 490667,
     "trend": 41,
     "mortality": 1320000,
     "fundingGap": "high",
@@ -3421,8 +3421,8 @@
       23502,
       25917,
       25631,
-      25145,
-      25831
+      25140,
+      25834
     ],
     "region": "SEAR"
   },
@@ -3431,7 +3431,7 @@
     "label": "Preeclampsia",
     "category": "cardiovascular",
     "description": "Dangerous pregnancy complication characterized by high blood pressure and organ damage, a leading cause of maternal and fetal mortality worldwide.",
-    "papers": 59801,
+    "papers": 59884,
     "trend": 52,
     "mortality": 76000,
     "fundingGap": "high",
@@ -3443,7 +3443,7 @@
       2568,
       2959,
       3217,
-      3452,
+      3454,
       3191,
       3162
     ],
@@ -3454,7 +3454,7 @@
     "label": "Endometriosis",
     "category": "autoimmune",
     "description": "Chronic inflammatory condition where tissue similar to the uterine lining grows outside the uterus, causing severe pain and infertility, affecting 1 in 10 women.",
-    "papers": 39943,
+    "papers": 40005,
     "trend": 69,
     "mortality": 0,
     "fundingGap": "high",
@@ -3467,7 +3467,7 @@
       1921,
       2123,
       2034,
-      2174,
+      2172,
       2423
     ],
     "region": "EUR"
@@ -3477,7 +3477,7 @@
     "label": "Tetanus",
     "category": "infectious",
     "description": "Acute bacterial infection caused by Clostridium tetani spores entering wounds, producing a neurotoxin that causes severe muscle spasms and lockjaw, preventable by vaccination.",
-    "papers": 32333,
+    "papers": 32349,
     "trend": -10,
     "mortality": 35000,
     "fundingGap": "high",
@@ -3500,7 +3500,7 @@
     "label": "Rotavirus",
     "category": "infectious",
     "description": "Leading cause of severe diarrheal disease in children under five worldwide, killing 200,000 children annually despite availability of effective vaccines.",
-    "papers": 19247,
+    "papers": 19259,
     "trend": -13,
     "mortality": 200000,
     "fundingGap": "high",
