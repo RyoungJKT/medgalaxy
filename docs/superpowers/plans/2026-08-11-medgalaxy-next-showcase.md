@@ -129,8 +129,8 @@ describe('data invariants', () => {
 });
 ```
 
-- [ ] **Step 4: Run and confirm the expected failures** (`npx vitest run tests/dataInvariants.test.js`): the epilepsy 10th-field test, the trend<=999 test (covid-19 = 14087650), and the corrections test MUST fail now; the rest pass. This proves the tripwire works.
-- [ ] **Step 5: Commit** `test: add data invariants suite (documents known data defects, fixed in Tasks 3-4)`
+- [ ] **Step 4: Mark the three known-bad assertions with `it.fails`** (vitest): the insights 9-field test (epilepsy has a 10th field today), the trend<=999 test (covid-19 = 14087650), and the corrections test. Run `npx vitest run tests/dataInvariants.test.js`: suite GREEN overall, with those three passing only because `it.fails` inverts them. This documents the defects while keeping every commit green. Tasks 3-4 flip them back to plain `it` as the fixes land.
+- [ ] **Step 5: Commit** `test: add data invariants suite (known defects marked it.fails, fixed in Tasks 3-4)`
 
 ### Task 2: Verification harness
 
