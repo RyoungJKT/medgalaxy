@@ -15,6 +15,9 @@ import VelocityOverlay from './ui/VelocityOverlay';
 import LandingOverlay from './ui/LandingOverlay';
 import CompareCards from './ui/CompareCards';
 import SupernovaOverlay from './ui/SupernovaOverlay';
+import OvertureCaption from './ui/OvertureCaption';
+import SkipPill from './ui/SkipPill';
+import HintChips from './ui/HintChips';
 
 export default function HtmlOverlay() {
   return (
@@ -40,6 +43,9 @@ export default function HtmlOverlay() {
       <VelocityOverlay />
       <LandingOverlay />
       <SupernovaOverlay />
+      <OvertureCaption />
+      <SkipPill />
+      <HintChips />
       <style>{`
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
         @keyframes slideDown{to{transform:translateY(0)}}
