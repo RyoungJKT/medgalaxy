@@ -8,6 +8,7 @@ import { sceneRefs } from '../sceneRefs';
 import { TIER } from '../utils/tiers';
 
 const PARALLAX_STRENGTH = 3.0;
+const ASSEMBLY_ELEV = 12; // degrees above the galactic plane (DIRECTION beat 0)
 
 export default function CameraRig({ camDist }) {
   const controlsRef = useRef();
@@ -23,38 +24,80 @@ export default function CameraRig({ camDist }) {
     sceneRefs.camera = camera;
   }, [camera]);
 
-  // Cinematic intro: start close, delayed pullback
+  // Expose controls + a direct seat for the overture's deterministic seek
   useEffect(() => {
-    // Start camera close to hero, slightly off-axis for cinematic angle
-    camera.position.set(8, 5, camDist * 0.3);
+    sceneRefs.controls = controlsRef.current;
+    sceneRefs.cameraJump = (x, y, z) => {
+      tweenRef.current.forEach(t => t.kill());
+      tweenRef.current = [];
+      gsap.killTweensOf(camera.position);
+      camera.position.set(x, y, z);
+      if (controlsRef.current) {
+        controlsRef.current.target.set(0, 0, 0);
+        controlsRef.current.update();
+      }
+    };
+    return () => { sceneRefs.cameraJump = null; };
+  }, [camera]);
 
-    // Delayed pullback: wait 1.0s for hero to emerge, then pull back over 2.5s
-    // Animate all axes so camera settles smoothly to final position
-    const pullbackTween = gsap.to(camera.position, {
-      x: 0,
-      y: 0,
-      z: camDist,
-      duration: 2.5,
-      delay: 1.0,
-      ease: 'power2.out',
-    });
+  // Beat 0, assembly: the instrument turns on. Camera holds 2.2 R0, 12 degrees
+  // above the galactic plane, then drifts in to 1.5 R0 over the assembly's 4.0 s
+  // on a long sine.inOut ("held breath"). DIRECTION section 2, beat 0.
+  useEffect(() => {
+    const seat = (m) => {
+      const el = (ASSEMBLY_ELEV * Math.PI) / 180;
+      return [0, camDist * m * Math.sin(el), camDist * m * Math.cos(el)];
+    };
+    const start = seat(2.2);
+    const end = seat(1.5);
 
-    // Listen for skip: if intro is skipped, fast-forward camera
+    // Reduced motion: no drift at all, take the beat 1 seat and hold it.
+    const reduced =
+      typeof window !== 'undefined' && !!window.matchMedia &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced) {
+      camera.position.set(end[0], end[1], end[2]);
+      return undefined;
+    }
+
+    camera.position.set(start[0], start[1], start[2]);
+
+    let driftTween = null;
+    const runDrift = (duration) => {
+      if (driftTween) driftTween.kill();
+      driftTween = gsap.to(camera.position, {
+        x: end[0], y: end[1], z: end[2],
+        duration,
+        ease: 'sine.inOut',
+        overwrite: 'auto',
+      });
+    };
+
+    // The clock starts when the landing overlay is dismissed, not at page load,
+    // so a viewer who reads the landing copy still gets the whole assembly.
+    if (useStore.getState().introStarted) runDrift(4.0);
+    const unsubStart = useStore.subscribe(
+      s => s.introStarted,
+      (started) => { if (started) runDrift(4.0); }
+    );
+
+    // Skip during assembly: fast-forward to the beat 1 seat.
     const unsub = useStore.subscribe(
       s => s.introPhase,
       (phase) => {
         if (phase >= 5 && !introStarted.current) {
-          pullbackTween.kill();
+          if (driftTween) driftTween.kill();
           gsap.to(camera.position, {
-            x: 0, y: 0, z: camDist,
+            x: end[0], y: end[1], z: end[2],
             duration: 0.5,
             ease: 'power2.out',
+            overwrite: 'auto',
           });
         }
       }
     );
 
-    return () => { pullbackTween.kill(); unsub(); };
+    return () => { if (driftTween) driftTween.kill(); unsubStart(); unsub(); };
   }, [camera, camDist]);
 
   // Subscribe to flyTarget changes
@@ -78,6 +121,9 @@ export default function CameraRig({ camDist }) {
         idleFrames.current = 0;
 
         const dur = flyTarget.duration || 1.2;
+        // Callers may name their own curve (the overture passes the exact
+        // easing function it also uses for its analytic seek).
+        const ease = flyTarget.ease || 'power3.inOut';
         const onUpdate = () => controls.update();
 
         tweenRef.current.push(
@@ -86,7 +132,7 @@ export default function CameraRig({ camDist }) {
             y: flyTarget.position[1],
             z: flyTarget.position[2],
             duration: dur,
-            ease: 'power3.inOut',
+            ease,
             onUpdate,
           })
         );
@@ -99,7 +145,7 @@ export default function CameraRig({ camDist }) {
               y: flyTarget.cameraPos[1],
               z: flyTarget.cameraPos[2],
               duration: dur,
-              ease: 'power3.inOut',
+              ease,
               onUpdate,
             })
           );
@@ -114,7 +160,7 @@ export default function CameraRig({ camDist }) {
               y: targetPos.y,
               z: targetPos.z,
               duration: dur,
-              ease: 'power3.inOut',
+              ease,
               onUpdate,
             })
           );
@@ -128,7 +174,7 @@ export default function CameraRig({ camDist }) {
               y: targetPos.y,
               z: targetPos.z,
               duration: dur,
-              ease: 'power3.inOut',
+              ease,
               onUpdate,
             })
           );
@@ -150,10 +196,20 @@ export default function CameraRig({ camDist }) {
   }, []);
 
   useFrame((state) => {
-    const { introPhase, roulettePhase, supernovaPhase } = useStore.getState();
+    const { introPhase, roulettePhase, supernovaPhase, overtureActive } = useStore.getState();
+    const handover = sceneRefs.handover;
 
     if (controlsRef.current) {
-      if (introPhase < 5) {
+      if (handover.speed != null && !handover.cancelled) {
+        // Velocity-matched handover: the overture's final glide is still
+        // running, and the controls are already turning at its rate so there is
+        // no dead frame between film and instrument.
+        controlsRef.current.autoRotate = true;
+        controlsRef.current.autoRotateSpeed = handover.speed;
+        idleFrames.current = 999;
+      } else if (introPhase < 5) {
+        controlsRef.current.autoRotate = false;
+      } else if (overtureActive) {
         controlsRef.current.autoRotate = false;
       } else if (supernovaPhase !== 'idle' && supernovaPhase !== 'complete') {
         controlsRef.current.autoRotate = false;
@@ -166,8 +222,8 @@ export default function CameraRig({ camDist }) {
       }
     }
 
-    // Subtle cursor parallax (desktop only, after intro)
-    if (TIER !== 'LOW' && introPhase >= 5) {
+    // Subtle cursor parallax (desktop only, after intro and after the film)
+    if (TIER !== 'LOW' && introPhase >= 5 && !overtureActive) {
       const targetX = mouseRef.current.x * PARALLAX_STRENGTH;
       const targetY = -mouseRef.current.y * PARALLAX_STRENGTH;
       const prev = parallaxOffset.current;
@@ -180,7 +236,13 @@ export default function CameraRig({ camDist }) {
     }
   });
 
-  const onStart = () => { idleFrames.current = 0; };
+  // The user taking the controls ends the handover for good.
+  const onStart = () => {
+    idleFrames.current = 0;
+    sceneRefs.handover.cancelled = true;
+    sceneRefs.handover.speed = null;
+    if (controlsRef.current) controlsRef.current.autoRotateSpeed = 0.3;
+  };
 
   return (
     <OrbitControls

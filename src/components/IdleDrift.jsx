@@ -8,9 +8,12 @@ export default function IdleDrift() {
   const blendRef = useRef(0);
 
   useFrame((state, delta) => {
-    const { activeMode, curPos, catPos, diseases, introPhase, roulettePhase } = useStore.getState();
+    const { activeMode, curPos, catPos, diseases, introPhase, roulettePhase,
+            overtureActive } = useStore.getState();
     if (activeMode) { blendRef.current = 0; return; }
     if (roulettePhase !== 'idle') { blendRef.current = 0; return; }
+    // The overture owns the field; drift eases back in from zero after it.
+    if (overtureActive) { blendRef.current = 0; return; }
     if (introPhase < 5) return;
 
     const count = diseases.length;

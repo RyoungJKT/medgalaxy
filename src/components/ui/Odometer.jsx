@@ -1,4 +1,7 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+
+// Unit-label crossfade duration (sanctioned time constant).
+const UNIT_MS = 240;
 
 // ─── Digit decomposition ──────────────────────────────────────────────────────
 // Splits a number into an ordered array of single characters: digits '0'-'9'
@@ -40,6 +43,49 @@ function DigitColumn({ digit }) {
   );
 }
 
+// Unit label to the right of the digits. A change is a true crossfade: the old
+// label keeps its place and fades out while the new one fades in over the same
+// 240 ms, which is what makes the flip read as one label turning into another
+// mid-roll rather than a blank frame followed by a new word.
+function UnitLabel({ unit }) {
+  const [pair, setPair] = useState({ prev: null, cur: unit });
+  const timerRef = useRef(null);
+
+  useEffect(() => {
+    setPair((p) => (p.cur === unit ? p : { prev: p.cur, cur: unit }));
+    clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => setPair({ prev: null, cur: unit }), UNIT_MS);
+    return () => clearTimeout(timerRef.current);
+  }, [unit]);
+
+  return (
+    <span
+      style={{
+        position: 'relative', display: 'inline-block', marginLeft: 8,
+        whiteSpace: 'nowrap', fontSize: 11, fontWeight: 400, color: '#94a3b8',
+      }}
+    >
+      <span
+        key={pair.cur}
+        style={{ display: 'inline-block', opacity: 0, animation: `odometerUnitIn ${UNIT_MS}ms ease forwards` }}
+      >
+        {pair.cur}
+      </span>
+      {pair.prev && pair.prev !== pair.cur && (
+        <span
+          key={`${pair.prev}-out`}
+          style={{
+            position: 'absolute', left: 0, top: 0, whiteSpace: 'nowrap',
+            opacity: 1, animation: `odometerUnitOut ${UNIT_MS}ms ease forwards`,
+          }}
+        >
+          {pair.prev}
+        </span>
+      )}
+    </span>
+  );
+}
+
 // Live odometer: fixed-width digit columns (comma separators static) plus a
 // unit label to the right that crossfades when it changes. Value changes
 // animate purely through the digit columns' CSS transform transition; this
@@ -67,19 +113,10 @@ export default function Odometer({ value, unit }) {
           );
         })}
       </span>
-      {unit && (
-        <span
-          key={unit}
-          style={{
-            fontSize: 11, fontWeight: 400, color: '#94a3b8', marginLeft: 8,
-            opacity: 0, animation: 'odometerUnitFade 240ms ease forwards',
-          }}
-        >
-          {unit}
-        </span>
-      )}
+      {unit && <UnitLabel unit={unit} />}
       <style>{`
-        @keyframes odometerUnitFade { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes odometerUnitIn  { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes odometerUnitOut { from { opacity: 1; } to { opacity: 0; } }
       `}</style>
     </span>
   );

@@ -75,6 +75,7 @@ export default function Spotlight() {
       (active) => {
         const sr = stateRef.current;
         if (useStore.getState().roulettePhase !== 'idle') return;
+        if (useStore.getState().overtureActive) return;
 
         if (active) {
           const { idMap, diseases } = useStore.getState();

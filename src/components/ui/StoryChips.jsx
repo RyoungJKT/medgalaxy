@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import useStore from '../../store';
 import { isMob } from '../../utils/helpers';
 
@@ -46,16 +46,13 @@ export default function StoryChips() {
   const roulettePhase = useStore(s => s.roulettePhase);
   const startRoulette = useStore(s => s.startRoulette);
   const isRouletteActive = roulettePhase !== 'idle';
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    const t = setTimeout(() => setMounted(true), 2800);
-    return () => clearTimeout(t);
-  }, []);
+  // Chips arrive with the rest of the chrome, at the overture's release beat.
+  const uiRevealed = useStore(s => s.uiRevealed);
 
-  if (!storyVisible && mounted) return null;
+  if (!storyVisible && uiRevealed) return null;
 
   const mob = isMob();
-  const show = storyVisible && mounted;
+  const show = storyVisible && uiRevealed;
 
   return (
     <div style={{

@@ -34,6 +34,17 @@ export default function NodeLabels() {
       }
 
       const storeState = useStore.getState();
+
+      // The overture owns the frame: no label layer over the film (the beat
+      // board calls for in-world micro-labels only, and DOM labels keep their
+      // category color through the palette suppression).
+      if (storeState.overtureActive) {
+        if (container.style.visibility !== 'hidden') container.style.visibility = 'hidden';
+        requestAnimationFrame(update);
+        return;
+      }
+      if (container.style.visibility === 'hidden') container.style.visibility = '';
+
       const curPos = storeState.curPos;
       const hovIdx = storeState.hoveredNode?.index ?? -1;
       const selIdx = storeState.selectedNode?.index ?? -1;

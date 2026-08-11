@@ -4,7 +4,7 @@ import { isMob } from '../../utils/helpers';
 
 export default function Legend() {
   const sizeMode = useStore(s => s.sizeMode);
-  const introStarted = useStore(s => s.introStarted);
+  const uiRevealed = useStore(s => s.uiRevealed);
   const mob = isMob();
 
   return (
@@ -13,7 +13,7 @@ export default function Legend() {
       padding: mob ? '8px 12px' : '8px 16px', display: 'flex', gap: mob ? 8 : 16,
       fontFamily: 'IBM Plex Mono,monospace', fontSize: 9, color: '#cbd5e1',
       background: 'linear-gradient(0deg,rgba(6,8,13,0.85) 0%,rgba(6,8,13,0) 100%)',
-      pointerEvents: 'none', transform: 'translateY(100%)', animation: introStarted ? 'slideUp 0.5s ease 3.4s forwards' : 'none',
+      pointerEvents: 'none', transform: 'translateY(100%)', animation: uiRevealed ? 'slideUp 0.5s ease 0.4s forwards' : 'none',
     }}>
       {mob ? (
         <span>Tap to explore &middot; Pinch to zoom</span>

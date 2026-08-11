@@ -272,6 +272,7 @@ export default function DiseaseNodes() {
   const onPointerOver = (e) => {
     e.stopPropagation();
     if (useStore.getState().roulettePhase !== 'idle') return;
+    if (useStore.getState().overtureActive) return;
     if (e.instanceId !== undefined) {
       useStore.getState().setHovered(e.instanceId);
       document.body.style.cursor = 'pointer';
@@ -284,6 +285,7 @@ export default function DiseaseNodes() {
   const onClick = (e) => {
     e.stopPropagation();
     if (useStore.getState().roulettePhase !== 'idle') return;
+    if (useStore.getState().overtureActive) return;
     if (e.instanceId !== undefined) {
       useStore.getState().selectDisease(e.instanceId);
     }

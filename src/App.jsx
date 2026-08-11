@@ -21,6 +21,7 @@ import Spotlight from './components/Spotlight';
 import PostFX from './components/PostFX';
 import SelectionRipple from './components/SelectionRipple';
 import IntroSequence from './components/IntroSequence';
+import OvertureSequence from './components/OvertureSequence';
 import AdaptiveDpr from './components/AdaptiveDpr';
 import GravityLens from './components/GravityLens';
 import GalaxyRoulette from './components/GalaxyRoulette';
@@ -45,6 +46,7 @@ export default function App() {
     // Only left click
     if (e.button !== 0) return;
     const s = useStore.getState();
+    if (s.overtureActive) return;
     if (s.roulettePhase !== 'idle') return;
     if (s.activeMode === 'connections') {
       s.setConnFocusIdx(-1);
@@ -62,7 +64,9 @@ export default function App() {
       storyActive, setStoryActive,
       setStoryCaption, setStoryStep, setStoryVisible,
       setNeglectMode, neglectMode, setConnFocusIdx,
-      roulettePhase, stopRoulette } = useStore.getState();
+      roulettePhase, stopRoulette, overtureActive } = useStore.getState();
+    // The film owns the scene; a double-click there is a skip, nothing else
+    if (overtureActive) return;
     // Cancel roulette if active
     if (roulettePhase !== 'idle') { deselect(); stopRoulette(); return; }
     // Stop spotlight
@@ -79,11 +83,34 @@ export default function App() {
     deselect();
   }, []);
 
+  // Any input during the film asks to skip. Capture phase so it fires before
+  // anything else can consume the event; never preventDefault, the gesture
+  // still belongs to the page (and to OrbitControls).
+  useEffect(() => {
+    const ask = () => {
+      const s = useStore.getState();
+      if (s.overtureActive) s.skipOverture();
+    };
+    const opts = { capture: true, passive: true };
+    window.addEventListener('pointerdown', ask, opts);
+    window.addEventListener('keydown', ask, opts);
+    window.addEventListener('wheel', ask, opts);
+    window.addEventListener('touchstart', ask, opts);
+    return () => {
+      window.removeEventListener('pointerdown', ask, opts);
+      window.removeEventListener('keydown', ask, opts);
+      window.removeEventListener('wheel', ask, opts);
+      window.removeEventListener('touchstart', ask, opts);
+    };
+  }, []);
+
   // Escape key to exit focus view, close overlays, stop tours
   useEffect(() => {
     const onKeyDown = (e) => {
       if (e.key !== 'Escape') return;
       const s = useStore.getState();
+      // Escape during the film asks to leave; it still gets the thesis
+      if (s.overtureActive) { s.skipOverture(); return; }
       // Cancel supernova
       if (s.supernovaPhase !== 'idle' && s.supernovaPhase !== 'complete') {
         s.cancelSupernova();
@@ -174,6 +201,7 @@ export default function App() {
           <PostFX />
           <SelectionRipple />
           <IntroSequence />
+          <OvertureSequence camDist={camDist} />
           <AdaptiveDpr />
           <GalaxyRoulette />
           <RouletteDust />

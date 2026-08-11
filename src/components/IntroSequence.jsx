@@ -6,8 +6,8 @@ import useStore from '../store';
 const T_HERO = 0.4;
 const T_CONSTELLATION = 1.0;
 const T_GALAXY = 1.8;
-const T_EFFECTS = 2.5;
-const T_DONE = 3.5;
+const T_EFFECTS = 2.8;
+const T_DONE = 4.0;  // beat 0, assembly (DIRECTION section 2)
 
 function smoothstep(a, b, t) {
   const x = Math.max(0, Math.min(1, (t - a) / (b - a)));
@@ -52,6 +52,11 @@ export default function IntroSequence() {
     if (doneRef.current) return;
 
     const store = useStore.getState();
+
+    // Someone else already declared the intro finished (skipIntro from the
+    // landing overlay, reduced motion, or the overture's seek hook). Never
+    // walk the phase back down from 5.
+    if (store.introPhase >= 5) { doneRef.current = true; return; }
 
     // Wait for landing overlay to be dismissed
     if (!store.introStarted) return;

@@ -5,6 +5,7 @@ import connectionsData from '../data/connections.json';
 import { processData, nR, isMob } from './utils/helpers';
 import { computeLayouts } from './utils/layout';
 import { CATS } from './utils/constants';
+import { sceneRefs } from './sceneRefs';
 
 // ─── Module-level data processing ────────────────────────────────────────────
 const processed = processData(diseasesData, connectionsData);
@@ -81,6 +82,16 @@ const useStore = create(
     introPhase: 0,     // 0=dark, 1=hero, 2=constellation, 3=galaxy, 4=effects, 5=done
     introProgress: 0,  // continuous 0→1 for smooth interpolation
 
+    // ── The Gap overture (cinematic opening; FSM lives in OvertureSequence) ──
+    overtureActive: false,   // true from landing dismissal until the film hands over
+    overtureBeat: 0,         // 0=assembly, 1=attention, 2=morph, 3=release
+    overtureCaption: null,   // { lines: string[], data?: string, odometer?: {...} }
+    overtureDone: false,     // latched once; the film never replays in a session
+    uiRevealed: false,       // gates header / filter bar / legend / story chips
+    hintsShown: false,
+    hintsDismissed: new Set(),
+    _overtureSkip: false,    // request flag; the FSM answers with the compressed morph
+
     // ── Camera ──
     flyTarget: null,
 
@@ -148,11 +159,73 @@ const useStore = create(
     setIntroProgress: (v) => set({ introProgress: v }),
     skipIntro: () => set({ introStarted: true, introPhase: 5, introProgress: 1 }),
 
+    setOvertureBeat: (v) => set({ overtureBeat: v }),
+    setOvertureCaption: (v) => set({ overtureCaption: v }),
+    setUiRevealed: (v) => set({ uiRevealed: v }),
+
+    hintDismiss: (key) => {
+      const prev = get().hintsDismissed;
+      if (!key || prev.has(key)) return;
+      const next = new Set(prev);
+      next.add(key);
+      set({ hintsDismissed: next });
+    },
+
+    // Opens the film. Tears down anything that could write the scene while it
+    // plays, in the same shape startRoulette uses for its own takeover.
+    startOverture: () => {
+      const s = get();
+      if (s.overtureDone || s.overtureActive) return;
+      if (s.roulettePhase !== 'idle') s.stopRoulette();
+      set({
+        overtureActive: true,
+        overtureBeat: 0,
+        overtureCaption: null,
+        _overtureSkip: false,
+        uiRevealed: false,
+        hintsShown: false,
+        spotlightActive: false,
+        spotlightCaption: '',
+        selectedNode: null,
+      });
+      if (s.storyActive) set({ storyActive: null, storyCaption: '', storyStep: 0 });
+    },
+
+    // A request, not a teardown: the FSM reads this and plays the compressed
+    // morph so nobody leaves without meeting the thesis.
+    skipOverture: () => {
+      const s = get();
+      if (!s.overtureActive || s._overtureSkip) return;
+      set({ _overtureSkip: true });
+    },
+
+    finishOverture: () => {
+      // Hand the grade back to its resting state: no suppression, no burn, and
+      // the standing ember scar left on the overlooked decile.
+      sceneRefs.fx.morphOverride = null;
+      sceneRefs.fx.ignite = 0;
+      sceneRefs.fx.desat = 0;
+      sceneRefs.fx.ember = 1;
+      sceneRefs.fx.glowSuppress = 0;
+      // Hand the drift back to CameraRig's resting rule, still turning.
+      sceneRefs.handover.speed = null;
+      set({
+        overtureActive: false,
+        overtureBeat: 3,
+        overtureCaption: null,
+        uiRevealed: true,
+        hintsShown: true,
+        overtureDone: true,
+        _overtureSkip: false,
+      });
+    },
+
     setRoulettePhase: (v) => set({ roulettePhase: v }),
     setRouletteWinner: (v) => set({ rouletteWinner: v }),
     setRouletteCaption: (v) => set({ rouletteCaption: v }),
 
     startRoulette: () => {
+      if (get().overtureActive) return;
       const { diseases: ds, activeCats, searchQuery, spotlightActive, storyActive,
               storyVisible, selectedNode } = get();
       const sq = searchQuery.toLowerCase();
@@ -195,6 +268,7 @@ const useStore = create(
 
     triggerSupernova: (idx, opts) => {
       const s = get();
+      if (s.overtureActive) return;
       // Allow re-trigger from 'complete' (e.g. story advancing to next supernova step)
       if (s.supernovaPhase !== 'idle' && s.supernovaPhase !== 'complete') return;
       if (idx == null || idx < 0 || idx >= s.diseases.length) return;

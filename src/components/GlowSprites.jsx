@@ -5,6 +5,7 @@ import useStore from '../store';
 import { nR } from '../utils/helpers';
 import { CC } from '../utils/constants';
 import { CFG } from '../utils/tiers';
+import { sceneRefs } from '../sceneRefs';
 
 function makeGlowTexture() {
   const c = document.createElement('canvas');
@@ -46,16 +47,22 @@ export default function GlowSprites() {
     const targetOpacity = introPhase >= 4 ? 0.35 : 0;
     glowOpacityRef.current += (targetOpacity - glowOpacityRef.current) * 0.08;
 
+    // Overture beat 2: these halos are additive sprites, so the shader's
+    // palette suppression cannot reach them; without this they would float as
+    // saturated category color over a graphite galaxy. Applied as a multiplier
+    // (not a second lerp) so the overture's own curve owns the timing.
+    const opacity = glowOpacityRef.current * (1 - (sceneRefs.fx.glowSuppress || 0));
+
     // Update visibility
     if (groupRef.current) {
-      groupRef.current.visible = glowOpacityRef.current > 0.005;
+      groupRef.current.visible = opacity > 0.005;
     }
 
     for (const idx of glowIndices) {
       const ref = refsMap.current[idx];
       if (ref) {
         ref.position.set(curPos[idx][0], curPos[idx][1], curPos[idx][2]);
-        if (ref.material) ref.material.opacity = glowOpacityRef.current;
+        if (ref.material) ref.material.opacity = opacity;
       }
     }
 
@@ -66,7 +73,7 @@ export default function GlowSprites() {
       if (targetRef && targetRef.material) {
         const boostPhases = { charge: 0.8, burst: 1.0, linkwave: 0.5, prefocus: 0.5 };
         const boost = boostPhases[supernovaPhase] || 0;
-        targetRef.material.opacity = Math.max(glowOpacityRef.current, boost);
+        targetRef.material.opacity = Math.max(opacity, boost);
       }
     }
   });
