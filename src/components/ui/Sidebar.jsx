@@ -83,6 +83,7 @@ export default function Sidebar() {
   const c = CC[disease.category];
   const cc = connCounts.get(idx);
   const t = disease.trend;
+  const trendSurged = Math.abs(t) >= 999;
   const ar = t > 0 ? '\u2191' : t < 0 ? '\u2193' : '\u2192';
   const tc = t > 0 ? '#22c55e' : t < 0 ? '#ef4444' : '#94a3b8';
   const gc = { high: '#ef4444', medium: '#eab308', low: '#22c55e' };
@@ -127,7 +128,7 @@ export default function Sidebar() {
         <div style={{ padding: '10px 16px', color: '#94a3b8', lineHeight: 1.5, fontSize: 13 }}>{disease.description}</div>
         {/* Stats */}
         <div style={{ padding: '0 16px 12px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-          <SB l="Publications" v={fmt(disease.papers)} s={<span style={{ color: tc }}>{ar}{Math.abs(t)}%</span>} />
+          <SB l="Publications" v={fmt(disease.papers)} s={trendSurged ? <span style={{ color: '#22c55e' }}>new</span> : <span style={{ color: tc }}>{ar}{Math.abs(t)}%</span>} />
           <SB l="Connections" v={cc} />
           <SB l="WHO Deaths/yr" v={disease.mortality > 0 ? fmt(disease.mortality) : 'N/A'} />
           <SB l="Funding Gap" v={disease.fundingGap.toUpperCase()} vc={gc[disease.fundingGap]} />

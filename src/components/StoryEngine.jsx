@@ -1,46 +1,57 @@
 import { useEffect, useRef } from 'react';
 import useStore from '../store';
+import { fmtFull, fmtWord, ppd, trendLabel } from '../utils/captions';
+
+// Papers-per-death display rule: 2 decimals below 1, whole numbers at/above 1.
+function ppdStr(val) {
+  if (val == null) return 'N/A';
+  return val < 1 ? val.toFixed(2) : String(Math.round(val));
+}
 
 // ─── Story sequences keyed by chipId ─────────────────────────────────────────
-function buildSequences(idMap) {
+// Every numeral below is derived at render time from live disease data
+// (papers/mortality/trend), so a weekly PubMed refresh can never leave a
+// stale figure baked into a caption string.
+function buildSequences(idMap, diseases) {
   const find = (id) => idMap[id];
+  const d = (id) => diseases[idMap[id]];
   return {
     researched: [
-      { id: find('breast-cancer'), supernova: true, caption: 'Breast Cancer\n430,000 published papers' },
-      { id: find('lung-cancer'), supernova: true, caption: 'Lung Cancer\n350,000 published papers' },
-      { id: find('type-2-diabetes'), supernova: true, caption: 'Type 2 Diabetes\n380,000 published papers' },
-      { caption: 'Over 1 million papers combined.\nScience is paying attention here.' },
+      { id: find('breast-cancer'), supernova: true, caption: `Breast Cancer\n${fmtFull(d('breast-cancer').papers)} published papers` },
+      { id: find('lung-cancer'), supernova: true, caption: `Lung Cancer\n${fmtFull(d('lung-cancer').papers)} published papers` },
+      { id: find('type-2-diabetes'), supernova: true, caption: `Type 2 Diabetes\n${fmtFull(d('type-2-diabetes').papers)} published papers` },
+      { caption: 'Science is paying attention here.' },
     ],
     killers: [
-      { id: find('heart-disease'), supernova: true, caption: 'Heart Disease\n9.1 million deaths every year' },
-      { id: find('stroke'), supernova: true, caption: 'Stroke\n7.3 million deaths every year' },
-      { id: find('copd'), supernova: true, caption: 'COPD\n3.5 million deaths every year' },
-      { caption: 'Together, nearly 20 million lives lost annually.' },
+      { id: find('heart-disease'), supernova: true, caption: `Heart Disease\n${fmtWord(d('heart-disease').mortality)} deaths every year` },
+      { id: find('stroke'), supernova: true, caption: `Stroke\n${fmtWord(d('stroke').mortality)} deaths every year` },
+      { id: find('copd'), supernova: true, caption: `COPD\n${fmtWord(d('copd').mortality)} deaths every year` },
+      { caption: 'Each of these alone outranks entire categories of disease.' },
     ],
     forgotten: [
-      { id: find('rotavirus'), supernova: true, caption: 'Rotavirus\n200,000 children die yearly — research down 4%' },
-      { id: find('tetanus'), supernova: true, caption: 'Tetanus\n35,000 deaths yearly — research down 3%' },
-      { id: find('hepatitis-c'), supernova: true, caption: 'Hepatitis C\n242,000 deaths yearly — research down 2%' },
-      { caption: '470,000+ deaths a year.\nAnd the world is looking away.' },
+      { id: find('rotavirus'), supernova: true, caption: `Rotavirus\n${fmtFull(d('rotavirus').mortality)} children die yearly, ${trendLabel(d('rotavirus').trend)}` },
+      { id: find('tetanus'), supernova: true, caption: `Tetanus\n${fmtFull(d('tetanus').mortality)} deaths yearly, ${trendLabel(d('tetanus').trend)}` },
+      { id: find('hepatitis-c'), supernova: true, caption: `Hepatitis C\n${fmtFull(d('hepatitis-c').mortality)} deaths yearly, ${trendLabel(d('hepatitis-c').trend)}` },
+      { caption: 'And the world is looking away.' },
     ],
     silent: [
-      { id: find('rheumatic-heart-disease'), supernova: true, caption: 'Rheumatic Heart Disease\n373,000 deaths — only 9,000 papers' },
-      { id: find('norovirus'), supernova: true, caption: 'Norovirus\n200,000 deaths — only 12,000 papers' },
-      { id: find('pertussis'), supernova: true, caption: 'Pertussis\n160,000 deaths — only 14,000 papers' },
-      { id: find('rotavirus'), supernova: true, caption: 'Rotavirus\n200,000 child deaths — research declining' },
-      { caption: '930,000+ people die every year.\nAlmost no one is studying why.' },
+      { id: find('rheumatic-heart-disease'), supernova: true, caption: `Rheumatic Heart Disease\n${fmtFull(d('rheumatic-heart-disease').mortality)} deaths, only ${fmtFull(d('rheumatic-heart-disease').papers)} papers` },
+      { id: find('norovirus'), supernova: true, caption: `Norovirus\n${fmtFull(d('norovirus').mortality)} deaths, only ${fmtFull(d('norovirus').papers)} papers` },
+      { id: find('pertussis'), supernova: true, caption: `Pertussis\n${fmtFull(d('pertussis').mortality)} deaths, only ${fmtFull(d('pertussis').papers)} papers` },
+      { id: find('rotavirus'), supernova: true, caption: `Rotavirus\n${fmtFull(d('rotavirus').mortality)} child deaths, ${trendLabel(d('rotavirus').trend)}` },
+      { caption: 'Almost no one is studying why.' },
     ],
     richpoor: [
-      { id: find('cystic-fibrosis'), supernova: true, caption: 'Cystic Fibrosis\n48 papers per death — wealthy nations' },
-      { id: find('multiple-sclerosis'), supernova: true, caption: 'Multiple Sclerosis\n16 papers per death — wealthy nations' },
-      { id: find('tuberculosis'), supernova: true, caption: 'Tuberculosis\n0.09 papers per death — 1.25M die yearly' },
-      { id: find('malaria'), supernova: true, caption: 'Malaria\n0.16 papers per death — 608,000 die yearly' },
+      { id: find('cystic-fibrosis'), supernova: true, caption: `Cystic Fibrosis\n${ppdStr(ppd(d('cystic-fibrosis')))} papers per death, wealthy nations` },
+      { id: find('multiple-sclerosis'), supernova: true, caption: `Multiple Sclerosis\n${ppdStr(ppd(d('multiple-sclerosis')))} papers per death, wealthy nations` },
+      { id: find('tuberculosis'), supernova: true, caption: `Tuberculosis\n${ppdStr(ppd(d('tuberculosis')))} papers per death, ${fmtWord(d('tuberculosis').mortality)} die yearly` },
+      { id: find('malaria'), supernova: true, caption: `Malaria\n${ppdStr(ppd(d('malaria')))} papers per death, ${fmtWord(d('malaria').mortality)} die yearly` },
       { caption: 'Where you are born decides\nhow much science fights for your life.' },
     ],
     mismatch: [
-      { id: find('cystic-fibrosis'), supernova: true, caption: 'Cystic Fibrosis\n48,000 papers for 1,000 deaths' },
-      { id: find('rheumatic-heart-disease'), supernova: true, caption: 'Rheumatic Heart Disease\n9,000 papers for 373,000 deaths' },
-      { caption: 'A 2,000x research gap.\nNow toggle Mortality at the top of the page.' },
+      { id: find('cystic-fibrosis'), supernova: true, caption: `Cystic Fibrosis\n${fmtFull(d('cystic-fibrosis').papers)} papers for ${fmtFull(d('cystic-fibrosis').mortality)} deaths` },
+      { id: find('rheumatic-heart-disease'), supernova: true, caption: `Rheumatic Heart Disease\n${fmtFull(d('rheumatic-heart-disease').papers)} papers for ${fmtFull(d('rheumatic-heart-disease').mortality)} deaths` },
+      { caption: `A ${fmtFull(Math.round(ppd(d('cystic-fibrosis')) / ppd(d('rheumatic-heart-disease'))))}x research gap.\nNow toggle Mortality at the top of the page.` },
     ],
   };
 }
@@ -106,8 +117,8 @@ export default function StoryEngine() {
         }
 
         // Build sequence and show first step
-        const { idMap } = useStore.getState();
-        const sequences = buildSequences(idMap);
+        const { idMap, diseases } = useStore.getState();
+        const sequences = buildSequences(idMap, diseases);
         sr.seq = sequences[chipId];
         sr.step = 0;
 

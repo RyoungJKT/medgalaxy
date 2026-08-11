@@ -1,43 +1,60 @@
 import { useEffect, useRef } from 'react';
 import useStore from '../store';
+import { fmtFull, fmtWord, ppd, deathsPerPaper, trendLabel } from '../utils/captions';
 
-// ─── Curated spotlight list ──────────────────────────────────────────────────
-function buildSpotlightList(idMap) {
+// Ratio display rule: 2 decimals below 1, whole numbers at/above 1.
+function ratioStr(val) {
+  if (val == null) return 'N/A';
+  return val < 1 ? val.toFixed(2) : String(Math.round(val));
+}
+
+// Capitalize the leading word of a trendLabel() fragment when it opens a
+// caption clause (trendLabel itself returns lowercase, sentence-case text).
+function cap(s) {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+// ─── Curated spotlight list ────────────────────────────────────────
+// Every numeral is derived at render time from live disease data (papers,
+// mortality, trend) so a weekly PubMed refresh can never leave a stale
+// figure baked into a caption string.
+function buildSpotlightList(idMap, diseases) {
   const find = (id) => idMap[id];
+  const d = (id) => diseases[idMap[id]];
   const list = [
     // Most researched
-    { id: find('breast-cancer'), caption: 'Breast Cancer \u00b7 430K papers \u00b7 Most researched cancer' },
-    { id: find('heart-disease'), caption: 'Heart Disease \u00b7 9.1M deaths/yr \u00b7 #1 killer globally' },
-    { id: find('type-2-diabetes'), caption: 'Type 2 Diabetes \u00b7 380K papers \u00b7 1.6M deaths/yr' },
-    { id: find('hiv-aids'), caption: 'HIV/AIDS \u00b7 350K papers \u00b7 Reshaped modern medicine' },
-    { id: find('lung-cancer'), caption: 'Lung Cancer \u00b7 1.8M deaths/yr \u00b7 Deadliest cancer' },
+    { id: find('breast-cancer'), caption: `Breast Cancer · ${fmtFull(d('breast-cancer').papers)} papers · Most researched cancer` },
+    { id: find('heart-disease'), caption: `Heart Disease · ${fmtWord(d('heart-disease').mortality)} deaths/yr · #1 killer globally` },
+    { id: find('type-2-diabetes'), caption: `Type 2 Diabetes · ${fmtFull(d('type-2-diabetes').papers)} papers · ${fmtWord(d('type-2-diabetes').mortality)} deaths/yr` },
+    { id: find('hiv-aids'), caption: `HIV/AIDS · ${fmtFull(d('hiv-aids').papers)} papers · Reshaped modern medicine` },
+    { id: find('lung-cancer'), caption: `Lung Cancer · ${fmtWord(d('lung-cancer').mortality)} deaths/yr · Deadliest cancer` },
     // Most deadly
-    { id: find('sepsis'), caption: 'Sepsis \u00b7 11M deaths/yr but only 95K papers \u00b7 115 deaths per paper' },
-    { id: find('stroke'), caption: 'Stroke \u00b7 7.3M deaths/yr \u00b7 Every 3 seconds someone has one' },
-    { id: find('copd'), caption: 'COPD \u00b7 3.5M deaths/yr \u00b7 41 deaths per paper published' },
-    { id: find('pneumonia'), caption: 'Pneumonia \u00b7 2.2M deaths/yr \u00b7 Leading killer of children' },
-    { id: find('alzheimers-disease'), caption: "Alzheimer's \u00b7 1.9M deaths/yr \u00b7 Research surging +6%" },
+    { id: find('sepsis'), caption: `Sepsis · ${fmtWord(d('sepsis').mortality)} deaths/yr but only ${fmtFull(d('sepsis').papers)} papers · ${ratioStr(deathsPerPaper(d('sepsis')))} deaths per paper` },
+    { id: find('stroke'), caption: `Stroke · ${fmtWord(d('stroke').mortality)} deaths/yr · Every 3 seconds someone has one` },
+    { id: find('copd'), caption: `COPD · ${fmtWord(d('copd').mortality)} deaths/yr · ${ratioStr(deathsPerPaper(d('copd')))} deaths per paper published` },
+    { id: find('pneumonia'), caption: `Pneumonia · ${fmtWord(d('pneumonia').mortality)} deaths/yr · Leading killer of children` },
+    { id: find('alzheimers-disease'), caption: `Alzheimer's · ${fmtWord(d('alzheimers-disease').mortality)} deaths/yr · ${cap(trendLabel(d('alzheimers-disease').trend))}` },
     // Most neglected
-    { id: find('rheumatic-heart-disease'), caption: 'Rheumatic Heart Disease \u00b7 373K deaths, only 9K papers \u00b7 41 deaths per paper' },
-    { id: find('norovirus'), caption: "Norovirus \u00b7 200K deaths/yr \u00b7 World's most common stomach bug" },
-    { id: find('sickle-cell-disease'), caption: 'Sickle Cell \u00b7 376K deaths/yr \u00b7 Most common genetic disease in Africa' },
-    { id: find('hepatitis-b'), caption: 'Hepatitis B \u00b7 1.1M deaths/yr \u00b7 15 deaths for every paper' },
+    { id: find('rheumatic-heart-disease'), caption: `Rheumatic Heart Disease · ${fmtFull(d('rheumatic-heart-disease').mortality)} deaths, only ${fmtFull(d('rheumatic-heart-disease').papers)} papers · ${ratioStr(deathsPerPaper(d('rheumatic-heart-disease')))} deaths per paper` },
+    { id: find('norovirus'), caption: `Norovirus · ${fmtFull(d('norovirus').mortality)} deaths/yr · World's most common stomach bug` },
+    { id: find('sickle-cell-disease'), caption: `Sickle Cell · ${fmtWord(d('sickle-cell-disease').mortality)} deaths/yr · Most common genetic disease in Africa` },
+    { id: find('hepatitis-b'), caption: `Hepatitis B · ${fmtWord(d('hepatitis-b').mortality)} deaths/yr · ${ratioStr(deathsPerPaper(d('hepatitis-b')))} deaths for every paper` },
     // Most researched per death
-    { id: find('cystic-fibrosis'), caption: 'Cystic Fibrosis \u00b7 48 papers per death \u00b7 Most researched per capita' },
-    { id: find('ebola'), caption: 'Ebola \u00b7 40 papers per death \u00b7 Fear drives funding' },
-    { id: find('west-nile-virus'), caption: 'West Nile Virus \u00b7 45 papers per death \u00b7 Heavily studied, rarely fatal' },
+    { id: find('cystic-fibrosis'), caption: `Cystic Fibrosis · ${ratioStr(ppd(d('cystic-fibrosis')))} papers per death · Most researched per capita` },
+    { id: find('ebola'), caption: `Ebola · ${ratioStr(ppd(d('ebola')))} papers per death · Fear drives funding` },
+    { id: find('west-nile-virus'), caption: `West Nile Virus · ${ratioStr(ppd(d('west-nile-virus')))} papers per death · Heavily studied, rarely fatal` },
     // Trending
-    { id: find('nafld'), caption: 'Fatty Liver Disease \u00b7 Research up 15% \u00b7 Fastest growing liver disease' },
-    { id: find('myocarditis'), caption: 'Myocarditis \u00b7 Research up 10% \u00b7 Heart inflammation gaining attention' },
-    { id: find('dengue'), caption: 'Dengue \u00b7 Research up 12% \u00b7 Half the world at risk' },
+    { id: find('nafld'), caption: `Fatty Liver Disease · ${cap(trendLabel(d('nafld').trend))} · Fastest growing liver disease` },
+    { id: find('myocarditis'), caption: `Myocarditis · ${cap(trendLabel(d('myocarditis').trend))} · Heart inflammation gaining attention` },
+    { id: find('dengue'), caption: `Dengue · ${cap(trendLabel(d('dengue').trend))} · Half the world at risk` },
     // Declining research
-    { id: find('covid-19'), caption: 'COVID-19 \u00b7 300K papers \u00b7 Research declining 10% as pandemic fades' },
-    { id: find('rotavirus'), caption: 'Rotavirus \u00b7 200K child deaths/yr \u00b7 Research declining despite mortality' },
+    { id: find('covid-19'), caption: `COVID-19 · ${fmtFull(d('covid-19').papers)} papers · ${cap(trendLabel(d('covid-19').trend))} when the pandemic began` },
+    { id: find('rotavirus'), caption: `Rotavirus · ${fmtFull(d('rotavirus').mortality)} child deaths/yr · ${cap(trendLabel(d('rotavirus').trend))} despite mortality` },
     // Zero mortality, high impact
-    { id: find('depression'), caption: 'Depression \u00b7 280K papers \u00b7 Zero mortality metric, massive burden' },
-    { id: find('obesity'), caption: 'Obesity \u00b7 200K papers \u00b7 Affects 1 billion people worldwide' },
+    { id: find('depression'), caption: `Depression · ${fmtFull(d('depression').papers)} papers · Zero mortality metric, massive burden` },
+    { id: find('obesity'), caption: `Obesity · ${fmtFull(d('obesity').papers)} papers · Affects 1 billion people worldwide` },
     // Unique story
-    { id: find('malaria'), caption: 'Malaria \u00b7 608K deaths/yr \u00b7 94% of deaths in Africa' },
+    { id: find('malaria'), caption: `Malaria · ${fmtWord(d('malaria').mortality)} deaths/yr · 94% of deaths in Africa` },
   ].filter((s) => s.id !== undefined);
 
   // Shuffle
@@ -60,8 +77,8 @@ export default function Spotlight() {
         if (useStore.getState().roulettePhase !== 'idle') return;
 
         if (active) {
-          const { idMap } = useStore.getState();
-          const list = buildSpotlightList(idMap);
+          const { idMap, diseases } = useStore.getState();
+          const list = buildSpotlightList(idMap, diseases);
           if (list.length === 0) return;
 
           sr.list = list;

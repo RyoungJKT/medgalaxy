@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import useStore from '../store';
 import { TIER } from '../utils/tiers';
 import { nR, isMob } from '../utils/helpers';
+import { fmtFull, ppd } from '../utils/captions';
 
 // ── Module-level scratch objects (zero per-frame allocations) ──
 const _v3 = new THREE.Vector3();
@@ -43,19 +44,14 @@ function computeRingPos(ringIdx, baseTheta, angle, radius, out) {
 function buildCaption(idx, diseases) {
   const d = diseases[idx];
   const parts = [d.label];
-  if (d.papers) parts.push(`${fmt(d.papers)} papers`);
-  if (d.mortality) parts.push(`${fmt(d.mortality)} deaths/yr`);
-  if (d.mortality > 0) {
-    const ppd = (d.papers / d.mortality).toFixed(2);
-    parts.push(`${ppd} papers per death`);
+  if (d.papers) parts.push(`${fmtFull(d.papers)} papers`);
+  if (d.mortality) parts.push(`${fmtFull(d.mortality)} deaths/yr`);
+  const papersPerDeath = ppd(d);
+  if (papersPerDeath !== null) {
+    const val = papersPerDeath < 1 ? papersPerDeath.toFixed(2) : String(Math.round(papersPerDeath));
+    parts.push(`${val} papers per death`);
   }
   return parts.join(' \u00b7 ');
-}
-
-function fmt(n) {
-  if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
-  if (n >= 1e3) return (n / 1e3).toFixed(0) + 'K';
-  return String(n);
 }
 
 // ── Fisher-Yates shuffle ──
