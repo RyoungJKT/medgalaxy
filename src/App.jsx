@@ -5,6 +5,7 @@ import { TIER, CFG } from './utils/tiers';
 import { isMob } from './utils/helpers';
 import useStore from './store';
 import DiseaseNodes from './components/DiseaseNodes';
+import TimeMachine from './components/TimeMachine';
 import EdgeNetwork from './components/EdgeNetwork';
 import GlowSprites from './components/GlowSprites';
 import CameraRig from './components/CameraRig';
@@ -184,6 +185,7 @@ export default function App() {
         )}
 
         <Suspense fallback={null}>
+          <TimeMachine />
           <DiseaseNodes />
           <EdgeNetwork />
           <GlowSprites />

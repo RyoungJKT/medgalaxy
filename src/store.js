@@ -95,6 +95,10 @@ const useStore = create(
     // ── Camera ──
     flyTarget: null,
 
+    // ── Time Machine (per-year radius scrub/tour; engine lives in TimeMachine.jsx) ──
+    tmPhase: 'idle',  // 'idle' | 'tour' | 'scrub'
+    tmCaption: null,  // same shape as overtureCaption: { lines: string[], data?: string, odometer?: {...} }
+
     // ── Actions ──
     selectDisease: (idx) => {
       const { diseases: ds, catPos: cp2 } = get();
@@ -142,7 +146,11 @@ const useStore = create(
     },
 
     setActiveCats: (cats) => set({ activeCats: cats }),
-    setActiveMode: (mode) => set({ activeMode: mode }),
+    setActiveMode: (mode) => {
+      const s = get();
+      if (s.tmPhase !== 'idle') s.stopTimeMachine();
+      set({ activeMode: mode });
+    },
     setNeglectMode: (v) => set({ neglectMode: v }),
     setStoryVisible: (v) => set({ storyVisible: v }),
     setStoryCaption: (v) => set({ storyCaption: v }),
@@ -176,6 +184,7 @@ const useStore = create(
     startOverture: () => {
       const s = get();
       if (s.overtureDone || s.overtureActive) return;
+      if (s.tmPhase !== 'idle') s.stopTimeMachine();
       if (s.roulettePhase !== 'idle') s.stopRoulette();
       set({
         overtureActive: true,
@@ -225,7 +234,9 @@ const useStore = create(
     setRouletteCaption: (v) => set({ rouletteCaption: v }),
 
     startRoulette: () => {
-      if (get().overtureActive) return;
+      const s0 = get();
+      if (s0.overtureActive) return;
+      if (s0.tmPhase !== 'idle') s0.stopTimeMachine();
       const { diseases: ds, activeCats, searchQuery, spotlightActive, storyActive,
               storyVisible, selectedNode } = get();
       const sq = searchQuery.toLowerCase();
@@ -269,6 +280,7 @@ const useStore = create(
     triggerSupernova: (idx, opts) => {
       const s = get();
       if (s.overtureActive) return;
+      if (s.tmPhase !== 'idle') s.stopTimeMachine();
       // Allow re-trigger from 'complete' (e.g. story advancing to next supernova step)
       if (s.supernovaPhase !== 'idle' && s.supernovaPhase !== 'complete') return;
       if (idx == null || idx < 0 || idx >= s.diseases.length) return;
@@ -347,6 +359,38 @@ const useStore = create(
     setSupernovaPhase: (v) => set({ supernovaPhase: v }),
     setSupernovaRevealedLinks: (v) => set({ supernovaRevealedLinks: v }),
     setSupernovaCaption: (v) => set({ supernovaCaption: v }),
+
+    setTmPhase: (v) => set({ tmPhase: v }),
+    setTmCaption: (v) => set({ tmCaption: v }),
+
+    // Takes over node radius from the papers/mortality morph, same teardown
+    // shape as startRoulette: refuses while another full-scene takeover (the
+    // overture, roulette, or a live supernova) owns the field, and parks the
+    // engine at the most recent year every time it starts fresh.
+    startTimeMachine: (auto) => {
+      const s = get();
+      if (s.overtureActive) return;
+      if (s.roulettePhase !== 'idle') return;
+      if (s.supernovaPhase !== 'idle' && s.supernovaPhase !== 'complete') return;
+      const tm = sceneRefs.tm;
+      if (tm) {
+        const lastYear = tm.data.nYears - 1;
+        tm.active = true;
+        tm.exit = 0;
+        tm.yearFloat = lastYear;
+        tm.targetYear = lastYear;
+      }
+      set({ tmPhase: auto ? 'tour' : 'scrub', tmCaption: null });
+    },
+
+    // Hands radius back to the normal morph. `sceneRefs.tm.active` stays true
+    // a beat longer than `tmPhase` — TimeMachine.jsx ramps `tm.exit` 0->1 over
+    // ~400ms so the return to papers/mortality sizing is a blend, not a snap,
+    // then flips `active` off itself once the blend completes.
+    stopTimeMachine: () => {
+      if (get().tmPhase === 'idle') return;
+      set({ tmPhase: 'idle', tmCaption: null });
+    },
 
     connFocusSelect: (diseaseId) => {
       const { idMap: im, diseases: ds, neighbors: nb, curPos: cp, sizeMode: sm } = get();

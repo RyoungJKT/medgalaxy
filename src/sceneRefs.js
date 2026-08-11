@@ -21,6 +21,11 @@ export const sceneRefs = {
   // film's motion continues into the instrument with no dead frame. `cancelled`
   // flips the moment the user grabs the controls.
   handover: { speed: null, cancelled: false },
+  // Time Machine engine, owned + assigned by TimeMachine.jsx (Task 12). null
+  // until that component mounts; DiseaseNodes guards with `tm && tm.active`
+  // so a not-yet-mounted or inactive Time Machine is a no-op, falling back to
+  // the normal papers/mortality morph radius.
+  tm: null,
 };
 
 // Dev hooks: let the verify harness and console drive the grade directly and
