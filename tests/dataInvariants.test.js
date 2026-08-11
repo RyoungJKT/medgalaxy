@@ -26,7 +26,7 @@ describe('data invariants', () => {
       expect(c.sharedPapers).toBeGreaterThan(0);
     }
   });
-  it.fails('insights cover every disease with exactly the 9 canonical fields', () => {
+  it('insights cover every disease with exactly the 9 canonical fields', () => {
     const canonical = ['whatItIs','whyItMatters','whyNeglected','mismatchInsight','top3Reasons','memorableFact','questionRaised','burdenAnswer','accelerateAnswer'];
     for (const d of diseases) {
       const ins = insights[d.id];
@@ -34,10 +34,10 @@ describe('data invariants', () => {
       expect(Object.keys(ins).sort(), d.id).toEqual([...canonical].sort());
     }
   });
-  it.fails('no absurd trend artifacts (<= 999 percent)', () => {
+  it('no absurd trend artifacts (<= 999 percent)', () => {
     for (const d of diseases) expect(Math.abs(d.trend), d.id).toBeLessThanOrEqual(999);
   });
-  it.fails('WHO-verified mortality corrections are applied', () => {
+  it('WHO-verified mortality corrections are applied', () => {
     const byId = Object.fromEntries(diseases.map(d => [d.id, d]));
     expect(byId['pertussis'].mortality).toBe(59000);
     expect(byId['rotavirus'].mortality).toBe(128500);

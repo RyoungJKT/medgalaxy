@@ -5,6 +5,7 @@ Updates: papers (total count), yearlyPapers (last 10 years), trend (% change).
 Does NOT touch: mortality, description, category, fundingGap, connections.
 """
 
+import datetime
 import json
 import os
 import sys
@@ -13,6 +14,7 @@ import urllib.request
 import urllib.error
 
 DATA_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'diseases.json')
+META_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'meta.json')
 
 # Override search terms for diseases whose labels don't work as-is
 SEARCH_OVERRIDES = {
@@ -90,6 +92,7 @@ def refresh_disease(disease):
     late_avg = sum(yearly[-3:]) / 3
     pct_change = ((late_avg / early_avg) - 1) * 100
     trend = round(pct_change)
+    trend = max(-999, min(999, trend))
 
     # Update disease record (only PubMed fields)
     disease['papers'] = total
@@ -134,6 +137,16 @@ def main():
     # Write back
     with open(DATA_PATH, 'w') as f:
         json.dump(diseases, f, indent=2)
+
+    # Update meta.json's lastRefresh date alongside diseases.json
+    if os.path.exists(META_PATH):
+        with open(META_PATH, 'r') as f:
+            meta = json.load(f)
+    else:
+        meta = {}
+    meta['pubmedLastRefresh'] = datetime.date.today().isoformat()
+    with open(META_PATH, 'w') as f:
+        json.dump(meta, f, indent=2)
 
     print()
     print(f'Done. Updated: {updated}, Failed: {failed}, Total: {total}')

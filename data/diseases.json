@@ -20,7 +20,9 @@
       1992,
       2295
     ],
-    "region": "SEAR"
+    "region": "SEAR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "malaria",
@@ -43,7 +45,9 @@
       4508,
       4622
     ],
-    "region": "AFR"
+    "region": "AFR",
+    "mortalityYear": 2024,
+    "mortalitySource": "WHO World Malaria Report 2025"
   },
   {
     "id": "chagas",
@@ -66,7 +70,9 @@
       1051,
       1032
     ],
-    "region": "AMR"
+    "region": "AMR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "leprosy",
@@ -89,7 +95,9 @@
       916,
       972
     ],
-    "region": "SEAR"
+    "region": "SEAR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "buruli-ulcer",
@@ -112,7 +120,9 @@
       65,
       68
     ],
-    "region": "AFR"
+    "region": "AFR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "schistosomiasis",
@@ -135,7 +145,9 @@
       652,
       735
     ],
-    "region": "AFR"
+    "region": "AFR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "leishmaniasis",
@@ -158,7 +170,9 @@
       1331,
       1437
     ],
-    "region": "EMR"
+    "region": "EMR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "sleeping-sickness",
@@ -181,7 +195,9 @@
       211,
       180
     ],
-    "region": "AFR"
+    "region": "AFR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "river-blindness",
@@ -204,7 +220,9 @@
       27,
       22
     ],
-    "region": "AFR"
+    "region": "AFR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "lymphatic-filariasis",
@@ -227,7 +245,9 @@
       182,
       183
     ],
-    "region": "SEAR"
+    "region": "SEAR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "trachoma",
@@ -250,7 +270,9 @@
       129,
       114
     ],
-    "region": "AFR"
+    "region": "AFR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "guinea-worm",
@@ -273,7 +295,9 @@
       21,
       18
     ],
-    "region": "AFR"
+    "region": "AFR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "rabies",
@@ -296,7 +320,9 @@
       605,
       594
     ],
-    "region": "SEAR"
+    "region": "SEAR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "yaws",
@@ -319,7 +345,9 @@
       22,
       22
     ],
-    "region": "AFR"
+    "region": "AFR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "chikungunya",
@@ -342,7 +370,9 @@
       615,
       657
     ],
-    "region": "SEAR"
+    "region": "SEAR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "leptospirosis",
@@ -365,7 +395,9 @@
       344,
       405
     ],
-    "region": "SEAR"
+    "region": "SEAR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "mycetoma",
@@ -388,7 +420,9 @@
       102,
       101
     ],
-    "region": "AFR"
+    "region": "AFR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "echinococcosis",
@@ -411,7 +445,9 @@
       532,
       590
     ],
-    "region": "EMR"
+    "region": "EMR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "fascioliasis",
@@ -434,7 +470,9 @@
       111,
       119
     ],
-    "region": "AMR"
+    "region": "AMR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "soil-transmitted-helminths",
@@ -457,7 +495,9 @@
       166,
       204
     ],
-    "region": "SEAR"
+    "region": "SEAR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "breast-cancer",
@@ -480,7 +520,9 @@
       30502,
       31277
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2022,
+    "mortalitySource": "IARC GLOBOCAN 2022"
   },
   {
     "id": "lung-cancer",
@@ -503,7 +545,9 @@
       26794,
       27943
     ],
-    "region": "WPR"
+    "region": "WPR",
+    "mortalityYear": 2022,
+    "mortalitySource": "IARC GLOBOCAN 2022"
   },
   {
     "id": "colon-cancer",
@@ -526,7 +570,9 @@
       7568,
       6836
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "pancreatic-cancer",
@@ -549,7 +595,9 @@
       10075,
       10337
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "leukemia",
@@ -572,7 +620,9 @@
       12524,
       12553
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "lymphoma",
@@ -595,7 +645,9 @@
       12400,
       12529
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "prostate-cancer",
@@ -618,7 +670,9 @@
       11512,
       11900
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "ovarian-cancer",
@@ -641,7 +695,9 @@
       6811,
       7140
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "melanoma",
@@ -664,7 +720,9 @@
       8423,
       8439
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "liver-cancer",
@@ -687,7 +745,9 @@
       19327,
       19649
     ],
-    "region": "WPR"
+    "region": "WPR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "stomach-cancer",
@@ -710,7 +770,9 @@
       5922,
       5897
     ],
-    "region": "WPR"
+    "region": "WPR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "cervical-cancer",
@@ -733,7 +795,9 @@
       6439,
       7034
     ],
-    "region": "AFR"
+    "region": "AFR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "bladder-cancer",
@@ -756,7 +820,9 @@
       5268,
       5428
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "brain-cancer",
@@ -779,7 +845,9 @@
       13947,
       15093
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "kidney-cancer",
@@ -802,7 +870,9 @@
       7526,
       7682
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "thyroid-cancer",
@@ -825,7 +895,9 @@
       5944,
       6302
     ],
-    "region": "WPR"
+    "region": "WPR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "esophageal-cancer",
@@ -848,7 +920,9 @@
       4694,
       4763
     ],
-    "region": "WPR"
+    "region": "WPR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "multiple-myeloma",
@@ -871,7 +945,9 @@
       3395,
       3440
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "heart-disease",
@@ -894,7 +970,9 @@
       67232,
       67594
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "stroke",
@@ -917,7 +995,9 @@
       33453,
       34254
     ],
-    "region": "WPR"
+    "region": "WPR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "hypertension",
@@ -940,7 +1020,9 @@
       31984,
       33328
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "atherosclerosis",
@@ -963,7 +1045,9 @@
       9313,
       9316
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "heart-failure",
@@ -986,7 +1070,9 @@
       21264,
       22245
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "arrhythmia",
@@ -1009,7 +1095,9 @@
       12903,
       11868
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "peripheral-artery-disease",
@@ -1032,7 +1120,9 @@
       2904,
       3076
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "aortic-aneurysm",
@@ -1055,7 +1145,9 @@
       3408,
       3610
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "cardiomyopathy",
@@ -1078,7 +1170,9 @@
       8191,
       8657
     ],
-    "region": "AFR"
+    "region": "AFR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "deep-vein-thrombosis",
@@ -1101,7 +1195,9 @@
       4801,
       4693
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "pulmonary-embolism",
@@ -1124,7 +1220,9 @@
       3147,
       3185
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "rheumatic-heart-disease",
@@ -1147,7 +1245,9 @@
       492,
       569
     ],
-    "region": "AFR"
+    "region": "AFR",
+    "mortalityYear": 2021,
+    "mortalitySource": "IHME GBD 2021"
   },
   {
     "id": "endocarditis",
@@ -1170,7 +1270,9 @@
       1873,
       1921
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "myocarditis",
@@ -1193,7 +1295,9 @@
       1854,
       1671
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "alzheimers-disease",
@@ -1216,7 +1320,9 @@
       17105,
       18457
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "IHME GBD 2021 (Alzheimer's and other dementias)"
   },
   {
     "id": "parkinsons-disease",
@@ -1239,7 +1345,9 @@
       10053,
       10819
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "epilepsy",
@@ -1262,7 +1370,9 @@
       9156,
       9702
     ],
-    "region": "AFR"
+    "region": "AFR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "multiple-sclerosis",
@@ -1285,7 +1395,9 @@
       6514,
       6826
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "als",
@@ -1308,7 +1420,9 @@
       2391,
       2545
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "huntingtons-disease",
@@ -1331,7 +1445,9 @@
       1299,
       1378
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "migraine",
@@ -1354,7 +1470,9 @@
       2726,
       2835
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "neuropathy",
@@ -1377,7 +1495,9 @@
       6044,
       6517
     ],
-    "region": "SEAR"
+    "region": "SEAR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "meningitis",
@@ -1400,7 +1520,9 @@
       4247,
       4470
     ],
-    "region": "AFR"
+    "region": "AFR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "cerebral-palsy",
@@ -1423,7 +1545,9 @@
       1974,
       2078
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "spinal-cord-injury",
@@ -1446,7 +1570,9 @@
       4574,
       4572
     ],
-    "region": "AMR"
+    "region": "AMR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "traumatic-brain-injury",
@@ -1469,7 +1595,9 @@
       5312,
       5603
     ],
-    "region": "AMR"
+    "region": "AMR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "narcolepsy",
@@ -1492,7 +1620,9 @@
       320,
       327
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "essential-tremor",
@@ -1515,7 +1645,9 @@
       363,
       427
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "asthma",
@@ -1538,7 +1670,9 @@
       9629,
       9533
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "copd",
@@ -1561,7 +1695,9 @@
       5454,
       5660
     ],
-    "region": "WPR"
+    "region": "WPR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "pneumonia",
@@ -1584,7 +1720,9 @@
       67606,
       49155
     ],
-    "region": "AFR"
+    "region": "AFR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "tuberculosis",
@@ -1607,7 +1745,9 @@
       9502,
       10039
     ],
-    "region": "SEAR"
+    "region": "SEAR",
+    "mortalityYear": 2024,
+    "mortalitySource": "WHO Global Tuberculosis Report 2025"
   },
   {
     "id": "lung-fibrosis",
@@ -1630,7 +1770,9 @@
       5097,
       5260
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "sleep-apnea",
@@ -1653,7 +1795,9 @@
       4108,
       4090
     ],
-    "region": "AMR"
+    "region": "AMR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "bronchiectasis",
@@ -1676,7 +1820,9 @@
       786,
       924
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "sarcoidosis",
@@ -1699,7 +1845,9 @@
       1217,
       1180
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "pulmonary-hypertension",
@@ -1722,7 +1870,9 @@
       4975,
       5117
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "pleural-effusion",
@@ -1745,7 +1895,9 @@
       1539,
       1699
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "acute-respiratory-distress",
@@ -1768,7 +1920,9 @@
       2843,
       2454
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "pertussis",
@@ -1777,7 +1931,7 @@
     "description": "Highly contagious bacterial respiratory infection known as whooping cough.",
     "papers": 36777,
     "trend": -14,
-    "mortality": 160000,
+    "mortality": 59000,
     "fundingGap": "high",
     "yearlyPapers": [
       738,
@@ -1791,7 +1945,9 @@
       606,
       639
     ],
-    "region": "AFR"
+    "region": "AFR",
+    "mortalityYear": 2021,
+    "mortalitySource": "IHME GBD 2021 (all ages)"
   },
   {
     "id": "lupus",
@@ -1814,7 +1970,9 @@
       4581,
       4761
     ],
-    "region": "AMR"
+    "region": "AMR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "rheumatoid-arthritis",
@@ -1837,7 +1995,9 @@
       6797,
       6843
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "crohns-disease",
@@ -1860,7 +2020,9 @@
       3652,
       3935
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "celiac-disease",
@@ -1883,7 +2045,9 @@
       1109,
       1160
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "type-1-diabetes",
@@ -1906,7 +2070,9 @@
       4611,
       4649
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "psoriasis",
@@ -1929,7 +2095,9 @@
       4203,
       4528
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "ulcerative-colitis",
@@ -1952,11 +2120,13 @@
       3889,
       4396
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "sjogrens-syndrome",
-    "label": "Sj\u00f6gren's Syndrome",
+    "label": "Sjögren's Syndrome",
     "category": "autoimmune",
     "description": "Autoimmune disorder attacking moisture-producing glands causing dryness.",
     "papers": 22041,
@@ -1975,7 +2145,9 @@
       983,
       985
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "vasculitis",
@@ -1998,7 +2170,9 @@
       4194,
       3753
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "scleroderma",
@@ -2021,7 +2195,9 @@
       1240,
       1226
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "myasthenia-gravis",
@@ -2044,7 +2220,9 @@
       860,
       944
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "ankylosing-spondylitis",
@@ -2067,7 +2245,9 @@
       1043,
       961
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "type-2-diabetes",
@@ -2090,7 +2270,9 @@
       17064,
       17759
     ],
-    "region": "WPR"
+    "region": "WPR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "obesity",
@@ -2113,7 +2295,9 @@
       32617,
       32997
     ],
-    "region": "AMR"
+    "region": "AMR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "gout",
@@ -2136,7 +2320,9 @@
       1231,
       1339
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "nafld",
@@ -2159,7 +2345,9 @@
       6032,
       4912
     ],
-    "region": "AMR"
+    "region": "AMR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "metabolic-syndrome",
@@ -2182,7 +2370,9 @@
       7455,
       7718
     ],
-    "region": "AMR"
+    "region": "AMR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "hyperlipidemia",
@@ -2205,7 +2395,9 @@
       3095,
       3191
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "hypothyroidism",
@@ -2228,7 +2420,9 @@
       2100,
       2177
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "hyperthyroidism",
@@ -2251,7 +2445,9 @@
       1412,
       1437
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "osteoporosis",
@@ -2274,7 +2470,9 @@
       5746,
       6393
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "phenylketonuria",
@@ -2297,7 +2495,9 @@
       216,
       236
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "porphyria",
@@ -2320,7 +2520,9 @@
       199,
       193
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "wilsons-disease",
@@ -2343,7 +2545,9 @@
       357,
       368
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "hiv-aids",
@@ -2366,7 +2570,9 @@
       6270,
       6050
     ],
-    "region": "AFR"
+    "region": "AFR",
+    "mortalityYear": 2024,
+    "mortalitySource": "UNAIDS Global AIDS Update 2025"
   },
   {
     "id": "covid-19",
@@ -2374,8 +2580,8 @@
     "category": "infectious",
     "description": "Respiratory illness caused by SARS-CoV-2 that triggered a global pandemic.",
     "papers": 518131,
-    "trend": 14087650,
-    "mortality": 1200000,
+    "trend": 999,
+    "mortality": 250000,
     "fundingGap": "low",
     "yearlyPapers": [
       0,
@@ -2389,7 +2595,9 @@
       90354,
       59634
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2023,
+    "mortalitySource": "WHO reported deaths, 2023; global reporting has since largely ceased"
   },
   {
     "id": "hepatitis-b",
@@ -2412,7 +2620,9 @@
       4027,
       4129
     ],
-    "region": "WPR"
+    "region": "WPR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "hepatitis-c",
@@ -2435,7 +2645,9 @@
       2782,
       2641
     ],
-    "region": "EMR"
+    "region": "EMR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "influenza",
@@ -2458,7 +2670,9 @@
       6677,
       6953
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "measles",
@@ -2481,7 +2695,9 @@
       794,
       899
     ],
-    "region": "AFR"
+    "region": "AFR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "ebola",
@@ -2490,7 +2706,7 @@
     "description": "Severe hemorrhagic fever virus with high fatality rates in outbreaks.",
     "papers": 13359,
     "trend": -59,
-    "mortality": 300,
+    "mortality": 32,
     "fundingGap": "medium",
     "yearlyPapers": [
       2072,
@@ -2504,7 +2720,9 @@
       605,
       546
     ],
-    "region": "AFR"
+    "region": "AFR",
+    "mortalityYear": 2025,
+    "mortalitySource": "WHO/CDC outbreak records 2025; episodic, 2014-16 averaged ~3,800/yr"
   },
   {
     "id": "cholera",
@@ -2527,7 +2745,9 @@
       816,
       820
     ],
-    "region": "AFR"
+    "region": "AFR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "typhoid",
@@ -2550,7 +2770,9 @@
       439,
       502
     ],
-    "region": "SEAR"
+    "region": "SEAR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "plague",
@@ -2573,7 +2795,9 @@
       79,
       83
     ],
-    "region": "AFR"
+    "region": "AFR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "mrsa",
@@ -2596,7 +2820,9 @@
       2448,
       2508
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "c-difficile",
@@ -2619,7 +2845,9 @@
       1196,
       1087
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "zika",
@@ -2642,7 +2870,9 @@
       1040,
       960
     ],
-    "region": "AMR"
+    "region": "AMR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "west-nile-virus",
@@ -2651,7 +2881,7 @@
     "description": "Mosquito-transmitted virus that can cause serious neurological disease.",
     "papers": 10329,
     "trend": -8,
-    "mortality": 200,
+    "mortality": 130,
     "fundingGap": "medium",
     "yearlyPapers": [
       410,
@@ -2665,7 +2895,9 @@
       445,
       403
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2023,
+    "mortalitySource": "CDC, US mean 2014-2023; no global estimate exists"
   },
   {
     "id": "norovirus",
@@ -2688,7 +2920,9 @@
       453,
       547
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2016,
+    "mortalitySource": "Lopman et al., PLOS Medicine 2016 modeling, WHO-cited"
   },
   {
     "id": "hpv",
@@ -2711,7 +2945,9 @@
       3281,
       3499
     ],
-    "region": "AFR"
+    "region": "AFR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "cystic-fibrosis",
@@ -2734,7 +2970,9 @@
       2735,
       2775
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "sickle-cell-disease",
@@ -2757,7 +2995,9 @@
       1668,
       1783
     ],
-    "region": "AFR"
+    "region": "AFR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "down-syndrome",
@@ -2780,7 +3020,9 @@
       1908,
       1801
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "hemophilia",
@@ -2803,7 +3045,9 @@
       1419,
       1359
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "thalassemia",
@@ -2826,7 +3070,9 @@
       1211,
       1271
     ],
-    "region": "SEAR"
+    "region": "SEAR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "marfan-syndrome",
@@ -2849,7 +3095,9 @@
       340,
       357
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "turner-syndrome",
@@ -2872,7 +3120,9 @@
       433,
       414
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "duchenne-muscular-dystrophy",
@@ -2895,7 +3145,9 @@
       782,
       775
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "fragile-x-syndrome",
@@ -2918,7 +3170,9 @@
       272,
       284
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "tay-sachs-disease",
@@ -2941,7 +3195,9 @@
       29,
       33
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "gaucher-disease",
@@ -2964,7 +3220,9 @@
       227,
       224
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "ehlers-danlos-syndrome",
@@ -2987,7 +3245,9 @@
       319,
       317
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "depression",
@@ -3010,7 +3270,9 @@
       40634,
       41799
     ],
-    "region": "SEAR"
+    "region": "SEAR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "schizophrenia",
@@ -3033,7 +3295,9 @@
       6712,
       6556
     ],
-    "region": "SEAR"
+    "region": "SEAR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "ptsd",
@@ -3056,7 +3320,9 @@
       3996,
       4106
     ],
-    "region": "AMR"
+    "region": "AMR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "anxiety-disorders",
@@ -3079,7 +3345,9 @@
       11925,
       11563
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "bipolar-disorder",
@@ -3102,7 +3370,9 @@
       2977,
       3015
     ],
-    "region": "SEAR"
+    "region": "SEAR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "ocd",
@@ -3125,7 +3395,9 @@
       1309,
       1319
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "adhd",
@@ -3148,7 +3420,9 @@
       3095,
       3230
     ],
-    "region": "AMR"
+    "region": "AMR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "autism-spectrum-disorder",
@@ -3171,7 +3445,9 @@
       5745,
       6189
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "anorexia-nervosa",
@@ -3194,7 +3470,9 @@
       928,
       941
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "substance-use-disorder",
@@ -3217,7 +3495,9 @@
       11406,
       11918
     ],
-    "region": "AMR"
+    "region": "AMR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "borderline-personality-disorder",
@@ -3240,7 +3520,9 @@
       658,
       643
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "insomnia",
@@ -3263,7 +3545,9 @@
       3690,
       3703
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "endometrial-cancer",
@@ -3286,7 +3570,9 @@
       2816,
       2891
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "congenital-heart-defects",
@@ -3309,7 +3595,9 @@
       5514,
       5432
     ],
-    "region": "SEAR"
+    "region": "SEAR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "sepsis",
@@ -3332,7 +3620,9 @@
       11053,
       11740
     ],
-    "region": "AFR"
+    "region": "AFR",
+    "mortalityYear": 2017,
+    "mortalitySource": "Rudd et al., Lancet 2020 (GBD 2017), WHO-cited; sepsis-associated deaths overlap underlying causes"
   },
   {
     "id": "prion-disease",
@@ -3355,7 +3645,9 @@
       654,
       662
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "polycystic-kidney-disease",
@@ -3378,7 +3670,9 @@
       613,
       642
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "chronic-kidney-disease",
@@ -3401,7 +3695,9 @@
       12446,
       13519
     ],
-    "region": "SEAR"
+    "region": "SEAR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "cirrhosis",
@@ -3424,7 +3720,9 @@
       25141,
       25844
     ],
-    "region": "SEAR"
+    "region": "SEAR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "preeclampsia",
@@ -3447,7 +3745,9 @@
       3188,
       3164
     ],
-    "region": "AFR"
+    "region": "AFR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "endometriosis",
@@ -3470,7 +3770,9 @@
       2172,
       2426
     ],
-    "region": "EUR"
+    "region": "EUR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "tetanus",
@@ -3493,7 +3795,9 @@
       558,
       523
     ],
-    "region": "AFR"
+    "region": "AFR",
+    "mortalityYear": 2021,
+    "mortalitySource": "WHO Global Health Estimates 2021"
   },
   {
     "id": "rotavirus",
@@ -3502,7 +3806,7 @@
     "description": "Leading cause of severe diarrheal disease in children under five worldwide, killing 200,000 children annually despite availability of effective vaccines.",
     "papers": 19465,
     "trend": -13,
-    "mortality": 200000,
+    "mortality": 128500,
     "fundingGap": "high",
     "yearlyPapers": [
       697,
@@ -3516,6 +3820,8 @@
       591,
       615
     ],
-    "region": "AFR"
+    "region": "AFR",
+    "mortalityYear": 2016,
+    "mortalitySource": "GBD/Troeger et al. 2018, WHO-cited (under-5 deaths)"
   }
 ]
