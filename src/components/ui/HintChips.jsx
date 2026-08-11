@@ -17,6 +17,9 @@ export default function HintChips() {
   const hintsShown = useStore((s) => s.hintsShown ?? false);
   const hintsDismissed = useStore((s) => s.hintsDismissed ?? null);
   const hintDismiss = useStore((s) => s.hintDismiss);
+  // The Time Machine owns bottom center while it is up; the chips that are
+  // still standing step aside for it and come back when it closes.
+  const tmPhase = useStore((s) => s.tmPhase ?? 'idle');
 
   // "Drag to orbit" — first controls interaction. The controls instance is
   // published by CameraRig, which may mount after this component.
@@ -54,7 +57,7 @@ export default function HintChips() {
 
   const visibleHints = HINTS.filter((h) => !(hintsDismissed && hintsDismissed.has(h.key)));
 
-  if (!hintsShown || visibleHints.length === 0) return null;
+  if (!hintsShown || visibleHints.length === 0 || tmPhase !== 'idle') return null;
 
   const mob = isMob();
 

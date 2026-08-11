@@ -97,7 +97,9 @@ const useStore = create(
 
     // ── Time Machine (per-year radius scrub/tour; engine lives in TimeMachine.jsx) ──
     tmPhase: 'idle',  // 'idle' | 'tour' | 'scrub'
-    tmCaption: null,  // same shape as overtureCaption: { lines: string[], data?: string, odometer?: {...} }
+    tmCaption: null,  // overtureCaption shape plus one field: { lines: string[], data?: string, micro?: string }
+    tmFocusIdx: -1,   // -1 = inactive; >=0 isolates one disease (the tour's flatline finale)
+    _tmSnapshot: null, // pre-Time-Machine state for a clean restore
 
     // ── Actions ──
     selectDisease: (idx) => {
@@ -362,6 +364,7 @@ const useStore = create(
 
     setTmPhase: (v) => set({ tmPhase: v }),
     setTmCaption: (v) => set({ tmCaption: v }),
+    setTmFocusIdx: (v) => set({ tmFocusIdx: v }),
 
     // Takes over node radius from the papers/mortality morph, same teardown
     // shape as startRoulette: refuses while another full-scene takeover (the
@@ -380,7 +383,20 @@ const useStore = create(
         tm.yearFloat = lastYear;
         tm.targetYear = lastYear;
       }
-      set({ tmPhase: auto ? 'tour' : 'scrub', tmCaption: null });
+      // The rail owns bottom center for as long as it is up, so the story chips
+      // stand down (same snapshot/restore shape roulette uses for its takeover),
+      // and anything else that drives the camera or the caption slot stands down
+      // with them.
+      set({
+        tmPhase: auto ? 'tour' : 'scrub',
+        tmCaption: null,
+        tmFocusIdx: -1,
+        _tmSnapshot: s._tmSnapshot || { storyVisible: s.storyVisible },
+        storyVisible: false,
+        spotlightActive: false,
+        spotlightCaption: '',
+      });
+      if (s.storyActive) set({ storyActive: null, storyCaption: '', storyStep: 0 });
     },
 
     // Hands radius back to the normal morph. `sceneRefs.tm.active` stays true
@@ -388,8 +404,16 @@ const useStore = create(
     // ~400ms so the return to papers/mortality sizing is a blend, not a snap,
     // then flips `active` off itself once the blend completes.
     stopTimeMachine: () => {
-      if (get().tmPhase === 'idle') return;
-      set({ tmPhase: 'idle', tmCaption: null });
+      const s = get();
+      if (s.tmPhase === 'idle') return;
+      const snap = s._tmSnapshot;
+      set({
+        tmPhase: 'idle',
+        tmCaption: null,
+        tmFocusIdx: -1,
+        _tmSnapshot: null,
+        storyVisible: snap ? snap.storyVisible : true,
+      });
     },
 
     connFocusSelect: (diseaseId) => {

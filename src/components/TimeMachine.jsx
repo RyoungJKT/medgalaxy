@@ -1,9 +1,11 @@
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import useStore from '../store';
 import { nR, nRM } from '../utils/helpers';
 import { sceneRefs } from '../sceneRefs';
 import { buildTimeMachineData } from '../utils/timeMachineData';
+import { fmtFull, fmtWord } from '../utils/captions';
+import { fireRipple } from './SelectionRipple';
 
 // Critically damped spring (damping ratio 1) with a 120ms time constant:
 // v += (k*(target-x) - c*v)*dt; x += v*dt, where k = (1/tau)^2, c = 2/tau.
@@ -17,12 +19,258 @@ const SPRING_C = 2 * OMEGA;
 // papers/mortality radius before DiseaseNodes stops calling radiusAt at all.
 const EXIT_DUR = 0.4;
 
+// ─── Tour vocabulary (DIRECTION section 3 + 4) ───────────────────────────────
+// Sanctioned constants only: a year-step is 650 ms, the rewind is two of them,
+// and no single leg runs longer than six (3.9 s). The cap is what keeps the
+// quiet stretch between the HIV surge and 2019 a sweep rather than a wait: 23
+// year-steps at the full rate would be fifteen seconds of nothing happening.
+const STEP = 0.65;
+const LEG_CAP_STEPS = 6;
+const REWIND = 2 * STEP;
+// Inside the finale hold: the cooling line reads first, then the galaxy dims
+// around rheumatic heart disease and the flatline caption takes the frame.
+const FINALE_SPLIT = 1.8;
+// The 2020 camera move: a micro push-in onto the node that detonates, 15
+// percent closer, so the shockwave leaves frame center rather than a corner.
+const PUSH_IN = 0.85;
+const COVID_EMBER = '#ff4d1a';
+// The finale's isolation reaches the halos too: HighlightSystem can only dim
+// instance colors, and an undimmed additive glow would keep 152 diseases
+// burning around the one that never surged. Ramped over 480 ms, released the
+// moment the focus does.
+const FINALE_GLOW = 0.55;
+const GLOW_RAMP = 0.48;
+
+export const TOUR_HOLDS = [3.0, 3.5, 3.0, 4.0, 3.0, 4.5];
+
+const clamp01 = (x) => (x < 0 ? 0 : x > 1 ? 1 : x);
+const easeExpoOut = (p) => (p >= 1 ? 1 : 1 - Math.pow(2, -10 * p));
+// back.out(1.2): the tour's single sanctioned overshoot, reserved for the
+// detonation (DIRECTION section 4, two motion families).
+const BACK_C1 = 1.2;
+const BACK_C3 = BACK_C1 + 1;
+const easeBackOut = (p) => 1 + BACK_C3 * Math.pow(p - 1, 3) + BACK_C1 * Math.pow(p - 1, 2);
+
+/**
+ * The tour's pause board, resolved against whatever span the data file actually
+ * carries. Years outside the file are dropped and a collision with an earlier
+ * pause is skipped, so a shorter (decade-only) file still produces a strictly
+ * increasing board that opens on its first year and closes on its last.
+ */
+export function buildTourPauses(data) {
+  const first = data.yearStart;
+  const last = data.yearStart + data.nYears - 1;
+  const spec = [
+    [first, 'rules'],
+    [1996, 'hivSurge'],
+    [2019, 'hivFade'],
+    [2020, 'detonation'],
+    [2021, 'peak'],
+    [last, 'finale'],
+  ];
+  const out = [];
+  for (let i = 0; i < spec.length; i++) {
+    const [year, kind] = spec[i];
+    const hold = TOUR_HOLDS[i];
+    if (year < first || year > last) continue;
+    const prev = out[out.length - 1];
+    if (prev && year <= prev.year) {
+      // The closing shot always owns the last slot; anything else that lands on
+      // an occupied year simply merges into it.
+      if (kind === 'finale') out[out.length - 1] = { year, yearIdx: year - first, kind, hold };
+      continue;
+    }
+    out.push({ year, yearIdx: year - first, kind, hold });
+  }
+  return out;
+}
+
+/**
+ * Builds the whole tour as data: travel segments (pure functions of time) plus
+ * discrete cues fired once as the clock crosses them. Same split the overture
+ * uses, and for the same reason: the harness can seek any pause and get exactly
+ * the frame the board describes.
+ * @param {object} data the Time Machine radius table (nYears/yearStart)
+ * @param {number} startYearIdx where the galaxy stands when the tour opens
+ */
+export function buildTourTimeline(data, startYearIdx) {
+  const pauses = buildTourPauses(data);
+  const segs = [];
+  const cues = [];
+  const pauseAt = [];
+  let t = 0;
+
+  // The opening rewind: the galaxy deflates back to the first year on screen
+  // while the camera pulls to the overview seat.
+  cues.push({ t: 0, kind: 'camera-home', effect: true });
+  if (startYearIdx !== pauses[0].yearIdx) {
+    segs.push({ t0: 0, t1: REWIND, from: startYearIdx, to: pauses[0].yearIdx, ease: easeExpoOut });
+    t = REWIND;
+  }
+
+  for (let i = 0; i < pauses.length; i++) {
+    const p = pauses[i];
+    if (i > 0) {
+      const from = pauses[i - 1].yearIdx;
+      const steps = Math.abs(p.yearIdx - from);
+      const dur = Math.min(steps, LEG_CAP_STEPS) * STEP;
+      const detonation = p.kind === 'detonation';
+      // The push-in rides the year-step itself, so the move and the eruption
+      // are one gesture rather than two.
+      if (detonation) cues.push({ t, kind: 'camera-node', node: 'covid-19', factor: PUSH_IN, dur: STEP, effect: true });
+      segs.push({ t0: t, t1: t + dur, from, to: p.yearIdx, ease: detonation ? easeBackOut : easeExpoOut });
+      t += dur;
+    }
+    pauseAt.push(t);
+    if (p.kind === 'finale') {
+      cues.push({ t, kind: 'camera-home', effect: true });
+      cues.push({ t, kind: 'caption', caption: 'cooling' });
+      cues.push({ t: t + FINALE_SPLIT, kind: 'caption', caption: 'flatline' });
+      cues.push({ t: t + FINALE_SPLIT, kind: 'focus', focus: 'rheumatic-heart-disease' });
+      // The closing shot recenters on the flatline without closing in: the
+      // point is the 152 diseases dimmed around it, so they stay in frame.
+      cues.push({ t: t + FINALE_SPLIT, kind: 'camera-node', node: 'rheumatic-heart-disease', factor: 0.95, effect: true });
+    } else {
+      cues.push({ t, kind: 'caption', caption: p.kind });
+      // The two HIV pauses are the one place the camera leaves the overview:
+      // it drifts onto the node the caption is about, then deeper for the fade.
+      if (p.kind === 'hivSurge') cues.push({ t, kind: 'camera-node', node: 'hiv-aids', factor: 0.80, effect: true });
+      if (p.kind === 'hivFade') cues.push({ t, kind: 'camera-node', node: 'hiv-aids', factor: 0.62, effect: true });
+      if (p.kind === 'detonation') cues.push({ t, kind: 'shockwave', effect: true });
+    }
+    t += p.hold;
+  }
+
+  cues.sort((a, b) => a.t - b.t);
+  return { segs, cues, pauses, pauseAt, end: t };
+}
+
+/** Year (as a fractional year index) at time t. Holds park on the pause year. */
+export function tourYearAt(segs, t) {
+  if (!segs.length) return 0;
+  let y = segs[0].from;
+  for (let i = 0; i < segs.length; i++) {
+    const sg = segs[i];
+    if (t >= sg.t1) { y = sg.to; continue; }
+    if (t >= sg.t0) {
+      const p = clamp01((t - sg.t0) / (sg.t1 - sg.t0));
+      return sg.from + (sg.to - sg.from) * sg.ease(p);
+    }
+    break;
+  }
+  return y;
+}
+
+// ─── Caption copy ────────────────────────────────────────────────────────────
+
+/**
+ * A disease label as it should read inside a sentence: plain title case drops to
+ * lower case ("Rheumatic Heart Disease" -> "rheumatic heart disease"), while
+ * anything the data spells in caps or with digits is left exactly as filed
+ * (HIV/AIDS, COVID-19, COPD).
+ */
+export function midSentence(label) {
+  if (!label) return '';
+  return label
+    .split(' ')
+    .map((w) => (w === w.toUpperCase() || /\d/.test(w) ? w : w.toLowerCase()))
+    .join(' ');
+}
+
+const cap1 = (s) => (s ? s[0].toUpperCase() + s.slice(1) : s);
+const valueAt = (d, year) => {
+  const start = Number.isFinite(d.yearStart) ? d.yearStart : 2015;
+  const v = Array.isArray(d.yearlyPapers) ? d.yearlyPapers[year - start] : 0;
+  return Number.isFinite(v) ? v : 0;
+};
+const peakOf = (d) => {
+  const yp = Array.isArray(d.yearlyPapers) ? d.yearlyPapers : [];
+  let best = -Infinity;
+  let idx = 0;
+  for (let i = 0; i < yp.length; i++) if (yp[i] > best) { best = yp[i]; idx = i; }
+  return { value: best > -Infinity ? best : 0, year: (Number.isFinite(d.yearStart) ? d.yearStart : 2015) + idx };
+};
+
+/**
+ * Every numeral the tour shows, derived from the live series at build time. A
+ * weekly PubMed refresh moves the numbers and the copy follows; nothing here is
+ * transcribed from the direction board.
+ */
+export function buildTourCaptions(diseases, idMap, data) {
+  const first = data.yearStart;
+  const last = data.yearStart + data.nYears - 1;
+  const hiv = diseases[idMap['hiv-aids']];
+  const covid = diseases[idMap['covid-19']];
+  const rhd = diseases[idMap['rheumatic-heart-disease']];
+
+  const caps = {
+    rules: {
+      lines: [`${data.nYears} years of attention, year by year.`],
+      data: 'Node size: papers published in that year.',
+    },
+  };
+
+  if (hiv) {
+    const surgeYear = Math.min(1996, last);
+    caps.hivSurge = {
+      lines: ['HIV research climbed with the epidemic.'],
+      data: `${hiv.label}: ${fmtFull(valueAt(hiv, first))} papers in ${first}, ${fmtFull(valueAt(hiv, surgeYear))} in ${surgeYear}.`,
+    };
+    const pk = peakOf(hiv);
+    const fadeYear = Math.min(2019, last);
+    caps.hivFade = {
+      lines: ['Attention faded long before the epidemic did.'],
+      data: `${hiv.label}: ${fmtFull(pk.value)} papers at its ${pk.year} peak, ${fmtFull(valueAt(hiv, fadeYear))} in ${fadeYear}. ${fmtWord(hiv.mortality)} people still die of it every year.`,
+    };
+  }
+
+  if (covid) {
+    const pk = peakOf(covid);
+    caps.detonation = {
+      lines: ['Then a new disease detonated.'],
+      data: `${covid.label}: ${fmtFull(valueAt(covid, 2019))} papers in 2019, ${fmtFull(valueAt(covid, 2020))} in 2020.`,
+    };
+    caps.peak = {
+      lines: ['Attention can move this fast.'],
+      data: `${fmtFull(pk.value)} ${covid.label} papers in ${pk.year} alone.`,
+    };
+    caps.cooling = {
+      lines: [`The surge cools: ${fmtFull(valueAt(covid, last))} papers in ${last}.`],
+    };
+  }
+
+  if (rhd) {
+    const pk = peakOf(rhd);
+    const flat = {
+      lines: [`${cap1(midSentence(rhd.label))} never surged at all.`],
+      data: `Its best year: ${fmtFull(pk.value)} papers. Its toll: ${fmtWord(rhd.mortality)} deaths, every year.`,
+    };
+    if (covid) {
+      // Within one disease: the sum of rheumatic heart disease's own series,
+      // summed here rather than transcribed. Never a cross-disease total.
+      const series = Array.isArray(rhd.yearlyPapers) ? rhd.yearlyPapers : [];
+      const total = series.reduce((a, b) => a + (Number.isFinite(b) ? b : 0), 0);
+      flat.micro = `${covid.label} drew more papers in 2020 than ${midSentence(rhd.label)} drew in all ${data.nYears} years combined (${fmtFull(valueAt(covid, 2020))} versus ${fmtFull(total)}).`;
+    }
+    caps.flatline = flat;
+  }
+
+  caps.handover = { lines: ['Scrub the decades.'], handover: true };
+  return caps;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Null-rendering engine half of the Time Machine. Owns `sceneRefs.tm`, the
 // interface DiseaseNodes' render loop already guards on (Task 9):
 //   { active: bool, yearFloat: number, targetYear: number, data, radiusAt(i), exit: number }
+// and, since Task 13, the auto-tour that drives yearFloat during 'tour'.
 export default function TimeMachine() {
   const tmRef = useRef(null);
   const velRef = useRef(0);
+  const tourRef = useRef({ tl: null, caps: null, t0: 0, fired: null, paused: null, pendingSeek: null });
+  const tourRanRef = useRef(false);
+  const tmSeenRef = useRef(false);
+  const glowRef = useRef(0);
 
   if (!tmRef.current) {
     const diseases = useStore.getState().diseases;
@@ -69,15 +317,173 @@ export default function TimeMachine() {
     if (typeof window !== 'undefined') window.__tm = tm;
   }
 
+  // ── The auto-tour fires once, 1.5 s after the film hands over ──
+  // Skipped if the viewer already took the instrument (a selection, a mode, the
+  // spotlight, or a Time Machine they started themselves).
+  useEffect(() => {
+    let timer = null;
+    // Anyone who has already been in the Time Machine has spent the auto-tour's
+    // slot, even if they left again before the timer came due.
+    const unsubSeen = useStore.subscribe(
+      (s) => s.tmPhase,
+      (phase) => { if (phase !== 'idle') tmSeenRef.current = true; }
+    );
+    const arm = () => {
+      if (tourRanRef.current) return;
+      tourRanRef.current = true;
+      timer = setTimeout(() => {
+        const s = useStore.getState();
+        if (tmSeenRef.current) return;
+        if (s.selectedNode || s.activeMode || s.spotlightActive || s.storyActive) return;
+        if (s.tmPhase !== 'idle') return;
+        if (s.roulettePhase !== 'idle') return;
+        if (s.supernovaPhase !== 'idle' && s.supernovaPhase !== 'complete') return;
+        s.startTimeMachine(true);
+      }, 1500);
+    };
+    if (useStore.getState().overtureDone) arm();
+    const unsub = useStore.subscribe((s) => s.overtureDone, (done) => { if (done) arm(); });
+    return () => { clearTimeout(timer); unsub(); unsubSeen(); };
+  }, []);
+
+  // ── Any input during the tour hands the scrubber over, at the year on screen ──
+  useEffect(() => {
+    const handover = () => {
+      const s = useStore.getState();
+      if (s.tmPhase !== 'tour') return;
+      const tm = tmRef.current;
+      if (tm) tm.targetYear = Math.round(tm.yearFloat);
+      s.setTmFocusIdx(-1);
+      s.setTmCaption(tourRef.current.caps ? tourRef.current.caps.handover : { lines: ['Scrub the decades.'], handover: true });
+      s.setTmPhase('scrub');
+    };
+    const opts = { capture: true, passive: true };
+    window.addEventListener('pointerdown', handover, opts);
+    window.addEventListener('keydown', handover, opts);
+    window.addEventListener('wheel', handover, opts);
+    window.addEventListener('touchstart', handover, opts);
+    return () => {
+      window.removeEventListener('pointerdown', handover, opts);
+      window.removeEventListener('keydown', handover, opts);
+      window.removeEventListener('wheel', handover, opts);
+      window.removeEventListener('touchstart', handover, opts);
+    };
+  }, []);
+
+  // ── Dev hook: deterministic pause capture for the verify harness ──
+  //   await window.__tour.seek(3)    → jump to the 2020 pause and hold the frame
+  //   await window.__tour.seek(5.4)  → 40 percent into the finale hold (flatline)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const waitFrames = (n) => new Promise((res) => {
+      let k = n;
+      const tick = () => (--k <= 0 ? res(true) : requestAnimationFrame(tick));
+      requestAnimationFrame(tick);
+    });
+    window.__tour = {
+      seek: (pauseIndex, frames = 14) => {
+        const s = useStore.getState();
+        if (!s.introStarted || s.introPhase < 5) s.skipIntro();
+        if (sceneRefs.introScales) sceneRefs.introScales.fill(1);
+        // The film must be finished, not merely inactive: OvertureSequence
+        // restarts it on the next frame otherwise, and its takeover would tear
+        // the seeked tour straight back down.
+        if (!s.overtureDone) s.finishOverture();
+        tourRanRef.current = true; // the harness owns the tour from here
+        tourRef.current.tl = null;
+        useStore.getState().setTmFocusIdx(-1);
+        useStore.getState().startTimeMachine(true);
+        useStore.getState().setTmPhase('tour');
+        tourRef.current.pendingSeek = pauseIndex;
+        return waitFrames(frames);
+      },
+      resume: () => { tourRef.current.paused = null; },
+      state: () => {
+        const r = tourRef.current;
+        const tm = tmRef.current;
+        return {
+          phase: useStore.getState().tmPhase,
+          t: r.paused,
+          end: r.tl ? r.tl.end : null,
+          pauseAt: r.tl ? r.tl.pauseAt : null,
+          year: tm ? tm.data.yearStart + tm.yearFloat : null,
+          yearFloat: tm ? tm.yearFloat : null,
+          targetYear: tm ? tm.targetYear : null,
+          focus: useStore.getState().tmFocusIdx,
+        };
+      },
+    };
+    return () => { delete window.__tour; };
+  }, []);
+
+  // Executes one timeline cue. Kept out of the builder so the timeline stays
+  // pure data (and testable without a scene).
+  const runCue = (cue, caps) => {
+    const s = useStore.getState();
+    switch (cue.kind) {
+      case 'caption':
+        s.setTmCaption(caps[cue.caption] || null);
+        break;
+      case 'focus': {
+        const idx = s.idMap[cue.focus];
+        if (idx !== undefined) s.setTmFocusIdx(idx);
+        break;
+      }
+      case 'shockwave': {
+        const idx = s.idMap['covid-19'];
+        if (idx !== undefined) fireRipple(idx, COVID_EMBER);
+        // The muffled 2020 boom (DIRECTION section 5, moment 4); no-op until
+        // the audio engine lands.
+        if (typeof window !== 'undefined') window.__mgAudio?.play?.('boom');
+        break;
+      }
+      case 'camera-home':
+        s.setFlyTarget({ position: [0, 0, 0], duration: REWIND, ease: 'sine.inOut' });
+        break;
+      case 'camera-node': {
+        const idx = s.idMap[cue.node];
+        const cam = sceneRefs.camera;
+        if (idx !== undefined && cam && s.curPos[idx]) {
+          const p = s.curPos[idx];
+          // Distance measured off wherever the viewer already is, so the drift
+          // is proportional to the current framing rather than a fixed seat.
+          s.setFlyTarget({
+            position: [p[0], p[1], p[2]],
+            radius: cam.position.length() * cue.factor,
+            duration: cue.dur || REWIND,
+            ease: 'sine.inOut',
+          });
+        }
+        break;
+      }
+      default:
+        break;
+    }
+  };
+
   useFrame((state, delta) => {
     const tm = tmRef.current;
     const dt = delta > 0.05 ? 0.05 : delta; // clamp so a stalled tab doesn't fling the spring
-    const tmPhase = useStore.getState().tmPhase;
+    const store = useStore.getState();
+    const tmPhase = store.tmPhase;
     const maxY = tm.data.nYears - 1;
+    const r = tourRef.current;
+
+    // Halo suppression follows the finale's focus, and only ever writes the
+    // shared grade channel when it has something to say (the film owns it
+    // while it plays).
+    const glowTarget = store.tmFocusIdx >= 0 ? FINALE_GLOW : 0;
+    if (!store.overtureActive && (glowTarget > 0 || glowRef.current > 0.001)) {
+      const k = Math.min(1, dt / GLOW_RAMP);
+      glowRef.current += (glowTarget - glowRef.current) * k;
+      if (glowRef.current < 0.001) glowRef.current = 0;
+      sceneRefs.fx.glowSuppress = glowRef.current;
+    }
 
     if (tmPhase === 'scrub') {
       tm.active = true;
       tm.exit = 0;
+      if (r.tl) { r.tl = null; r.paused = null; r.pendingSeek = null; }
       const target = tm.targetYear < 0 ? 0 : (tm.targetYear > maxY ? maxY : tm.targetYear);
       const v = velRef.current + (SPRING_K * (target - tm.yearFloat) - SPRING_C * velRef.current) * dt;
       velRef.current = v;
@@ -85,15 +491,78 @@ export default function TimeMachine() {
       if (tm.yearFloat < 0) tm.yearFloat = 0;
       if (tm.yearFloat > maxY) tm.yearFloat = maxY;
     } else if (tmPhase === 'tour') {
-      // Task 13's script drives yearFloat/targetYear directly; this engine
-      // just keeps the node radii live while it does.
+      // The tour owns yearFloat outright: a pure function of the tour clock,
+      // so a seeked frame and a played frame are the same frame.
       tm.active = true;
       tm.exit = 0;
       velRef.current = 0;
+      const clock = state.clock.getElapsedTime();
+
+      if (!r.tl) {
+        r.caps = buildTourCaptions(store.diseases, store.idMap, tm.data);
+        r.tl = buildTourTimeline(tm.data, Math.round(tm.yearFloat));
+        r.t0 = clock;
+        r.fired = new Set();
+        r.paused = null;
+      }
+
+      // Harness seek: reposition the clock, replay the state cues up to it, and
+      // hold the frame. One-shot effects (the shockwave, camera moves) only
+      // replay if they belong to the moment being captured.
+      if (r.pendingSeek != null) {
+        const pi = r.pendingSeek;
+        r.pendingSeek = null;
+        const i = Math.max(0, Math.min(r.tl.pauses.length - 1, Math.floor(pi)));
+        const target = r.tl.pauseAt[i] + (pi - i) * r.tl.pauses[i].hold;
+        r.t0 = clock - target;
+        r.paused = target;
+        r.fired = new Set();
+        // Camera cues are framing state, not one-shot effects: only the most
+        // recent one before the target is replayed, and it always is, so a
+        // seeked pause is framed the way the played pause would be.
+        let lastCam = null;
+        for (let k = 0; k < r.tl.cues.length; k++) {
+          const c = r.tl.cues[k];
+          if (c.t > target) break;
+          r.fired.add(k);
+          if (c.kind === 'camera-home' || c.kind === 'camera-node') { lastCam = c; continue; }
+          if (c.effect && target - c.t > 0.4) continue;
+          runCue(c, r.caps);
+        }
+        if (lastCam) runCue(lastCam, r.caps);
+        tm.yearFloat = tourYearAt(r.tl.segs, target);
+        tm.targetYear = tm.yearFloat;
+        return;
+      }
+
+      const t = r.paused != null ? r.paused : clock - r.t0;
+      let y = tourYearAt(r.tl.segs, t);
+      if (y < 0) y = 0;
+      if (y > maxY) y = maxY;
+      tm.yearFloat = y;
+      tm.targetYear = y;
+
+      if (r.paused != null) return;
+
+      for (let k = 0; k < r.tl.cues.length; k++) {
+        if (!r.fired.has(k) && t >= r.tl.cues[k].t) {
+          r.fired.add(k);
+          runCue(r.tl.cues[k], r.caps);
+        }
+      }
+
+      if (t >= r.tl.end) {
+        // The closing shot stays on screen: the flatline caption and its
+        // isolation hold until the viewer touches the rail. All the handover
+        // does is give them the scrubber, at the year they are looking at.
+        tm.targetYear = Math.round(tm.yearFloat);
+        useStore.getState().setTmPhase('scrub');
+      }
     } else if (tm.active) {
       // idle, but still blending out: ramp the 400ms exit mix, then hand
       // radius fully back to DiseaseNodes' own morph.
       velRef.current = 0;
+      if (r.tl) { r.tl = null; r.paused = null; r.pendingSeek = null; }
       tm.exit += dt / EXIT_DUR;
       if (tm.exit >= 1) {
         tm.exit = 0;

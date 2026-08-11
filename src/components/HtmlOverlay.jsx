@@ -19,6 +19,7 @@ import OvertureCaption from './ui/OvertureCaption';
 import OvertureMicroLabels from './ui/OvertureMicroLabels';
 import SkipPill from './ui/SkipPill';
 import HintChips from './ui/HintChips';
+import TimeRail from './ui/TimeRail';
 
 export default function HtmlOverlay() {
   return (
@@ -48,6 +49,7 @@ export default function HtmlOverlay() {
       <OvertureCaption />
       <SkipPill />
       <HintChips />
+      <TimeRail />
       <style>{`
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
         @keyframes slideDown{to{transform:translateY(0)}}

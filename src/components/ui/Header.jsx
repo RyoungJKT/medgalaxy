@@ -101,6 +101,11 @@ export default function Header() {
   const selectDisease = useStore(s => s.selectDisease);
   const idMap = useStore(s => s.idMap);
   const uiRevealed = useStore(s => s.uiRevealed);
+  const tmPhase = useStore(s => s.tmPhase);
+  const startTimeMachine = useStore(s => s.startTimeMachine);
+  const stopTimeMachine = useStore(s => s.stopTimeMachine);
+  const tmActive = tmPhase !== 'idle';
+  const toggleTimeMachine = () => { if (tmActive) stopTimeMachine(); else startTimeMachine(false); };
 
   const mob = isMob();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -135,9 +140,17 @@ export default function Header() {
         <span style={{ fontWeight: 600, fontSize: mob ? 13 : 15 }}>MedGalaxy</span>
         {!mob && (
           <>
-            <span style={{ color: '#94a3b8', fontSize: 11 }}>3D visualization of global disease research</span>
-            <span style={{ color: '#94a3b8', fontSize: 11 }}>&middot;</span>
-            <span style={{ color: '#94a3b8', fontSize: 11 }}>{diseases.length} diseases &middot; {displayEdges.length} connections</span>
+            {/* The tagline is the first thing to go as the row tightens: below
+                1500px it would otherwise push the controls into a second line,
+                which lands on top of the filter bar. The counts follow at
+                1360px, and the wordmark alone survives anything narrower. */}
+            <span className="mg-hdr-tagline" style={{ color: '#94a3b8', fontSize: 11, whiteSpace: 'nowrap' }}>
+              3D visualization of global disease research
+            </span>
+            <span className="mg-hdr-tagline" style={{ color: '#94a3b8', fontSize: 11 }}>&middot;</span>
+            <span className="mg-hdr-counts" style={{ color: '#94a3b8', fontSize: 11, whiteSpace: 'nowrap' }}>
+              {diseases.length} diseases &middot; {displayEdges.length} connections
+            </span>
           </>
         )}
       </div>
@@ -203,6 +216,9 @@ export default function Header() {
                 <button onClick={() => { setActiveMode('velocity'); setMenuOpen(false); }}
                   style={{ padding: '6px 10px', fontSize: 10, fontFamily: 'inherit', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, cursor: 'pointer', background: 'transparent', color: '#e2e8f0', width: '100%', textAlign: 'left' }}
                 >Trends</button>
+                <button onClick={() => { toggleTimeMachine(); setMenuOpen(false); }}
+                  style={{ padding: '8px 10px', minHeight: 44, fontSize: 10, fontFamily: 'inherit', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, cursor: 'pointer', background: tmActive ? 'rgba(255,255,255,0.12)' : 'transparent', color: tmActive ? '#f59e0b' : '#e2e8f0', width: '100%', textAlign: 'left' }}
+                >{tmActive ? '✕ Time Machine' : 'Time Machine'}</button>
                 <button onClick={() => { setNeglectMode(!neglectMode); setMenuOpen(false); }}
                   style={{ padding: '6px 10px', fontSize: 10, fontFamily: 'inherit', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, cursor: 'pointer', background: neglectMode ? 'rgba(255,255,255,0.12)' : 'transparent', color: neglectMode ? '#ef4444' : '#e2e8f0', width: '100%', textAlign: 'left' }}
                 >{neglectMode ? '✕ Attention Map' : 'Attention Map'}</button>
@@ -235,6 +251,9 @@ export default function Header() {
           <button onClick={() => setActiveMode('explode')} style={btnStyle}>Research Gap</button>
           <button onClick={() => { useStore.getState().setConnFocusIdx(-1); setActiveMode('connections'); }} style={btnStyle}>Connections</button>
           <button onClick={() => setActiveMode('velocity')} style={btnStyle}>Trends</button>
+          <button onClick={toggleTimeMachine}
+            style={{ ...btnStyle, background: tmActive ? 'rgba(255,255,255,0.12)' : 'transparent', color: tmActive ? '#f59e0b' : '#e2e8f0' }}
+          >{tmActive ? '✕ Time Machine' : 'Time Machine'}</button>
           <button onClick={() => setSpotlightActive(!spotlightActive)}
             style={{ ...btnStyle, background: spotlightActive ? 'rgba(255,255,255,0.12)' : 'transparent', color: spotlightActive ? '#f59e0b' : '#e2e8f0' }}
           >{spotlightActive ? '✕ Spotlight' : 'Spotlight'}</button>
@@ -249,6 +268,13 @@ export default function Header() {
           </div>
         </>
       )}
+      {/* Measured, not guessed: the control row needs 1527px on its own, the
+          counts add 212 and the tagline 310. Each is dropped exactly where it
+          would otherwise wrap the header into the filter bar underneath. */}
+      <style>{`
+        @media (max-width: 1839px) { .mg-hdr-tagline { display: none; } }
+        @media (max-width: 1539px) { .mg-hdr-counts  { display: none; } }
+      `}</style>
     </div>
   );
 }

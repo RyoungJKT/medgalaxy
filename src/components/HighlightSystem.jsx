@@ -33,6 +33,7 @@ export default function HighlightSystem() {
   const supernovaTargetIdx = useStore(s => s.supernovaTargetIdx);
   const supernovaRevealedLinks = useStore(s => s.supernovaRevealedLinks);
   const supernovaNeighborBatches = useStore(s => s.supernovaNeighborBatches);
+  const tmFocusIdx = useStore(s => s.tmFocusIdx);
 
   useEffect(() => {
     const raf = requestAnimationFrame(() => {
@@ -120,6 +121,12 @@ export default function HighlightSystem() {
             // Ring non-winner: slightly dim to make winner stand out more
             _color.multiplyScalar(0.55);
           }
+        } else if (tmFocusIdx >= 0) {
+          // Time Machine finale: one disease keeps its full color and the other
+          // 152 fall to 40 percent. Showing nothing happening is the closing
+          // shot (DIRECTION section 3), so the isolation outranks hover, search
+          // and category dimming while it is up.
+          if (i !== tmFocusIdx) _color.multiplyScalar(0.4);
         } else if (!neg && !catVis) {
           _color.multiplyScalar(0.05);
         } else if (connMode && connFocusIdx >= 0) {
@@ -243,6 +250,7 @@ export default function HighlightSystem() {
     supernovaTargetIdx,
     supernovaRevealedLinks,
     supernovaNeighborBatches,
+    tmFocusIdx,
   ]);
 
   return null;

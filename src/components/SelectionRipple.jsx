@@ -1,9 +1,10 @@
-import { useRef, useMemo, useEffect } from 'react';
+import { useRef, useMemo, useEffect, useCallback } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import useStore from '../store';
 import { CC } from '../utils/constants';
 import { nR } from '../utils/helpers';
+import { sceneRefs } from '../sceneRefs';
 
 const RIPPLE_DURATION = 1.0;
 const MAX_RADIUS = 140;
@@ -63,6 +64,21 @@ function buildRingGeometry(segments) {
   return geo;
 }
 
+// The live ring's trigger, published by the mounted component. Module-level so
+// non-React callers (the Time Machine tour's 2020 shockwave) can fire the same
+// ring the selection path uses, rather than standing up a second one.
+let rippleTrigger = null;
+
+/**
+ * Fires the selection ring from a node, in a caller-chosen color.
+ * @param {number} idx disease index
+ * @param {string} [color] CSS color; defaults to the disease's category color
+ * @returns {boolean} false when no ripple is mounted or the index is out of range
+ */
+export function fireRipple(idx, color) {
+  return rippleTrigger ? rippleTrigger(idx, color) : false;
+}
+
 export default function SelectionRipple() {
   const meshRef = useRef();
   const progressRef = useRef(-1); // -1 = inactive
@@ -85,27 +101,39 @@ export default function SelectionRipple() {
     side: THREE.DoubleSide,
   }), []);
 
+  // One trigger for both callers: the selection subscription below and the
+  // exported fireRipple. The ring starts at the node's radius as it stands
+  // right now, so during the Time Machine it leaves that year's sphere, not the
+  // cumulative-papers one.
+  const trigger = useCallback((idx, color) => {
+    const { curPos, diseases, supernovaPhase } = useStore.getState();
+    if (idx == null || idx < 0 || idx >= diseases.length) return false;
+    const disease = diseases[idx];
+    const pos = curPos[idx];
+
+    posRef.current = [pos[0], pos[1], pos[2]];
+    const tm = sceneRefs.tm;
+    startRadiusRef.current = tm && tm.active ? tm.radiusAt(idx) : nR(disease.papers);
+    mat.uniforms.uColor.value.set(color || CC[disease.category]);
+    supernovaRef.current = supernovaPhase === 'burst';
+    progressRef.current = 0; // trigger
+    return true;
+  }, [mat]);
+
+  // Publish the trigger for module-level callers.
+  useEffect(() => {
+    rippleTrigger = trigger;
+    return () => { if (rippleTrigger === trigger) rippleTrigger = null; };
+  }, [trigger]);
+
   // Watch for selection changes
   useEffect(() => {
     const unsub = useStore.subscribe(
       s => s.selectedNode,
-      (selectedNode) => {
-        if (!selectedNode) return;
-        const { curPos, diseases } = useStore.getState();
-        const idx = selectedNode.index;
-        const disease = diseases[idx];
-        const pos = curPos[idx];
-
-        posRef.current = [pos[0], pos[1], pos[2]];
-        startRadiusRef.current = nR(disease.papers);
-        mat.uniforms.uColor.value.set(CC[disease.category]);
-        const { supernovaPhase } = useStore.getState();
-        supernovaRef.current = supernovaPhase === 'burst';
-        progressRef.current = 0; // trigger
-      }
+      (selectedNode) => { if (selectedNode) trigger(selectedNode.index); }
     );
     return unsub;
-  }, [mat]);
+  }, [trigger]);
 
   useFrame((state, delta) => {
     if (!meshRef.current) return;
