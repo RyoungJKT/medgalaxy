@@ -79,6 +79,9 @@ export default function DiseaseNodes() {
   // Intro scale tracking
   const introScalesRef = useRef(null);
   const introDoneRef = useRef(false);
+  // Size-morph engine: smoothed sizeMode toggle + per-node hover breathe
+  const morphRef = useRef(0);
+  const hoverScaleRef = useRef(new Float32Array(count).fill(1));
 
   const geo = useMemo(() => {
     const g = new THREE.SphereGeometry(1, mobDevice ? 16 : 32, mobDevice ? 16 : 32);
@@ -241,10 +244,24 @@ export default function DiseaseNodes() {
     }
 
     const scales = introScalesRef.current;
+    const fx = sceneRefs.fx;
+    const tm = sceneRefs.tm;
+    // smooth sizeMode toggle: drift stored morph toward target
+    const morphTarget = fx.morphOverride ?? (sizeMode === 'mortality' ? 1 : 0);
+    morphRef.current += (morphTarget - morphRef.current) * (fx.morphOverride != null ? 1 : 0.06);
+    const morphT = fx.morphOverride ?? morphRef.current;
+    const ease = morphT * morphT * (3 - 2 * morphT); // smoothstep
+    const hoverIdx = store.hoveredNode ? store.hoveredNode.index : -1;
     for (let i = 0; i < count; i++) {
       _v3.set(curPos[i][0], curPos[i][1], curPos[i][2]);
-      const r = sizeMode === 'papers' ? nR(diseases[i].papers) : nRM(diseases[i].mortality);
-      const is = scales ? scales[i] : 1;
+      let r;
+      if (tm && tm.active) {
+        r = tm.radiusAt(i); // Task 11
+      } else {
+        r = nR(diseases[i].papers) * (1 - ease) + nRM(diseases[i].mortality) * ease;
+      }
+      hoverScaleRef.current[i] += (((i === hoverIdx) ? 1.06 : 1) - hoverScaleRef.current[i]) * 0.25;
+      const is = (scales ? scales[i] : 1) * hoverScaleRef.current[i];
       _s3.set(r * is, r * is, r * is);
       _m4.compose(_v3, _q4, _s3);
       mesh.setMatrixAt(i, _m4);
