@@ -9,4 +9,4 @@ export const CL = {
   neurological:'Neurological', respiratory:'Respiratory', autoimmune:'Autoimmune',
   metabolic:'Metabolic', infectious:'Infectious', genetic:'Genetic', mental:'Mental Health',
 };
-export const MN = 0.3, MX = 55, MAX_PAPERS = 450000, MAX_MORT = 1400000;
+export const MN = 0.3, MX = 55, MAX_PAPERS = 1750000, MAX_MORT = 11000000;
