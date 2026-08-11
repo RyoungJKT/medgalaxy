@@ -87,12 +87,17 @@ export default function CameraRig({ camDist }) {
       (phase) => {
         if (phase >= 5 && !introStarted.current) {
           if (driftTween) driftTween.kill();
-          gsap.to(camera.position, {
-            x: end[0], y: end[1], z: end[2],
-            duration: 0.5,
-            ease: 'power2.out',
-            overwrite: 'auto',
-          });
+          // Tracked like every other camera tween: the overture's first beat
+          // dispatches a flyTarget within a frame or two of this fast-forward,
+          // and the flyTarget subscriber can only kill what is in tweenRef.
+          tweenRef.current.push(
+            gsap.to(camera.position, {
+              x: end[0], y: end[1], z: end[2],
+              duration: 0.5,
+              ease: 'power2.out',
+              overwrite: 'auto',
+            })
+          );
         }
       }
     );

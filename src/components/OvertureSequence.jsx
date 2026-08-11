@@ -109,6 +109,8 @@ function handoverSpeed(seg, t, camDist) {
 }
 
 // ── Captions. Every numeral is derived from the live data. ──
+const DIES = 'But this is who actually dies.';
+
 function buildCaptions(diseases, idMap) {
   const heroIdx = idMap.sepsis;
   const hero = heroIdx !== undefined ? diseases[heroIdx] : null;
@@ -117,11 +119,17 @@ function buildCaptions(diseases, idMap) {
       lines: ["Where the world's attention goes."],
       data: `${diseases.length} diseases, sized by research papers on record.`,
     }),
-    dies: () => ({ lines: ['But this is who actually dies.'] }),
+    dies: () => ({ lines: [DIES] }),
+    // The thesis frame carries both sentence lines at once: line one stays put
+    // and the hero joins beneath it, plus the odometer. That is exactly the
+    // budget (DIRECTION section 1: never more than two sentence lines plus one
+    // data line). heroLine tells the caption which line takes hero typography;
+    // line one steps down to the lead style as the hero lands.
     hero: () =>
       hero
         ? {
-            lines: [`${hero.label} kills ${fmtWord(hero.mortality)} people a year.`],
+            lines: [DIES, `${hero.label} kills ${fmtWord(hero.mortality)} people a year.`],
+            heroLine: 1,
             odometer: {
               from: hero.papers,
               fromUnit: 'papers',
@@ -129,7 +137,7 @@ function buildCaptions(diseases, idMap) {
               toUnit: 'deaths every year',
             },
           }
-        : { lines: ['But this is who actually dies.'] },
+        : { lines: [DIES] },
     explore: () => ({ lines: ['Explore the gap.'] }),
   };
 }
@@ -385,23 +393,34 @@ export default function OvertureSequence({ camDist }) {
     if (store._overtureSkip && r.paused == null) {
       useStore.setState({ _overtureSkip: false });
       const tNow = clock - r.startedAt;
-      if (r.tl.kind === 'compressed' || tNow >= T_B3) {
+      // Nobody leaves without meeting the thesis (DIRECTION 6.9). A second
+      // input (trackpad momentum, a double click's second pointerdown, key
+      // auto-repeat) arrives milliseconds after the first and must not cut the
+      // hero caption: an early finish is only allowed once the thesis has
+      // actually landed, which on the compressed path means the hero hold has
+      // run out. Otherwise the request is consumed and ignored.
+      const landed = r.tl.kind === 'compressed' ? tNow >= C_HOLD_END : tNow >= T_B3;
+      if (landed) {
         // Already releasing: the thesis has landed, hand over now.
         store.finishOverture();
         r.tl = null;
         return;
       }
-      const cam = sceneRefs.camera;
-      const fromPos = cam ? [cam.position.x, cam.position.y, cam.position.z] : seatPos(camDist, SEAT.attention1);
-      r.tl = buildCompressed(r.CAP, { ...r.fx }, fromPos, r.reduced);
-      r.startedAt = clock;
-      r.fired = new Set();
-      r.camDispatched = new Set();
-      sceneRefs.handover.speed = null;
-      // The skip gesture itself reaches the orbit controls and cancels the
-      // handover; the compressed film still has a release to hand over from.
-      sceneRefs.handover.cancelled = false;
-      r.handoverArmed = false;
+      // Mid-thesis on the compressed path the flag is simply spent: the film
+      // keeps playing and this frame falls through as normal.
+      if (r.tl.kind !== 'compressed') {
+        const cam = sceneRefs.camera;
+        const fromPos = cam ? [cam.position.x, cam.position.y, cam.position.z] : seatPos(camDist, SEAT.attention1);
+        r.tl = buildCompressed(r.CAP, { ...r.fx }, fromPos, r.reduced);
+        r.startedAt = clock;
+        r.fired = new Set();
+        r.camDispatched = new Set();
+        sceneRefs.handover.speed = null;
+        // The skip gesture itself reaches the orbit controls and cancels the
+        // handover; the compressed film still has a release to hand over from.
+        sceneRefs.handover.cancelled = false;
+        r.handoverArmed = false;
+      }
     }
 
     const tl = r.tl;

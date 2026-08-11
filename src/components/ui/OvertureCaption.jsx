@@ -52,12 +52,11 @@ export default function OvertureCaption() {
 
   if (!rendered) return null;
   const mob = isMob();
-  const { lines = [], data, odometer } = rendered;
+  const { lines = [], data, odometer, heroLine = 0 } = rendered;
   const captionKey = lines.join('\n');
 
   return (
     <div
-      key={captionKey}
       style={{
         position: 'absolute', bottom: mob ? 90 : 110, left: '50%', transform: 'translateX(-50%)',
         zIndex: 46, background: 'rgba(10,16,30,0.95)', backdropFilter: 'blur(16px)',
@@ -70,11 +69,20 @@ export default function OvertureCaption() {
       }}
     >
       {lines.map((line, i) => (
+        // Keyed by text, not index: a line that survives a caption change (the
+        // thesis frame keeps "But this is who actually dies." while the hero
+        // line joins beneath it) keeps its DOM node, so it does not replay its
+        // entrance. It steps down to the lead style instead, on a sanctioned
+        // 240 ms, which is what gives the hero line the frame.
         <div
-          key={i}
+          key={line}
           style={{
-            fontSize: 'clamp(20px, 3.2vw, 34px)', fontWeight: 500, color: '#e2e8f0',
+            fontSize: i === heroLine ? 'clamp(20px, 3.2vw, 34px)' : 'clamp(14px, 1.9vw, 20px)',
+            fontWeight: i === heroLine ? 500 : 400,
+            color: i === heroLine ? '#e2e8f0' : '#94a3b8',
             lineHeight: 1.25, whiteSpace: mob ? 'normal' : 'nowrap', maxWidth: mob ? '85vw' : 'none',
+            marginBottom: i === heroLine ? 0 : 4,
+            transition: 'font-size 240ms ease, color 240ms ease',
             animation: visible ? `overtureLineIn 300ms ease ${i * 90}ms forwards` : 'none',
           }}
         >
@@ -83,7 +91,7 @@ export default function OvertureCaption() {
       ))}
       {odometer ? (
         <div style={{ marginTop: 10 }}>
-          <OdometerAnimated odometer={odometer} />
+          <OdometerAnimated key={captionKey} odometer={odometer} />
         </div>
       ) : data ? (
         <div

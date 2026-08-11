@@ -75,9 +75,12 @@ export default function Spotlight() {
       (active) => {
         const sr = stateRef.current;
         if (useStore.getState().roulettePhase !== 'idle') return;
-        if (useStore.getState().overtureActive) return;
 
         if (active) {
+          // Suppression gate lives on the start path only, mirroring
+          // stopRoulette's restore-first shape: if the film opens mid-run, the
+          // deactivation below must still be able to clear the interval.
+          if (useStore.getState().overtureActive) return;
           const { idMap, diseases } = useStore.getState();
           const list = buildSpotlightList(idMap, diseases);
           if (list.length === 0) return;

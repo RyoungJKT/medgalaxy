@@ -16,6 +16,7 @@ import LandingOverlay from './ui/LandingOverlay';
 import CompareCards from './ui/CompareCards';
 import SupernovaOverlay from './ui/SupernovaOverlay';
 import OvertureCaption from './ui/OvertureCaption';
+import OvertureMicroLabels from './ui/OvertureMicroLabels';
 import SkipPill from './ui/SkipPill';
 import HintChips from './ui/HintChips';
 
@@ -43,6 +44,7 @@ export default function HtmlOverlay() {
       <VelocityOverlay />
       <LandingOverlay />
       <SupernovaOverlay />
+      <OvertureMicroLabels />
       <OvertureCaption />
       <SkipPill />
       <HintChips />
