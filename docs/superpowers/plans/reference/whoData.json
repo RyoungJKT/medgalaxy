@@ -1,0 +1,165 @@
+{
+  "rows": [
+    {
+      "id": "heart-disease",
+      "repoValue": 9100000,
+      "verifiedValue": 9100000,
+      "source": "WHO GHE 2021 (top-10 causes fact sheet): ischaemic heart disease, 9.1M deaths in 2021",
+      "action": "keep",
+      "confidence": "high"
+    },
+    {
+      "id": "sepsis",
+      "repoValue": 11000000,
+      "verifiedValue": 11000000,
+      "source": "Rudd et al., Lancet 2020 (GBD 2017): 11.0M sepsis-associated deaths; cited by WHO sepsis fact sheet",
+      "action": "flag",
+      "confidence": "medium"
+    },
+    {
+      "id": "breast-cancer",
+      "repoValue": 666000,
+      "verifiedValue": 665684,
+      "source": "IARC GLOBOCAN 2022 (Bray et al., CA Cancer J Clin 2024): 665,684 deaths in 2022",
+      "action": "keep",
+      "confidence": "high"
+    },
+    {
+      "id": "copd",
+      "repoValue": 3500000,
+      "verifiedValue": 3500000,
+      "source": "WHO GHE 2021: COPD 3.5M deaths in 2021 (4th leading cause)",
+      "action": "keep",
+      "confidence": "high"
+    },
+    {
+      "id": "rheumatic-heart-disease",
+      "repoValue": 373000,
+      "verifiedValue": 373345,
+      "source": "IHME GBD 2021: 373,345 deaths in 2021 (WHO GHE 2021: 360,000)",
+      "action": "keep",
+      "confidence": "high"
+    },
+    {
+      "id": "stroke",
+      "repoValue": 7300000,
+      "verifiedValue": 7300000,
+      "source": "IHME GBD 2021 (Lancet Neurol 2024): 7.3M (6.6-7.8M) stroke deaths in 2021; WHO GHE 2021 ~6.9M",
+      "action": "keep",
+      "confidence": "high"
+    },
+    {
+      "id": "pneumonia",
+      "repoValue": 2200000,
+      "verifiedValue": 2500000,
+      "source": "WHO GHE 2021: lower respiratory infections 2.5M deaths in 2021 (GBD 2021 ~2.2M); repo matches GBD, within 15% of GHE",
+      "action": "keep",
+      "confidence": "high"
+    },
+    {
+      "id": "lung-cancer",
+      "repoValue": 1817000,
+      "verifiedValue": 1817000,
+      "source": "IARC GLOBOCAN 2022: ~1.8M lung cancer deaths in 2022 (18.7% of 9.7M cancer deaths); repo matches to the thousand",
+      "action": "keep",
+      "confidence": "high"
+    },
+    {
+      "id": "type-2-diabetes",
+      "repoValue": 1600000,
+      "verifiedValue": 1600000,
+      "source": "WHO diabetes fact sheet: diabetes the direct cause of 1.6M deaths in 2021 (all diabetes; T2D is ~95%)",
+      "action": "keep",
+      "confidence": "high"
+    },
+    {
+      "id": "malaria",
+      "repoValue": 608000,
+      "verifiedValue": 610000,
+      "source": "WHO World Malaria Report 2025: 610,000 deaths in 2024 (2023: 598,000); repo 608,000 is the prior WMR-2024 figure, within 1%",
+      "action": "keep",
+      "confidence": "high"
+    },
+    {
+      "id": "pertussis",
+      "repoValue": 160000,
+      "verifiedValue": 59000,
+      "source": "IHME GBD 2021: under-20 deaths 51,517 (95% UI 23,071-103,878; Transl Pediatr GBD-2021 analysis); all-ages ~59,000. Repo 160,000 = obsolete 2014-era estimate (160,700 under-5)",
+      "action": "correct",
+      "confidence": "medium"
+    },
+    {
+      "id": "rotavirus",
+      "repoValue": 200000,
+      "verifiedValue": 128500,
+      "source": "GBD/Troeger et al. 2018 (JAMA Pediatr), WHO-cited: 128,500 under-5 rotavirus deaths (2016); still the standard WHO-cited figure",
+      "action": "correct",
+      "confidence": "high"
+    },
+    {
+      "id": "hiv-aids",
+      "repoValue": 630000,
+      "verifiedValue": 630000,
+      "source": "UNAIDS Global AIDS Update 2025: 630,000 AIDS-related deaths in 2024",
+      "action": "keep",
+      "confidence": "high"
+    },
+    {
+      "id": "alzheimers-disease",
+      "repoValue": 1900000,
+      "verifiedValue": 1950000,
+      "source": "IHME GBD 2021: 1.95M deaths from Alzheimer's disease and other dementias in 2021 (WHO GHE 2021: 1.8M)",
+      "action": "keep",
+      "confidence": "high"
+    },
+    {
+      "id": "tuberculosis",
+      "repoValue": 1250000,
+      "verifiedValue": 1230000,
+      "source": "WHO Global Tuberculosis Report 2025: 1.23M TB deaths in 2024 (incl. 150,000 with HIV); repo 1.25M = TB report 2024 figure for 2023, within 2%",
+      "action": "keep",
+      "confidence": "high"
+    },
+    {
+      "id": "covid-19",
+      "repoValue": 1200000,
+      "verifiedValue": 8800000,
+      "source": "WHO GHE 2021: 8.8M COVID-19 deaths in 2021 (2nd leading cause). Reported deaths: ~0.25-0.32M in 2023, tens of thousands/yr since",
+      "action": "flag",
+      "confidence": "high"
+    },
+    {
+      "id": "norovirus",
+      "repoValue": 200000,
+      "verifiedValue": 200000,
+      "source": "CDC / PLOS Medicine (Lopman et al. 2016) modeling: ~200,000 deaths/yr (WHO-cited 212,489); no newer authoritative global estimate",
+      "action": "keep",
+      "confidence": "medium"
+    },
+    {
+      "id": "cystic-fibrosis",
+      "repoValue": 1000,
+      "verifiedValue": 1000,
+      "source": "No single authoritative global estimate; registry data (US CDC WONDER ~250-500 CF deaths/yr US, UK ~100+) supports a global total in the low thousands",
+      "action": "keep",
+      "confidence": "low"
+    },
+    {
+      "id": "ebola",
+      "repoValue": 300,
+      "verifiedValue": 32,
+      "source": "WHO/CDC outbreak records: 2025 deaths = 32 (Uganda SVD 4 + DRC Kasai EVD 28); 2024 = 0; 2022-23 Uganda outbreak = 77 total",
+      "action": "flag",
+      "confidence": "high"
+    },
+    {
+      "id": "west-nile-virus",
+      "repoValue": 200,
+      "verifiedValue": 130,
+      "source": "CDC: mean ~130 WNV deaths/yr in the US (2014-2023); no authority publishes a global total (Europe adds tens in bad years)",
+      "action": "flag",
+      "confidence": "medium"
+    }
+  ],
+  "notes": "VINTAGE: WHO GHE 2021 (released 2024) is STILL the latest GHE vintage as of Aug 2026; next release expected ~2027-28. IHME has published the GBD 2023 capstone (Global burden of 292 causes of death, 1990-2023, healthdata.org), making GBD 2023 the newest overall vintage, but GBD 2021 remains the latest with widely citable per-cause secondary literature; nothing I could extract from GBD 2023 changes any verdict here. Disease-specific annual reports are newer than GHE and were preferred where they exist: Global TB Report 2025 (year 2024), World Malaria Report 2025 (year 2024), UNAIDS 2025 (year 2024), GLOBOCAN 2022 (cancers).\n\nCORRECTIONS (2): pertussis 160,000 -> 59,000 (repo value is the 2014-era Yeung/WHO estimate of 160,700 under-5 deaths; GBD 2021 under-20 deaths = 51,517, all-ages ~59,000; COVID-era mask/distancing effects contributed to the drop, so expect some rebound in GBD 2023 given the 2024 case surge of ~941,565 reported cases). rotavirus 200,000 -> 128,500 (WHO-cited GBD figure for under-5 deaths, 2016; repo value is the pre-2016 estimate).\n\nFLAGS (4): (a) sepsis: 11M (GBD 2017, Rudd 2020) is the standard WHO-cited figure, but sepsis deaths are 'sepsis-ASSOCIATED' and overlap with underlying causes (pneumonia, cancers, IHD) - summing it with other rows double-counts; the GBD 2021 update (Lancet Glob Health 2025) estimates 21.4M for 2021 inflated by COVID. Keep 11M only with a methodology disclosure. (b) covid-19: repo 1.2M matches no vintage - GHE 2021 says 8.8M (2021), WHO-reported deaths were ~0.25-0.32M in 2023 and tens of thousands/yr in 2024-25 (reporting largely ceased); the field needs an explicit year label; writing 8.8M unlabeled would also mislead. (c) ebola: deaths are episodic, not annual - 2024 = 0, 2025 = 32, but 2014-16 averaged ~3,800/yr; a flat 300/yr fabricates a steady state. Suggest showing most-recent-year with an 'epidemic-prone' note. (d) west-nile-virus: no global authority; CDC US mean ~130/yr; repo 200 is a plausible global order of magnitude but uncitable as stated.\n\nMETHODOLOGY-PAGE DISCLOSURES (framing that can mislead): sepsis double-counting (above) is the big one. Also: 'pneumonia' figure is WHO's 'lower respiratory infections' (includes flu, RSV, bronchiolitis); rotavirus and norovirus deaths are subsets of overall diarrhoeal-disease deaths (do not sum with a diarrhoea row); 'heart-disease' = ischaemic heart disease only (not all cardiovascular, which is ~19-20M); 'alzheimers-disease' = Alzheimer's AND other dementias; 'type-2-diabetes' = all diabetes direct deaths (excludes ~0.5M diabetes-attributed kidney deaths); breast/lung cancer use GLOBOCAN 2022 while others use GHE/GBD 2021 - mixed vintages should be stated. On paper-count vs deaths framing specifically: diseases with huge research footprints but modest current mortality (covid-19, ebola, cystic-fibrosis, west-nile-virus) will look 'over-studied' vs deaths, while sepsis looks 'under-studied' only because its 11M deaths overlap other categories - a scatter of publications vs mortality should disclose both the overlap and the year-labeling caveats.\n\nFile read: /Users/darwin/Documents/Claude/medgalaxy-next/data/diseases.json. All 20 ids matched exactly; no nearest-id substitutions were needed.\n\nKey sources: who.int/news-room/fact-sheets/detail/the-top-10-causes-of-death; who.int/data/gho/data/themes/mortality-and-global-health-estimates/ghe-leading-causes-of-death; healthdata.org/research-analysis/library/global-burden-292-causes-death-204-countries-and-territories-and-660 (GBD 2023); tp.amegroups.org/article/view/144801/html (pertussis GBD 2021); ourworldindata.org/rotavirus-vaccine; cdn.who.int world-malaria-report-2025 executive summary; who.int Global TB Report 2025; unaids.org 2025 Global AIDS Update; acsjournals.onlinelibrary.wiley.com/doi/10.3322/caac.21834 (GLOBOCAN 2022); healthdata.org GBD 2021 sepsis and stroke library pages; journals.plos.org/plosmedicine (norovirus); cdc.gov west-nile-virus key messages; cdc.gov/ebola/outbreaks; data.who.int/dashboards/covid19/deaths."
+}
