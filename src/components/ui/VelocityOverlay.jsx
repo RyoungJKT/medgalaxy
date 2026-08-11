@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import useStore from '../../store';
 import { CC } from '../../utils/constants';
-import { fmt, isMob } from '../../utils/helpers';
+import { fmt, isMob, decadeGrowth } from '../../utils/helpers';
 
 function fG(v) { return v >= 10 ? String(Math.round(v)) + '\u00d7' : v >= 1 ? v.toFixed(1) + '\u00d7' : v.toFixed(2) + '\u00d7'; }
 function fP(v) { return v >= 0 ? '+' + Math.round(v) + '%' : Math.round(v) + '%'; }
@@ -15,11 +15,7 @@ export default function VelocityOverlay() {
     const items = diseases
       .filter(d => d.yearlyPapers && d.yearlyPapers.length >= 6)
       .map(d => {
-        const yp = d.yearlyPapers;
-        const early = yp.slice(0, 3).reduce((a, b) => a + b, 0) / 3;
-        const late = yp.slice(-3).reduce((a, b) => a + b, 0) / 3;
-        const growth = early > 0 ? late / early : 0;
-        const pctChange = early > 0 ? ((late / early) - 1) * 100 : 0;
+        const { growth, pctChange, early, late } = decadeGrowth(d.yearlyPapers);
         return { ...d, growth, pctChange, early, late };
       });
     const nonCovid = items.filter(d => d.id !== 'covid-19');

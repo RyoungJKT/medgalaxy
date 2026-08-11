@@ -7,6 +7,7 @@ import { FXAAShader } from 'three/examples/jsm/shaders/FXAAShader';
 import * as d3 from 'd3';
 import diseasesData from '../data/diseases.json';
 import connectionsData from '../data/connections.json';
+import { decadeGrowth } from './utils/helpers';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 // Vibrant saturated palette
@@ -570,11 +571,7 @@ export default function MedGalaxy() {
 
   const velocityData=React.useMemo(()=>{
     const items=diseasesData.filter(d=>d.yearlyPapers&&d.yearlyPapers.length>=6).map(d=>{
-      const yp=d.yearlyPapers;
-      const early=yp.slice(0,3).reduce((a,b)=>a+b,0)/3;
-      const late=yp.slice(-3).reduce((a,b)=>a+b,0)/3;
-      const growth=early>0?late/early:0;
-      const pctChange=early>0?((late/early)-1)*100:0;
+      const{growth,pctChange,early,late}=decadeGrowth(d.yearlyPapers);
       return{...d,growth,pctChange,early,late};
     });
     const nonCovid=items.filter(d=>d.id!=='covid-19');

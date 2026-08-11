@@ -5,6 +5,16 @@ export function nRM(m){if(m<=0)return MN*0.2;return MN+Math.pow(Math.min(m,MAX_M
 export function fmt(n){if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=10000)return Math.round(n/1000)+'K';if(n>=1000)return(n/1000).toFixed(1)+'K';return String(n);}
 export function isMob(){return typeof window!=='undefined'&&(matchMedia('(pointer:coarse)').matches||window.innerWidth<768);}
 
+export function decadeGrowth(yearlyPapers){
+  // Always window onto the most recent 10 entries, regardless of how far
+  // back yearlyPapers starts (yearStart) — keeps "last decade" meaning the
+  // last decade even after a historical backfill extends the array.
+  const yp=yearlyPapers.slice(-10);
+  const early=yp.slice(0,3).reduce((a,b)=>a+b,0)/3;
+  const late=yp.slice(-3).reduce((a,b)=>a+b,0)/3;
+  return{growth:early>0?late/early:0,pctChange:early>0?((late/early)-1)*100:0,early,late};
+}
+
 export function neglectColor(ppd){
   // ppd: papers per death. High = well-researched (green), low = neglected (red)
   if(ppd<=0)return'#22c55e'; // no mortality data → treat as well-researched
