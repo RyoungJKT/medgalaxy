@@ -45,9 +45,9 @@ function dTier() {
 }
 function isMob(){return typeof window!=='undefined'&&(matchMedia('(pointer:coarse)').matches||window.innerWidth<768);}
 // Node sizing: extreme power-law for maximum size contrast
-const MN=0.3, MX=55, MAX_PAPERS=450000, MAX_MORT=1400000;
-function nR(p){return MN+Math.pow(Math.min(p,MAX_PAPERS)/MAX_PAPERS,0.45)*(MX-MN);}
-function nRM(m){if(m<=0)return MN*0.2;return MN+Math.pow(Math.min(m,MAX_MORT)/MAX_MORT,0.45)*(MX-MN);}
+const MN=0.3, MX=55, MAX_PAPERS=1750000, MAX_MORT=11000000;
+function nR(p){return MN+Math.pow(Math.min(p,MAX_PAPERS)/MAX_PAPERS,0.5)*(MX-MN);}
+function nRM(m){if(m<=0)return MN*0.2;return MN+Math.pow(Math.min(m,MAX_MORT)/MAX_MORT,0.5)*(MX-MN);}
 function fmt(n){if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=10000)return Math.round(n/1000)+'K';if(n>=1000)return(n/1000).toFixed(1)+'K';return String(n);}
 
 // ─── Data Processing ─────────────────────────────────────────────────────────
