@@ -18,7 +18,7 @@ import ConnectionsView from './components/ConnectionsView';
 import VelocityMap from './components/VelocityMap';
 import AttentionMap from './components/AttentionMap';
 import Spotlight from './components/Spotlight';
-import SelectionDOF from './components/SelectionDOF';
+import PostFX from './components/PostFX';
 import SelectionRipple from './components/SelectionRipple';
 import IntroSequence from './components/IntroSequence';
 import AdaptiveDpr from './components/AdaptiveDpr';
@@ -171,7 +171,7 @@ export default function App() {
           <VelocityMap />
           <AttentionMap />
           <Spotlight />
-          <SelectionDOF />
+          <PostFX />
           <SelectionRipple />
           <IntroSequence />
           <AdaptiveDpr />

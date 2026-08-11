@@ -1,10 +1,10 @@
 import React, { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { EffectComposer, DepthOfField } from '@react-three/postprocessing';
+import { EffectComposer, Bloom, DepthOfField, Vignette } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import useStore from '../store';
 import { sceneRefs } from '../sceneRefs';
-import { TIER } from '../utils/tiers';
+import { TIER, CFG } from '../utils/tiers';
 
 const _target = new THREE.Vector3();
 
@@ -13,7 +13,7 @@ const MAX_BOKEH = TIER === 'HIGH' ? 3.0 : 2.0;
 // Render DOF at reduced resolution (half for MEDIUM, two-thirds for HIGH)
 const DOF_RES_SCALE = TIER === 'HIGH' ? 0.667 : 0.5;
 
-export default function SelectionDOF() {
+export default function PostFX() {
   const dofRef = useRef();
   const curBokeh = useRef(0);
   const prevCamRef = useRef({ x: 0, y: 0, z: 0, qx: 0, qy: 0, qz: 0 });
@@ -66,13 +66,11 @@ export default function SelectionDOF() {
 
   return (
     <EffectComposer resolutionScale={DOF_RES_SCALE}>
-      <DepthOfField
-        ref={dofRef}
-        focusDistance={0}
-        focalLength={0.04}
-        bokehScale={0}
-        resolutionScale={DOF_RES_SCALE}
-      />
+      <Bloom mipmapBlur intensity={CFG.bloom.intensity} levels={CFG.bloom.levels}
+        luminanceThreshold={1.0} luminanceSmoothing={0.05} />
+      <DepthOfField ref={dofRef} focusDistance={0} focalLength={0.04}
+        bokehScale={0} resolutionScale={DOF_RES_SCALE} />
+      <Vignette eskil={false} offset={0.28} darkness={0.62} />
     </EffectComposer>
   );
 }
