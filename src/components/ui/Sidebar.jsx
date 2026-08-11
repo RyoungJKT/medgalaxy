@@ -135,8 +135,8 @@ export default function Sidebar() {
         </div>
         {/* Sparkline */}
         <div style={{ padding: '0 16px 12px' }}>
-          <div style={{ color: '#94a3b8', fontSize: 11, marginBottom: 4 }}>Publication Trend (2014–2024)</div>
-          <Sparkline data={disease.yearlyPapers} color={c} />
+          <div style={{ color: '#94a3b8', fontSize: 11, marginBottom: 4 }}>{`Publication Trend (${disease.yearStart ?? 2015}-2024)`}</div>
+          <Sparkline data={disease.yearlyPapers} color={c} yearStart={disease.yearStart ?? 2015} yearEnd={2024} />
         </div>
         {/* PubMed link */}
         <div style={{ padding: '0 16px 12px' }}>

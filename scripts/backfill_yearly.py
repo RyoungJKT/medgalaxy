@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 """
-Refresh PubMed publication data for all diseases in diseases.json.
-Updates: papers (total count), yearlyPapers (last 10 years), trend (% change).
-Does NOT touch: mortality, description, category, fundingGap, connections.
+Backfill yearlyPapers with 1990-2014 PubMed counts for all diseases in diseases.json.
+Extends the existing 2015-2024 (10-entry) yearlyPapers to a 35-entry array
+(indexes 0..24 = 1990..2014 backfilled, 25..34 = 2015..2024 from the weekly
+refresh pipeline), and sets yearStart = 1990.
+Resumable: writes the file after every completed disease, and skips diseases
+that are already backfilled (yearStart == 1990) on restart.
 """
 
-import datetime
 import json
 import os
 import sys
@@ -14,7 +16,6 @@ import urllib.request
 import urllib.error
 
 DATA_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'diseases.json')
-META_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'meta.json')
 
 # Override search terms for diseases whose labels don't work as-is
 SEARCH_OVERRIDES = {
@@ -31,7 +32,7 @@ SEARCH_OVERRIDES = {
     'hiv-aids': 'HIV AIDS',
 }
 
-YEARS = list(range(2015, 2025))  # 10 years of data
+YEARS_BACK = list(range(1990, 2015))  # 25 years of backfill data
 RATE_LIMIT_DELAY = 0.35  # seconds between requests
 
 
@@ -69,38 +70,21 @@ def get_search_term(disease):
     return label
 
 
-def refresh_disease(disease):
-    """Fetch updated PubMed data for a single disease."""
+def backfill_disease(disease):
+    """Fetch 1990-2014 PubMed counts for a single disease and prepend them
+    to the existing (2015-2024) yearlyPapers array."""
     term = get_search_term(disease)
 
-    # Total paper count
-    total = pubmed_count(term)
-    if total is None:
-        return False
-
-    # Yearly papers
-    yearly = []
-    for year in YEARS:
+    back = []
+    for year in YEARS_BACK:
         count = pubmed_count(term, f'{year}/01/01', f'{year}/12/31')
         if count is None:
             return False
-        yearly.append(count)
+        back.append(count)
         time.sleep(RATE_LIMIT_DELAY)
 
-    # Calculate trend: compare first 3 years avg to last 3 years avg
-    early_avg = sum(yearly[:3]) / 3 if sum(yearly[:3]) > 0 else 1
-    late_avg = sum(yearly[-3:]) / 3
-    pct_change = ((late_avg / early_avg) - 1) * 100
-    trend = round(pct_change)
-    trend = max(-999, min(999, trend))
-
-    # Update disease record (only PubMed fields)
-    disease['papers'] = total
-    prior = disease.get('yearlyPapers', [])
-    year_start = disease.get('yearStart', YEARS[0])
-    prefix_len = YEARS[0] - year_start  # 25 after backfill, 0 before
-    disease['yearlyPapers'] = prior[:prefix_len] + yearly
-    disease['trend'] = trend
+    disease['yearlyPapers'] = back + disease['yearlyPapers']
+    disease['yearStart'] = 1990
     return True
 
 
@@ -110,49 +94,34 @@ def main():
 
     total = len(diseases)
     updated = 0
+    skipped = 0
     failed = 0
 
-    print(f'Refreshing PubMed data for {total} diseases...')
-    print(f'Years: {YEARS[0]}-{YEARS[-1]}')
+    print(f'Backfilling yearlyPapers {YEARS_BACK[0]}-{YEARS_BACK[-1]} for {total} diseases...')
     print()
 
     for i, disease in enumerate(diseases):
-        label = disease['label']
-        term = get_search_term(disease)
-        print(f'[{i+1}/{total}] {label} (searching: "{term}")...', end=' ', flush=True)
+        if disease.get('yearStart') == 1990:
+            print(f'[{i+1}/{total}] {disease["id"]} — already backfilled, skipping')
+            skipped += 1
+            continue
 
-        old_papers = disease.get('papers', 0)
-        old_trend = disease.get('trend', 0)
+        print(f'[{i+1}/{total}] {disease["id"]}...', end=' ', flush=True)
 
-        success = refresh_disease(disease)
+        success = backfill_disease(disease)
 
         if success:
-            delta = disease['papers'] - old_papers
-            delta_str = f'+{delta}' if delta >= 0 else str(delta)
-            print(f'OK — {disease["papers"]:,} papers ({delta_str}), trend={disease["trend"]}% (was {old_trend}%)')
+            print(f'OK — yearlyPapers now {len(disease["yearlyPapers"])} entries (yearStart={disease["yearStart"]})')
             updated += 1
+            # Write after EVERY completed disease so the run is resumable.
+            with open(DATA_PATH, 'w') as f:
+                json.dump(diseases, f, indent=2)
         else:
-            print('FAILED — keeping existing data')
+            print('FAILED — leaving disease unbackfilled for retry on next run')
             failed += 1
 
-        time.sleep(RATE_LIMIT_DELAY)
-
-    # Write back
-    with open(DATA_PATH, 'w') as f:
-        json.dump(diseases, f, indent=2)
-
-    # Update meta.json's lastRefresh date alongside diseases.json
-    if os.path.exists(META_PATH):
-        with open(META_PATH, 'r') as f:
-            meta = json.load(f)
-    else:
-        meta = {}
-    meta['pubmedLastRefresh'] = datetime.date.today().isoformat()
-    with open(META_PATH, 'w') as f:
-        json.dump(meta, f, indent=2)
-
     print()
-    print(f'Done. Updated: {updated}, Failed: {failed}, Total: {total}')
+    print(f'Done. Updated: {updated}, Skipped (already backfilled): {skipped}, Failed: {failed}, Total: {total}')
 
     if failed > 0:
         sys.exit(1)

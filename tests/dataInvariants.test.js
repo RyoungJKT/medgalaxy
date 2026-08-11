@@ -45,4 +45,30 @@ describe('data invariants', () => {
     expect(byId['ebola'].mortality).toBe(32);
     expect(byId['west-nile-virus'].mortality).toBe(130);
   });
+  it('yearlyPapers is backfilled to 1990 for every disease', () => {
+    for (const d of diseases) {
+      expect(d.yearlyPapers.length, d.id).toBe(35);
+      expect(d.yearStart, d.id).toBe(1990);
+    }
+  });
+  it('covid-19 pre-2019 paper counts are noise-level (sanity gate on the backfill)', () => {
+    const byId = Object.fromEntries(diseases.map(d => [d.id, d]));
+    const preOnset = byId['covid-19'].yearlyPapers.slice(0, 29); // 1990-2018
+    const sum = preOnset.reduce((a, b) => a + b, 0);
+    expect(sum).toBeLessThan(400);
+  });
+  it('hiv-aids shows the 1990s surge (Time Machine second act)', () => {
+    const byId = Object.fromEntries(diseases.map(d => [d.id, d]));
+    const nineties = byId['hiv-aids'].yearlyPapers.slice(0, 10); // 1990-1999
+    const max = Math.max(...nineties);
+    // Brief's original threshold was 2x; real data surges 1.86x-1.94x depending
+    // on which 90s year is used as the peak. Plan author approved loosening
+    // to >= 1.8x so the invariant reflects verified data instead of a guess.
+    expect(max).toBeGreaterThanOrEqual(nineties[0] * 1.8);
+  });
+  it('rheumatic-heart-disease stays flat across the full 1990-2024 span (Time Machine finale)', () => {
+    const byId = Object.fromEntries(diseases.map(d => [d.id, d]));
+    const max = Math.max(...byId['rheumatic-heart-disease'].yearlyPapers);
+    expect(max).toBeLessThan(600);
+  });
 });
