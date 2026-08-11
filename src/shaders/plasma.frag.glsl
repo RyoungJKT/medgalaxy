@@ -3,9 +3,12 @@ uniform float usePlasma;
 uniform vec3 fogColor;
 uniform float fogNear;
 uniform float fogFar;
+uniform float igniteAmount;   // overture beat 2 stage two: 0 = cold, 1 = full burn
+uniform float desatAmount;    // overture beat 2 stage one: 0 = category color, 1 = graphite
+uniform float emberAmount;    // beat 3 onward: standing scar on the overlooked decile
 
 varying vec3 vNormal, vWorldPos, vColor, vViewPos, vWorldNormal, vObjPos;
-varying float vPhase, vFogDepth, vCatId;
+varying float vPhase, vFogDepth, vCatId, vIgnite, vEmber;
 
 // ── Tuning constants ──
 const vec3  KEY_DIR    = normalize(vec3(0.6, 0.8, 0.5));
@@ -99,8 +102,8 @@ void main(){
     col = col * (0.85 + bump * 0.35);
   }
 
-  // Animated plasma (HIGH tier). TO ENABLE: change `false` to `usePlasma > 0.5`
-  if (false) {
+  // Animated plasma (HIGH tier). TO DISABLE: change `usePlasma > 0.5` to `false`
+  if (usePlasma > 0.5) {
     vec3 np = vWorldPos * 1.8 + vec3(time * 0.35 + vPhase);
     float plasma = fbm(np) + fbm(np * 1.5 + vec3(0.0, time * 0.25, 0.0));
     plasma = pow(plasma * 0.5, 0.7);
@@ -119,6 +122,35 @@ void main(){
   alpha = mix(alpha, 0.1, fogFactor * 0.5);
 
   col = min(col, vColor * 1.15);
+
+  // ── 8. Overture grade: suppression → ignite → ember ──
+  // Everything below the clamp on purpose: only the ignite ramp is allowed to
+  // exceed the bloom threshold (1.0), so glow always means divergence.
+
+  // Palette suppression (overture beat 2 stage one): drain to graphite
+  float lum = dot(col, vec3(0.299, 0.587, 0.114));
+  col = mix(col, vec3(lum) * vec3(0.72, 0.78, 0.92), desatAmount * 0.85);
+
+  // Black-body ignite: dark rim to white-hot core, HDR (exceeds bloom threshold)
+  float ig = vIgnite * igniteAmount;
+  if (ig > 0.001) {
+    float core = pow(NdotV, 2.2);                       // radial: rim 0, core 1
+    // Temperature is radial position TIMES divergence weight, so a node only
+    // climbs the ramp as far as its own divergence earns: sepsis (1.0) is the
+    // only node that reaches the white-hot core, mid-field nodes top out at
+    // ember, and the honest anchors never leave smolder.
+    float temp = core * ig;
+    vec3 ramp = mix(vec3(0.17, 0.03, 0.02),             // smolder #2b0806
+                mix(vec3(0.79, 0.08, 0.03),             // ignition #c92a0d
+                    vec3(1.0, 0.95, 0.88), temp * temp * temp), // white-hot core #fff3e0
+                temp);
+    col = mix(col, ramp * (1.0 + 5.0 * temp * ig), ig);
+  }
+
+  // Persistent ember rim on the overlooked decile (post-release standing scar)
+  float rim = pow(1.0 - NdotV, 3.0);
+  col += vec3(1.0, 0.23, 0.08) * rim * vEmber * emberAmount
+         * (0.30 + 0.05 * sin(time * 3.14159 + vPhase));
 
   gl_FragColor = vec4(col, alpha);
 }

@@ -7,6 +7,7 @@ import { CC, CATS } from '../utils/constants';
 import { sceneRefs } from '../sceneRefs';
 import { TIER } from '../utils/tiers';
 import { useAttentionColors } from './AttentionMap';
+import { igniteWeights } from '../utils/igniteWeights';
 import plasmaVert from '../shaders/plasma.vert.glsl?raw';
 import plasmaFrag from '../shaders/plasma.frag.glsl?raw';
 import pulseVert from '../shaders/pulse.vert.glsl?raw';
@@ -87,8 +88,11 @@ export default function DiseaseNodes() {
       phases[i] = Math.random() * Math.PI * 2;
       catIds[i] = CAT_INDEX[diseases[i].category] || 0;
     }
+    const { ignite, ember } = igniteWeights(diseases);
     g.setAttribute('aPhase', new THREE.InstancedBufferAttribute(phases, 1));
     g.setAttribute('aCatId', new THREE.InstancedBufferAttribute(catIds, 1));
+    g.setAttribute('aIgnite', new THREE.InstancedBufferAttribute(ignite, 1));
+    g.setAttribute('aEmber', new THREE.InstancedBufferAttribute(ember, 1));
     return g;
   }, [count, mobDevice, diseases]);
 
@@ -98,10 +102,18 @@ export default function DiseaseNodes() {
     fogFar: { value: 2000.0 },
   }), []);
 
+  // Overture grade uniforms — separate objects per material (each material owns
+  // its own, both fed from sceneRefs.fx every frame).
+  const gradeUniforms = () => ({
+    igniteAmount: { value: 0 },
+    desatAmount: { value: 0 },
+    emberAmount: { value: 0 },
+  });
+
   const plasmaMat = useMemo(() => {
     if (mobDevice) return null;
     return new THREE.ShaderMaterial({
-      uniforms: { time: { value: 0 }, usePlasma: { value: TIER === 'HIGH' ? 1.0 : 0.0 }, ...fogUniforms },
+      uniforms: { time: { value: 0 }, usePlasma: { value: TIER === 'HIGH' ? 1.0 : 0.0 }, ...fogUniforms, ...gradeUniforms() },
       vertexShader: plasmaVert,
       fragmentShader: plasmaFrag,
       transparent: true,
@@ -111,7 +123,7 @@ export default function DiseaseNodes() {
   const pulseMat = useMemo(() => {
     if (mobDevice) return null;
     return new THREE.ShaderMaterial({
-      uniforms: { time: { value: 0 }, ...fogUniforms },
+      uniforms: { time: { value: 0 }, ...fogUniforms, ...gradeUniforms() },
       vertexShader: pulseVert,
       fragmentShader: pulseFrag,
       transparent: true,
@@ -179,6 +191,10 @@ export default function DiseaseNodes() {
 
     if (mat.uniforms) {
       mat.uniforms.time.value = state.clock.getElapsedTime();
+      const fx = sceneRefs.fx;
+      mat.uniforms.igniteAmount.value = fx.ignite;
+      mat.uniforms.desatAmount.value = fx.desat;
+      mat.uniforms.emberAmount.value = fx.ember;
     }
 
     // Intro scale logic
