@@ -622,9 +622,17 @@ export default function TimeMachine() {
     // while it plays).
     const glowTarget = store.tmFocusIdx >= 0 ? FINALE_GLOW : 0;
     if (!store.overtureActive && (glowTarget > 0 || glowRef.current > 0.001)) {
-      const k = Math.min(1, dt / GLOW_RAMP);
-      glowRef.current += (glowTarget - glowRef.current) * k;
-      if (glowRef.current < 0.001) glowRef.current = 0;
+      if (reducedRef.current) {
+        // Reduced motion: the finale's halo suppression snaps straight to its
+        // target instead of ramping over GLOW_RAMP (Task 17 follow-up review,
+        // finding 3) — the same "no ramp" rule the tour's year travel and
+        // camera cues already follow under this flag.
+        glowRef.current = glowTarget;
+      } else {
+        const k = Math.min(1, dt / GLOW_RAMP);
+        glowRef.current += (glowTarget - glowRef.current) * k;
+        if (glowRef.current < 0.001) glowRef.current = 0;
+      }
       sceneRefs.fx.glowSuppress = glowRef.current;
     }
 

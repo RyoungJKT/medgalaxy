@@ -148,6 +148,19 @@ export default function NodeLabels() {
           className="absolute"
           style={{
             transform: 'translateX(-50%)',
+            // Same shrink-to-fit width bug as HintChips/OvertureCaption/
+            // TimeRail (Task 17 report section 2): `el.style.left` below sets
+            // a per-node pixel offset (not the literal `50%` the other fixed
+            // components use), but the mechanism is identical — an
+            // absolutely positioned box with `width` auto and `right` auto
+            // resolves its Chromium shrink-to-fit width against the space
+            // remaining between `left` and the containing block's right edge,
+            // not the label's natural width. A label anchored anywhere right
+            // of center (`sx` clamped up to `rc.width - 40`, i.e. as little
+            // as 40px of "available width" at the clamp) wrapped its disease
+            // name one word per line. max-content sizes each label to its
+            // own text.
+            width: 'max-content',
             fontFamily: "'IBM Plex Mono', monospace",
             fontSize: mob ? 7 : 9,
             color: neglectMode

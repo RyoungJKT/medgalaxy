@@ -61,6 +61,14 @@ export default function StoryCaption() {
         zIndex: 46, background: 'rgba(10,16,30,0.95)', backdropFilter: 'blur(16px)',
         border: '1px solid rgba(255,255,255,0.15)', borderRadius: 12,
         padding: mob ? '14px 20px' : '18px 32px',
+        // Same shrink-to-fit width bug as HintChips/OvertureCaption/TimeRail
+        // (Task 17 report section 2): an absolutely positioned box centered
+        // via left:50%/translateX(-50%) with width left auto resolves its
+        // Chromium shrink-to-fit width to ~half the containing block, not the
+        // content's natural width. Invisible at 1440px, wraps short captions
+        // word-per-line at 375px. max-content sizes the card to its content;
+        // the maxWidth below still caps genuinely long captions.
+        width: 'max-content',
         fontFamily: 'IBM Plex Mono,monospace', fontSize: mob ? 18 : 22,
         color: '#f1f5f9', whiteSpace: mob ? 'normal' : 'nowrap',
         maxWidth: mob ? '92vw' : 'none', textAlign: 'center',

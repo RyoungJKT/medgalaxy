@@ -38,6 +38,11 @@ export default function SupernovaOverlay() {
             bottom: 80,
             left: '50%',
             transform: 'translateX(-50%)',
+            // Same shrink-to-fit width bug as HintChips/OvertureCaption/
+            // TimeRail (Task 17 report section 2) — see StoryCaption.jsx for
+            // the full explanation. max-content sizes the card to its
+            // content instead of Chromium's ~half-containing-block guess.
+            width: 'max-content',
             pointerEvents: 'none',
             zIndex: 6,
             textAlign: 'center',

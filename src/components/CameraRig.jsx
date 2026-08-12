@@ -125,7 +125,13 @@ export default function CameraRig({ camDist }) {
         controls.autoRotate = false;
         idleFrames.current = 0;
 
-        const dur = flyTarget.duration || 1.2;
+        // ?? not ||: TimeMachine's reduced-motion tour explicitly passes
+        // duration: 0 for a snap cut, which || would discard as falsy and
+        // fall back to the default 1.2s tween (Task 17 follow-up review,
+        // finding 1). This is the only call site that ever passes 0; every
+        // other caller passes undefined or a positive number, so behavior
+        // there is unchanged.
+        const dur = flyTarget.duration ?? 1.2;
         // Callers may name their own curve (the overture passes the exact
         // easing function it also uses for its analytic seek).
         const ease = flyTarget.ease || 'power3.inOut';
