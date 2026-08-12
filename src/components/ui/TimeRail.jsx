@@ -112,8 +112,6 @@ export default function TimeRail() {
   const dragRef = useRef({ active: false, v: 0, lastY: 0 });
   const inertiaRef = useRef(null);
   const snapRef = useRef(null);
-  const moveRef = useRef(null);
-  const upRef = useRef(null);
 
   const tm = sceneRefs.tm;
   const nYears = tm ? tm.data.nYears : 1;
@@ -199,11 +197,16 @@ export default function TimeRail() {
   }, [snapTo]);
 
   // The finale's isolation and its caption hold until the viewer takes the
-  // instrument; the first scrub is what releases them.
+  // instrument; the first scrub is what releases them. A handover chip
+  // (`{ handover: true }`, set by TimeMachine.jsx's window-level listener,
+  // which fires first on capture) is a different thing from a held finale
+  // caption and must survive this call — otherwise a rail grab or an arrow
+  // key nulls the chip in the same gesture that just set it (Task 13 review
+  // finding 6), and "Scrub the decades." never has a chance to show.
   const clearFinale = useCallback(() => {
     const s = useStore.getState();
     if (s.tmFocusIdx >= 0) s.setTmFocusIdx(-1);
-    if (s.tmCaption) s.setTmCaption(null);
+    if (s.tmCaption && !s.tmCaption.handover) s.setTmCaption(null);
   }, []);
 
   const yearFromClientX = useCallback((clientX) => {
@@ -231,16 +234,13 @@ export default function TimeRail() {
     const d = dragRef.current;
     if (!d.active) return;
     d.active = false;
-    window.removeEventListener('pointermove', moveRef.current);
-    window.removeEventListener('pointerup', upRef.current);
-    window.removeEventListener('pointercancel', upRef.current);
+    window.removeEventListener('pointermove', onPointerMove);
+    window.removeEventListener('pointerup', onPointerUp);
+    window.removeEventListener('pointercancel', onPointerUp);
     if (!t) return;
     if (Math.abs(d.v) > FLICK_MIN) flick(d.v);
     else snapTo(Math.round(t.targetYear));
-  }, [flick, snapTo]);
-
-  moveRef.current = onPointerMove;
-  upRef.current = onPointerUp;
+  }, [flick, snapTo, onPointerMove]);
 
   const onPointerDown = useCallback((e) => {
     const t = sceneRefs.tm;
@@ -253,16 +253,22 @@ export default function TimeRail() {
     const y = yearFromClientX(e.clientX);
     dragRef.current = { active: true, v: 0, lastY: y };
     t.targetYear = y;
-    window.addEventListener('pointermove', moveRef.current);
-    window.addEventListener('pointerup', upRef.current);
-    window.addEventListener('pointercancel', upRef.current);
-  }, [cancelInertia, cancelSnap, clearFinale, yearFromClientX]);
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+    window.addEventListener('pointercancel', onPointerUp);
+  }, [cancelInertia, cancelSnap, clearFinale, yearFromClientX, onPointerMove, onPointerUp]);
 
   // Keyboard: left and right step a year while scrubbing; Escape leaves the
   // Time Machine altogether.
   useEffect(() => {
     if (tmPhase === 'idle') return undefined;
     const onKey = (e) => {
+      // A caret in the search box (or any other text field) owns arrow keys
+      // and Escape; the rail must not steal them out from under it (Task 13
+      // review finding 3).
+      const target = e.target;
+      const tag = target && target.tagName;
+      if (target && (tag === 'INPUT' || tag === 'TEXTAREA' || target.isContentEditable)) return;
       const s = useStore.getState();
       if (e.key === 'Escape') { s.stopTimeMachine(); return; }
       if (s.tmPhase !== 'scrub') return;
@@ -279,23 +285,25 @@ export default function TimeRail() {
     return () => window.removeEventListener('keydown', onKey);
   }, [tmPhase, clearFinale, snapTo]);
 
-  // Stop any momentum the moment the Time Machine closes.
+  // Stop any momentum the moment the Time Machine closes. If it closed
+  // mid-drag, run the same teardown a pointerup would: otherwise the window
+  // pointermove/pointerup/pointercancel listeners from onPointerDown outlive
+  // the rail (Task 13 review finding 4).
   useEffect(() => {
     if (tmPhase !== 'idle') return undefined;
     cancelInertia();
     cancelSnap();
+    onPointerUp();
     return undefined;
-  }, [tmPhase, cancelInertia, cancelSnap]);
+  }, [tmPhase, cancelInertia, cancelSnap, onPointerUp]);
 
   useEffect(() => () => {
     if (inertiaRef.current) cancelAnimationFrame(inertiaRef.current);
     if (snapRef.current) cancelAnimationFrame(snapRef.current);
-    if (moveRef.current) window.removeEventListener('pointermove', moveRef.current);
-    if (upRef.current) {
-      window.removeEventListener('pointerup', upRef.current);
-      window.removeEventListener('pointercancel', upRef.current);
-    }
-  }, []);
+    window.removeEventListener('pointermove', onPointerMove);
+    window.removeEventListener('pointerup', onPointerUp);
+    window.removeEventListener('pointercancel', onPointerUp);
+  }, [onPointerMove, onPointerUp]);
 
   // One pulse as the tour hands the rail over.
   const prevPhase = useRef(tmPhase);

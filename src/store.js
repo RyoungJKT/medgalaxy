@@ -395,6 +395,10 @@ const useStore = create(
         storyVisible: false,
         spotlightActive: false,
         spotlightCaption: '',
+        // Same effect as setActiveMode(null): the rail owns bottom center and
+        // the node-radius channel, so an active Trends/Connections/Research Gap
+        // overlay stands down rather than running underneath it.
+        activeMode: null,
       });
       if (s.storyActive) set({ storyActive: null, storyCaption: '', storyStep: 0 });
     },

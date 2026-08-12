@@ -109,7 +109,10 @@ export function buildTimeMachineData(diseases) {
       const prev = prevRow >= 0 ? values[prevRow + i] : 0;
       movers[i] = { index: i, id: diseases[i].id, label: diseases[i].label, delta: value - prev, value };
     }
-    movers.sort((a, b) => b.delta - a.delta);
+    // Ranked by magnitude: "biggest mover" means the largest swing either way,
+    // not only the largest gain. The sign survives in `delta` itself, and the
+    // rail's own hover chip formats it back on (TimeRail.jsx's `sign`/`Math.abs`).
+    movers.sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
     return movers;
   }
 

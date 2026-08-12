@@ -5,6 +5,8 @@ import { isMob } from '../../utils/helpers';
 export default function Legend() {
   const sizeMode = useStore(s => s.sizeMode);
   const uiRevealed = useStore(s => s.uiRevealed);
+  const diseases = useStore(s => s.diseases);
+  const displayEdges = useStore(s => s.displayEdges);
   const mob = isMob();
 
   return (
@@ -23,6 +25,9 @@ export default function Legend() {
           <span>Drag to rotate &middot; Scroll to zoom &middot; Right-drag to pan &middot; Double-click to re-center</span>
         </>
       )}
+      {/* Header hides its count below 1539px with nothing standing in for it
+          (Task 13 review finding 10); the legend footer carries it always. */}
+      <span>{diseases.length} diseases &middot; {displayEdges.length} connections</span>
       <span style={{ marginLeft: 'auto' }}>Data: PubMed &middot; WHO Global Health Estimates 2021 &middot; Project by Russell J. Young</span>
     </div>
   );

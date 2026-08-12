@@ -128,8 +128,11 @@ export function buildTourTimeline(data, startYearIdx) {
       cues.push({ t: t + FINALE_SPLIT, kind: 'caption', caption: 'flatline' });
       cues.push({ t: t + FINALE_SPLIT, kind: 'focus', focus: 'rheumatic-heart-disease' });
       // The closing shot recenters on the flatline without closing in: the
-      // point is the 152 diseases dimmed around it, so they stay in frame.
-      cues.push({ t: t + FINALE_SPLIT, kind: 'camera-node', node: 'rheumatic-heart-disease', factor: 0.95, effect: true });
+      // point is the 152 diseases dimmed around it, so they stay in frame. No
+      // `factor` on purpose — a relative pull from wherever the camera
+      // happens to be would inherit the tour's compounded push-ins (the HIV
+      // and detonation drifts) instead of the designed overview distance.
+      cues.push({ t: t + FINALE_SPLIT, kind: 'camera-node', node: 'rheumatic-heart-disease', effect: true });
     } else {
       cues.push({ t, kind: 'caption', caption: p.kind });
       // The two HIV pauses are the one place the camera leaves the overview:
@@ -211,7 +214,10 @@ export function buildTourCaptions(diseases, idMap, data) {
   };
 
   if (hiv) {
-    const surgeYear = Math.min(1996, last);
+    // Clamped on both ends: a decade-fallback data file (yearStart well after
+    // 1990) must not let this land before the file's own first year, which
+    // would read the pre-file zero floor and print a "0 papers" line.
+    const surgeYear = Math.max(first, Math.min(1996, last));
     caps.hivSurge = {
       lines: ['HIV research climbed with the epidemic.'],
       data: `${hiv.label}: ${fmtFull(valueAt(hiv, first))} papers in ${first}, ${fmtFull(valueAt(hiv, surgeYear))} in ${surgeYear}.`,
@@ -347,15 +353,26 @@ export default function TimeMachine() {
   }, []);
 
   // ── Any input during the tour hands the scrubber over, at the year on screen ──
+  // The same guard also covers the finale's held frame: the tour can end
+  // naturally (tmPhase already 'scrub') with the flatline focus/caption still
+  // parked from the closing shot. Without this, only a rail-drag, arrow key,
+  // Escape, or the close button released them — a plain click on another node
+  // left the dim/isolation locked on indefinitely (Task 13 review finding 1).
   useEffect(() => {
     const handover = () => {
       const s = useStore.getState();
-      if (s.tmPhase !== 'tour') return;
-      const tm = tmRef.current;
-      if (tm) tm.targetYear = Math.round(tm.yearFloat);
-      s.setTmFocusIdx(-1);
-      s.setTmCaption(tourRef.current.caps ? tourRef.current.caps.handover : { lines: ['Scrub the decades.'], handover: true });
-      s.setTmPhase('scrub');
+      if (s.tmPhase === 'tour') {
+        const tm = tmRef.current;
+        if (tm) tm.targetYear = Math.round(tm.yearFloat);
+        s.setTmFocusIdx(-1);
+        s.setTmCaption(tourRef.current.caps ? tourRef.current.caps.handover : { lines: ['Scrub the decades.'], handover: true });
+        s.setTmPhase('scrub');
+        return;
+      }
+      if (s.tmPhase === 'scrub' && s.tmFocusIdx >= 0) {
+        s.setTmFocusIdx(-1);
+        s.setTmCaption(null);
+      }
     };
     const opts = { capture: true, passive: true };
     window.addEventListener('pointerdown', handover, opts);
@@ -438,7 +455,14 @@ export default function TimeMachine() {
         break;
       }
       case 'camera-home':
-        s.setFlyTarget({ position: [0, 0, 0], duration: REWIND, ease: 'sine.inOut' });
+        // No radius: CameraRig's fly-back branch (docs/superpowers/plans/reference/
+        // sceneCore.md item 6) flies to the fixed, designed camDist rather than a
+        // distance relative to wherever the camera already is — the one branch
+        // that guarantees a wide framing regardless of how far the tour's earlier
+        // push-ins (HIV, detonation) left the camera pulled in. `radius: null`
+        // is explicit here, the same pattern store.deselect uses for its own
+        // fly-home.
+        s.setFlyTarget({ position: [0, 0, 0], radius: null, duration: REWIND, ease: 'sine.inOut' });
         break;
       case 'camera-node': {
         const idx = s.idMap[cue.node];
@@ -446,10 +470,13 @@ export default function TimeMachine() {
         if (idx !== undefined && cam && s.curPos[idx]) {
           const p = s.curPos[idx];
           // Distance measured off wherever the viewer already is, so the drift
-          // is proportional to the current framing rather than a fixed seat.
+          // is proportional to the current framing rather than a fixed seat —
+          // except when the cue omits `factor` (the finale's recenter), which
+          // asks for the same designed-camDist overview `camera-home` uses.
+          const radius = cue.factor != null ? cam.position.length() * cue.factor : null;
           s.setFlyTarget({
             position: [p[0], p[1], p[2]],
-            radius: cam.position.length() * cue.factor,
+            radius,
             duration: cue.dur || REWIND,
             ease: 'sine.inOut',
           });
