@@ -245,3 +245,39 @@ on-display evidence the headless matrix above could not supply; it confirms
 the headless readings were not hiding a real-compositor regression, and it
 does not supersede those rows (headless remains the reproducible harness for
 the full matrix).
+
+### 5b. LOW tier, on-display, 375x812: review gate, round 2 (P2 #9)
+
+The round-2 synthesis scored performance 8.5 with one named evidence hole:
+every LOW-tier/mobile row above is a headless-ceiling reading the matrix
+itself says cannot detect a regression, and the headed rows were HIGH tier
+only, with no Time Machine scenario. This section closes it. No code changed
+for it; the flag already existed.
+
+Harness: `node tools/verify.mjs --headed --mobile --eval "<drive>" --fps N`
+against the `:5280` dev server. `--mobile` sets a 375x812 viewport with
+`isMobile`/`hasTouch`, which is what `detectTier()` and `isMob()` read, so
+this is the LOW tier and the mobile UI branch (confirmed in-run:
+`window.innerWidth` 375, `matchMedia('(pointer:coarse)')` true). Same machine
+and display as section 5 (Apple M2 Max, built-in panel at 120.00Hz), so the
+vsync ceiling for an on-screen tab is again 120 fps. One run each.
+
+| Tier | Scenario | Drive method (`--eval`) | Window | FPS | Gate | Result |
+|---|---|---|---|---:|---:|---|
+| LOW | At rest (post-film) | `skipIntro()` then `finishOverture()`, settle 30 frames | 5 s | 120 | >=55 | PASS |
+| LOW | Beat 2 (the morph) | `__overture.seek(6.0)` then `resume()` | 5 s | 120 | >=55 | PASS |
+| LOW | Time Machine travel leg | `__tour.seek(1)` then `resume()`, wait out the 3.5 s pause hold so the window covers the 1996 -> 2019 leg (6 year-steps, 3.9 s) | 4 s | 120 | >=55 | PASS |
+
+The travel-leg run was re-run with `--shot fix4-mob-tm-leg`: the frame at the
+end of the FPS window reads 2019 on the rail, so the window did span the leg
+rather than a hold.
+
+All three hold the display's full refresh on the real compositor, which is the
+same result the HIGH-tier headed rows got and the same caveat applies: a rAF
+counter cannot distinguish 120 from "vsync-locked at 120", so this is a
+ceiling reading, not a headroom measurement. What it does establish, and what
+the headless LOW rows could not, is that the tier most likely to be a first
+touchpoint hits vsync on a real compositor in all three of the film's heaviest
+states, including the Time Machine, which had no headed coverage at all
+before. It is still this machine's GPU, not a phone's; a real-device run
+remains the only way to measure phone-class headroom.

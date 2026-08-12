@@ -16,8 +16,16 @@ import { fmtFull } from '../../utils/captions';
 // cannot allow), so these two labels are projected here instead, on the same
 // math, and only for the beat that asks for them.
 //
-// Desktop only: on mobile the caption sheet owns the lower frame and an 11px
-// label beside a node does not survive the reflow.
+// Beat 1's pair is desktop only: on mobile the caption sheet owns the lower
+// frame and two 11px labels beside two giants do not survive the reflow.
+//
+// Beat 2's single label ships everywhere (review gate round 2, P1 #6). On the
+// LOW-tier phone path the thesis frame read as two similar red dots, and the
+// name of the one the sentence is about was the missing half of the fix (the
+// white-hot instance color is the other half, HighlightSystem). It goes out
+// smaller, and it is held above the caption sheet's measured top edge, so the
+// one thing the phone frame cannot afford, a label over the sentence, cannot
+// happen.
 //
 // Beat 2 has one of its own (review gate F4). The ignition lights more than one
 // node — sepsis at weight 1.0 and COPD at 0.895 both flare, and the frame never
@@ -34,6 +42,12 @@ const MICRO = [
 const FADE_MS = 300;
 const GAP = 12;                              // px between node rim and label
 const ROW = 16;                              // px of vertical nudge on collision
+const MOB_FONT = 9;                          // the phone's beat-2 label
+const CAPTION_GAP = 10;                      // px kept clear above the caption sheet
+// Fallback when the caption sheet has not rendered yet (its top edge is
+// measured live below): the mobile sheet sits at bottom 90 and the thesis
+// frame's three lines plus the odometer run about 200px tall.
+const MOB_CAPTION_BAND = 290;
 const pv = new THREE.Vector3();
 const tanHalfFov = Math.tan(Math.PI / 6);    // fov 60 → half 30 degrees
 
@@ -48,9 +62,9 @@ export default function OvertureMicroLabels() {
   const containerRef = useRef(null);
   const mob = isMob();
 
-  const entries = mob
-    ? []
-    : MICRO.map((m) => ({ ...m, idx: idMap && idMap[m.id] })).filter((m) => m.idx !== undefined);
+  const entries = (mob ? MICRO.filter((m) => m.beat === 2) : MICRO)
+    .map((m) => ({ ...m, idx: idMap && idMap[m.id] }))
+    .filter((m) => m.idx !== undefined);
   const idxKey = entries.map((m) => `${m.idx}:${m.beat}`).join(',');
 
   useEffect(() => {
@@ -65,6 +79,20 @@ export default function OvertureMicroLabels() {
     // actually shown, so lateral camera drift crossing the frame midline mid-
     // beat does not flip which side it reads on. null = not yet latched.
     const sides = new Array(nodes.length).fill(null);
+    // The caption sheet's live top edge, measured rather than assumed: the
+    // thesis frame's card grows a line and an odometer as it lands, so a
+    // constant would either float the label too high all beat or let it sit on
+    // the sentence at the one moment that matters. Cached until the node goes
+    // away (the caption unmounts between beats).
+    let capEl = null;
+    const captionTop = (rc) => {
+      if (!capEl || !capEl.isConnected) capEl = document.querySelector('[data-mg-overture-caption]');
+      if (capEl) {
+        const r = capEl.getBoundingClientRect();
+        if (r.height > 0) return r.top;
+      }
+      return rc.height - MOB_CAPTION_BAND;
+    };
 
     function update() {
       if (!running) return;
@@ -146,6 +174,12 @@ export default function OvertureMicroLabels() {
           left = Math.max(12, Math.min(rc.width - 12 - w, outward[0]));
           while (placed.some((p) => hits(p, left, top, w))) top += ROW;
         }
+        // The phone's one rule: never on the sentence. A label whose node sits
+        // low in the frame rides up to the sheet's edge rather than over it.
+        if (mob) {
+          const ceilTop = captionTop(rc) - CAPTION_GAP - ROW;
+          if (top > ceilTop) top = ceilTop;
+        }
 
         if (on) placed.push({ x: left, y: top, w });
         el.style.display = '';
@@ -179,7 +213,8 @@ export default function OvertureMicroLabels() {
           key={diseases[m.idx].id}
           style={{
             position: 'absolute', display: 'none', whiteSpace: 'nowrap',
-            fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: '#94a3b8',
+            fontFamily: "'IBM Plex Mono', monospace", fontSize: mob ? MOB_FONT : 11,
+            color: '#94a3b8',
             textShadow: '0 0 6px rgba(0,0,0,0.9), 0 1px 2px rgba(0,0,0,0.9)',
             opacity: 0, transition: `opacity ${FADE_MS}ms ease`,
           }}

@@ -26,6 +26,17 @@ const _s = new THREE.Vector3();
 // by fx.ignite * aIgnite[i].
 const EMBER_RED = '#ff4d1a';
 const _ember = new THREE.Color(EMBER_RED);
+// The hero's black-body signature, the same white-hot core the shader ramps to
+// (#fff3e0, DIRECTION section 1) and the same color the 2020 detonation flash
+// uses. On the shader path the core is reached only where temperature, i.e.
+// radial position TIMES the node's own ignite weight, approaches 1, which no
+// node but the 1.0-weight hero can do. This flat path has no radial term, so
+// the exclusivity is stated directly: only a weight of exactly 1.0 climbs past
+// ember, and it climbs on the shader's own temp^3 curve. Without it LOW tier's
+// thesis frame read as two similar red dots (review gate round 2, P1 #6).
+const WHITE_HOT = '#fff3e0';
+const _whiteHot = new THREE.Color(WHITE_HOT);
+const HERO_W = 0.999; // ignite weights are normalized: the hero alone hits 1.0
 
 /**
  * Logic-only component that updates instanced mesh colors and edge
@@ -308,7 +319,17 @@ export default function HighlightSystem() {
         _color.lerp(_graphite, Math.min(1, desat * 0.85));
       }
       const ig = ignite * igniteArr[i];
-      if (ig > 0.001) _color.lerp(_ember, Math.min(1, ig));
+      if (ig > 0.001) {
+        _color.lerp(_ember, Math.min(1, ig));
+        // temp^3, the shader's own white-hot mix (plasma.frag section 8), with
+        // core = 1 because a flat instance color has no rim-to-core ramp to
+        // ride. Everything under weight 1.0 stays ember-red at every ignite
+        // amount, so the phone frame has exactly one white node.
+        if (igniteArr[i] >= HERO_W) {
+          const t = Math.min(1, ig);
+          _color.lerp(_whiteHot, t * t * t);
+        }
+      }
       iMesh.setColorAt(i, _color);
     }
     iMesh.instanceColor.needsUpdate = true;

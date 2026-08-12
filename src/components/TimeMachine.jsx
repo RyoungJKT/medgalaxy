@@ -162,6 +162,15 @@ export function buildTourTimeline(data, startYearIdx, reduced = false) {
       if (p.kind === 'hivSurge') cues.push({ t, kind: 'camera-node', node: 'hiv-aids', factor: 0.80, effect: true });
       if (p.kind === 'hivFade') cues.push({ t, kind: 'camera-node', node: 'hiv-aids', factor: 0.62, effect: true });
       if (p.kind === 'detonation') cues.push({ t, kind: 'shockwave', effect: true });
+      // The peak's own recenter (review gate round 2, P2 #7). By 2021 the
+      // camera has inherited three compounded push-ins (HIV 0.80, HIV again
+      // 0.62, the detonation 0.85), and what they leave on screen is heart
+      // disease about two and a half times the size of COVID-19, directly
+      // under a caption whose whole claim is that attention moved to COVID.
+      // No `factor`, the finale's pattern: recenter on the node the sentence
+      // is about, at the designed overview distance, so the true 2021 number
+      // one (141,958 papers) is also the biggest thing in the frame.
+      if (p.kind === 'peak') cues.push({ t, kind: 'camera-node', node: 'covid-19', effect: true });
     }
     t += p.hold;
   }
@@ -287,6 +296,17 @@ export function buildTourCaptions(diseases, idMap, data) {
       // this pause draws beneath the node it's about (DIRECTION section 3,
       // pause 2: "its ten-year sparkline draws in-world beneath it").
       sparklineFor: 'hiv-aids',
+      // Per-pause ceiling (review gate round 2, P3 #12). Against the shared
+      // maxYearly ceiling (COVID's 2021 spike, several times HIV's best year)
+      // HIV's whole 35-year arc flattened into a line hugging the bottom of
+      // the box, so the pause meant to show attention fading showed no fade.
+      // Its own peak as the ceiling, still with a zero baseline, restores the
+      // climb and the decline the caption is describing. The finale keeps the
+      // shared ceiling on purpose: there the flatness is the argument.
+      sparklineCeiling: Math.max(
+        0,
+        ...(Array.isArray(hiv.yearlyPapers) ? hiv.yearlyPapers.filter(Number.isFinite) : [0])
+      ),
     };
   }
 

@@ -393,3 +393,220 @@ panel and a per-disease sidebar footnote now say so.
 4. `trend` was deleted rather than kept as an unused key. Nothing needed it,
    and an authored field sitting beside measured ones invites the next reader
    to trust it.
+
+---
+
+## Round 2 fix wave: craft, mobile, hero exclusivity, peak cue, favicon
+
+Branch `next/showcase`, worktree `medgalaxy-next`, one commit
+(`fix(gate): round-2 craft wave, mobile labels, hero exclusivity, peak cue, favicon`).
+Verification: `npx vitest run` green (153 tests, 14 files; 16 new),
+`npx vite build` green (2.46s, same pre-existing chunk-size warning). Shots
+carry the `fix4-` prefix and every one was read back and judged; each fix
+below records its drive method and, where a number was claimed, an A/B
+measured by reverting only that file and re-running the same harness call.
+
+### P1 #5: mobile tour label budget (src/components/NodeLabels.jsx)
+
+Two changes plus a new pure module, `src/utils/labelLayout.js`:
+
+1. **The cap is the frame's, not the desktop's.** `labelCap(viewportWidth)` =
+   `clamp(round(width/36), 12, 40)`. At 1440px it returns exactly the 40 the
+   Time Machine always used, so the desktop tour is byte-for-byte unchanged;
+   at 375px it returns 12. Below 768px the cap also applies at rest, which is
+   the idle clutter A (r2a-m-05) and C (r2c-rest) both flagged.
+2. **Greedy screen-space collision culling**, on every path below 768px.
+   Candidates are sorted by screen radius, each is placed only if its rect
+   clears every rect already placed, and hover/selection/the finale's focus
+   are pinned so the frame's own subject can never lose its name. Label rects
+   are computed from the font each label will actually be drawn at:
+   `width = chars * fontSize * 0.6` (the mono advance, verified against the
+   live layer: a 13-character name at 5px measures 39.0px, estimate 39.0) and
+   `height = max(14, fontSize * 1.5)` (Chromium's normal line box for this
+   stack, also measured live: 10.5px at 5px, 18px at 12px). The first pass
+   used `fontSize + 2` and left one overlapping pair at three pauses, which
+   is how the line-box factor got measured rather than assumed.
+
+`labelCap`, `labelWidth`, `labelHeight`, `rectsOverlap` and `cullOverlaps`
+are pure and unit tested (`tests/labelLayout.test.js`, 14 tests: the desktop
+40 is pinned, pinned candidates survive both budget and collision, ordering
+is priority, `collide: false` is the wide-frame path, and a 153-label 375px
+field culls to a provably non-overlapping set).
+
+*Evidence, measured in-page over all six tour pauses at 375px (count the
+visible label rects, count intersecting pairs, count rects below the rail
+line), before = `git show HEAD:` of this one file:*
+
+| | labels | overlapping pairs |
+|---|---:|---:|
+| before, six tour pauses | 40 each | 18 / 15 / 11 / 10 / 9 / 8 |
+| after, six tour pauses | 12 each | 0 / 0 / 0 / 0 / 0 / 0 (twice, two runs) |
+| before, at rest | 152 | 133 |
+| after, at rest | 12 | 0 |
+
+Desktop is unchanged: 40 labels at every tour pause, 150 at rest, no cull.
+Shot `fix4-mob-tour-labels.png` (the 1996 pause at 375px): twelve names, none
+touching, none over the rail.
+
+### P1 #6: mobile thesis frame
+
+**(a) White-hot hero on the instanceColor path** (`HighlightSystem.jsx`). The
+LOW-tier flat grade drained to graphite and then lerped every ignited node
+toward the same ember red, so the thesis frame was two similar red dots. It
+now mirrors the shader's exclusivity: temperature in `plasma.frag` is radial
+position times the node's own weight, and only the exact 1.0-weight node can
+reach the white-hot core, so on the flat path (no radial term) the node whose
+weight is 1.0 lerps on to `#fff3e0` on the shader's own `temp^3` curve while
+everything below stays ember. Sepsis is the unique 1.0 (next is COPD at
+0.895, checked against the live weights).
+
+**(b) The sepsis micro-label ships on mobile** (`OvertureMicroLabels.jsx`).
+Beat 1's pair stays desktop-only; beat 2's single label is enabled everywhere
+at 9px, and is clamped above the caption sheet's *measured* top edge (the
+sheet now carries `data-mg-overture-caption`, read live because the thesis
+card grows a line and an odometer as it lands, so a constant would be wrong
+at the one moment that matters).
+
+*Evidence, `fix4-mob-hero.png` against the existing `fix2-mobile-hero.png`,
+same drive (`__overture.seek(9.6)` at 375x812, LOW tier):* before, two
+similar red-orange dots and no name; after, one white-hot node with
+"Sepsis · 248,989 papers" beside it and the rest of the field ember. Measured
+in-page: the label sits at y 402-416 with the caption sheet's top at 586, so
+it clears by 170px.
+
+### P2 #7: the 2021 peak recenter (src/components/TimeMachine.jsx)
+
+The peak pause now fires its own `camera-node` cue on covid-19 with no
+`factor`, the finale's pattern: a fly to the designed overview distance
+rather than a relative pull off wherever the tour's three compounded push-ins
+(HIV 0.80, HIV 0.62, the detonation 0.85) left the camera.
+
+This one only reproduces on the live path, which is exactly why earlier
+rounds missed it: a harness seek replays only the last camera cue, computed
+off an unpushed seat, so the compounding never happens under `__tour.seek`.
+Both readings below therefore play the tour for real (`seek(0)`, `resume()`,
+wait out 18.7s of holds and legs) and measure projected on-screen radii at
+the pause.
+
+| | camera distance | COVID-19 | Heart Disease | heart / covid |
+|---|---:|---:|---:|---:|
+| before | 168 | 48.2 px | 61.4 px | **1.27** |
+| after | 1121.9 | 17.2 px | 9.3 px | **0.54** |
+
+*Shots `fix4-peak-2021-before.png` and `fix4-peak-2021.png`:* before, heart
+disease is a huge orange sphere cropped by the right edge of the frame while
+COVID sits small and centered, under "Attention can move this fast."; after,
+COVID is centered and is the largest node in frame, with the whole 2021 field
+visible. A new unit test also pins the claim the shot is making: COVID-19 is
+strictly the biggest node of the peak year across all 153 diseases.
+
+### P3 #10: bottom exclusion zone (NodeLabels.jsx + TimeRail.jsx)
+
+`TimeRail` now exports `railBandHeight(mob)`, derived from its own layout
+constants (container offset + year numeral + margin + the 44px track hit
+area) = 128px on a phone, 132 on desktop, so the label layer cannot drift out
+of sync with the rail the way a hand-copied constant would. NodeLabels
+mirrors the `y >= 90` header rule against it, plus an 8px margin: a label
+whose node is above the rail rides up to the line, one whose node is inside
+the band stands down entirely. Active only while `tmPhase !== 'idle'`, since
+that is the only time the rail exists.
+
+*Evidence:* the baseline was marginal rather than harmless, which matches two
+reviewers seeing it live and no harness shot catching it. Desktop, per pause,
+lowest label bottom vs the rail line at 768: before 654 / 701 / **764** /
+637 / 629 / 669; after 651 / 696 / **756** / 629 / 622 / 662, with the clamp
+line at 760. The HIV-fade pause (the deepest push-in) sat 4px off the rail
+before and is now held 4px clear of the clamp.
+
+### P3 #11: hero exclusivity at mid-ignite (plasma.frag.glsl, pulse.frag.glsl)
+
+`igniteContrast` damps the field but does not stop it crossing the bloom
+threshold. Both shaders now scale (not clip, so nothing shifts hue) the
+ignite output of any node whose weight is not exactly 1.0 so its luminance
+stays under the composer's `luminanceThreshold` of 1.0, for exactly the
+window `igniteContrast` is up. No new uniform: the channel that already means
+"the hero is the only subject" carries it, ramping in with the same curve
+(1 before the burn, 3 by the hero caption, held through release) and going
+inert with `ignite` when the film ends.
+
+*Evidence, 120px boxes around sepsis and COPD, before = `git show HEAD:` of
+the two shader files, same seeks:*
+
+| t | sepsis mean / peak / bright px | COPD mean / peak / bright px |
+|---|---|---|
+| 8.2 before (the hero-naming frame) | 124.8 / 255 / 1963 | **67.7 / 255 / 450** |
+| 8.2 after | 124.4 / 255 / 1965 | **12.2 / 145 / 0** |
+| 8.0, 8.6, 9.0 before | 12.3 / 23.6 / 49.3 mean | 3.9 / 5.7 / 7.1 mean |
+| 8.0, 8.6, 9.0 after | 12.3 / 23.5 / 49.3 mean | 3.9 / 5.7 / 7.1 mean |
+
+The defect is a transient on the hero-caption frame itself, not the ignite
+landing, which is why `seek(9.6)` never showed it and `r2c-hero.png` did: the
+before ratio there is 0.54, within noise of the 0.52 Reviewers A and C
+measured independently. After, sepsis is untouched to within a pixel count of
+2 in 1965 and COPD has zero pixels over the bright threshold. Away from that
+frame nothing moves at all, so the mid-field smolder is intact.
+
+*Shots `fix4-hero-hold-bloom-before.png` and `fix4-hero-hold-bloom.png`:*
+before, sepsis blooms white and COPD blooms a cyan-teal halo top-center;
+after, one blooming node and COPD is a plain ember sphere.
+`fix4-release-unaffected.png` confirms full category color returns at release.
+
+### P3 #12: HIV sparkline (TimeMachine.jsx, TourSparkline.jsx)
+
+The HIV-fade pause caption carries a `sparklineCeiling` (its own series max,
+still with a zero baseline); the finale deliberately does not, because there
+flatness is the argument. `TourSparkline` prefers the per-pause ceiling and
+falls back to the shared `maxYearly`.
+
+*Evidence:* against the shared ceiling the whole 35-year HIV series spanned
+5.3 percent of the box (1.3px of 24); against its own it spans 65 percent
+(15.5px). Both bounds are pinned in a unit test. Shots
+`fix4-hiv-sparkline-before-zoom.png` and `fix4-hiv-sparkline-zoom.png` (3x,
+same clip): before, a dead-flat line; after, a climb, a plateau and a decline
+with the playhead on the falling side. Full frame:
+`fix4-hiv-sparkline.png`.
+
+### P3 #13: favicon (public/favicon.png, index.html)
+
+A 32x32 PNG generated from a small deterministic script (pure Node, zlib plus
+hand-written PNG chunks, no image dependency): one glowing node on the app's
+own `#06080d`, white core into the `#22c55e` corona the pre-React shell's
+brand dot already uses. Declared as `rel="icon"` plus `apple-touch-icon`.
+
+*Evidence:* a run that records every response and console message reports
+`/favicon.png` 200, zero 404s of any kind, zero console errors, and
+`link[rel=icon]` resolving to it. `dist/favicon.png` is emitted by the build.
+Shot `fix4-favicon.png` is the icon as served, magnified.
+
+### P2 #9: mobile performance evidence (measurement only)
+
+Three headed LOW-tier runs at 375x812 appended to
+`docs/verify/perf-matrix.md` as section 5b: at rest 120 fps, beat-2 morph
+120 fps, Time Machine travel leg (1996 -> 2019, 6 year-steps) 120 fps, all
+against a >=55 gate on a 120Hz display. The leg run was repeated with a shot
+(`fix4-mob-tm-leg.png`) whose rail reads 2019 at the end of the FPS window,
+proving the window covered travel and not a hold. Same ceiling-reading caveat
+as section 5, stated there.
+
+### Judgement calls worth flagging
+
+1. **The bloom ceiling rides `igniteContrast` rather than a new uniform.**
+   The alternative was a dedicated `heroExclusive` channel. The contrast
+   channel already has exactly the right lifetime and meaning, and a second
+   channel would have been a second thing to keep in sync with the film.
+   The cost is that the ramp's shape is tied to `HERO_CONTRAST` being 3;
+   the clamp saturates at any value at or above 3 and is documented as such.
+2. **The collision cull is narrow-frame only.** Applying it on desktop would
+   change a frame two reviewers have already accepted, and the cost is a
+   per-frame sort the wide path does not need. The budget still applies on
+   both.
+3. **Culling is greedy by screen radius, not an optimal packing.** A label
+   dropped for colliding with a bigger neighbour is the intended reading
+   order (the bigger node is the more important one), and greedy is O(n·k)
+   with k <= 12 on the frame that needs it.
+4. **The peak cue reuses the finale's factor-less recenter** rather than a
+   new "reset push-ins" concept. One camera vocabulary, already tested.
+5. **`fix4-*-before.png` shots are kept** beside their afters. Three of the
+   five findings only reproduce under a specific drive (live tour, the
+   hero-caption frame, the shared ceiling), so the before is the part of the
+   evidence that is hard to re-obtain later.

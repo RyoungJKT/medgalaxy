@@ -111,7 +111,15 @@ export default function TourSparkline() {
   const currentYear = tm ? tm.data.yearStart + Math.round(tm.yearFloat) : yearStart;
   const playIdx = Math.max(0, Math.min(series.length - 1, currentYear - yearStart));
   const chartH = H - 8;
-  const ceiling = tm && tm.data && tm.data.maxYearly > 0 ? tm.data.maxYearly : undefined;
+  // The shared ceiling is the default, and stays the finale's: rheumatic heart
+  // disease measured against the biggest year any disease ever had is the
+  // closing shot's whole point. A pause that carries its own `sparklineCeiling`
+  // (the HIV fade) is normalized against that instead, so a series dwarfed by
+  // COVID's spike still draws its own arc rather than a flat line along the
+  // bottom of the box (review gate round 2, P3 #12). Zero baseline either way.
+  const shared = tm && tm.data && tm.data.maxYearly > 0 ? tm.data.maxYearly : undefined;
+  const perPause = tmCaption && tmCaption.sparklineCeiling > 0 ? tmCaption.sparklineCeiling : 0;
+  const ceiling = perPause > 0 ? perPause : shared;
   const { path, xAt, yAt } = buildPath(series, W, chartH, ceiling);
   const px = xAt(playIdx);
   const py = yAt(series[playIdx]);

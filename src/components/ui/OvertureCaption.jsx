@@ -57,6 +57,10 @@ export default function OvertureCaption() {
 
   return (
     <div
+      // Marked so the in-world micro-labels can measure the sheet and stay
+      // clear of it on a phone, where the caption owns the lower frame
+      // (OvertureMicroLabels, review gate round 2, P1 #6).
+      data-mg-overture-caption=""
       style={{
         position: 'absolute', bottom: mob ? 90 : 110, left: '50%', transform: 'translateX(-50%)',
         zIndex: 46, background: 'rgba(10,16,30,0.95)', backdropFilter: 'blur(16px)',

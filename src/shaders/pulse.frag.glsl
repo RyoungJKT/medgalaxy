@@ -95,6 +95,16 @@ void main(){
                     vec3(1.0, 0.95, 0.88), temp * temp * temp), // white-hot core #fff3e0
                 temp);
     col = mix(col, ramp * (1.0 + 5.0 * temp * ig), ig);
+
+    // Hero exclusivity through the hero hold, identical to plasma.frag: only
+    // the exact 1.0-weight hero may cross the composer's bloom threshold while
+    // igniteContrast is up (review gate round 2, P3 #11). A scale, not a clip,
+    // so the damped node keeps its hue on its way under the line.
+    float notHero = 1.0 - step(0.999, vIgnite);
+    float heroOnly = clamp((igniteContrast - 1.0) * 0.5, 0.0, 1.0);
+    float outLum = dot(col, vec3(0.2126, 0.7152, 0.0722));
+    float underBloom = outLum > 0.95 ? 0.95 / outLum : 1.0;
+    col *= mix(1.0, underBloom, notHero * heroOnly);
   }
 
   // Persistent ember rim on the overlooked decile (post-release standing scar)

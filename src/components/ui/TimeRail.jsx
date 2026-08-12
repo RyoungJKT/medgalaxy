@@ -18,6 +18,19 @@ const FLICK_STOP = 0.004; // years/frame at which momentum resolves to a detent
 const EMBER = '#ff4d1a';
 const RAIL_W = 520;       // desktop rail width
 const HIT_H = 44;         // touch target height, mobile and desktop alike
+
+/**
+ * How much of the bottom of the frame the rail occupies, in px, derived from
+ * the rail's own layout numbers rather than guessed at: the container's bottom
+ * offset (`bottom: mob ? 52 : 40` below), the year numeral (26/38), its
+ * margin (6/10) and the track's 44px hit area. 128 on a phone, 132 on desktop.
+ *
+ * Exported because the DOM label layer needs the same band as an exclusion
+ * zone (review gate round 2, P3 #10: tour labels drawing over the rail ticks),
+ * and a second hand-copied constant there would drift the first time this
+ * layout moves.
+ */
+export const railBandHeight = (mob) => (mob ? 52 + 26 + 6 : 40 + 38 + 10) + HIT_H;
 const easeExpoOut = (p) => (p >= 1 ? 1 : 1 - Math.pow(2, -10 * p));
 
 // Digit column, same technique as the odometer (a 0-9 strip translated behind a

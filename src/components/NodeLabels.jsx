@@ -4,6 +4,8 @@ import useStore from '../store';
 import { CC } from '../utils/constants';
 import { nR, isMob, neglectColor } from '../utils/helpers';
 import { sceneRefs } from '../sceneRefs';
+import { labelCap, labelWidth, labelHeight, cullOverlaps } from '../utils/labelLayout';
+import { railBandHeight } from './ui/TimeRail';
 
 const pv = new THREE.Vector3();
 
@@ -15,10 +17,21 @@ const pv = new THREE.Vector3();
 // it; a label whose node is inside the band is dropped entirely.
 const HEADER_ZONE = 90;
 const PRE_HEADER_ZONE = 8; // before the reveal there is nothing to clear but the bezel
+// The rail's band at the bottom of the frame, mirroring the header clamp above
+// (review gate round 2, P3 #10). A label whose node sits above the rail rides
+// up to the line; a label whose node is inside the band stands down entirely,
+// exactly the header's rule turned upside down. The 8px is the same kind of
+// margin the header zone carries over its own two rows.
+const RAIL_MARGIN = 8;
 // The Time Machine's ceiling. The tour's whole argument is a handful of nodes
 // changing size, and 153 names over it read as noise (rg1-25, rg1-30); the
-// biggest 40 on screen carry the frame and the rest stand down for the years.
-const TM_MAX_LABELS = 40;
+// biggest on screen carry the frame and the rest stand down for the years.
+// The number is now the frame's, not the desktop's: labelCap() still returns
+// exactly 40 at 1440px and falls to 12 on a 375px phone, where the round-2
+// craft review measured 26 overlapping label pairs at the tour's pauses
+// (P1 #5). Below NARROW the same budget also applies at rest, and every path
+// runs the greedy collision cull.
+const NARROW = 768;
 // The finale's isolation reaches the label layer too. HighlightSystem dims the
 // instances and TimeMachine dims the halos; without this the names stayed at
 // full strength and diluted the one node the closing shot is about.
@@ -46,8 +59,15 @@ export default function NodeLabels() {
     const sxA = new Float32Array(n);
     const topA = new Float32Array(n);
     const rA = new Float32Array(n);
+    const fsA = new Float32Array(n);
     const showA = new Uint8Array(n);
-    const sortA = new Float32Array(n);
+    // Candidate rects for the budget/collision pass, allocated once and
+    // refilled in place: the pass runs every frame and must not allocate.
+    const nameLen = diseases.map((d) => (d.label ? d.label.length : 0));
+    const pool = [];
+    for (let i = 0; i < n; i++) pool.push({ i, x: 0, top: 0, w: 0, h: 0, pri: 0, pinned: false });
+    const cands = [];
+    const byPriority = (a, b) => b.pri - a.pri;
 
     function update() {
       if (!running) return;
@@ -86,8 +106,24 @@ export default function NodeLabels() {
       const tmActive = storeState.tmPhase !== 'idle';
       const focusIdx = storeState.tmFocusIdx;
       const topLimit = storeState.uiRevealed ? HEADER_ZONE : PRE_HEADER_ZONE;
+      // The rail only exists while the Time Machine is up, so its band is only
+      // excluded then; the rest of the time the frame runs to the bezel.
+      const bottomLimit = tmActive
+        ? rc.height - railBandHeight(mob) - RAIL_MARGIN
+        : rc.height;
+      const narrow = rc.width < NARROW;
 
       const tanHalfFov = Math.tan(Math.PI / 6); // fov=60 → half=30°
+
+      // The font each label will actually be written at (pass 2 below), needed
+      // here because a label's width, and therefore whether it collides, is
+      // its character count times this size.
+      const fontFor = (i, screenR) =>
+        i === selIdx
+          ? (mob ? Math.max(10, Math.min(18, screenR * 1.2)) : 15)
+          : i === hovIdx
+            ? (mob ? Math.max(9, Math.min(14, screenR * 1.0)) : 11)
+            : (mob ? Math.max(5, Math.min(12, screenR * 0.8)) : 9);
 
       // ── Pass 1: project, and decide what could be drawn ──
       for (let i = 0; i < diseases.length; i++) {
@@ -135,26 +171,48 @@ export default function NodeLabels() {
           top = topLimit;
         }
 
+        const fs = fontFor(i, screenR);
+        const h = labelHeight(fs);
+        // The rail's band, the header rule mirrored: ride up to the line, or
+        // stand down if the node itself is down in the rail.
+        if (top + h > bottomLimit) {
+          if (sy > bottomLimit) continue;
+          top = bottomLimit - h;
+        }
+
         sxA[i] = sx;
         topA[i] = top;
         rA[i] = screenR;
+        fsA[i] = fs;
         showA[i] = 1;
       }
 
-      // ── The Time Machine's ceiling: the biggest TM_MAX_LABELS on screen ──
-      if (tmActive) {
-        let m = 0;
-        for (let i = 0; i < diseases.length; i++) if (showA[i]) sortA[m++] = rA[i];
-        if (m > TM_MAX_LABELS) {
-          const ranked = sortA.subarray(0, m);
-          ranked.sort(); // ascending, numeric (typed array)
-          const cut = ranked[m - TM_MAX_LABELS];
-          for (let i = 0; i < diseases.length; i++) {
-            if (!showA[i] || rA[i] >= cut) continue;
-            // The frame's own subjects survive the cap regardless of size.
-            if (i === hovIdx || i === selIdx || i === focusIdx) continue;
-            showA[i] = 0;
-          }
+      // ── The budget, and (on a narrow frame) the collision cull ──
+      // The tour has always capped the field; below NARROW the cap applies at
+      // rest too, because the round-2 review found the idle phone frame as
+      // cluttered as the tour's pauses. The cull is the narrow frame's alone:
+      // a desktop label layer at 1440px has room for its 40 names, and the
+      // cull's cost is a per-frame sort the wide path does not need.
+      if (tmActive || narrow) {
+        const cap = labelCap(rc.width);
+        cands.length = 0;
+        for (let i = 0; i < diseases.length; i++) {
+          if (!showA[i]) continue;
+          const c = pool[i];
+          c.x = sxA[i];
+          c.top = topA[i];
+          c.w = labelWidth(nameLen[i], fsA[i]);
+          c.h = labelHeight(fsA[i]);
+          c.pri = rA[i];
+          // The frame's own subjects survive both the budget and the cull.
+          c.pinned = i === hovIdx || i === selIdx || i === focusIdx;
+          cands.push(c);
+        }
+        if (cands.length > cap || narrow) {
+          cands.sort(byPriority);
+          const keep = cullOverlaps(cands, cap, narrow);
+          for (let i = 0; i < diseases.length; i++) if (showA[i]) showA[i] = 0;
+          for (let k = 0; k < keep.length; k++) showA[keep[k]] = 1;
         }
       }
 
@@ -167,7 +225,6 @@ export default function NodeLabels() {
           continue;
         }
 
-        const screenR = rA[i];
         el.style.display = '';
         el.style.left = sxA[i] + 'px';
         el.style.top = topA[i] + 'px';
@@ -177,17 +234,17 @@ export default function NodeLabels() {
         if (focusIdx >= 0) op = i === focusIdx ? 1 : op * TM_DIM;
         el.style.opacity = String(op);
 
+        // fsA is the same size the collision pass measured this label at, so
+        // the rect that cleared its neighbours is the rect that gets drawn.
         const nameEl = el.firstChild;
+        nameEl.style.fontSize = fsA[i] + 'px';
         if (i === selIdx) {
-          nameEl.style.fontSize = mob ? Math.max(10, Math.min(18, screenR * 1.2)) + 'px' : '15px';
           nameEl.style.fontWeight = '700';
           nameEl.style.color = '#f1f5f9';
         } else if (i === hovIdx) {
-          nameEl.style.fontSize = mob ? Math.max(9, Math.min(14, screenR * 1.0)) + 'px' : '11px';
           nameEl.style.fontWeight = '600';
           nameEl.style.color = '#e2e8f0';
         } else {
-          nameEl.style.fontSize = mob ? Math.max(5, Math.min(12, screenR * 0.8)) + 'px' : '9px';
           nameEl.style.fontWeight = '400';
           nameEl.style.color = '';
         }

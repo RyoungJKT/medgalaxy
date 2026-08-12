@@ -116,6 +116,32 @@ describe('buildTourTimeline', () => {
     expect(shock.t).toBeCloseTo(tl.pauseAt[3], 6); // lands with 2020
     expect(shock.effect).toBe(true);
   });
+
+  // Review gate round 2, P2 #7: the peak pause must undo the tour's compounded
+  // push-ins, or "Attention can move this fast." plays over a frame where
+  // heart disease is the biggest thing on screen.
+  it('recenters on COVID-19 at the 2021 peak, at the designed distance', () => {
+    const peakIdx = tl.pauses.findIndex((p) => p.kind === 'peak');
+    expect(peakIdx).toBeGreaterThan(0);
+    const cue = tl.cues.find(
+      (c) => c.kind === 'camera-node' && Math.abs(c.t - tl.pauseAt[peakIdx]) < 1e-6
+    );
+    expect(cue).toBeTruthy();
+    expect(cue.node).toBe('covid-19');
+    // No factor: the fly-home branch, not a relative pull off the current seat.
+    expect(cue.factor).toBeUndefined();
+  });
+
+  it('makes COVID-19 the biggest node of the peak year it recenters on', () => {
+    const peak = tl.pauses.find((p) => p.kind === 'peak');
+    const year = peak.year;
+    const covidCount = at(covid, year);
+    for (const d of diseases) {
+      if (d.id === 'covid-19') continue;
+      const v = d.yearlyPapers[year - d.yearStart] || 0;
+      expect(v).toBeLessThan(covidCount);
+    }
+  });
 });
 
 describe('buildTourTimeline reduced motion', () => {
@@ -163,7 +189,11 @@ describe('buildTourTimeline reduced motion', () => {
     const shock = rtl.cues.find((c) => c.kind === 'shockwave');
     expect(shock).toBeTruthy();
     expect(shock.t).toBeCloseTo(rtl.pauseAt[3], 6);
-    const detCam = rtl.cues.find((c) => c.kind === 'camera-node' && c.node === 'covid-19');
+    // The push-in specifically (the peak pause also flies to covid-19, but as
+    // a recenter with no factor and no duration of its own).
+    const detCam = rtl.cues.find(
+      (c) => c.kind === 'camera-node' && c.node === 'covid-19' && c.factor != null
+    );
     expect(detCam.dur).toBe(0);
   });
 
@@ -190,6 +220,27 @@ describe('buildTourCaptions', () => {
     expect(caps.hivFade.data).toContain('7,534 papers at its 2014 peak');
     expect(caps.hivFade.data).toContain(`${at(hiv, 2019).toLocaleString('en-US')} in 2019`);
     expect(caps.hivFade.data).toContain('630,000');
+  });
+
+  // Review gate round 2, P3 #12: the HIV pause carries its own sparkline
+  // ceiling so a series dwarfed by COVID's spike still draws its arc; the
+  // finale deliberately does not, because there the flatness is the argument.
+  it('gives the HIV fade its own sparkline ceiling and leaves the finale on the shared one', () => {
+    expect(caps.hivFade.sparklineCeiling).toBe(Math.max(...hiv.yearlyPapers));
+    expect(caps.hivFade.sparklineCeiling).toBeLessThan(data.maxYearly);
+    expect(caps.flatline.sparklineCeiling).toBeUndefined();
+  });
+
+  it('lifts the HIV arc off the floor: its own ceiling gives it real vertical range', () => {
+    const span = (ceiling) => {
+      const lo = Math.min(...hiv.yearlyPapers) / ceiling;
+      const hi = Math.max(...hiv.yearlyPapers) / ceiling;
+      return hi - lo;
+    };
+    // Against the shared ceiling the whole 35-year series occupies a few
+    // percent of the box; against its own it occupies most of it.
+    expect(span(data.maxYearly)).toBeLessThan(0.06);
+    expect(span(caps.hivFade.sparklineCeiling)).toBeGreaterThan(0.6);
   });
 
   it('derives the detonation and the peak from covid own series', () => {

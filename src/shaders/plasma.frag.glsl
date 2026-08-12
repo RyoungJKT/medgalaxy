@@ -151,6 +151,25 @@ void main(){
                     vec3(1.0, 0.95, 0.88), temp * temp * temp), // white-hot core #fff3e0
                 temp);
     col = mix(col, ramp * (1.0 + 5.0 * temp * ig), ig);
+
+    // Hero exclusivity through the hero hold (review gate round 2, P3 #11).
+    // The contrast curve damps the field but does not stop it crossing the
+    // bloom threshold: COPD at weight 0.895 still peaked over it and bloomed
+    // its own halo through the 1.5 s that names sepsis: a second glowing node
+    // under a sentence about one, in a film whose rule is that glow means
+    // divergence. igniteContrast is already the "the hero is the only subject"
+    // channel (1 before the burn, ramped to 3 by the hero caption and held),
+    // so the ceiling rides it rather than adding a second uniform. Every node
+    // whose weight is not exactly 1.0 has its ignite emissive scaled (not
+    // clipped, so nothing shifts hue) to sit just under the composer's
+    // luminanceThreshold of 1.0 for exactly that window. The hero's own weight
+    // is 1.0, so step() leaves it alone; the ember rim and everything after
+    // are added below this block and are untouched.
+    float notHero = 1.0 - step(0.999, vIgnite);
+    float heroOnly = clamp((igniteContrast - 1.0) * 0.5, 0.0, 1.0);
+    float outLum = dot(col, vec3(0.2126, 0.7152, 0.0722));
+    float underBloom = outLum > 0.95 ? 0.95 / outLum : 1.0;
+    col *= mix(1.0, underBloom, notHero * heroOnly);
   }
 
   // Persistent ember rim on the overlooked decile (post-release standing scar)
