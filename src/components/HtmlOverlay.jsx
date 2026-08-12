@@ -12,6 +12,7 @@ import RouletteCaption from './ui/RouletteCaption';
 import ExplodeOverlay from './ui/ExplodeOverlay';
 import ConnectionsOverlay from './ui/ConnectionsOverlay';
 import VelocityOverlay from './ui/VelocityOverlay';
+import MethodologyPanel from './ui/MethodologyPanel';
 import LandingOverlay from './ui/LandingOverlay';
 import CompareCards from './ui/CompareCards';
 import SupernovaOverlay from './ui/SupernovaOverlay';
@@ -43,6 +44,7 @@ export default function HtmlOverlay() {
       <ExplodeOverlay />
       <ConnectionsOverlay />
       <VelocityOverlay />
+      <MethodologyPanel />
       <LandingOverlay />
       <SupernovaOverlay />
       <OvertureMicroLabels />

@@ -58,6 +58,9 @@ const useStore = create(
     spotlightActive: false,
     spotlightCaption: '',
 
+    // ── Methodology panel (credibility layer) ──
+    methodologyOpen: false,
+
     // ── Galaxy Roulette (separate from activeMode to avoid conflicts) ──
     roulettePhase: 'idle', // 'idle' | 'assembling' | 'spinup' | 'reveal'
     rouletteWinner: null,
@@ -159,6 +162,7 @@ const useStore = create(
     setConnFocusIdx: (v) => set({ connFocusIdx: v }),
     setSpotlightActive: (v) => set({ spotlightActive: v }),
     setSpotlightCaption: (v) => set({ spotlightCaption: v }),
+    setMethodologyOpen: (v) => set({ methodologyOpen: v }),
     setMeshRef: (ref) => set({ meshRef: ref }),
     setFlyTarget: (v) => set({ flyTarget: v }),
     setCurPos: (v) => set({ curPos: v }),

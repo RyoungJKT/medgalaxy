@@ -1,6 +1,7 @@
 import React from 'react';
 import useStore from '../../store';
 import { isMob } from '../../utils/helpers';
+import meta from '../../../data/meta.json';
 
 export default function Legend() {
   const sizeMode = useStore(s => s.sizeMode);
@@ -28,7 +29,7 @@ export default function Legend() {
       {/* Header hides its count below 1539px with nothing standing in for it
           (Task 13 review finding 10); the legend footer carries it always. */}
       <span>{diseases.length} diseases &middot; {displayEdges.length} connections</span>
-      <span style={{ marginLeft: 'auto' }}>Data: PubMed &middot; WHO Global Health Estimates 2021 &middot; Project by Russell J. Young</span>
+      <span style={{ marginLeft: 'auto' }}>{`Data: PubMed, refreshed weekly (latest: ${meta.pubmedLastRefresh}) · WHO GHE 2021 and per-disease sources · Project by Russell J. Young`}</span>
     </div>
   );
 }
