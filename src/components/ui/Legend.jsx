@@ -47,7 +47,7 @@ export default function Legend() {
           the full citation (exact date, WHO source name, author credit) is
           one tap away in the Methodology panel. */}
       <span style={{ marginLeft: 'auto' }}>
-        {mob ? 'Data: PubMed, weekly · WHO GHE' : `Data: PubMed, refreshed weekly (latest: ${meta.pubmedLastRefresh}) · WHO GHE 2021 and per-disease sources · Project by Russell J. Young`}
+        {mob ? 'Data: PubMed, weekly · sourced' : `Data: PubMed, refreshed weekly (latest: ${meta.pubmedLastRefresh}) · deaths: per-disease sources · Project by Russell J. Young`}
       </span>
     </div>
   );

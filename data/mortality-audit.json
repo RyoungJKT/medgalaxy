@@ -1,0 +1,1379 @@
+{
+  "dengue": {
+    "value": 24000,
+    "year": 2021,
+    "source": "WHO Global Health Estimates 2021",
+    "action": "correct",
+    "url": "https://www.who.int/data/gho/data/themes/mortality-and-global-health-estimates/ghe-leading-causes-of-death",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "malaria": {
+    "value": 610000,
+    "year": 2024,
+    "source": "WHO World Malaria Report 2025",
+    "action": "keep",
+    "url": "https://cdn.who.int/media/docs/default-source/malaria/world-malaria-reports/world-malaria-report-2025-executive-summary-eng.pdf",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "chagas": {
+    "value": 10000,
+    "year": 2026,
+    "source": "WHO Chagas disease fact sheet (updated April 2026)",
+    "action": "correct",
+    "url": "https://www.who.int/news-room/fact-sheets/detail/chagas-disease-(american-trypanosomiasis)",
+    "confidence": "medium",
+    "checked": "2026-08-12"
+  },
+  "leprosy": {
+    "value": 230,
+    "year": 2021,
+    "source": "WHO Global Health Estimates 2021",
+    "action": "correct",
+    "url": "https://www.who.int/data/gho/data/themes/mortality-and-global-health-estimates/ghe-leading-causes-of-death",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "buruli-ulcer": {
+    "value": 0,
+    "year": null,
+    "source": "No global mortality estimate published; Buruli ulcer is rarely fatal (WHO NTD; not a GHE cause line)",
+    "action": "flag",
+    "url": "https://www.who.int/news-room/fact-sheets/detail/buruli-ulcer-(mycobacterium-ulcerans-infection)",
+    "confidence": "medium",
+    "checked": "2026-08-12"
+  },
+  "schistosomiasis": {
+    "value": 13000,
+    "year": 2021,
+    "source": "IHME GBD 2021",
+    "action": "relabel",
+    "url": "https://www.parasite-journal.org/articles/parasite/full_html/2025/01/parasite240186/parasite240186.html",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "leishmaniasis": {
+    "value": 5800,
+    "year": 2021,
+    "source": "WHO Global Health Estimates 2021",
+    "action": "correct",
+    "url": "https://www.who.int/data/gho/data/themes/mortality-and-global-health-estimates/ghe-leading-causes-of-death",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "sleeping-sickness": {
+    "value": 1100,
+    "year": 2021,
+    "source": "WHO Global Health Estimates 2021 (Trypanosomiasis cause line)",
+    "action": "correct",
+    "url": "https://www.who.int/data/gho/data/themes/mortality-and-global-health-estimates/ghe-leading-causes-of-death",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "river-blindness": {
+    "value": 0,
+    "year": 2021,
+    "source": "WHO Global Health Estimates 2021",
+    "action": "keep",
+    "url": "https://www.who.int/data/gho/data/themes/mortality-and-global-health-estimates/ghe-leading-causes-of-death",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "lymphatic-filariasis": {
+    "value": 0,
+    "year": 2021,
+    "source": "WHO Global Health Estimates 2021",
+    "action": "keep",
+    "url": "https://www.who.int/data/gho/data/themes/mortality-and-global-health-estimates/ghe-leading-causes-of-death",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "trachoma": {
+    "value": 0,
+    "year": 2021,
+    "source": "WHO Global Health Estimates 2021",
+    "action": "keep",
+    "url": "https://www.who.int/data/gho/data/themes/mortality-and-global-health-estimates/ghe-leading-causes-of-death",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "guinea-worm": {
+    "value": 0,
+    "year": 2025,
+    "source": "WHO/Carter Center dracunculiasis surveillance (10 human cases worldwide in 2025; essentially never fatal)",
+    "action": "relabel",
+    "url": "https://www.cartercenter.org/news/guinea-worm-announcement/",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "rabies": {
+    "value": 59000,
+    "year": 2015,
+    "source": "WHO rabies fact sheet (modelled estimate, Hampson et al. 2015)",
+    "action": "relabel",
+    "url": "https://www.who.int/news-room/fact-sheets/detail/rabies",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "yaws": {
+    "value": 0,
+    "year": null,
+    "source": "Not a cause of death: yaws disables and disfigures but is essentially non-fatal; no GHE cause line or global mortality estimate exists",
+    "action": "flag",
+    "url": "https://www.who.int/news-room/fact-sheets/detail/yaws",
+    "confidence": "medium",
+    "checked": "2026-08-12"
+  },
+  "chikungunya": {
+    "value": 186,
+    "year": 2025,
+    "source": "WHO/ECDC chikungunya epidemiological updates: 502,264 reported cases and 186 reported deaths worldwide in 2025 (2026 YTD to 5 Aug: 219,522 cases, 81 deaths)",
+    "action": "correct",
+    "url": "https://www.ecdc.europa.eu/en/chikungunya-monthly",
+    "confidence": "medium",
+    "checked": "2026-08-12"
+  },
+  "leptospirosis": {
+    "value": 58900,
+    "year": 2015,
+    "source": "Costa et al. 2015, PLOS Neglected Tropical Diseases (systematic review: 1.03M cases, 58,900 deaths/yr)",
+    "action": "relabel",
+    "url": "https://journals.plos.org/plosntds/article?id=10.1371/journal.pntd.0003898",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "mycetoma": {
+    "value": 0,
+    "year": null,
+    "source": "No global mortality data exist; mycetoma burden is unquantified (WHO NTD; not a GHE cause line)",
+    "action": "flag",
+    "url": "https://www.who.int/news-room/fact-sheets/detail/mycetoma",
+    "confidence": "medium",
+    "checked": "2026-08-12"
+  },
+  "echinococcosis": {
+    "value": 1400,
+    "year": 2021,
+    "source": "IHME GBD 2021 (cystic echinococcosis)",
+    "action": "relabel",
+    "url": "https://link.springer.com/article/10.1186/s12889-025-24502-5",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "fascioliasis": {
+    "value": 0,
+    "year": 2021,
+    "source": "WHO Global Health Estimates 2021 (food-borne trematodes cause line: 0 deaths)",
+    "action": "relabel",
+    "url": "https://www.who.int/data/gho/data/themes/mortality-and-global-health-estimates/ghe-leading-causes-of-death",
+    "confidence": "medium",
+    "checked": "2026-08-12"
+  },
+  "soil-transmitted-helminths": {
+    "value": 3800,
+    "year": 2021,
+    "source": "WHO Global Health Estimates 2021 (intestinal nematode infections cause line)",
+    "action": "correct",
+    "url": "https://www.who.int/data/gho/data/themes/mortality-and-global-health-estimates/ghe-leading-causes-of-death",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "breast-cancer": {
+    "value": 666000,
+    "year": 2022,
+    "source": "IARC GLOBOCAN 2022",
+    "action": "keep",
+    "url": "https://acsjournals.onlinelibrary.wiley.com/doi/10.3322/caac.21834",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "lung-cancer": {
+    "value": 1817000,
+    "year": 2022,
+    "source": "IARC GLOBOCAN 2022",
+    "action": "keep",
+    "url": "https://acsjournals.onlinelibrary.wiley.com/doi/10.3322/caac.21834",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "colon-cancer": {
+    "value": 904000,
+    "year": 2022,
+    "source": "IARC GLOBOCAN 2022 (colorectum incl. anus)",
+    "action": "relabel",
+    "url": "https://acsjournals.onlinelibrary.wiley.com/doi/10.3322/caac.21834",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "pancreatic-cancer": {
+    "value": 467000,
+    "year": 2022,
+    "source": "IARC GLOBOCAN 2022",
+    "action": "keep",
+    "url": "https://acsjournals.onlinelibrary.wiley.com/doi/10.3322/caac.21834",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "leukemia": {
+    "value": 305000,
+    "year": 2022,
+    "source": "IARC GLOBOCAN 2022",
+    "action": "keep",
+    "url": "https://acsjournals.onlinelibrary.wiley.com/doi/10.3322/caac.21834",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "lymphoma": {
+    "value": 251000,
+    "year": 2022,
+    "source": "IARC GLOBOCAN 2022 (non-Hodgkin lymphoma)",
+    "action": "relabel",
+    "url": "https://acsjournals.onlinelibrary.wiley.com/doi/10.3322/caac.21834",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "prostate-cancer": {
+    "value": 397000,
+    "year": 2022,
+    "source": "IARC GLOBOCAN 2022",
+    "action": "keep",
+    "url": "https://acsjournals.onlinelibrary.wiley.com/doi/10.3322/caac.21834",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "ovarian-cancer": {
+    "value": 207000,
+    "year": 2022,
+    "source": "IARC GLOBOCAN 2022",
+    "action": "keep",
+    "url": "https://acsjournals.onlinelibrary.wiley.com/doi/10.3322/caac.21834",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "melanoma": {
+    "value": 59000,
+    "year": 2022,
+    "source": "IARC GLOBOCAN 2022",
+    "action": "keep",
+    "url": "https://acsjournals.onlinelibrary.wiley.com/doi/10.3322/caac.21834",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "liver-cancer": {
+    "value": 759000,
+    "year": 2022,
+    "source": "IARC GLOBOCAN 2022",
+    "action": "keep",
+    "url": "https://acsjournals.onlinelibrary.wiley.com/doi/10.3322/caac.21834",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "stomach-cancer": {
+    "value": 660000,
+    "year": 2022,
+    "source": "IARC GLOBOCAN 2022",
+    "action": "keep",
+    "url": "https://acsjournals.onlinelibrary.wiley.com/doi/10.3322/caac.21834",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "cervical-cancer": {
+    "value": 349000,
+    "year": 2022,
+    "source": "IARC GLOBOCAN 2022",
+    "action": "keep",
+    "url": "https://acsjournals.onlinelibrary.wiley.com/doi/10.3322/caac.21834",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "bladder-cancer": {
+    "value": 221000,
+    "year": 2022,
+    "source": "IARC GLOBOCAN 2022",
+    "action": "keep",
+    "url": "https://acsjournals.onlinelibrary.wiley.com/doi/10.3322/caac.21834",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "brain-cancer": {
+    "value": 248000,
+    "year": 2022,
+    "source": "IARC GLOBOCAN 2022 (brain and central nervous system)",
+    "action": "correct",
+    "url": "https://link.springer.com/article/10.1007/s11060-025-05164-0",
+    "confidence": "medium",
+    "checked": "2026-08-12"
+  },
+  "kidney-cancer": {
+    "value": 156000,
+    "year": 2022,
+    "source": "IARC GLOBOCAN 2022",
+    "action": "keep",
+    "url": "https://acsjournals.onlinelibrary.wiley.com/doi/10.3322/caac.21834",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "thyroid-cancer": {
+    "value": 48000,
+    "year": 2022,
+    "source": "IARC GLOBOCAN 2022",
+    "action": "keep",
+    "url": "https://acsjournals.onlinelibrary.wiley.com/doi/10.3322/caac.21834",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "esophageal-cancer": {
+    "value": 445000,
+    "year": 2022,
+    "source": "IARC GLOBOCAN 2022",
+    "action": "keep",
+    "url": "https://acsjournals.onlinelibrary.wiley.com/doi/10.3322/caac.21834",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "multiple-myeloma": {
+    "value": 121000,
+    "year": 2022,
+    "source": "IARC GLOBOCAN 2022",
+    "action": "keep",
+    "url": "https://acsjournals.onlinelibrary.wiley.com/doi/10.3322/caac.21834",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "heart-disease": {
+    "value": 9100000,
+    "year": 2021,
+    "source": "WHO Global Health Estimates 2021",
+    "action": "keep",
+    "url": "https://www.who.int/news-room/fact-sheets/detail/the-top-10-causes-of-death",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "stroke": {
+    "value": 7300000,
+    "year": 2021,
+    "source": "IHME GBD 2021",
+    "action": "keep",
+    "url": "https://www.thelancet.com/journals/laneur/article/PIIS1474-4422(24)00369-7/fulltext",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "hypertension": {
+    "value": 1330000,
+    "year": 2021,
+    "source": "IHME GBD 2021 (hypertensive heart disease)",
+    "action": "relabel",
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12033261/",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "atherosclerosis": {
+    "value": 0,
+    "year": 2021,
+    "source": "No distinct cause-of-death line; atherosclerotic deaths counted under ischaemic heart disease, stroke and peripheral artery disease (WHO GHE 2021 / IHME GBD 2021)",
+    "action": "relabel",
+    "url": null,
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "heart-failure": {
+    "value": 86000,
+    "year": 2021,
+    "source": "No global cause-of-death line; heart failure deaths are assigned to underlying causes (stored figure resembles US CDC underlying-cause count, US only)",
+    "action": "flag",
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11755835/",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "arrhythmia": {
+    "value": 340000,
+    "year": 2021,
+    "source": "IHME GBD 2021 (atrial fibrillation and flutter)",
+    "action": "relabel",
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12133759/",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "peripheral-artery-disease": {
+    "value": 68000,
+    "year": 2021,
+    "source": "IHME GBD 2021 (lower-extremity peripheral arterial disease)",
+    "action": "correct",
+    "url": "https://www.frontiersin.org/journals/cardiovascular-medicine/articles/10.3389/fcvm.2025.1592322/full",
+    "confidence": "medium",
+    "checked": "2026-08-12"
+  },
+  "aortic-aneurysm": {
+    "value": 154000,
+    "year": 2021,
+    "source": "IHME GBD 2021",
+    "action": "relabel",
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12458886/",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "cardiomyopathy": {
+    "value": 370000,
+    "year": 2021,
+    "source": "IHME GBD 2021 (cardiomyopathy)",
+    "action": "relabel",
+    "url": "https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0341687",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "deep-vein-thrombosis": {
+    "value": 10000,
+    "year": null,
+    "source": "No WHO GHE or GBD cause-of-death line for venous thromboembolism; regional estimates only (US CDC: 60,000-100,000 VTE deaths/yr, US only)",
+    "action": "flag",
+    "url": null,
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "pulmonary-embolism": {
+    "value": 400000,
+    "year": null,
+    "source": "No WHO GHE or GBD cause-of-death line; regional or modeled estimates only (Europe about 544,000 VTE-related deaths/yr, Cohen 2007 model; US 60,000-100,000, CDC)",
+    "action": "flag",
+    "url": null,
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "rheumatic-heart-disease": {
+    "value": 373000,
+    "year": 2021,
+    "source": "IHME GBD 2021",
+    "action": "keep",
+    "url": "https://www.sciencedirect.com/science/article/pii/S1470211826000424",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "endocarditis": {
+    "value": 78000,
+    "year": 2021,
+    "source": "IHME GBD 2021",
+    "action": "correct",
+    "url": "https://link.springer.com/article/10.1186/s12889-025-22100-z",
+    "confidence": "medium",
+    "checked": "2026-08-12"
+  },
+  "myocarditis": {
+    "value": 32000,
+    "year": 2021,
+    "source": "IHME GBD 2021",
+    "action": "relabel",
+    "url": "https://link.springer.com/article/10.1186/s12872-024-04402-z",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "alzheimers-disease": {
+    "value": 1950000,
+    "year": 2021,
+    "source": "IHME GBD 2021 (Alzheimer's disease and other dementias)",
+    "action": "correct",
+    "url": "https://www.thelancet.com/journals/laneur/article/PIIS1474-4422(24)00038-3/fulltext",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "parkinsons-disease": {
+    "value": 388000,
+    "year": 2021,
+    "source": "IHME GBD 2021",
+    "action": "relabel",
+    "url": "https://www.thelancet.com/journals/laneur/article/PIIS1474-4422(24)00038-3/fulltext",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "epilepsy": {
+    "value": 140000,
+    "year": 2021,
+    "source": "IHME GBD 2021 (idiopathic epilepsy)",
+    "action": "relabel",
+    "url": "https://www.thelancet.com/journals/laneur/article/PIIS1474-4422(24)00038-3/fulltext",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "multiple-sclerosis": {
+    "value": 16300,
+    "year": 2021,
+    "source": "IHME GBD 2021",
+    "action": "correct",
+    "url": "https://www.thelancet.com/journals/laneur/article/PIIS1474-4422(24)00038-3/fulltext",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "als": {
+    "value": 39000,
+    "year": 2021,
+    "source": "IHME GBD 2021 (motor neuron diseases)",
+    "action": "relabel",
+    "url": "https://www.thelancet.com/journals/laneur/article/PIIS1474-4422(24)00038-3/fulltext",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "huntingtons-disease": {
+    "value": 5000,
+    "year": null,
+    "source": "No WHO GHE or IHME GBD cause line; extrapolated from prevalence and US vital statistics (US about 2,000 HD deaths/yr)",
+    "action": "flag",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/39973386/",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "migraine": {
+    "value": 0,
+    "year": 2021,
+    "source": "WHO Global Health Estimates 2021",
+    "action": "keep",
+    "url": "https://www.who.int/data/gho/data/themes/mortality-and-global-health-estimates/ghe-leading-causes-of-death",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "neuropathy": {
+    "value": 0,
+    "year": 2021,
+    "source": "No WHO GHE/IHME GBD cause-of-death line; deaths coded to underlying diseases (e.g. diabetes). Zero kept as modeling boundary",
+    "action": "relabel",
+    "url": "https://www.thelancet.com/journals/laneur/article/PIIS1474-4422(24)00038-3/fulltext",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "meningitis": {
+    "value": 214000,
+    "year": 2021,
+    "source": "IHME GBD 2021",
+    "action": "relabel",
+    "url": "https://www.thelancet.com/journals/laneur/article/PIIS1474-4422(24)00038-3/fulltext",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "cerebral-palsy": {
+    "value": 0,
+    "year": 2021,
+    "source": "No WHO GHE/IHME GBD cause-of-death line; deaths coded to underlying and associated causes. Zero kept as modeling boundary",
+    "action": "relabel",
+    "url": "https://www.who.int/data/gho/data/themes/mortality-and-global-health-estimates/ghe-leading-causes-of-death",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "spinal-cord-injury": {
+    "value": 0,
+    "year": 2021,
+    "source": "IHME GBD 2021 publishes SCI morbidity only; injury deaths are assigned to external causes (road injury, falls, violence), not to SCI. Zero kept as modeling boundary",
+    "action": "relabel",
+    "url": "https://www.thelancet.com/journals/laneur/article/PIIS1474-4422(24)00038-3/fulltext",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "traumatic-brain-injury": {
+    "value": 500000,
+    "year": null,
+    "source": "No WHO GHE or IHME GBD cause line (injury deaths are coded to external causes); modeled literature estimate, not a WHO or IHME figure",
+    "action": "flag",
+    "url": "https://www.thelancet.com/journals/laneur/article/PIIS1474-4422(24)00038-3/fulltext",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "narcolepsy": {
+    "value": 0,
+    "year": 2021,
+    "source": "No WHO GHE/IHME GBD cause-of-death line for narcolepsy. Zero kept as modeling boundary",
+    "action": "relabel",
+    "url": "https://www.who.int/data/gho/data/themes/mortality-and-global-health-estimates/ghe-leading-causes-of-death",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "essential-tremor": {
+    "value": 0,
+    "year": 2021,
+    "source": "No WHO GHE/IHME GBD cause-of-death line for essential tremor. Zero kept as modeling boundary",
+    "action": "relabel",
+    "url": "https://www.who.int/data/gho/data/themes/mortality-and-global-health-estimates/ghe-leading-causes-of-death",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "asthma": {
+    "value": 442000,
+    "year": 2023,
+    "source": "WHO asthma fact sheet (updated April 2026; IHME GBD 2023)",
+    "action": "correct",
+    "url": "https://www.who.int/news-room/fact-sheets/detail/asthma",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "copd": {
+    "value": 3500000,
+    "year": 2021,
+    "source": "WHO Global Health Estimates 2021",
+    "action": "keep",
+    "url": "https://www.who.int/data/gho/data/themes/mortality-and-global-health-estimates/ghe-leading-causes-of-death",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "pneumonia": {
+    "value": 2180000,
+    "year": 2021,
+    "source": "IHME GBD 2021 (lower respiratory infections)",
+    "action": "keep",
+    "url": "https://www.thelancet.com/journals/laninf/article/PIIS1473-3099(24)00176-2/fulltext",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "tuberculosis": {
+    "value": 1230000,
+    "year": 2024,
+    "source": "WHO Global Tuberculosis Report 2025",
+    "action": "keep",
+    "url": "https://www.who.int/teams/global-programme-on-tuberculosis-and-lung-health/tb-reports/global-tuberculosis-report-2025",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "lung-fibrosis": {
+    "value": 188000,
+    "year": 2021,
+    "source": "IHME GBD 2021 (interstitial lung disease and pulmonary sarcoidosis)",
+    "action": "relabel",
+    "url": "https://bmcpublichealth.biomedcentral.com/articles/10.1186/s12889-024-20430-y",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "sleep-apnea": {
+    "value": 0,
+    "year": 2021,
+    "source": "No WHO or GBD cause-of-death line; 0 is a modeling boundary",
+    "action": "flag",
+    "url": "https://www.who.int/data/gho/data/themes/mortality-and-global-health-estimates/ghe-leading-causes-of-death",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "bronchiectasis": {
+    "value": 1000,
+    "year": 2021,
+    "source": "No global figure published; US-only vital statistics ~2,300/yr (CDC WONDER 1999-2020)",
+    "action": "flag",
+    "url": "https://journal.chestnet.org/article/S0012-3692(23)04197-1/fulltext",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "sarcoidosis": {
+    "value": 1000,
+    "year": 2021,
+    "source": "US-only vital statistics (~1,000/yr underlying cause, CDC 1999-2016); no global sarcoidosis-specific figure",
+    "action": "flag",
+    "url": "https://www.resmedjournal.com/article/S0954-6111(18)30369-X/fulltext",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "pulmonary-hypertension": {
+    "value": 22000,
+    "year": 2021,
+    "source": "IHME GBD 2021 (pulmonary arterial hypertension)",
+    "action": "relabel",
+    "url": "https://www.thelancet.com/journals/lanres/article/PIIS2213-2600(24)00295-9/fulltext",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "pleural-effusion": {
+    "value": 0,
+    "year": 2021,
+    "source": "Not a cause-of-death category in any global source; 0 is a modeling boundary",
+    "action": "flag",
+    "url": null,
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "acute-respiratory-distress": {
+    "value": 400000,
+    "year": 2021,
+    "source": "Literature-derived estimate; no WHO or GBD cause line (ARDS deaths attributed to underlying causes)",
+    "action": "flag",
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8449138/",
+    "confidence": "medium",
+    "checked": "2026-08-12"
+  },
+  "pertussis": {
+    "value": 59000,
+    "year": 2021,
+    "source": "WHO Global Health Estimates 2021 (whooping cough)",
+    "action": "relabel",
+    "url": "https://www.who.int/data/gho/data/themes/mortality-and-global-health-estimates/ghe-leading-causes-of-death",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "lupus": {
+    "value": 35000,
+    "year": 2021,
+    "source": "No citable global figure (WHO GHE has no SLE line; IHME GBD omits SLE)",
+    "action": "flag",
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12711659/",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "rheumatoid-arthritis": {
+    "value": 38000,
+    "year": 2021,
+    "source": "WHO Global Health Estimates 2021",
+    "action": "keep",
+    "url": "https://cdn.who.int/media/docs/default-source/gho-documents/global-health-estimates/ghe2021_deaths_global_new2.xlsx",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "crohns-disease": {
+    "value": 20000,
+    "year": 2021,
+    "source": "Share of combined IBD line; not published per disease",
+    "action": "flag",
+    "url": "https://academic.oup.com/gastro/article/doi/10.1093/gastro/goaf082/8253331",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "celiac-disease": {
+    "value": 0,
+    "year": 2021,
+    "source": "No global cause-of-death line (WHO GHE/IHME GBD); 0 = modeling boundary",
+    "action": "flag",
+    "url": "https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0022774",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "type-1-diabetes": {
+    "value": 49000,
+    "year": 2021,
+    "source": "IHME Global Burden of Disease 2021",
+    "action": "relabel",
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12259457/",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "psoriasis": {
+    "value": 0,
+    "year": 2021,
+    "source": "IHME GBD 2021 (modeled as nonfatal; 0 attributed deaths)",
+    "action": "relabel",
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12283580/",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "ulcerative-colitis": {
+    "value": 20000,
+    "year": 2021,
+    "source": "Share of combined IBD line; not published per disease",
+    "action": "flag",
+    "url": "https://academic.oup.com/gastro/article/doi/10.1093/gastro/goaf082/8253331",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "sjogrens-syndrome": {
+    "value": 0,
+    "year": 2021,
+    "source": "No global cause-of-death line (WHO GHE/IHME GBD); 0 = modeling boundary",
+    "action": "relabel",
+    "url": null,
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "vasculitis": {
+    "value": 4000,
+    "year": 2021,
+    "source": "No citable global figure; region/reporting-country AAV analyses only",
+    "action": "flag",
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12783593/",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "scleroderma": {
+    "value": 15000,
+    "year": 2023,
+    "source": "No citable global figure; WHO Mortality Database reporting-country analyses only",
+    "action": "flag",
+    "url": "https://link.springer.com/article/10.1007/s10067-026-07995-2",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "myasthenia-gravis": {
+    "value": 3000,
+    "year": 2021,
+    "source": "No citable global figure; national data only",
+    "action": "flag",
+    "url": "https://onlinelibrary.wiley.com/doi/full/10.1002/acn3.51792",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "ankylosing-spondylitis": {
+    "value": 0,
+    "year": 2021,
+    "source": "No disease-specific line; included in 'other musculoskeletal disorders' (WHO GHE/IHME GBD); 0 = modeling boundary",
+    "action": "relabel",
+    "url": "https://www.thelancet.com/journals/lanrhe/article/piis2665-9913(23)00232-1/fulltext",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "type-2-diabetes": {
+    "value": 1600000,
+    "year": 2021,
+    "source": "WHO Global Health Estimates 2021 (diabetes mellitus, all types)",
+    "action": "relabel",
+    "url": "https://www.who.int/news-room/fact-sheets/detail/diabetes",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "obesity": {
+    "value": 0,
+    "year": 2021,
+    "source": "Risk factor, not a cause-of-death line; WHO attributes 3.7 million NCD deaths to higher-than-optimal BMI (2021)",
+    "action": "relabel",
+    "url": "https://www.who.int/news-room/fact-sheets/detail/obesity-and-overweight",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "gout": {
+    "value": 3400,
+    "year": 2021,
+    "source": "WHO Global Health Estimates 2021",
+    "action": "correct",
+    "url": null,
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "nafld": {
+    "value": 138000,
+    "year": 2021,
+    "source": "IHME GBD 2021 (MASLD: cirrhosis plus NASH liver cancer)",
+    "action": "relabel",
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12482587/",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "metabolic-syndrome": {
+    "value": 0,
+    "year": 2021,
+    "source": "Composite construct; no WHO GHE or GBD cause-of-death line (component deaths counted under diabetes, ischaemic heart disease, stroke)",
+    "action": "relabel",
+    "url": null,
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "hyperlipidemia": {
+    "value": 0,
+    "year": 2021,
+    "source": "Risk factor, not a cause-of-death line; GBD 2021 attributes about 3.7-3.8 million CVD deaths to high LDL cholesterol",
+    "action": "relabel",
+    "url": "https://www.nmcd-journal.com/article/S0939-4753(25)00184-X/abstract",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "hypothyroidism": {
+    "value": 0,
+    "year": 2021,
+    "source": "No WHO GHE or GBD cause-of-death line; global deaths not separately published",
+    "action": "relabel",
+    "url": null,
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "hyperthyroidism": {
+    "value": 0,
+    "year": 2021,
+    "source": "No WHO GHE or GBD cause-of-death line; global deaths not separately published",
+    "action": "relabel",
+    "url": null,
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "osteoporosis": {
+    "value": 0,
+    "year": 2021,
+    "source": "Not a cause-of-death line; deaths counted under fall and fracture injuries. GBD attributes 437,884 deaths to low bone mineral density (2019, risk-factor construct)",
+    "action": "relabel",
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9165055/",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "phenylketonuria": {
+    "value": 0,
+    "year": 2021,
+    "source": "No WHO GHE or GBD cause-of-death line; deaths ultra-rare under newborn screening; no global mortality figure published",
+    "action": "relabel",
+    "url": null,
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "porphyria": {
+    "value": 0,
+    "year": 2021,
+    "source": "No WHO GHE or GBD cause-of-death line; no published global mortality figure (rare disease)",
+    "action": "relabel",
+    "url": null,
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "wilsons-disease": {
+    "value": 500,
+    "year": null,
+    "source": "No citable global mortality figure (WHO GHE and GBD publish none; literature reports case fatality among diagnosed patients only)",
+    "action": "flag",
+    "url": "https://link.springer.com/article/10.1186/s13023-025-04185-2",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "hiv-aids": {
+    "value": 630000,
+    "year": 2024,
+    "source": "UNAIDS Global AIDS Update 2025",
+    "action": "keep",
+    "url": "https://www.unaids.org/en/UNAIDS-global-AIDS-update-2025",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "covid-19": {
+    "value": 294000,
+    "year": 2023,
+    "source": "WHO COVID-19 dashboard, reported deaths 2023; global reporting has since largely ceased",
+    "action": "keep",
+    "url": "https://data.who.int/dashboards/covid19/deaths",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "hepatitis-b": {
+    "value": 1100000,
+    "year": 2024,
+    "source": "WHO Global Hepatitis Report 2026",
+    "action": "relabel",
+    "url": "https://www.who.int/teams/global-hiv-hepatitis-and-stis-programmes/hepatitis/reports/global-hepatitis-report-2026",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "hepatitis-c": {
+    "value": 240000,
+    "year": 2024,
+    "source": "WHO Global Hepatitis Report 2026",
+    "action": "correct",
+    "url": "https://www.who.int/teams/global-hiv-hepatitis-and-stis-programmes/hepatitis/reports/global-hepatitis-report-2026",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "influenza": {
+    "value": 389000,
+    "year": 2019,
+    "source": "Paget et al. 2019, J Glob Health (GLaMOR study), WHO-cited; WHO fact sheet range 290,000-650,000 respiratory deaths/yr",
+    "action": "correct",
+    "url": "https://jogh.org/documents/issue201902/jogh-09-020421.pdf",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "measles": {
+    "value": 95000,
+    "year": 2024,
+    "source": "WHO measles estimates, 2024",
+    "action": "keep",
+    "url": "https://www.who.int/news-room/fact-sheets/detail/measles",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "ebola": {
+    "value": 2013,
+    "year": 2026,
+    "source": "WHO situation reports, 2026 Bundibugyo Ebola epidemic (DRC + Uganda, PHEIC declared 16 May 2026): ~4,400 confirmed cases and 2,013 deaths as of 11 Aug 2026, outbreak ongoing; episodic; 2025 total was 49",
+    "action": "correct",
+    "url": "https://www.who.int/emergencies/situations/ebola-outbreak---drc-2026",
+    "confidence": "medium",
+    "checked": "2026-08-12"
+  },
+  "cholera": {
+    "value": 95000,
+    "year": 2015,
+    "source": "Ali et al. 2015 (PLOS NTD), WHO-cited modelled estimate; WHO cholera fact sheet cites 21,000-143,000 deaths/yr",
+    "action": "relabel",
+    "url": "https://www.who.int/news-room/fact-sheets/detail/cholera",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "typhoid": {
+    "value": 110000,
+    "year": 2019,
+    "source": "WHO typhoid fact sheet (estimate for 2019; typhoid has no GHE cause line)",
+    "action": "relabel",
+    "url": "https://www.who.int/news-room/fact-sheets/detail/typhoid",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "plague": {
+    "value": 100,
+    "year": 2015,
+    "source": "WHO plague fact sheet: 3,248 cases and 584 deaths reported worldwide 2010-2015 (~100/yr); episodic spikes (Madagascar 2017: 200+ deaths)",
+    "action": "correct",
+    "url": "https://www.who.int/news-room/fact-sheets/detail/plague",
+    "confidence": "medium",
+    "checked": "2026-08-12"
+  },
+  "mrsa": {
+    "value": 130000,
+    "year": 2021,
+    "source": "Naghavi et al., The Lancet 2024 (GRAM/GBD 2021 AMR study): deaths attributable to MRSA",
+    "action": "relabel",
+    "url": "https://www.thelancet.com/journals/lancet/article/PIIS0140-6736(24)01867-1/fulltext",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "c-difficile": {
+    "value": 16000,
+    "year": 2021,
+    "source": "IHME GBD 2021 (C. difficile infection deaths; no WHO global figure exists)",
+    "action": "relabel",
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12291758/",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "zika": {
+    "value": 0,
+    "year": null,
+    "source": "Modeling boundary: no WHO GHE cause line and no global mortality estimate; direct Zika deaths are near zero (GBD 2021 tracks incidence, not deaths; harm is mainly congenital)",
+    "action": "flag",
+    "url": "https://www.who.int/news-room/fact-sheets/detail/zika-virus",
+    "confidence": "medium",
+    "checked": "2026-08-12"
+  },
+  "west-nile-virus": {
+    "value": 130,
+    "year": 2023,
+    "source": "CDC, US mean 2014-2023; no global estimate exists",
+    "action": "keep",
+    "url": "https://www.cdc.gov/west-nile-virus/data-maps/historic-data.html",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "norovirus": {
+    "value": 200000,
+    "year": 2016,
+    "source": "Lopman et al., PLOS Medicine 2016 modeling, WHO-cited",
+    "action": "keep",
+    "url": "https://journals.plos.org/plosmedicine/article?id=10.1371/journal.pmed.1001999",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "hpv": {
+    "value": 0,
+    "year": 2022,
+    "source": "Boundary to avoid double-counting: HPV kills via its cancers, counted under cancer rows (cervical cancer ~350,000 deaths, GLOBOCAN 2022); HPV infection itself has no GHE mortality line",
+    "action": "relabel",
+    "url": "https://www.who.int/news-room/fact-sheets/detail/cervical-cancer",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "cystic-fibrosis": {
+    "value": 1000,
+    "year": 2021,
+    "source": "No citable global figure; national registry data only",
+    "action": "flag",
+    "url": null,
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "sickle-cell-disease": {
+    "value": 376000,
+    "year": 2021,
+    "source": "IHME GBD 2021, total sickle cell mortality burden (underlying plus contributing causes), Lancet Haematology 2023",
+    "action": "relabel",
+    "url": "https://www.thelancet.com/journals/lanhae/article/PIIS2352-3026(23)00118-7/fulltext",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "down-syndrome": {
+    "value": 27500,
+    "year": 2021,
+    "source": "WHO Global Health Estimates 2021",
+    "action": "correct",
+    "url": "https://cdn.who.int/media/docs/default-source/gho-documents/global-health-estimates/ghe2021_deaths_global_new2.xlsx",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "hemophilia": {
+    "value": 3000,
+    "year": 2021,
+    "source": "No citable global figure; WFH registered-patient reports only",
+    "action": "flag",
+    "url": "https://www1.wfh.org/publications/files/pdf-2588.pdf",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "thalassemia": {
+    "value": 11000,
+    "year": 2021,
+    "source": "IHME Global Burden of Disease 2021",
+    "action": "relabel",
+    "url": "https://www.thelancet.com/journals/eclinm/article/PIIS2589-5370(24)00198-6/fulltext",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "marfan-syndrome": {
+    "value": 1000,
+    "year": 2021,
+    "source": "No citable global figure; national cohort data only",
+    "action": "flag",
+    "url": "https://www.mayoclinicproceedings.org/article/S0025-6196(13)00877-X/fulltext",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "turner-syndrome": {
+    "value": 0,
+    "year": 2021,
+    "source": "No Turner-specific mortality line (WHO GHE/IHME GBD publish nonfatal burden only); 0 = modeling boundary",
+    "action": "relabel",
+    "url": "https://obgyn.onlinelibrary.wiley.com/doi/full/10.1111/aogs.70082",
+    "confidence": "medium",
+    "checked": "2026-08-12"
+  },
+  "duchenne-muscular-dystrophy": {
+    "value": 1500,
+    "year": 2021,
+    "source": "No citable global figure; registry/cohort data only",
+    "action": "flag",
+    "url": "https://www.neurology.org/doi/10.1212/WNL.0000000000012910",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "fragile-x-syndrome": {
+    "value": 0,
+    "year": 2021,
+    "source": "No global cause-of-death line (WHO GHE/IHME GBD); 0 = modeling boundary",
+    "action": "relabel",
+    "url": null,
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "tay-sachs-disease": {
+    "value": 500,
+    "year": 2021,
+    "source": "No citable global figure",
+    "action": "flag",
+    "url": null,
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "gaucher-disease": {
+    "value": 500,
+    "year": 2021,
+    "source": "No citable global figure",
+    "action": "flag",
+    "url": null,
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "ehlers-danlos-syndrome": {
+    "value": 0,
+    "year": 2021,
+    "source": "No global cause-of-death line (WHO GHE/IHME GBD); 0 = modeling boundary",
+    "action": "relabel",
+    "url": null,
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "depression": {
+    "value": 0,
+    "year": 2021,
+    "source": "WHO Global Health Estimates 2021",
+    "action": "keep",
+    "url": "https://www.who.int/data/gho/data/themes/mortality-and-global-health-estimates/ghe-leading-causes-of-death",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "schizophrenia": {
+    "value": 0,
+    "year": 2021,
+    "source": "IHME GBD 2021 (no deaths directly attributed; excess mortality coded to physical causes and suicide)",
+    "action": "relabel",
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8776563/",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "ptsd": {
+    "value": 0,
+    "year": 2021,
+    "source": "IHME GBD 2021 (no deaths directly attributed; PTSD is estimated within the anxiety-disorders grouping, and suicide is counted under self-harm)",
+    "action": "relabel",
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8776563/",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "anxiety-disorders": {
+    "value": 0,
+    "year": 2021,
+    "source": "IHME GBD 2021 (no deaths directly attributed to anxiety disorders)",
+    "action": "relabel",
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8776563/",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "bipolar-disorder": {
+    "value": 0,
+    "year": 2021,
+    "source": "IHME GBD 2021 (no deaths directly attributed; suicide counted under self-harm)",
+    "action": "relabel",
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8776563/",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "ocd": {
+    "value": 0,
+    "year": 2021,
+    "source": "IHME GBD 2021 (no deaths directly attributed; OCD is not a separate cause of death)",
+    "action": "relabel",
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8776563/",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "adhd": {
+    "value": 0,
+    "year": 2021,
+    "source": "WHO Global Health Estimates 2021",
+    "action": "keep",
+    "url": "https://www.who.int/data/gho/data/themes/mortality-and-global-health-estimates/ghe-leading-causes-of-death",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "autism-spectrum-disorder": {
+    "value": 0,
+    "year": 2021,
+    "source": "WHO Global Health Estimates 2021",
+    "action": "keep",
+    "url": "https://www.who.int/data/gho/data/themes/mortality-and-global-health-estimates/ghe-leading-causes-of-death",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "anorexia-nervosa": {
+    "value": 270,
+    "year": 2019,
+    "source": "IHME GBD 2019 (anorexia nervosa, direct underlying-cause deaths only; excess mortality mostly coded to other causes)",
+    "action": "correct",
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8776563/",
+    "confidence": "medium",
+    "checked": "2026-08-12"
+  },
+  "substance-use-disorder": {
+    "value": 137000,
+    "year": 2021,
+    "source": "IHME GBD 2021 (drug use disorders; excludes alcohol use disorders)",
+    "action": "relabel",
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12679053/",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "borderline-personality-disorder": {
+    "value": 0,
+    "year": 2021,
+    "source": "IHME GBD 2021 (no deaths directly attributed; personality disorders fall under 'other mental disorders' with zero direct deaths)",
+    "action": "relabel",
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8776563/",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "insomnia": {
+    "value": 0,
+    "year": 2021,
+    "source": "No WHO GHE/IHME GBD cause-of-death line for insomnia or sleep-wake disorders. Zero kept as modeling boundary",
+    "action": "relabel",
+    "url": "https://www.who.int/data/gho/data/themes/mortality-and-global-health-estimates/ghe-leading-causes-of-death",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "endometrial-cancer": {
+    "value": 98000,
+    "year": 2022,
+    "source": "IARC GLOBOCAN 2022",
+    "action": "keep",
+    "url": "https://acsjournals.onlinelibrary.wiley.com/doi/10.3322/caac.21834",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "congenital-heart-defects": {
+    "value": 251000,
+    "year": 2021,
+    "source": "IHME GBD 2021 (congenital heart anomalies)",
+    "action": "relabel",
+    "url": "https://link.springer.com/article/10.1007/s00431-025-06085-w",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "sepsis": {
+    "value": 11000000,
+    "year": 2017,
+    "source": "Rudd et al., Lancet 2020 (GBD 2017), WHO-cited; sepsis-associated deaths overlap underlying causes",
+    "action": "keep",
+    "url": "https://www.thelancet.com/article/S0140-6736(19)32989-7/fulltext",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "prion-disease": {
+    "value": 2500,
+    "year": null,
+    "source": "No WHO GHE or IHME GBD cause line; surveillance-extrapolated estimate (about 1-2 deaths per million per year, CDC)",
+    "action": "flag",
+    "url": "https://www.cdc.gov/creutzfeldt-jakob/about/index.html",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "polycystic-kidney-disease": {
+    "value": 2000,
+    "year": 2021,
+    "source": "No citable global figure; folded into CKD 'other causes' (IHME GBD); national data only",
+    "action": "flag",
+    "url": "https://bmcpublichealth.biomedcentral.com/articles/10.1186/s12889-025-21851-z",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "chronic-kidney-disease": {
+    "value": 1400000,
+    "year": 2021,
+    "source": "WHO Global Health Estimates 2021 (kidney diseases)",
+    "action": "correct",
+    "url": "https://www.who.int/news-room/fact-sheets/detail/the-top-10-causes-of-death",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "cirrhosis": {
+    "value": 1320000,
+    "year": 2021,
+    "source": "WHO Global Health Estimates 2021",
+    "action": "keep",
+    "url": null,
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "preeclampsia": {
+    "value": 38000,
+    "year": 2021,
+    "source": "IHME GBD 2021 (maternal hypertensive disorders)",
+    "action": "correct",
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12098623/",
+    "confidence": "medium",
+    "checked": "2026-08-12"
+  },
+  "endometriosis": {
+    "value": 0,
+    "year": 2021,
+    "source": "IHME GBD 2021 (modeled as nonfatal; burden is YLD-driven)",
+    "action": "relabel",
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12583065/",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "tetanus": {
+    "value": 21400,
+    "year": 2021,
+    "source": "WHO Global Health Estimates 2021",
+    "action": "correct",
+    "url": "https://www.who.int/data/gho/data/themes/mortality-and-global-health-estimates/ghe-leading-causes-of-death",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  },
+  "rotavirus": {
+    "value": 128500,
+    "year": 2016,
+    "source": "GBD/Troeger et al. 2018, WHO-cited (under-5 deaths)",
+    "action": "keep",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/30105384/",
+    "confidence": "high",
+    "checked": "2026-08-12"
+  }
+}

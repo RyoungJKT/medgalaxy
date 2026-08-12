@@ -861,3 +861,152 @@ Machine" no longer clipped at the right edge.
    digit transition is consulted continuously (every value change, for the
    life of the session), so a live CSS rule tracks a mid-session OS setting
    change where a mount-time ref would not.
+
+## Round 4 data wave: full 153-row mortality provenance reconciliation
+
+Branch `next/showcase`, worktree `medgalaxy-next`, one commit
+(`fix(data): full 153-row mortality provenance reconciliation + audit
+manifest guard`). Input: the completed 153-row audit (39 keep, 61 relabel,
+23 correct, 30 flag), applied under the controller's policy, with the applied
+truth written to `data/mortality-audit.json` and made permanent by a test.
+
+### What was applied
+
+- **keep (39):** untouched. Where the audit restated value/year/source on a
+  keep row, the applier asserted it equalled what was stored; nothing
+  mismatched.
+- **relabel (61):** source string replaced with the one the value actually
+  came from (year/value carried where the row named them, always equal to
+  what was stored, so no relabel moved a number). The bulk of these are rows
+  that held an IHME GBD or single-study figure while citing WHO GHE 2021 for
+  a cause line the GHE workbook does not contain.
+- **correct (23):** value, year and source replaced together. Largest moves:
+  endocarditis 17,000 -> 78,000 (GBD 2021 infective endocarditis; the stored
+  figure was ~4.5x low), multiple sclerosis 4,700 -> 16,300 (a US-only count
+  wearing a global citation), leishmaniasis 26,000 -> 5,800 (the withdrawn
+  fact-sheet range floor -> the GHE 2021 line), preeclampsia 76,000 -> 38,000
+  (advocacy figure -> GBD maternal hypertensive disorders), tetanus
+  35,000 -> 21,400, dengue 40,000 -> 24,000, ebola 49 -> 2,013, anorexia
+  nervosa 1,500 -> 270, down syndrome 21,000 -> 27,500, chronic kidney
+  disease 1.3M -> 1.4M (the stored value was the GHE 2019 vintage),
+  Alzheimer's 1.90M -> 1.95M, asthma 455,000 -> 442,000, influenza
+  400,000 -> 389,000, chikungunya 500 -> 186, plague 300 -> 100, leprosy
+  0 -> 230, gout 0 -> 3,400 (both rows where the cited source publishes a
+  nonzero line, so a zero could not stand under that citation).
+- **flag (30):** stored value kept, source replaced with the audit's honest
+  wording, year kept where the audit gave one and removed where it did not
+  (10 rows now carry no `mortalityYear` at all).
+
+Two controller-decided note alternatives: **colon-cancer** keeps 904,000 but
+is renamed to "Colorectal Cancer" with source "IARC GLOBOCAN 2022
+(colorectum incl. anus)", since 904,000 is GLOBOCAN's colorectum total, not
+colon alone; **ebola** takes the audit's ongoing-outbreak row (2,013 deaths
+as of 11 Aug 2026, 2026 Bundibugyo epidemic, PHEIC 16 May 2026), which
+already reflected the outbreak the round-3 reviewer cited, so no separate web
+check was needed.
+
+Three flag rows (`huntingtons-disease`, `traumatic-brain-injury`,
+`prion-disease`) carried no top-level source in the audit; their wording was
+taken from the "honest label wording" clause in each row's note and
+reconciled with the policy that a flag row keeps its stored value, so TBI
+reads "no WHO GHE or IHME GBD cause line (injury deaths are coded to external
+causes); modeled literature estimate, not a WHO or IHME figure" rather than
+claiming a source for its 500,000.
+
+### The manifest and its guard
+
+`data/mortality-audit.json` records, per id: value, year, source, action,
+url, confidence, checked ("2026-08-12"). `tests/dataInvariants.test.js`
+replaces the old hand-listed corrections test with three:
+
+1. every disease's `(mortality, mortalityYear ?? null, mortalitySource)`
+   equals the manifest's `(value, year ?? null, source)` — this is what
+   proves the full application, and it permanently guards the default pool;
+2. the manifest itself carries a known action, a source, a confidence and the
+   check date for all 153 rows, and the action counts are exactly
+   39/61/23/30;
+3. no flagged row's source starts with a WHO GHE or IHME GBD attribution, and
+   every one of them classifies as no-global-estimate.
+
+Plus a rewritten year invariant: source is always present, year may be
+absent, and the yearless set is asserted by name (the 10 flag rows above).
+
+### Sidebar label (src/utils/mortalityLabel.js)
+
+Restructured into one `classify()` with named-source rules first and the
+no-estimate class second, so a source that publishes a figure and then notes
+a gap keeps its attribution (WHO's typhoid fact sheet publishes 110,000 and
+says typhoid has no GHE cause line: it reads "WHO fact sheet 2019", not "no
+global estimate"). New short forms: `WHO fact sheet`, `WHO outbreak reports`,
+`reported, WHO/ECDC`, `WHO surveillance`, `GRAM/GBD`, and a generic
+`modelled, <first author>` for single studies (Costa, Ali, Paget, Lopman).
+The year is now appended, not interpolated, so a row with no year renders
+`GBD, all LRI` rather than inventing one. Flag-class rows read
+`Deaths/yr · no global estimate` whether the stored value is 0 or a
+region-only number, which is the point of those rows. All 153 labels stay
+within the 40-character single-line budget the tile allows.
+
+### Methodology panel
+
+The provenance table already derived from the data, so it picked the whole
+audit up on its own (136 rows now differ from the shared default, up from a
+handful). Added: one derived sentence naming the no-global-estimate class
+("For 46 of the 153 diseases no authority publishes a global death estimate
+at all..."), a "none" year cell for the 10 yearless rows, and a rewritten
+counts paragraph, because the old one claimed "everything else defaults to
+WHO Global Health Estimates 2021" when the default now covers 17 rows. The
+four bucket counts (23 GHE / 19 GLOBOCAN / 38 GBD / 46 no-estimate, 27 on a
+programme report, fact sheet or single study) are all derived and disjoint;
+`globocanCount` is anchored to `^IARC GLOBOCAN` precisely so the HPV row,
+whose no-estimate wording mentions GLOBOCAN, is not counted twice. The colon
+and ebola caveat sentences were updated to match the renamed row and the
+ongoing epidemic. `src/components/ui/Legend.jsx`'s footer credit no longer
+says "WHO GHE 2021 and per-disease sources" (it now says "deaths:
+per-disease sources"), since GHE is no longer the majority source.
+
+Eight passages in `data/disease-insights.json` quoted a mortality figure the
+audit moved (leishmaniasis 26,000, brain 249,000, endocarditis 17,000,
+Alzheimer's 1.9M, MS 4,700, CKD 1.3M, preeclampsia 76,000, tetanus 35,000).
+Each was updated to the audited number in place, so the prose cannot
+contradict the tile above it.
+
+### Verification
+
+- `npx vitest run`: 166 tests, 14 files, green (was 124/12 at round 1).
+- `npx vite build`: green.
+- Python cross-check: all 153 rows in `data/diseases.json` match the
+  manifest triple, 0 mismatches; action counts 39/61/23/30 confirmed.
+- Harness `fix6-` shots, all read back and judged:
+  `fix6-sidebar-flag` (Buruli Ulcer: "Deaths/yr · no global estimate", value
+  N/A, one line), `fix6-sidebar-relabel` (Rabies: "Deaths/yr · WHO fact sheet
+  2015", 59K), `fix6-colorectal` (+ `-search`: sidebar and node label read
+  "Colorectal Cancer", typing "Colorect" surfaces it in the dropdown),
+  `fix6-methodology` (+ `-table`, `-none`: the derived sentence, the 136-row
+  table, and a "none" year cell rendering cleanly), `fix6-deaths-view`
+  (mortality sizing with the Time Machine stopped: sepsis 11M largest, then
+  heart disease, stroke, COPD, pneumonia, Alzheimer's, lung cancer, type 2
+  diabetes; 45 rows at zero, no console errors).
+
+### Judgement calls worth flagging
+
+1. **The no-estimate caption is classified off the source string, not off a
+   new data field.** The wording in `data/diseases.json` stays the single
+   place the truth is written down, and the panel and the sidebar read the
+   same predicate, so the panel's count cannot drift from what the tiles say.
+2. **Named source beats no-estimate wording.** Ordering the rules the other
+   way captioned typhoid, which has a published WHO estimate, as having none.
+   That ordering is now the thing the typhoid assertion in
+   `tests/mortalityLabel.test.js` protects.
+3. **Zero-value rows whose source publishes a zero keep the bare
+   "Deaths/yr".** Only rows where nobody publishes anything earn the caption;
+   captioning WHO's published zero for trachoma or ADHD as "no global
+   estimate" would be the same class of error the audit was run to kill.
+4. **The 46 that read "no global estimate" is wider than the audit's 30
+   flags**, because 16 relabel rows landed on the same honest wording (no
+   cause line, zero as a modeling boundary). The panel counts what the
+   display actually shows rather than an audit-internal category the viewer
+   cannot see.
+5. **The insights prose was corrected, though the brief only named the colon
+   entry.** Eight entries quoted numbers the audit moved; leaving them would
+   have put a contradicted figure two inches below the corrected tile, which
+   is exactly the credibility failure this pass exists to remove.

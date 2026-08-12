@@ -3,6 +3,7 @@ import diseases from '../data/diseases.json';
 import meta from '../data/meta.json';
 import searchOverrides from '../data/search-overrides.json';
 import { nonDefaultMortalitySources } from '../src/components/ui/MethodologyPanel';
+import { isNoGlobalEstimate } from '../src/utils/mortalityLabel';
 import { pubmedTermFor } from '../src/utils/pubmedTerms';
 
 describe('methodology non-default mortality source table', () => {
@@ -30,8 +31,24 @@ describe('methodology non-default mortality source table', () => {
   it('every row carries the fields the table renders', () => {
     for (const d of rows) {
       expect(d.label, d.id).toBeTruthy();
-      expect(d.mortalityYear, d.id).toBeTruthy();
       expect(d.mortalitySource, d.id).toBeTruthy();
+      // Year is optional: rows where no authority publishes an estimate
+      // describe no reference year, and the table prints "none" for them.
+      if (d.mortalityYear !== undefined) expect(typeof d.mortalityYear, d.id).toBe('number');
+    }
+  });
+
+  it('the no-global-estimate count the panel states is derived from the data it shows', () => {
+    // The panel computes this with the same predicate the sidebar tile uses, so
+    // the sentence cannot claim a count the source column contradicts.
+    const derived = diseases.filter(d => isNoGlobalEstimate(d.mortalitySource)).length;
+    expect(derived).toBe(46);
+    expect(derived).toBeLessThan(diseases.length);
+    // Every one of them is an exception row, never the shared default source.
+    for (const d of diseases) {
+      if (!isNoGlobalEstimate(d.mortalitySource)) continue;
+      expect(d.mortalitySource, d.id).not.toBe(meta.mortalityDefaultSource);
+      expect(ids, d.id).toContain(d.id);
     }
   });
 });

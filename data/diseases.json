@@ -6,7 +6,7 @@
     "description": "Mosquito-borne viral infection endemic to tropical and subtropical regions worldwide.",
     "papers": 36441,
     "trend": 10,
-    "mortality": 40000,
+    "mortality": 24000,
     "fundingGap": "high",
     "yearlyPapers": [
       107,
@@ -108,7 +108,7 @@
     "description": "Parasitic illness caused by Trypanosoma cruzi, spread by triatomine bugs.",
     "papers": 24890,
     "trend": 14,
-    "mortality": 12000,
+    "mortality": 10000,
     "fundingGap": "high",
     "yearlyPapers": [
       200,
@@ -148,8 +148,8 @@
       1032
     ],
     "region": "AMR",
-    "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalityYear": 2026,
+    "mortalitySource": "WHO Chagas disease fact sheet (updated April 2026)",
     "yearStart": 1990
   },
   {
@@ -159,7 +159,7 @@
     "description": "Chronic bacterial infection affecting skin, nerves, and mucous membranes.",
     "papers": 33737,
     "trend": 31,
-    "mortality": 0,
+    "mortality": 230,
     "fundingGap": "medium",
     "yearlyPapers": [
       475,
@@ -250,8 +250,7 @@
       68
     ],
     "region": "AFR",
-    "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "No global mortality estimate published; Buruli ulcer is rarely fatal (WHO NTD; not a GHE cause line)",
     "yearStart": 1990
   },
   {
@@ -302,7 +301,7 @@
     ],
     "region": "AFR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "IHME GBD 2021",
     "yearStart": 1990
   },
   {
@@ -312,7 +311,7 @@
     "description": "Parasitic disease spread by sandfly bites, causing skin or visceral organ damage.",
     "papers": 36972,
     "trend": 1,
-    "mortality": 26000,
+    "mortality": 5800,
     "fundingGap": "high",
     "yearlyPapers": [
       337,
@@ -363,7 +362,7 @@
     "description": "Tsetse fly-transmitted parasitic disease affecting the central nervous system.",
     "papers": 9161,
     "trend": -25,
-    "mortality": 500,
+    "mortality": 1100,
     "fundingGap": "high",
     "yearlyPapers": [
       93,
@@ -404,7 +403,7 @@
     ],
     "region": "AFR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "WHO Global Health Estimates 2021 (Trypanosomiasis cause line)",
     "yearStart": 1990
   },
   {
@@ -607,8 +606,8 @@
       18
     ],
     "region": "AFR",
-    "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalityYear": 2025,
+    "mortalitySource": "WHO/Carter Center dracunculiasis surveillance (10 human cases worldwide in 2025; essentially never fatal)",
     "yearStart": 1990
   },
   {
@@ -658,8 +657,8 @@
       594
     ],
     "region": "SEAR",
-    "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalityYear": 2015,
+    "mortalitySource": "WHO rabies fact sheet (modelled estimate, Hampson et al. 2015)",
     "yearStart": 1990
   },
   {
@@ -709,8 +708,7 @@
       22
     ],
     "region": "AFR",
-    "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "Not a cause of death: yaws disables and disfigures but is essentially non-fatal; no GHE cause line or global mortality estimate exists",
     "yearStart": 1990
   },
   {
@@ -720,7 +718,7 @@
     "description": "Mosquito-borne viral disease causing fever and severe joint pain.",
     "papers": 9804,
     "trend": 2,
-    "mortality": 500,
+    "mortality": 186,
     "fundingGap": "medium",
     "yearlyPapers": [
       5,
@@ -760,8 +758,8 @@
       657
     ],
     "region": "SEAR",
-    "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalityYear": 2025,
+    "mortalitySource": "WHO/ECDC chikungunya epidemiological updates: 502,264 reported cases and 186 reported deaths worldwide in 2025 (2026 YTD to 5 Aug: 219,522 cases, 81 deaths)",
     "yearStart": 1990
   },
   {
@@ -811,8 +809,8 @@
       405
     ],
     "region": "SEAR",
-    "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalityYear": 2015,
+    "mortalitySource": "Costa et al. 2015, PLOS Neglected Tropical Diseases (systematic review: 1.03M cases, 58,900 deaths/yr)",
     "yearStart": 1990
   },
   {
@@ -862,8 +860,7 @@
       101
     ],
     "region": "AFR",
-    "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "No global mortality data exist; mycetoma burden is unquantified (WHO NTD; not a GHE cause line)",
     "yearStart": 1990
   },
   {
@@ -914,7 +911,7 @@
     ],
     "region": "EMR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "IHME GBD 2021 (cystic echinococcosis)",
     "yearStart": 1990
   },
   {
@@ -965,7 +962,7 @@
     ],
     "region": "AMR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "WHO Global Health Estimates 2021 (food-borne trematodes cause line: 0 deaths)",
     "yearStart": 1990
   },
   {
@@ -975,7 +972,7 @@
     "description": "Intestinal worm infections affecting over a billion people in developing regions.",
     "papers": 2837,
     "trend": 19,
-    "mortality": 3500,
+    "mortality": 3800,
     "fundingGap": "high",
     "yearlyPapers": [
       4,
@@ -1016,7 +1013,7 @@
     ],
     "region": "SEAR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "WHO Global Health Estimates 2021 (intestinal nematode infections cause line)",
     "yearStart": 1990
   },
   {
@@ -1123,7 +1120,7 @@
   },
   {
     "id": "colon-cancer",
-    "label": "Colon Cancer",
+    "label": "Colorectal Cancer",
     "category": "cancer",
     "description": "Cancer of the large intestine, highly treatable when detected early via screening.",
     "papers": 180574,
@@ -1169,7 +1166,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2022,
-    "mortalitySource": "IARC GLOBOCAN 2022",
+    "mortalitySource": "IARC GLOBOCAN 2022 (colorectum incl. anus)",
     "yearStart": 1990
   },
   {
@@ -1322,7 +1319,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2022,
-    "mortalitySource": "IARC GLOBOCAN 2022",
+    "mortalitySource": "IARC GLOBOCAN 2022 (non-Hodgkin lymphoma)",
     "yearStart": 1990
   },
   {
@@ -1689,7 +1686,7 @@
     "description": "Primary tumors of the brain and central nervous system with poor survival.",
     "papers": 293493,
     "trend": 36,
-    "mortality": 249000,
+    "mortality": 248000,
     "fundingGap": "medium",
     "yearlyPapers": [
       2780,
@@ -1730,7 +1727,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2022,
-    "mortalitySource": "IARC GLOBOCAN 2022",
+    "mortalitySource": "IARC GLOBOCAN 2022 (brain and central nervous system)",
     "yearStart": 1990
   },
   {
@@ -2087,7 +2084,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "IHME GBD 2021 (hypertensive heart disease)",
     "yearStart": 1990
   },
   {
@@ -2138,7 +2135,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "No distinct cause-of-death line; atherosclerotic deaths counted under ischaemic heart disease, stroke and peripheral artery disease (WHO GHE 2021 / IHME GBD 2021)",
     "yearStart": 1990
   },
   {
@@ -2189,7 +2186,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "No global cause-of-death line; heart failure deaths are assigned to underlying causes (stored figure resembles US CDC underlying-cause count, US only)",
     "yearStart": 1990
   },
   {
@@ -2240,7 +2237,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "IHME GBD 2021 (atrial fibrillation and flutter)",
     "yearStart": 1990
   },
   {
@@ -2250,7 +2247,7 @@
     "description": "Narrowing of peripheral arteries reducing blood flow to the limbs.",
     "papers": 57888,
     "trend": 26,
-    "mortality": 65000,
+    "mortality": 68000,
     "fundingGap": "medium",
     "yearlyPapers": [
       470,
@@ -2291,7 +2288,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "IHME GBD 2021 (lower-extremity peripheral arterial disease)",
     "yearStart": 1990
   },
   {
@@ -2342,7 +2339,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "IHME GBD 2021",
     "yearStart": 1990
   },
   {
@@ -2393,7 +2390,7 @@
     ],
     "region": "AFR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "IHME GBD 2021 (cardiomyopathy)",
     "yearStart": 1990
   },
   {
@@ -2443,8 +2440,7 @@
       4693
     ],
     "region": "EUR",
-    "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "No WHO GHE or GBD cause-of-death line for venous thromboembolism; regional estimates only (US CDC: 60,000-100,000 VTE deaths/yr, US only)",
     "yearStart": 1990
   },
   {
@@ -2494,8 +2490,7 @@
       3185
     ],
     "region": "EUR",
-    "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "No WHO GHE or GBD cause-of-death line; regional or modeled estimates only (Europe about 544,000 VTE-related deaths/yr, Cohen 2007 model; US 60,000-100,000, CDC)",
     "yearStart": 1990
   },
   {
@@ -2556,7 +2551,7 @@
     "description": "Infection of the heart's inner lining, typically affecting heart valves.",
     "papers": 50821,
     "trend": 34,
-    "mortality": 17000,
+    "mortality": 78000,
     "fundingGap": "medium",
     "yearlyPapers": [
       654,
@@ -2597,7 +2592,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "IHME GBD 2021",
     "yearStart": 1990
   },
   {
@@ -2648,7 +2643,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "IHME GBD 2021",
     "yearStart": 1990
   },
   {
@@ -2658,7 +2653,7 @@
     "description": "Progressive neurodegenerative disorder and leading cause of dementia.",
     "papers": 257532,
     "trend": 66,
-    "mortality": 1900000,
+    "mortality": 1950000,
     "fundingGap": "medium",
     "yearlyPapers": [
       1361,
@@ -2699,7 +2694,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2021,
-    "mortalitySource": "IHME GBD 2021 (Alzheimer's and other dementias)",
+    "mortalitySource": "IHME GBD 2021 (Alzheimer's disease and other dementias)",
     "yearStart": 1990
   },
   {
@@ -2750,7 +2745,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "IHME GBD 2021",
     "yearStart": 1990
   },
   {
@@ -2801,7 +2796,7 @@
     ],
     "region": "AFR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "IHME GBD 2021 (idiopathic epilepsy)",
     "yearStart": 1990
   },
   {
@@ -2811,7 +2806,7 @@
     "description": "Autoimmune disease damaging nerve cell insulation in the brain and spine.",
     "papers": 128235,
     "trend": 26,
-    "mortality": 4700,
+    "mortality": 16300,
     "fundingGap": "low",
     "yearlyPapers": [
       723,
@@ -2852,7 +2847,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "IHME GBD 2021",
     "yearStart": 1990
   },
   {
@@ -2903,7 +2898,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "IHME GBD 2021 (motor neuron diseases)",
     "yearStart": 1990
   },
   {
@@ -2953,8 +2948,7 @@
       1378
     ],
     "region": "EUR",
-    "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "No WHO GHE or IHME GBD cause line; extrapolated from prevalence and US vital statistics (US about 2,000 HD deaths/yr)",
     "yearStart": 1990
   },
   {
@@ -3056,7 +3050,7 @@
     ],
     "region": "SEAR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "No WHO GHE/IHME GBD cause-of-death line; deaths coded to underlying diseases (e.g. diabetes). Zero kept as modeling boundary",
     "yearStart": 1990
   },
   {
@@ -3107,7 +3101,7 @@
     ],
     "region": "AFR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "IHME GBD 2021",
     "yearStart": 1990
   },
   {
@@ -3158,7 +3152,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "No WHO GHE/IHME GBD cause-of-death line; deaths coded to underlying and associated causes. Zero kept as modeling boundary",
     "yearStart": 1990
   },
   {
@@ -3209,7 +3203,7 @@
     ],
     "region": "AMR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "IHME GBD 2021 publishes SCI morbidity only; injury deaths are assigned to external causes (road injury, falls, violence), not to SCI. Zero kept as modeling boundary",
     "yearStart": 1990
   },
   {
@@ -3259,8 +3253,7 @@
       5603
     ],
     "region": "AMR",
-    "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "No WHO GHE or IHME GBD cause line (injury deaths are coded to external causes); modeled literature estimate, not a WHO or IHME figure",
     "yearStart": 1990
   },
   {
@@ -3311,7 +3304,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "No WHO GHE/IHME GBD cause-of-death line for narcolepsy. Zero kept as modeling boundary",
     "yearStart": 1990
   },
   {
@@ -3362,7 +3355,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "No WHO GHE/IHME GBD cause-of-death line for essential tremor. Zero kept as modeling boundary",
     "yearStart": 1990
   },
   {
@@ -3372,7 +3365,7 @@
     "description": "Chronic airway inflammation causing reversible breathing difficulty.",
     "papers": 244541,
     "trend": 20,
-    "mortality": 455000,
+    "mortality": 442000,
     "fundingGap": "low",
     "yearlyPapers": [
       2255,
@@ -3412,8 +3405,8 @@
       9533
     ],
     "region": "EUR",
-    "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalityYear": 2023,
+    "mortalitySource": "WHO asthma fact sheet (updated April 2026; IHME GBD 2023)",
     "yearStart": 1990
   },
   {
@@ -3617,7 +3610,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "IHME GBD 2021 (interstitial lung disease and pulmonary sarcoidosis)",
     "yearStart": 1990
   },
   {
@@ -3668,7 +3661,7 @@
     ],
     "region": "AMR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "No WHO or GBD cause-of-death line; 0 is a modeling boundary",
     "yearStart": 1990
   },
   {
@@ -3719,7 +3712,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "No global figure published; US-only vital statistics ~2,300/yr (CDC WONDER 1999-2020)",
     "yearStart": 1990
   },
   {
@@ -3770,7 +3763,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "US-only vital statistics (~1,000/yr underlying cause, CDC 1999-2016); no global sarcoidosis-specific figure",
     "yearStart": 1990
   },
   {
@@ -3821,7 +3814,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "IHME GBD 2021 (pulmonary arterial hypertension)",
     "yearStart": 1990
   },
   {
@@ -3872,7 +3865,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "Not a cause-of-death category in any global source; 0 is a modeling boundary",
     "yearStart": 1990
   },
   {
@@ -3923,7 +3916,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "Literature-derived estimate; no WHO or GBD cause line (ARDS deaths attributed to underlying causes)",
     "yearStart": 1990
   },
   {
@@ -3974,7 +3967,7 @@
     ],
     "region": "AFR",
     "mortalityYear": 2021,
-    "mortalitySource": "IHME GBD 2021 (all ages)",
+    "mortalitySource": "WHO Global Health Estimates 2021 (whooping cough)",
     "yearStart": 1990
   },
   {
@@ -4025,7 +4018,7 @@
     ],
     "region": "AMR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "No citable global figure (WHO GHE has no SLE line; IHME GBD omits SLE)",
     "yearStart": 1990
   },
   {
@@ -4127,7 +4120,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "Share of combined IBD line; not published per disease",
     "yearStart": 1990
   },
   {
@@ -4178,7 +4171,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "No global cause-of-death line (WHO GHE/IHME GBD); 0 = modeling boundary",
     "yearStart": 1990
   },
   {
@@ -4229,7 +4222,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "IHME Global Burden of Disease 2021",
     "yearStart": 1990
   },
   {
@@ -4280,7 +4273,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "IHME GBD 2021 (modeled as nonfatal; 0 attributed deaths)",
     "yearStart": 1990
   },
   {
@@ -4331,12 +4324,12 @@
     ],
     "region": "EUR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "Share of combined IBD line; not published per disease",
     "yearStart": 1990
   },
   {
     "id": "sjogrens-syndrome",
-    "label": "Sj\u00f6gren's Syndrome",
+    "label": "Sjögren's Syndrome",
     "category": "autoimmune",
     "description": "Autoimmune disorder attacking moisture-producing glands causing dryness.",
     "papers": 22041,
@@ -4382,7 +4375,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "No global cause-of-death line (WHO GHE/IHME GBD); 0 = modeling boundary",
     "yearStart": 1990
   },
   {
@@ -4433,7 +4426,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "No citable global figure; region/reporting-country AAV analyses only",
     "yearStart": 1990
   },
   {
@@ -4483,8 +4476,8 @@
       1226
     ],
     "region": "EUR",
-    "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalityYear": 2023,
+    "mortalitySource": "No citable global figure; WHO Mortality Database reporting-country analyses only",
     "yearStart": 1990
   },
   {
@@ -4535,7 +4528,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "No citable global figure; national data only",
     "yearStart": 1990
   },
   {
@@ -4586,7 +4579,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "No disease-specific line; included in 'other musculoskeletal disorders' (WHO GHE/IHME GBD); 0 = modeling boundary",
     "yearStart": 1990
   },
   {
@@ -4637,7 +4630,7 @@
     ],
     "region": "WPR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "WHO Global Health Estimates 2021 (diabetes mellitus, all types)",
     "yearStart": 1990
   },
   {
@@ -4688,7 +4681,7 @@
     ],
     "region": "AMR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "Risk factor, not a cause-of-death line; WHO attributes 3.7 million NCD deaths to higher-than-optimal BMI (2021)",
     "yearStart": 1990
   },
   {
@@ -4698,7 +4691,7 @@
     "description": "Inflammatory arthritis from uric acid crystal deposits in joints.",
     "papers": 26110,
     "trend": 42,
-    "mortality": 0,
+    "mortality": 3400,
     "fundingGap": "low",
     "yearlyPapers": [
       133,
@@ -4790,7 +4783,7 @@
     ],
     "region": "AMR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "IHME GBD 2021 (MASLD: cirrhosis plus NASH liver cancer)",
     "yearStart": 1990
   },
   {
@@ -4841,7 +4834,7 @@
     ],
     "region": "AMR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "Composite construct; no WHO GHE or GBD cause-of-death line (component deaths counted under diabetes, ischaemic heart disease, stroke)",
     "yearStart": 1990
   },
   {
@@ -4892,7 +4885,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "Risk factor, not a cause-of-death line; GBD 2021 attributes about 3.7-3.8 million CVD deaths to high LDL cholesterol",
     "yearStart": 1990
   },
   {
@@ -4943,7 +4936,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "No WHO GHE or GBD cause-of-death line; global deaths not separately published",
     "yearStart": 1990
   },
   {
@@ -4994,7 +4987,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "No WHO GHE or GBD cause-of-death line; global deaths not separately published",
     "yearStart": 1990
   },
   {
@@ -5045,7 +5038,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "Not a cause-of-death line; deaths counted under fall and fracture injuries. GBD attributes 437,884 deaths to low bone mineral density (2019, risk-factor construct)",
     "yearStart": 1990
   },
   {
@@ -5096,7 +5089,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "No WHO GHE or GBD cause-of-death line; deaths ultra-rare under newborn screening; no global mortality figure published",
     "yearStart": 1990
   },
   {
@@ -5147,7 +5140,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "No WHO GHE or GBD cause-of-death line; no published global mortality figure (rare disease)",
     "yearStart": 1990
   },
   {
@@ -5197,8 +5190,7 @@
       368
     ],
     "region": "EUR",
-    "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "No citable global mortality figure (WHO GHE and GBD publish none; literature reports case fatality among diagnosed patients only)",
     "yearStart": 1990
   },
   {
@@ -5350,8 +5342,8 @@
       4129
     ],
     "region": "WPR",
-    "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalityYear": 2024,
+    "mortalitySource": "WHO Global Hepatitis Report 2026",
     "yearStart": 1990
   },
   {
@@ -5361,7 +5353,7 @@
     "description": "Blood-borne viral infection causing chronic liver disease and cirrhosis.",
     "papers": 109888,
     "trend": -44,
-    "mortality": 242000,
+    "mortality": 240000,
     "fundingGap": "medium",
     "yearlyPapers": [
       510,
@@ -5401,8 +5393,8 @@
       2641
     ],
     "region": "EMR",
-    "mortalityYear": 2022,
-    "mortalitySource": "WHO Global Hepatitis Report 2024",
+    "mortalityYear": 2024,
+    "mortalitySource": "WHO Global Hepatitis Report 2026",
     "yearStart": 1990
   },
   {
@@ -5412,7 +5404,7 @@
     "description": "Highly contagious respiratory virus causing seasonal epidemics worldwide.",
     "papers": 176766,
     "trend": 28,
-    "mortality": 400000,
+    "mortality": 389000,
     "fundingGap": "medium",
     "yearlyPapers": [
       1320,
@@ -5452,8 +5444,8 @@
       6953
     ],
     "region": "EUR",
-    "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalityYear": 2019,
+    "mortalitySource": "Paget et al. 2019, J Glob Health (GLaMOR study), WHO-cited; WHO fact sheet range 290,000-650,000 respiratory deaths/yr",
     "yearStart": 1990
   },
   {
@@ -5514,7 +5506,7 @@
     "description": "Severe hemorrhagic fever virus with high fatality rates in outbreaks.",
     "papers": 13359,
     "trend": -59,
-    "mortality": 49,
+    "mortality": 2013,
     "fundingGap": "medium",
     "yearlyPapers": [
       19,
@@ -5554,8 +5546,8 @@
       546
     ],
     "region": "AFR",
-    "mortalityYear": 2025,
-    "mortalitySource": "WHO/CDC outbreak records 2025, DRC 45 plus Uganda 4; episodic, 2014-16 averaged ~3,800/yr",
+    "mortalityYear": 2026,
+    "mortalitySource": "WHO situation reports, 2026 Bundibugyo Ebola epidemic (DRC + Uganda, PHEIC declared 16 May 2026): ~4,400 confirmed cases and 2,013 deaths as of 11 Aug 2026, outbreak ongoing; episodic; 2025 total was 49",
     "yearStart": 1990
   },
   {
@@ -5605,8 +5597,8 @@
       820
     ],
     "region": "AFR",
-    "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalityYear": 2015,
+    "mortalitySource": "Ali et al. 2015 (PLOS NTD), WHO-cited modelled estimate; WHO cholera fact sheet cites 21,000-143,000 deaths/yr",
     "yearStart": 1990
   },
   {
@@ -5656,8 +5648,8 @@
       502
     ],
     "region": "SEAR",
-    "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalityYear": 2019,
+    "mortalitySource": "WHO typhoid fact sheet (estimate for 2019; typhoid has no GHE cause line)",
     "yearStart": 1990
   },
   {
@@ -5667,7 +5659,7 @@
     "description": "Zoonotic bacterial infection caused by Yersinia pestis, transmitted via flea bites or respiratory droplets. Manifests as bubonic, septicemic, or pneumonic plague. Endemic in parts of Africa, Asia, and the Americas with sporadic outbreaks.",
     "papers": 3625,
     "trend": -28,
-    "mortality": 300,
+    "mortality": 100,
     "fundingGap": "low",
     "yearlyPapers": [
       38,
@@ -5707,8 +5699,8 @@
       83
     ],
     "region": "AFR",
-    "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalityYear": 2015,
+    "mortalitySource": "WHO plague fact sheet: 3,248 cases and 584 deaths reported worldwide 2010-2015 (~100/yr); episodic spikes (Madagascar 2017: 200+ deaths)",
     "yearStart": 1990
   },
   {
@@ -5759,7 +5751,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "Naghavi et al., The Lancet 2024 (GRAM/GBD 2021 AMR study): deaths attributable to MRSA",
     "yearStart": 1990
   },
   {
@@ -5810,7 +5802,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "IHME GBD 2021 (C. difficile infection deaths; no WHO global figure exists)",
     "yearStart": 1990
   },
   {
@@ -5860,8 +5852,7 @@
       960
     ],
     "region": "AMR",
-    "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "Modeling boundary: no WHO GHE cause line and no global mortality estimate; direct Zika deaths are near zero (GBD 2021 tracks incidence, not deaths; harm is mainly congenital)",
     "yearStart": 1990
   },
   {
@@ -6013,8 +6004,8 @@
       3499
     ],
     "region": "AFR",
-    "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalityYear": 2022,
+    "mortalitySource": "Boundary to avoid double-counting: HPV kills via its cancers, counted under cancer rows (cervical cancer ~350,000 deaths, GLOBOCAN 2022); HPV infection itself has no GHE mortality line",
     "yearStart": 1990
   },
   {
@@ -6065,7 +6056,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "No citable global figure; national registry data only",
     "yearStart": 1990
   },
   {
@@ -6116,7 +6107,7 @@
     ],
     "region": "AFR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "IHME GBD 2021, total sickle cell mortality burden (underlying plus contributing causes), Lancet Haematology 2023",
     "yearStart": 1990
   },
   {
@@ -6126,7 +6117,7 @@
     "description": "Chromosomal condition caused by trisomy 21 affecting development.",
     "papers": 49931,
     "trend": 20,
-    "mortality": 21000,
+    "mortality": 27500,
     "fundingGap": "medium",
     "yearlyPapers": [
       629,
@@ -6218,7 +6209,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "No citable global figure; WFH registered-patient reports only",
     "yearStart": 1990
   },
   {
@@ -6269,7 +6260,7 @@
     ],
     "region": "SEAR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "IHME Global Burden of Disease 2021",
     "yearStart": 1990
   },
   {
@@ -6320,7 +6311,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "No citable global figure; national cohort data only",
     "yearStart": 1990
   },
   {
@@ -6371,7 +6362,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "No Turner-specific mortality line (WHO GHE/IHME GBD publish nonfatal burden only); 0 = modeling boundary",
     "yearStart": 1990
   },
   {
@@ -6422,7 +6413,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "No citable global figure; registry/cohort data only",
     "yearStart": 1990
   },
   {
@@ -6473,7 +6464,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "No global cause-of-death line (WHO GHE/IHME GBD); 0 = modeling boundary",
     "yearStart": 1990
   },
   {
@@ -6524,7 +6515,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "No citable global figure",
     "yearStart": 1990
   },
   {
@@ -6575,7 +6566,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "No citable global figure",
     "yearStart": 1990
   },
   {
@@ -6626,7 +6617,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "No global cause-of-death line (WHO GHE/IHME GBD); 0 = modeling boundary",
     "yearStart": 1990
   },
   {
@@ -6728,7 +6719,7 @@
     ],
     "region": "SEAR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "IHME GBD 2021 (no deaths directly attributed; excess mortality coded to physical causes and suicide)",
     "yearStart": 1990
   },
   {
@@ -6779,7 +6770,7 @@
     ],
     "region": "AMR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "IHME GBD 2021 (no deaths directly attributed; PTSD is estimated within the anxiety-disorders grouping, and suicide is counted under self-harm)",
     "yearStart": 1990
   },
   {
@@ -6830,7 +6821,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "IHME GBD 2021 (no deaths directly attributed to anxiety disorders)",
     "yearStart": 1990
   },
   {
@@ -6881,7 +6872,7 @@
     ],
     "region": "SEAR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "IHME GBD 2021 (no deaths directly attributed; suicide counted under self-harm)",
     "yearStart": 1990
   },
   {
@@ -6932,7 +6923,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "IHME GBD 2021 (no deaths directly attributed; OCD is not a separate cause of death)",
     "yearStart": 1990
   },
   {
@@ -7044,7 +7035,7 @@
     "description": "Eating disorder characterized by extreme food restriction and weight loss.",
     "papers": 21805,
     "trend": 29,
-    "mortality": 1500,
+    "mortality": 270,
     "fundingGap": "medium",
     "yearlyPapers": [
       276,
@@ -7084,8 +7075,8 @@
       941
     ],
     "region": "EUR",
-    "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalityYear": 2019,
+    "mortalitySource": "IHME GBD 2019 (anorexia nervosa, direct underlying-cause deaths only; excess mortality mostly coded to other causes)",
     "yearStart": 1990
   },
   {
@@ -7136,7 +7127,7 @@
     ],
     "region": "AMR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "IHME GBD 2021 (drug use disorders; excludes alcohol use disorders)",
     "yearStart": 1990
   },
   {
@@ -7187,7 +7178,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "IHME GBD 2021 (no deaths directly attributed; personality disorders fall under 'other mental disorders' with zero direct deaths)",
     "yearStart": 1990
   },
   {
@@ -7238,7 +7229,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "No WHO GHE/IHME GBD cause-of-death line for insomnia or sleep-wake disorders. Zero kept as modeling boundary",
     "yearStart": 1990
   },
   {
@@ -7340,7 +7331,7 @@
     ],
     "region": "SEAR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "IHME GBD 2021 (congenital heart anomalies)",
     "yearStart": 1990
   },
   {
@@ -7441,8 +7432,7 @@
       662
     ],
     "region": "EUR",
-    "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "No WHO GHE or IHME GBD cause line; surveillance-extrapolated estimate (about 1-2 deaths per million per year, CDC)",
     "yearStart": 1990
   },
   {
@@ -7493,7 +7483,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "No citable global figure; folded into CKD 'other causes' (IHME GBD); national data only",
     "yearStart": 1990
   },
   {
@@ -7503,7 +7493,7 @@
     "description": "Progressive loss of kidney function often caused by diabetes and hypertension, requiring dialysis or transplantation in advanced stages.",
     "papers": 243960,
     "trend": 34,
-    "mortality": 1300000,
+    "mortality": 1400000,
     "fundingGap": "high",
     "yearlyPapers": [
       1987,
@@ -7544,7 +7534,7 @@
     ],
     "region": "SEAR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "WHO Global Health Estimates 2021 (kidney diseases)",
     "yearStart": 1990
   },
   {
@@ -7605,7 +7595,7 @@
     "description": "Dangerous pregnancy complication characterized by high blood pressure and organ damage, a leading cause of maternal and fetal mortality worldwide.",
     "papers": 60814,
     "trend": 52,
-    "mortality": 76000,
+    "mortality": 38000,
     "fundingGap": "high",
     "yearlyPapers": [
       403,
@@ -7646,7 +7636,7 @@
     ],
     "region": "AFR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "IHME GBD 2021 (maternal hypertensive disorders)",
     "yearStart": 1990
   },
   {
@@ -7697,7 +7687,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "IHME GBD 2021 (modeled as nonfatal; burden is YLD-driven)",
     "yearStart": 1990
   },
   {
@@ -7707,7 +7697,7 @@
     "description": "Acute bacterial infection caused by Clostridium tetani spores entering wounds, producing a neurotoxin that causes severe muscle spasms and lockjaw, preventable by vaccination.",
     "papers": 32525,
     "trend": -10,
-    "mortality": 35000,
+    "mortality": 21400,
     "fundingGap": "high",
     "yearlyPapers": [
       482,

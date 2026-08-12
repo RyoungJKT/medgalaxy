@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo } from 'react';
 import useStore from '../../store';
 import { isMob, fmt } from '../../utils/helpers';
 import { MAX_PAPERS, MAX_MORT } from '../../utils/constants';
+import { isNoGlobalEstimate } from '../../utils/mortalityLabel';
 import meta from '../../../data/meta.json';
 
 const SH = { fontSize: 11, color: '#3399ff', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 6 };
@@ -56,7 +57,13 @@ export default function MethodologyPanel() {
       defaultCount: diseases.length - nonDefault.length,
       // Derived, never a literal: the prose below must not be able to claim a
       // count the exceptions table then contradicts.
-      globocanCount: diseases.filter(d => /GLOBOCAN/.test(d.mortalitySource || '')).length,
+      // Anchored so the four buckets the paragraph below counts stay disjoint:
+      // one row cites GLOBOCAN inside a no-estimate explanation (HPV) and must
+      // not be counted twice.
+      globocanCount: diseases.filter(d => /^IARC GLOBOCAN/.test(d.mortalitySource || '')).length,
+      gheCount: diseases.filter(d => /^WHO Global Health Estimates/.test(d.mortalitySource || '')).length,
+      gbdCount: diseases.filter(d => /^IHME/.test(d.mortalitySource || '')).length,
+      noEstimateCount: diseases.filter(d => isNoGlobalEstimate(d.mortalitySource)).length,
     };
   }, [diseases, displayEdges]);
 
@@ -115,13 +122,16 @@ export default function MethodologyPanel() {
               The all-time total and the year-by-year series are different queries, so they are not required to agree. For six diseases the series sums slightly above the all-time total, because PubMed counts a record in every year its publication dates name, and a record carrying both an electronic and a print date names two. The sidebar prints a note under the sparkline on exactly those diseases rather than leaving the arithmetic to be discovered.
             </div>
             <div style={SP}>
-              Deaths do not come from PubMed at all. They are entered by hand from named sources: {stats.defaultCount} of {stats.diseaseCount} diseases use the shared default below, and the other {stats.nonDefault.length} use a disease-specific source, each with the year its figure describes. Every count in this paragraph is computed from the data file when this panel opens, not written in by hand, so it cannot drift away from the table below it. The vintages are deliberately mixed, not uniform: all {stats.globocanCount} cancers use IARC GLOBOCAN 2022, malaria, tuberculosis, HIV/AIDS and measles use their own most current annual reports, a handful of causes that IHME estimates more precisely than WHO's cause list allows use IHME GBD 2021, and everything else defaults to WHO Global Health Estimates 2021, still the latest GHE vintage as of this edition. The sidebar repeats the source in short form next to every deaths figure, so the attribution travels with the number.
+              Deaths do not come from PubMed at all. They are entered by hand, and every one of the {stats.diseaseCount} figures has been checked against the document it cites, one row at a time. {stats.gheCount} sit on WHO's Global Health Estimates 2021, {stats.globocanCount} cancers on IARC GLOBOCAN 2022, {stats.gbdCount} on IHME's Global Burden of Disease where WHO's cause list carries no line for them, {stats.diseaseCount - stats.gheCount - stats.globocanCount - stats.gbdCount - stats.noEstimateCount} on a programme report, fact sheet or single modelling study, and {stats.noEstimateCount} on no global estimate at all, for the reason given below. Every count in this paragraph is computed from the data file when this panel opens, not written in by hand, so it cannot drift away from the table below it. The vintages are deliberately mixed, not uniform: malaria, tuberculosis, HIV/AIDS, measles and hepatitis use their own most current annual reports, and WHO Global Health Estimates 2021 is still the latest GHE vintage as of this edition. The sidebar repeats the source in short form next to every deaths figure, so the attribution travels with the number.
+            </div>
+            <div style={SP}>
+              For {stats.noEstimateCount} of the {stats.diseaseCount} diseases no authority publishes a global death estimate at all: WHO's cause list and IHME's cause hierarchy have no line for them, because their deaths are coded to an underlying disease or an external cause. Those rows display the modeling boundary and say so, in the source column below and on the sidebar tile itself, rather than borrowing a citation that would imply a figure nobody has published.
             </div>
             <div style={{ fontSize: 11, color: '#cbd5e1', marginBottom: 8 }}>
-              Default source, {stats.defaultCount} of {stats.diseaseCount} diseases: {meta.mortalityDefaultSource}
+              Most-used single source, {stats.defaultCount} of {stats.diseaseCount} diseases: {meta.mortalityDefaultSource}
             </div>
             <div style={{ fontSize: 10, color: '#475569', marginBottom: 6 }}>
-              The {stats.nonDefault.length} exceptions:
+              The other {stats.nonDefault.length}, row by row (year "none" means the row describes no reference year):
             </div>
             <div style={{ maxHeight: 220, overflowY: 'auto', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 6 }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
@@ -136,7 +146,7 @@ export default function MethodologyPanel() {
                   {stats.nonDefault.map(d => (
                     <tr key={d.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
                       <td style={{ padding: '6px 10px', color: '#e2e8f0', whiteSpace: 'nowrap', verticalAlign: 'top' }}>{d.label}</td>
-                      <td style={{ padding: '6px 10px', color: '#94a3b8', whiteSpace: 'nowrap', verticalAlign: 'top' }}>{d.mortalityYear}</td>
+                      <td style={{ padding: '6px 10px', color: '#94a3b8', whiteSpace: 'nowrap', verticalAlign: 'top' }}>{d.mortalityYear ?? 'none'}</td>
                       <td style={{ padding: '6px 10px', color: '#94a3b8' }}>{d.mortalitySource}</td>
                     </tr>
                   ))}
@@ -155,13 +165,13 @@ export default function MethodologyPanel() {
               Pneumonia uses IHME's lower respiratory infections category, which also includes influenza, RSV, and bronchiolitis deaths, not narrowly bacterial pneumonia, and which excludes COVID-19 deaths by construction. Rotavirus and norovirus are both subsets of overall diarrhoeal disease deaths, not separate causes; neither should be summed with the other or treated as the full diarrhoeal burden.
             </div>
             <div style={SP}>
-              Three cancer rows are broader than their labels, because that is how IARC reports them: colon cancer carries GLOBOCAN's colorectum figure, which includes rectal cancer; lymphoma carries non-Hodgkin lymphoma only, with Hodgkin lymphoma counted separately by IARC and not added in; and brain cancer carries the brain and central nervous system category.
+              Two cancer rows are broader than their labels, because that is how IARC reports them: lymphoma carries non-Hodgkin lymphoma only, with Hodgkin lymphoma counted separately by IARC and not added in, and brain cancer carries the brain and central nervous system category. A third was renamed instead of relabelled: the colon row held GLOBOCAN's colorectum total, so it is now called colorectal cancer, the construct that figure actually describes, rectum and anus included.
             </div>
             <div style={SP}>
               Heart disease reports ischaemic heart disease specifically (heart attacks and related coronary disease), not all cardiovascular disease, which WHO estimates at roughly 19 to 20 million deaths a year. Alzheimer's disease includes Alzheimer's and other dementias combined, per WHO and IHME reporting, not Alzheimer's alone. Type 2 diabetes shows all diabetes direct deaths, type 1 and type 2 together as WHO reports it, and excludes diabetes-attributed kidney deaths, which WHO estimates separately at roughly half a million more.
             </div>
             <div style={SP}>
-              COVID-19 and Ebola are both labeled with a single year rather than an ongoing annual rate. COVID-19 shows a recent reported-deaths figure (year noted in the table above); the pandemic year 2021 alone recorded far more under WHO's broader estimate, 8.8 million, the second leading cause of death that year, and global reporting has since largely ceased. Ebola is episodic outbreak data: zero in quiet years, thousands during an epidemic; the figure shown is a single recent year, not a steady annual toll.
+              COVID-19 and Ebola are both labeled with a single year rather than an ongoing annual rate. COVID-19 shows a recent reported-deaths figure (year noted in the table above); the pandemic year 2021 alone recorded far more under WHO's broader estimate, 8.8 million, the second leading cause of death that year, and global reporting has since largely ceased. Ebola is episodic outbreak data: zero in quiet years, thousands during an epidemic. The figure shown is the running toll of the 2026 Bundibugyo epidemic, which was still ongoing when this edition was built, not a steady annual rate; the whole of 2025 recorded 49 deaths.
             </div>
           </div>
 
