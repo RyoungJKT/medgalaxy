@@ -4,7 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import engine, {
   SOUND_NAMES, fifthUp, minorThirdDown, dbToGain,
-  DUCK_DB, DUCK_GAIN, TMBOOM_DB, REVEAL_BASE_HZ,
+  DUCK_DB, DUCK_GAIN, TMBOOM_DB, REVEAL_BASE_HZ, DUCK_MS,
 } from '../src/audio/engine';
 
 // Sound is untestable through the harness (no speakers, no AudioContext in a
@@ -50,6 +50,12 @@ describe('audio engine: gain math (mix discipline, DIRECTION section 5)', () => 
     expect(TMBOOM_DB).toBe(-10);
     expect(dbToGain(TMBOOM_DB)).toBeLessThan(DUCK_GAIN);
     expect(dbToGain(TMBOOM_DB)).toBeLessThan(1);
+  });
+
+  it('assembly duck window (2900ms) is long enough for resolve-tone tail (~2.8s)', () => {
+    // synthAssembly resolve-tone stops at t0 + 2.8s (line 76)
+    // duck should hold until at least 2800ms to avoid tail cutoff
+    expect(DUCK_MS.assembly).toBeGreaterThanOrEqual(2800);
   });
 });
 

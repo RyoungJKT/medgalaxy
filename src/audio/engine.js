@@ -28,7 +28,7 @@ export const REVEAL_BASE_HZ = 440; // A4: the two-note rising-fifth motif's root
 export const SOUND_NAMES = ['assembly', 'ignition', 'release', 'tmBoom', 'reveal', 'tick'];
 
 // Rough foreground duration per sound (ms): how long the ambient duck holds.
-const DUCK_MS = { assembly: 2200, ignition: 1400, release: 2000, tmBoom: 1600, reveal: 500, tick: 120 };
+export const DUCK_MS = { assembly: 2900, ignition: 1400, release: 2000, tmBoom: 1600, reveal: 500, tick: 120 };
 
 function makeNoiseBuffer(ctx) {
   const len = Math.round(ctx.sampleRate * 2);
@@ -181,6 +181,7 @@ class AudioEngine {
     this.droneBaseGain = 0.05;
     this.droneNodes = null;
     this.enabled = false;
+    this._suspendTimer = null;  // deferred suspend, cleared on re-enable
   }
 
   // Builds the graph on first call. Idempotent: safe to call on every pill
@@ -208,11 +209,15 @@ class AudioEngine {
     this.enabled = !!on;
     if (!this.ctx) return;
     if (this.enabled) {
+      // Clear any pending suspend, then resume if needed and start drone
+      if (this._suspendTimer) clearTimeout(this._suspendTimer);
+      this._suspendTimer = null;
       if (this.ctx.state === 'suspended') this.ctx.resume();
       this._startDrone();
     } else {
+      // Stop drone, then defer suspend so the fade automation can finish
       this._stopDrone();
-      this.ctx.suspend();
+      this._suspendTimer = setTimeout(() => this.ctx?.suspend(), 400);
     }
   }
 
@@ -243,7 +248,16 @@ class AudioEngine {
   // Sub drone, 40-55Hz sine plus filtered noise, barely there. Starts on
   // enable and stays running until the pill turns sound back off.
   _startDrone() {
-    if (this.droneNodes || !this.ctx) return;
+    if (!this.ctx) return;
+
+    // Hard-disconnect any stale drone nodes before creating fresh ones
+    if (this.droneNodes) {
+      const { osc, noise, gain } = this.droneNodes;
+      try { osc.disconnect(); } catch (e) { /* ignore */ }
+      try { noise.disconnect(); } catch (e) { /* ignore */ }
+      try { gain.disconnect(); } catch (e) { /* ignore */ }
+    }
+
     const ctx = this.ctx;
     const gain = ctx.createGain();
     gain.gain.value = 0;
@@ -282,7 +296,7 @@ class AudioEngine {
     gain.gain.linearRampToValueAtTime(0, now + 0.3);
     osc.stop(now + 0.35);
     noise.stop(now + 0.35);
-    this.droneNodes = null;
+    // Keep droneNodes reference so _startDrone can hard-disconnect stale nodes
     this.droneGain = null;
   }
 }
