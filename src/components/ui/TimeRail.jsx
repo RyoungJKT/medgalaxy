@@ -75,19 +75,19 @@ function TimeCaption({ caption, mob, tall }) {
             fontSize: i === 0 ? 'clamp(16px, 2.4vw, 26px)' : 'clamp(13px, 1.7vw, 18px)',
             fontWeight: i === 0 ? 500 : 400, color: i === 0 ? '#e2e8f0' : '#94a3b8',
             lineHeight: 1.3, whiteSpace: mob ? 'normal' : 'nowrap',
-            animation: `tmLineIn 300ms cubic-bezier(0.16,1,0.3,1) ${i * 90}ms both`,
+            animation: `tmLineIn 300ms ${EASE.ui} ${i * 90}ms both`,
           }}
         >
           {line}
         </div>
       ))}
       {data && (
-        <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 8, animation: `tmLineIn 300ms cubic-bezier(0.16,1,0.3,1) ${lines.length * 90}ms both` }}>
+        <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 8, animation: `tmLineIn 300ms ${EASE.ui} ${lines.length * 90}ms both` }}>
           {data}
         </div>
       )}
       {micro && tall && (
-        <div style={{ fontSize: 10, color: '#64748b', marginTop: 6, maxWidth: mob ? '80vw' : 620, marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.5, whiteSpace: 'normal', animation: `tmLineIn 300ms cubic-bezier(0.16,1,0.3,1) ${(lines.length + 1) * 90}ms both` }}>
+        <div style={{ fontSize: 10, color: '#64748b', marginTop: 6, maxWidth: mob ? '80vw' : 620, marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.5, whiteSpace: 'normal', animation: `tmLineIn 300ms ${EASE.ui} ${(lines.length + 1) * 90}ms both` }}>
           {micro}
         </div>
       )}

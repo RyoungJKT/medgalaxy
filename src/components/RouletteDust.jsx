@@ -60,6 +60,12 @@ export default function RouletteDust() {
   // Track accumulated angles per ring (mirrors GalaxyRoulette's ringAngles)
   const anglesRef = useRef([0, 0, 0]);
   const opacityRef = useRef(0);
+  // Fix (review): neglectColor(ppd(...)) built a fresh color string every
+  // frame even though it only ever changes when rouletteWinner (or whether
+  // that winner is overlooked) changes. Cached here, and — per the same
+  // finding — skipped entirely once the early opacity exit below fires, since
+  // a fully transparent dust field has no visible color to update.
+  const colorCacheRef = useRef({ winner: null, overlooked: false, str: DEFAULT_COLOR });
 
   useFrame((state, delta) => {
     const store = useStore.getState();
@@ -73,12 +79,6 @@ export default function RouletteDust() {
 
     // Dust speed matches GalaxyRoulette's MAX_SPEEDS
     const maxSpeeds = TIER === 'LOW' ? [9.0, 5.5, 3.5] : TIER === 'MEDIUM' ? [13.0, 8.5, 5.5] : [16.0, 11.0, 7.0];
-
-    // Ember tint: once the reveal has a winner in the overlooked decile, the
-    // dust throws that disease's neglect color instead of the flat default.
-    const winnerOverlooked =
-      roulettePhase === 'reveal' && rouletteWinner != null && rouletteWinner >= 0 && ember[rouletteWinner] === 1;
-    matRef.current.color.set(winnerOverlooked ? neglectColor(ppd(diseases[rouletteWinner])) : DEFAULT_COLOR);
 
     // Target opacity and speed multiplier based on phase
     let targetOpacity = 0;
@@ -106,6 +106,19 @@ export default function RouletteDust() {
       return;
     }
     pointsRef.current.visible = true;
+
+    // Ember tint: once the reveal has a winner in the overlooked decile, the
+    // dust throws that disease's neglect color instead of the flat default.
+    // Recomputed only when the winner (or its overlooked-ness) actually changes.
+    const winnerOverlooked =
+      roulettePhase === 'reveal' && rouletteWinner != null && rouletteWinner >= 0 && ember[rouletteWinner] === 1;
+    const cc = colorCacheRef.current;
+    if (cc.winner !== rouletteWinner || cc.overlooked !== winnerOverlooked) {
+      cc.winner = rouletteWinner;
+      cc.overlooked = winnerOverlooked;
+      cc.str = winnerOverlooked ? neglectColor(ppd(diseases[rouletteWinner])) : DEFAULT_COLOR;
+    }
+    matRef.current.color.set(cc.str);
 
     // Advance ring angles
     const angles = anglesRef.current;

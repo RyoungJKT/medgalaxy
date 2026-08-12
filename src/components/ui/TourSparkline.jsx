@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import useStore from '../../store';
 import { sceneRefs } from '../../sceneRefs';
 import { isMob } from '../../utils/helpers';
+import { DUR, EASE } from '../../utils/motion';
 
 // Carry-over C (direction, deferred from Task 13): during the Time Machine
 // tour's HIV fade pause and the rheumatic heart disease finale, draw the
@@ -17,13 +18,24 @@ const GAP = 12; // px between the node's screen rim and the sparkline's top edge
 const pv = new THREE.Vector3();
 const tanHalfFov = Math.tan(Math.PI / 6); // fov 60 -> half 30 degrees, same math NodeLabels/OvertureMicroLabels use
 
-function buildPath(series, w, h) {
-  if (!series || series.length < 2) return { path: '', px: 0, py: h / 2 };
-  const mx = Math.max(...series);
-  const mn = Math.min(...series);
-  const rng = mx - mn || 1;
+// Fix (review): normalizes against a shared ceiling (the Time Machine's own
+// `data.maxYearly`, the single biggest yearly count across every disease and
+// year) with a zero baseline, instead of each series stretching to fill the
+// box against its own min/max. Per-series normalization made every pause read
+// as "this disease surged" — the finale's own caption says rheumatic heart
+// disease "never surged at all," but its 130-569 range still filled the box
+// top-to-bottom and sloped up like a climb. Against the shared ceiling, RHD
+// draws as a near-flat line hugging the bottom (matching the caption) while
+// HIV's much larger swing still reads its own arc.
+function buildPath(series, w, h, ceiling) {
+  // Even the early-return keeps the {path, xAt, yAt} shape the caller
+  // destructures — the old {path, px, py} shape was silently discarded by
+  // the caller and replaced with different defaults, so a two-point-or-fewer
+  // series rendered inconsistently with what this function actually returned.
+  if (!series || series.length < 2) return { path: '', xAt: () => 0, yAt: () => h / 2 };
+  const mx = ceiling > 0 ? ceiling : Math.max(...series, 1);
   const xAt = (i) => (i / (series.length - 1)) * w;
-  const yAt = (v) => h - 2 - ((v - mn) / rng) * (h - 4);
+  const yAt = (v) => h - 2 - (Math.max(0, v) / mx) * (h - 4);
   const path = series.map((v, i) => `${xAt(i)},${yAt(v)}`).join(' ');
   return { path, xAt, yAt };
 }
@@ -99,9 +111,10 @@ export default function TourSparkline() {
   const currentYear = tm ? tm.data.yearStart + Math.round(tm.yearFloat) : yearStart;
   const playIdx = Math.max(0, Math.min(series.length - 1, currentYear - yearStart));
   const chartH = H - 8;
-  const { path, xAt, yAt } = buildPath(series, W, chartH);
-  const px = xAt ? xAt(playIdx) : 0;
-  const py = yAt ? yAt(series[playIdx]) : chartH / 2;
+  const ceiling = tm && tm.data && tm.data.maxYearly > 0 ? tm.data.maxYearly : undefined;
+  const { path, xAt, yAt } = buildPath(series, W, chartH, ceiling);
+  const px = xAt(playIdx);
+  const py = yAt(series[playIdx]);
 
   return (
     <div
@@ -109,7 +122,7 @@ export default function TourSparkline() {
       style={{
         position: 'absolute', left: 0, top: 0, width: W, height: H,
         pointerEvents: 'none', zIndex: 29, opacity: 0,
-        transition: 'opacity 240ms ease',
+        transition: `opacity ${DUR.ui}ms ${EASE.ui}`,
       }}
     >
       <svg width={W} height={H} style={{ display: 'block', overflow: 'visible' }}>

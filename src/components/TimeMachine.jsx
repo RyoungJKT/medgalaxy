@@ -1,13 +1,13 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import useStore from '../store';
-import { nR, nRM } from '../utils/helpers';
 import { sceneRefs } from '../sceneRefs';
 import { buildTimeMachineData } from '../utils/timeMachineData';
 import { fmtFull, fmtWord } from '../utils/captions';
 import { fireRipple } from './SelectionRipple';
 import { DUR, springStep } from '../utils/motion';
+import { morphRadiusAt } from './DiseaseNodes';
 
 // The scrub engine's critically damped spring (DIRECTION section 3, scrubber
 // interaction feel: "each node follows its target through a critically
@@ -297,14 +297,34 @@ export default function TimeMachine() {
   // literal-frame technique TimeRail's own detent pip uses.
   const flashRef = useRef({ idx: -1, frames: 0 });
   const flashMeshRef = useRef(null);
-  const flashGeo = useMemo(() => new THREE.SphereGeometry(1, 12, 12), []);
-  const flashMat = useMemo(
-    () => new THREE.MeshBasicMaterial({
+  // Fix (review): the flash fires once per tour (occasionally replayed by the
+  // verify harness's seek), not every frame, so its geometry/material are
+  // allocated only for the ~12 frames they're needed rather than held for the
+  // component's whole lifetime — allocFlash/disposeFlash below own that,
+  // instead of a permanent useMemo pair that was never disposed.
+  const flashResRef = useRef(null);
+  const allocFlash = () => ({
+    geo: new THREE.SphereGeometry(1, 12, 12),
+    mat: new THREE.MeshBasicMaterial({
       color: FLASH_COLOR, transparent: true, opacity: 1,
-      blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false,
+      blending: THREE.AdditiveBlending, depthWrite: false,
+      // depthTest off is a deliberate overdraw tradeoff: the flash must read
+      // through the galaxy for its 12 frames regardless of which nodes are
+      // nearer the camera, and at 12 frames of one additive sphere the cost
+      // is invisible next to the payoff of the core never getting occluded.
+      depthTest: false,
     }),
-    []
-  );
+  });
+  const disposeFlash = () => {
+    const r = flashResRef.current;
+    if (!r) return;
+    r.geo.dispose();
+    r.mat.dispose();
+    flashResRef.current = null;
+    const mesh = flashMeshRef.current;
+    if (mesh) { mesh.geometry = null; mesh.material = null; }
+  };
+  useEffect(() => disposeFlash, []); // safety net: dispose if still live on unmount
 
   if (!tmRef.current) {
     const diseases = useStore.getState().diseases;
@@ -339,10 +359,17 @@ export default function TimeMachine() {
 
       const store = useStore.getState();
       const fx = sceneRefs.fx;
+      // Fix (review): the Time Machine only ever exits into the normal galaxy
+      // view, whose sizeMode toggle is discrete — morphT here is always the
+      // *settled* destination (0 or 1), never a live scripted transition, so
+      // this is a lookup of the landing radius, not a curve to ease along.
+      // Reusing DiseaseNodes' own morphRadiusAt (lag=1, irrelevant at a
+      // settled endpoint — the endpoint invariant holds for every L) keeps
+      // this in lockstep with the shared morph formula instead of a second,
+      // independently-drifting copy of the smoothstep curve.
       const morphT = fx.morphOverride != null ? fx.morphOverride : (store.sizeMode === 'mortality' ? 1 : 0);
-      const ease = morphT * morphT * (3 - 2 * morphT); // smoothstep, same curve DiseaseNodes uses
       const d = store.diseases[i];
-      const normalR = nR(d.papers) * (1 - ease) + nRM(d.mortality) * ease;
+      const normalR = morphRadiusAt(d, morphT, 1);
       return tmR + (normalR - tmR) * tm.exit;
     };
 
@@ -484,6 +511,13 @@ export default function TimeMachine() {
         if (idx !== undefined) {
           fireRipple(idx, COVID_EMBER);
           // Carry-over D: the white-core flash rides the same cue as the ring.
+          // disposeFlash() first: a re-fired shockwave (a harness seek that
+          // replays this cue) before the previous flash's 12 frames finished
+          // must not leak the earlier geometry/material.
+          disposeFlash();
+          flashResRef.current = allocFlash();
+          const mesh = flashMeshRef.current;
+          if (mesh) { mesh.geometry = flashResRef.current.geo; mesh.material = flashResRef.current.mat; }
           flashRef.current = { idx, frames: FLASH_FRAMES };
         }
         // The muffled 2020 boom (DIRECTION section 5, moment 4): smaller than
@@ -546,6 +580,12 @@ export default function TimeMachine() {
         mesh.position.set(p[0], p[1], p[2]);
         const r0 = tm.radiusAt ? tm.radiusAt(fl.idx) : 2;
         mesh.scale.setScalar(Math.max(2, r0 * 1.4));
+      }
+      // Countdown just ended: the flash has no further use for its geometry
+      // and material until the next shockwave cue allocates a fresh pair.
+      if (fl.frames === 0) {
+        if (mesh) mesh.visible = false;
+        disposeFlash();
       }
     } else if (flashMeshRef.current && flashMeshRef.current.visible) {
       flashMeshRef.current.visible = false;
@@ -656,6 +696,7 @@ export default function TimeMachine() {
   // Almost entirely a null-rendering engine; the one exception is the 2020
   // flash mesh, an isolated additive sprite that touches nothing else in the
   // scene (no shared uniform, no ignite amount), so it cannot bloom anything
-  // but itself.
-  return <mesh ref={flashMeshRef} geometry={flashGeo} material={flashMat} visible={false} frustumCulled={false} />;
+  // but itself. It carries no geometry/material of its own here — allocFlash/
+  // disposeFlash wire those in only while a flash is actually live.
+  return <mesh ref={flashMeshRef} visible={false} frustumCulled={false} />;
 }

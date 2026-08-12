@@ -37,6 +37,11 @@ export default function SupernovaDust() {
   // throws ember-red dust" — the same rule applies to the supernova reveal).
   const ember = useMemo(() => igniteWeights(diseases).ember, [diseases]);
 
+  // Fix (review): the tint string (neglectColor(ppd(...)) or the category
+  // color) only changes when the target disease changes, not every frame —
+  // cached here instead of rebuilt on every one of PARTICLE_COUNT's frames.
+  const tintCacheRef = useRef({ idx: -1, str: null });
+
   const { geo, seeds, tex } = useMemo(() => {
     if (PARTICLE_COUNT === 0) return { geo: null, seeds: null, tex: null };
     const positions = new Float32Array(PARTICLE_COUNT * 3);
@@ -119,10 +124,15 @@ export default function SupernovaDust() {
     positions.needsUpdate = true;
 
     // Update color: category by default, ember-red neglect tint when this
-    // node sits in the overlooked decile.
+    // node sits in the overlooked decile. Recomputed only when the target
+    // index changes, not every frame.
     if (diseases[idx]) {
-      const tint = ember[idx] === 1 ? neglectColor(ppd(diseases[idx])) : CC[diseases[idx].category];
-      pointsRef.current.material.color.set(tint);
+      const tc = tintCacheRef.current;
+      if (tc.idx !== idx) {
+        tc.idx = idx;
+        tc.str = ember[idx] === 1 ? neglectColor(ppd(diseases[idx])) : CC[diseases[idx].category];
+      }
+      pointsRef.current.material.color.set(tc.str);
     }
   });
 

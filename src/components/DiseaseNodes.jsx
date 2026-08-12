@@ -8,7 +8,7 @@ import { sceneRefs } from '../sceneRefs';
 import { TIER } from '../utils/tiers';
 import { useAttentionColors } from './AttentionMap';
 import { igniteWeights } from '../utils/igniteWeights';
-import { lagFactor, staggeredEase, springStep, DUR } from '../utils/motion';
+import { lagFactor, staggeredEase, springStepInto, DUR } from '../utils/motion';
 import plasmaVert from '../shaders/plasma.vert.glsl?raw';
 import plasmaFrag from '../shaders/plasma.frag.glsl?raw';
 import pulseVert from '../shaders/pulse.vert.glsl?raw';
@@ -18,6 +18,10 @@ const _m4 = new THREE.Matrix4();
 const _v3 = new THREE.Vector3();
 const _q4 = new THREE.Quaternion();
 const _s3 = new THREE.Vector3();
+// Scratch pair for the hover spring's per-node, per-frame step (150+ nodes x
+// 60fps) — springStepInto writes into this instead of allocating a [x, v]
+// tuple every iteration of the instancing loop.
+const _spring = [0, 0];
 
 // Category index lookup for aCatId attribute
 const CAT_INDEX = {};
@@ -35,17 +39,22 @@ const HOVER_SCALE = 1.06;
 // and morphT 1 on exactly nRM(mortality), for every node, regardless of lag —
 // is a plain unit test rather than a pixel comparison.
 //
-// `towardMortality` is the current direction of travel (true = morphing
-// toward the mortality radius, false = back toward papers); the per-node lag
-// factors are only ever recomputed when that direction reverses, not every
-// frame, so a node's stagger does not jitter mid-transition.
-export function computeLagFactors(diseases, towardMortality) {
+// Fix (review, direction-reversal pop): a node's lag factor is now
+// DIRECTION-INDEPENDENT — computed once from whichever of its two radii
+// (papers or mortality) is larger, i.e. the bigger of the two trips it could
+// ever be asked to make. The old version recomputed a whole second lag table
+// from the *new* target the instant the morph direction reversed, which
+// silently swapped a node's eased radius mid-frame (a quick "Mortality then
+// Papers" double click could jump one node's radius by double digits in a
+// single frame). One static table per disease list, no reversal swap, same
+// endpoint invariant (staggeredEase(0)=0, staggeredEase(1)=1 for every L).
+export function computeLagFactors(diseases) {
   const n = diseases.length;
   const L = new Float32Array(n);
   const rTarget = new Float32Array(n);
   let rMax = 0;
   for (let i = 0; i < n; i++) {
-    rTarget[i] = towardMortality ? nRM(diseases[i].mortality) : nR(diseases[i].papers);
+    rTarget[i] = Math.max(nR(diseases[i].papers), nRM(diseases[i].mortality));
     if (rTarget[i] > rMax) rMax = rTarget[i];
   }
   for (let i = 0; i < n; i++) L[i] = lagFactor(rTarget[i], rMax);
@@ -120,11 +129,10 @@ export default function DiseaseNodes() {
   const morphRef = useRef(0);
   const hoverScaleRef = useRef(new Float32Array(count).fill(1));
   const hoverVelRef = useRef(new Float32Array(count));
-  // Carry-over A: per-node lag factors, recomputed only when the morph
-  // reverses direction (see computeLagFactors above).
-  const lagRef = useRef(null);
-  const morphDirRef = useRef(true); // true = toward mortality; the overture's own direction
-  const prevMorphTRef = useRef(null);
+  // Carry-over A: per-node lag factors — direction-independent (see
+  // computeLagFactors above), so this only needs to change when the disease
+  // list itself changes, never mid-transition.
+  const lag = useMemo(() => computeLagFactors(diseases), [diseases]);
 
   const geo = useMemo(() => {
     const g = new THREE.SphereGeometry(1, mobDevice ? 16 : 32, mobDevice ? 16 : 32);
@@ -196,12 +204,6 @@ export default function DiseaseNodes() {
       introScalesRef.current.fill(1);
     }
     sceneRefs.introScales = introScalesRef.current;
-
-    // Reset the morph stagger cache too: a data reload invalidates any
-    // lag factors computed from the previous disease list.
-    lagRef.current = null;
-    morphDirRef.current = true;
-    prevMorphTRef.current = null;
 
     for (let i = 0; i < count; i++) {
       _v3.set(catPos[i][0], catPos[i][1], catPos[i][2]);
@@ -301,21 +303,6 @@ export default function DiseaseNodes() {
     morphRef.current += (morphTarget - morphRef.current) * (fx.morphOverride != null ? 1 : 0.06);
     const morphT = fx.morphOverride ?? morphRef.current;
 
-    // Carry-over A: recompute the per-node lag factors only when the morph's
-    // direction of travel reverses (or on the very first frame), so a node's
-    // stagger stays fixed through a single transition instead of jittering.
-    if (prevMorphTRef.current === null) {
-      lagRef.current = computeLagFactors(diseases, morphDirRef.current);
-    } else if (morphT !== prevMorphTRef.current) {
-      const towardMortality = morphT > prevMorphTRef.current;
-      if (towardMortality !== morphDirRef.current) {
-        morphDirRef.current = towardMortality;
-        lagRef.current = computeLagFactors(diseases, towardMortality);
-      }
-    }
-    prevMorphTRef.current = morphT;
-    const lag = lagRef.current;
-
     const hoverIdx = store.hoveredNode ? store.hoveredNode.index : -1;
     for (let i = 0; i < count; i++) {
       _v3.set(curPos[i][0], curPos[i][1], curPos[i][2]);
@@ -325,10 +312,10 @@ export default function DiseaseNodes() {
       } else {
         r = morphRadiusAt(diseases[i], morphT, lag ? lag[i] : 1);
       }
-      const [hs, hv] = springStep(hoverScaleRef.current[i], hoverVelRef.current[i], i === hoverIdx ? HOVER_SCALE : 1, dt, HOVER_TC);
-      hoverScaleRef.current[i] = hs;
-      hoverVelRef.current[i] = hv;
-      const is = (scales ? scales[i] : 1) * hs;
+      springStepInto(_spring, hoverScaleRef.current[i], hoverVelRef.current[i], i === hoverIdx ? HOVER_SCALE : 1, dt, HOVER_TC);
+      hoverScaleRef.current[i] = _spring[0];
+      hoverVelRef.current[i] = _spring[1];
+      const is = (scales ? scales[i] : 1) * _spring[0];
       _s3.set(r * is, r * is, r * is);
       _m4.compose(_v3, _q4, _s3);
       mesh.setMatrixAt(i, _m4);

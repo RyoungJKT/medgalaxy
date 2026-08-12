@@ -45,6 +45,27 @@ export function springStep(x, v, target, dt, tc) {
   return [nx, nv];
 }
 
+/**
+ * Same critically damped step as springStep, but writes into a caller-owned
+ * `out` pair instead of allocating a new [x, v] tuple. For hot per-node loops
+ * (DiseaseNodes' instancing pass runs this once per node per frame) where a
+ * fresh array every iteration is needless GC pressure — pass one scratch pair
+ * and read `out[0]`/`out[1]` immediately after the call.
+ * @param {[number, number]} out scratch pair, overwritten with [nextX, nextV]
+ * @returns {[number, number]} the same `out` array, for chaining/convenience
+ */
+export function springStepInto(out, x, v, target, dt, tc) {
+  const omega = 1 / tc;
+  const k = omega * omega;
+  const c = 2 * omega;
+  const a = k * (target - x) - c * v;
+  const nv = v + a * dt;
+  const nx = x + nv * dt;
+  out[0] = nx;
+  out[1] = nv;
+  return out;
+}
+
 // ── Mass-weighted stagger (DIRECTION section 6 item 5; section 2 beat 2) ──
 // "Per-node duration scales with sqrt of target radius so massive nodes move
 // slowly, mass made visible." lagFactor turns a node's target radius into a
@@ -54,7 +75,13 @@ export function springStep(x, v, target, dt, tc) {
 // global progress 0 and exactly 1 at global progress 1, for every L, so
 // toggling direction never disturbs the endpoints.
 const LAG_FLOOR = 0.35;
-const LAG_LEAD = 0.15; // how much of the global range small movers get to lead by
+// How much of the global range small movers sit idle at 0 before starting —
+// not a head start. A small mover (low L) holds still through this delay,
+// then races through a compressed ramp and lands on 1 at the same global t=1
+// every node shares; the net effect mid-transition is what "mass made
+// visible" wants (small movers read further along, big movers still
+// catching up) even though they start later, not earlier.
+const LAG_LEAD = 0.15;
 
 export function lagFactor(rTarget, rMax) {
   if (!(rMax > 0)) return 1;
