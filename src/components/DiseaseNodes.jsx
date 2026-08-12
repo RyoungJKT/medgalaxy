@@ -162,6 +162,7 @@ export default function DiseaseNodes() {
     igniteAmount: { value: 0 },
     desatAmount: { value: 0 },
     emberAmount: { value: 0 },
+    igniteContrast: { value: 1 },
   });
 
   const plasmaMat = useMemo(() => {
@@ -250,6 +251,10 @@ export default function DiseaseNodes() {
       mat.uniforms.igniteAmount.value = fx.ignite;
       mat.uniforms.desatAmount.value = fx.desat;
       mat.uniforms.emberAmount.value = fx.ember;
+      // Defaulted rather than assumed: only the film ever writes this channel,
+      // and a session that never plays it must still light nodes on the raw
+      // weights rather than pow(w, undefined) = NaN.
+      mat.uniforms.igniteContrast.value = fx.igniteContrast ?? 1;
     }
 
     // Intro scale logic

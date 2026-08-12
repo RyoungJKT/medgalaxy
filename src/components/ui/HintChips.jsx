@@ -17,6 +17,7 @@ export default function HintChips() {
   const hintsShown = useStore((s) => s.hintsShown ?? false);
   const hintsDismissed = useStore((s) => s.hintsDismissed ?? null);
   const hintDismiss = useStore((s) => s.hintDismiss);
+  const startTimeMachine = useStore((s) => s.startTimeMachine);
   // The Time Machine owns bottom center while it is up; the chips that are
   // still standing step aside for it and come back when it closes.
   const tmPhase = useStore((s) => s.tmPhase ?? 'idle');
@@ -55,6 +56,17 @@ export default function HintChips() {
     return () => { unsubSel(); unsubTm(); };
   }, [hintsShown]);
 
+  // A chip that names an instrument opens it (review gate F1a): "Try the Time
+  // Machine" used to be the one invitation in the app that did nothing but
+  // disappear when taken. It opens the narrated tour, the same thing the film's
+  // own auto-tour offers, so the viewer who accepts gets the decade story
+  // rather than a bare scrubber. Every other chip teaches a gesture it cannot
+  // perform for you, so dismissal remains all they do.
+  const onChip = (key) => {
+    if (key === 'timeMachine' && startTimeMachine) startTimeMachine(true);
+    if (hintDismiss) hintDismiss(key);
+  };
+
   const visibleHints = HINTS.filter((h) => !(hintsDismissed && hintsDismissed.has(h.key)));
 
   if (!hintsShown || visibleHints.length === 0 || tmPhase !== 'idle') return null;
@@ -83,7 +95,7 @@ export default function HintChips() {
       {visibleHints.map((h, i) => (
         <div
           key={h.key}
-          onClick={() => hintDismiss && hintDismiss(h.key)}
+          onClick={() => onChip(h.key)}
           style={{
             padding: mob ? '5px 10px' : '6px 14px', borderRadius: 999,
             background: 'rgba(10,16,30,0.85)', border: '1px solid rgba(255,255,255,0.1)',

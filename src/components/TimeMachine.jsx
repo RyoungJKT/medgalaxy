@@ -49,6 +49,12 @@ const GLOW_RAMP = 0.48;
 
 export const TOUR_HOLDS = [3.0, 3.5, 3.0, 4.0, 3.0, 4.5];
 
+// How long the film's hand-off waits before the auto-tour offers itself, and
+// how long the finale's closing shot holds before it tells the viewer the rail
+// is theirs (review gate F6).
+const TOUR_ARM_DELAY = 1500;
+const FINALE_HANDOVER = 2.5;
+
 const clamp01 = (x) => (x < 0 ? 0 : x > 1 ? 1 : x);
 const easeExpoOut = (p) => (p >= 1 ? 1 : 1 - Math.pow(2, -10 * p));
 // back.out(1.2): the tour's single sanctioned overshoot, reserved for the
@@ -162,6 +168,40 @@ export function buildTourTimeline(data, startYearIdx, reduced = false) {
 
   cues.sort((a, b) => a.t - b.t);
   return { segs, cues, pauses, pauseAt, end: t };
+}
+
+// ─── The auto-tour's gate ────────────────────────────────────────────────────
+// Pure so the one rule that matters is testable without a scene: a tour that
+// never ran is not a tour that was spent.
+
+/**
+ * True while something else owns the field, so the auto-tour must not open.
+ * @param {object} s a store snapshot
+ */
+export function tourPreempted(s) {
+  if (!s) return true;
+  if (s.selectedNode || s.activeMode || s.spotlightActive || s.storyActive) return true;
+  if (s.tmPhase !== 'idle') return true;
+  if (s.roulettePhase !== 'idle') return true;
+  if (s.supernovaPhase !== 'idle' && s.supernovaPhase !== 'complete') return true;
+  return false;
+}
+
+/**
+ * The three outcomes the auto-tour's timer can have, kept apart on purpose
+ * (review gate F1b). Before this, arming the timer was itself treated as
+ * spending the tour: if the viewer happened to have a node selected, a mode up
+ * or the spotlight on when it came due, the guard clauses returned and the
+ * narrated tour was marked run without a single frame of it ever playing —
+ * and, since the film only arms once, it could never play again in that
+ * session. 'preempted' leaves the slot unspent so the tour re-arms when
+ * whatever preempted it lets go; only 'run' consumes it.
+ * @returns {'consumed'|'preempted'|'run'}
+ */
+export function tourGate(state, consumed) {
+  if (consumed) return 'consumed';
+  if (tourPreempted(state)) return 'preempted';
+  return 'run';
 }
 
 /** Year (as a fractional year index) at time t. Holds park on the pause year. */
@@ -298,9 +338,12 @@ export function buildTourCaptions(diseases, idMap, data) {
 export default function TimeMachine() {
   const tmRef = useRef(null);
   const velRef = useRef(0);
-  const tourRef = useRef({ tl: null, caps: null, t0: 0, fired: null, paused: null, pendingSeek: null });
-  const tourRanRef = useRef(false);
-  const tmSeenRef = useRef(false);
+  const tourRef = useRef({ tl: null, caps: null, t0: 0, fired: null, paused: null, pendingSeek: null, handoverAt: null });
+  // The auto-tour's one-shot slot. Spent only when the tour actually opens (or
+  // when the viewer opens the Time Machine themselves) — never by a timer that
+  // came due and found the field busy. See tourGate above.
+  const tourConsumedRef = useRef(false);
+  const tourTimerRef = useRef(null);
   const glowRef = useRef(0);
   // prefers-reduced-motion, read once on mount (same pattern as
   // OvertureSequence's own reducedRef): the tour becomes stepped year holds
@@ -400,33 +443,47 @@ export default function TimeMachine() {
     if (typeof window !== 'undefined') window.__tm = tm;
   }
 
-  // ── The auto-tour fires once, 1.5 s after the film hands over ──
+  // ── The auto-tour offers itself 1.5 s after the film hands over ──
   // Skipped if the viewer already took the instrument (a selection, a mode, the
-  // spotlight, or a Time Machine they started themselves).
+  // spotlight, or a Time Machine they started themselves) — but only *skipped*,
+  // not spent: a tour the field preempted re-arms the moment the field is free
+  // again (review gate F1b).
   useEffect(() => {
-    let timer = null;
     // Anyone who has already been in the Time Machine has spent the auto-tour's
     // slot, even if they left again before the timer came due.
     const unsubSeen = useStore.subscribe(
       (s) => s.tmPhase,
-      (phase) => { if (phase !== 'idle') tmSeenRef.current = true; }
+      (phase) => { if (phase !== 'idle') tourConsumedRef.current = true; }
     );
     const arm = () => {
-      if (tourRanRef.current) return;
-      tourRanRef.current = true;
-      timer = setTimeout(() => {
+      if (tourConsumedRef.current || tourTimerRef.current) return;
+      tourTimerRef.current = setTimeout(() => {
+        tourTimerRef.current = null;
         const s = useStore.getState();
-        if (tmSeenRef.current) return;
-        if (s.selectedNode || s.activeMode || s.spotlightActive || s.storyActive) return;
-        if (s.tmPhase !== 'idle') return;
-        if (s.roulettePhase !== 'idle') return;
-        if (s.supernovaPhase !== 'idle' && s.supernovaPhase !== 'complete') return;
+        // 'preempted' returns without consuming, so the re-arm below can try
+        // again; 'run' is the only branch that spends the slot.
+        if (tourGate(s, tourConsumedRef.current) !== 'run') return;
+        tourConsumedRef.current = true;
         s.startTimeMachine(true);
-      }, 1500);
+      }, TOUR_ARM_DELAY);
     };
     if (useStore.getState().overtureDone) arm();
-    const unsub = useStore.subscribe((s) => s.overtureDone, (done) => { if (done) arm(); });
-    return () => { clearTimeout(timer); unsub(); unsubSeen(); };
+    const unsubDone = useStore.subscribe((s) => s.overtureDone, (done) => { if (done) arm(); });
+    // The re-arm. Fires on the edge where the field stops being busy (a
+    // deselect, a mode closed, the spotlight off), and the same 1.5 s pause
+    // then applies, so the invitation never lands on top of the gesture that
+    // freed the frame.
+    const unsubFree = useStore.subscribe(
+      (s) => tourPreempted(s),
+      (busy) => { if (!busy && useStore.getState().overtureDone) arm(); }
+    );
+    return () => {
+      clearTimeout(tourTimerRef.current);
+      tourTimerRef.current = null;
+      unsubDone();
+      unsubSeen();
+      unsubFree();
+    };
   }, []);
 
   // ── Any input during the tour hands the scrubber over, at the year on screen ──
@@ -488,8 +545,9 @@ export default function TimeMachine() {
         // restarts it on the next frame otherwise, and its takeover would tear
         // the seeked tour straight back down.
         if (!s.overtureDone) s.finishOverture();
-        tourRanRef.current = true; // the harness owns the tour from here
+        tourConsumedRef.current = true; // the harness owns the tour from here
         tourRef.current.tl = null;
+        tourRef.current.handoverAt = null;
         useStore.getState().setTmFocusIdx(-1);
         useStore.getState().startTimeMachine(true);
         useStore.getState().setTmPhase('tour');
@@ -640,6 +698,22 @@ export default function TimeMachine() {
       tm.active = true;
       tm.exit = 0;
       if (r.tl) { r.tl = null; r.paused = null; r.pendingSeek = null; }
+      // The finale's own handover (review gate F6). A tour that ends naturally
+      // used to leave the closing shot up with nothing telling the viewer the
+      // rail was now theirs — only an interrupt ever printed "Scrub the
+      // decades." After FINALE_HANDOVER seconds on the held frame, the same
+      // chip the interrupt path sets goes up here too. The isolation itself
+      // stays: the closing shot is the point, and TimeRail's first scrub
+      // releases it exactly as before.
+      if (r.handoverAt != null && state.clock.getElapsedTime() >= r.handoverAt) {
+        r.handoverAt = null;
+        // Only if the finale is still the frame. Any input in the meantime has
+        // already run the window-level handover, which clears the focus and
+        // sets this same chip; re-setting it here would restart its 2.6 s life.
+        if (store.tmFocusIdx >= 0 && store.tmCaption && !store.tmCaption.handover) {
+          store.setTmCaption(r.caps ? r.caps.handover : { lines: ['Scrub the decades.'], handover: true });
+        }
+      }
       const target = tm.targetYear < 0 ? 0 : (tm.targetYear > maxY ? maxY : tm.targetYear);
       const [ny, nv] = springStep(tm.yearFloat, velRef.current, target, dt, TAU);
       velRef.current = nv;
@@ -660,6 +734,7 @@ export default function TimeMachine() {
         r.t0 = clock;
         r.fired = new Set();
         r.paused = null;
+        r.handoverAt = null;
       }
 
       // Harness seek: reposition the clock, replay the state cues up to it, and
@@ -710,8 +785,10 @@ export default function TimeMachine() {
       if (t >= r.tl.end) {
         // The closing shot stays on screen: the flatline caption and its
         // isolation hold until the viewer touches the rail. All the handover
-        // does is give them the scrubber, at the year they are looking at.
+        // does is give them the scrubber, at the year they are looking at —
+        // and, FINALE_HANDOVER seconds later, say so (the scrub branch above).
         tm.targetYear = Math.round(tm.yearFloat);
+        r.handoverAt = clock + FINALE_HANDOVER;
         useStore.getState().setTmPhase('scrub');
       }
     } else if (tm.active) {
@@ -719,6 +796,7 @@ export default function TimeMachine() {
       // radius fully back to DiseaseNodes' own morph.
       velRef.current = 0;
       if (r.tl) { r.tl = null; r.paused = null; r.pendingSeek = null; }
+      r.handoverAt = null; // the machine is closing; nothing left to hand over
       tm.exit += dt / EXIT_DUR;
       if (tm.exit >= 1) {
         tm.exit = 0;

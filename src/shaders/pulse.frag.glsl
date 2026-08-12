@@ -5,6 +5,7 @@ uniform float fogFar;
 uniform float igniteAmount;   // overture beat 2 stage two: 0 = cold, 1 = full burn
 uniform float desatAmount;    // overture beat 2 stage one: 0 = category color, 1 = graphite
 uniform float emberAmount;    // beat 3 onward: standing scar on the overlooked decile
+uniform float igniteContrast; // exponent on each node's own ignite weight (1 = raw weights)
 
 varying vec3 vNormal, vWorldPos, vColor, vViewPos, vWorldNormal;
 varying float vPhase, vFogDepth, vCatId, vIgnite, vEmber;
@@ -79,7 +80,12 @@ void main(){
   col = mix(col, vec3(lum) * vec3(0.72, 0.78, 0.92), desatAmount * 0.85);
 
   // Black-body ignite: dark rim to white-hot core, HDR (exceeds bloom threshold)
-  float ig = vIgnite * igniteAmount;
+  // igniteContrast pulls the field away from the hero without touching it: the
+  // hero's weight is exactly 1.0 (pow(1, k) == 1), every other node's is below
+  // it, so raising the exponent damps the competitors only (review gate F4,
+  // beat-2 ignition ambiguity). Outside the film igniteAmount is 0 and this
+  // whole block is skipped, so the curve is a film-only statement.
+  float ig = pow(vIgnite, igniteContrast) * igniteAmount;
   if (ig > 0.001) {
     float core = pow(NdotV, 2.2);                       // radial: rim 0, core 1
     // Temperature is radial position TIMES divergence weight (see plasma.frag).

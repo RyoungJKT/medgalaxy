@@ -7,6 +7,23 @@ import { sceneRefs } from '../sceneRefs';
 
 const pv = new THREE.Vector3();
 
+// ─── Label discipline (review gate F5) ───────────────────────────────────────
+// The header band. Labels never draw into it once the header is revealed: at
+// 1440x900 the header row bottoms out at 44px and the filter bar under it at
+// 78px, so 90 clears both with a margin, and the mobile search sheet drops to
+// 86px when it is open. A label whose node sits below the line rides down to
+// it; a label whose node is inside the band is dropped entirely.
+const HEADER_ZONE = 90;
+const PRE_HEADER_ZONE = 8; // before the reveal there is nothing to clear but the bezel
+// The Time Machine's ceiling. The tour's whole argument is a handful of nodes
+// changing size, and 153 names over it read as noise (rg1-25, rg1-30); the
+// biggest 40 on screen carry the frame and the rest stand down for the years.
+const TM_MAX_LABELS = 40;
+// The finale's isolation reaches the label layer too. HighlightSystem dims the
+// instances and TimeMachine dims the halos; without this the names stayed at
+// full strength and diluted the one node the closing shot is about.
+const TM_DIM = 0.25;
+
 /**
  * Renders disease-name labels as DOM elements positioned via 3D-to-2D
  * projection. Lives outside the R3F Canvas in HtmlOverlay.
@@ -20,6 +37,17 @@ export default function NodeLabels() {
 
   useEffect(() => {
     let running = true;
+
+    // Scratch, allocated once per mount rather than per frame. The pass is
+    // split in two because the Time Machine's cap is a comparison across the
+    // whole field: nothing can be drawn until every node's screen radius for
+    // this frame is known.
+    const n = diseases.length;
+    const sxA = new Float32Array(n);
+    const topA = new Float32Array(n);
+    const rA = new Float32Array(n);
+    const showA = new Uint8Array(n);
+    const sortA = new Float32Array(n);
 
     function update() {
       if (!running) return;
@@ -55,12 +83,16 @@ export default function NodeLabels() {
       const introScales = sceneRefs.introScales;
       const rc = canvas.getBoundingClientRect();
       const kids = container.children;
+      const tmActive = storeState.tmPhase !== 'idle';
+      const focusIdx = storeState.tmFocusIdx;
+      const topLimit = storeState.uiRevealed ? HEADER_ZONE : PRE_HEADER_ZONE;
 
       const tanHalfFov = Math.tan(Math.PI / 6); // fov=60 → half=30°
 
+      // ── Pass 1: project, and decide what could be drawn ──
       for (let i = 0; i < diseases.length; i++) {
-        const el = kids[i];
-        if (!el) continue;
+        showA[i] = 0;
+        if (!kids[i]) continue;
 
         pv.set(curPos[i][0], curPos[i][1], curPos[i][2]);
 
@@ -70,10 +102,7 @@ export default function NodeLabels() {
         pv.project(camera);
 
         // Behind camera or off-screen
-        if (pv.z > 1 || pv.z < -1) {
-          el.style.display = 'none';
-          continue;
-        }
+        if (pv.z > 1 || pv.z < -1) continue;
 
         let sx = (pv.x * 0.5 + 0.5) * rc.width;
         const sy = (-pv.y * 0.5 + 0.5) * rc.height;
@@ -85,32 +114,68 @@ export default function NodeLabels() {
         const screenR = nodeR * rc.height / (2 * nodeDist * tanHalfFov);
 
         // Hide labels for nodes not yet revealed during intro
-        if (introScales && introScales[i] < 0.1) {
-          el.style.display = 'none';
-          continue;
-        }
+        if (introScales && introScales[i] < 0.1) continue;
 
         // Hide all labels during spin (motion too fast for labels to read)
         // Hide non-ring-node labels during other roulette phases
-        if (rPhase === 'spinup') {
-          el.style.display = 'none';
-          continue;
+        if (rPhase === 'spinup') continue;
+        if (ringSet && !ringSet.has(i)) continue;
+
+        // Hide very tiny labels when zoomed out. The finale's isolated node is
+        // exempt: it is small precisely because it never surged, and the whole
+        // closing shot is about reading its name.
+        if (screenR < 0.3 && i !== hovIdx && i !== focusIdx) continue;
+
+        // Header/search exclusion zone: a label that would ride up into the
+        // chrome is pushed back down to the line, and one whose node is itself
+        // inside the band stands down altogether — the header wins its strip.
+        let top = sy - Math.max(screenR * 1.1, 3) - 10;
+        if (top < topLimit) {
+          if (sy < topLimit) continue;
+          top = topLimit;
         }
-        if (ringSet && !ringSet.has(i)) {
-          el.style.display = 'none';
+
+        sxA[i] = sx;
+        topA[i] = top;
+        rA[i] = screenR;
+        showA[i] = 1;
+      }
+
+      // ── The Time Machine's ceiling: the biggest TM_MAX_LABELS on screen ──
+      if (tmActive) {
+        let m = 0;
+        for (let i = 0; i < diseases.length; i++) if (showA[i]) sortA[m++] = rA[i];
+        if (m > TM_MAX_LABELS) {
+          const ranked = sortA.subarray(0, m);
+          ranked.sort(); // ascending, numeric (typed array)
+          const cut = ranked[m - TM_MAX_LABELS];
+          for (let i = 0; i < diseases.length; i++) {
+            if (!showA[i] || rA[i] >= cut) continue;
+            // The frame's own subjects survive the cap regardless of size.
+            if (i === hovIdx || i === selIdx || i === focusIdx) continue;
+            showA[i] = 0;
+          }
+        }
+      }
+
+      // ── Pass 2: write the DOM ──
+      for (let i = 0; i < diseases.length; i++) {
+        const el = kids[i];
+        if (!el) continue;
+        if (!showA[i]) {
+          if (el.style.display !== 'none') el.style.display = 'none';
           continue;
         }
 
-        // Hide very tiny labels when zoomed out
-        if (screenR < 0.3 && i !== hovIdx) {
-          el.style.display = 'none';
-          continue;
-        }
-
+        const screenR = rA[i];
         el.style.display = '';
-        el.style.left = sx + 'px';
-        el.style.top = sy - Math.max(screenR * 1.1, 3) - 10 + 'px';
-        el.style.opacity = i === hovIdx || i === selIdx ? '1' : '0.75';
+        el.style.left = sxA[i] + 'px';
+        el.style.top = topA[i] + 'px';
+
+        let op = i === hovIdx || i === selIdx ? 1 : 0.75;
+        // Finale isolation: everything that is not the subject steps back.
+        if (focusIdx >= 0) op = i === focusIdx ? 1 : op * TM_DIM;
+        el.style.opacity = String(op);
 
         const nameEl = el.firstChild;
         if (i === selIdx) {

@@ -438,21 +438,28 @@ export default function TimeRail() {
 
   return (
     <>
-      {/* Mode chip: same seat every mode uses, top center under the header. */}
-      <div style={{ position: 'absolute', top: mob ? 56 : 84, left: '50%', transform: 'translateX(-50%)', zIndex: 47 }}>
+      {/* Mode chip: same seat every mode uses, top center under the header.
+          Mobile only (review gate F8). On desktop the header's own Time
+          Machine button is in frame and already reads "✕ Time Machine" while
+          the machine is up, so this floating chip was a second, identical exit
+          control eight pixels below it. Mobile keeps it: there the header
+          collapses to a Menu button and the exit lives two taps deep. */}
+      {mob && (
+      <div style={{ position: 'absolute', top: 56, left: '50%', transform: 'translateX(-50%)', zIndex: 47 }}>
         <button
           onClick={() => stopTimeMachine()}
           style={{
             pointerEvents: 'auto', cursor: 'pointer', fontFamily: "'IBM Plex Mono', monospace",
-            padding: mob ? '10px 16px' : '6px 14px', minHeight: mob ? 44 : undefined,
+            padding: '10px 16px', minHeight: 44,
             borderRadius: 999, border: '1px solid rgba(245,158,11,0.5)',
-            background: 'rgba(10,16,30,0.9)', color: '#f59e0b', fontSize: mob ? 11 : 11,
+            background: 'rgba(10,16,30,0.9)', color: '#f59e0b', fontSize: 11,
             animation: `tmChipIn ${IN_MS}ms ${EASE.ui} both`,
           }}
         >
           &#10005; Time Machine
         </button>
       </div>
+      )}
 
       <TimeCaption caption={tmCaption} mob={mob} tall={vp.h >= 700} />
 

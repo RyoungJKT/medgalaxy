@@ -15,10 +15,18 @@ const get = (f) => { const i = args.indexOf(f); return i >= 0 ? args[i + 1] : nu
 // --reduced: emulate prefers-reduced-motion: reduce, set before goto (has to
 // be live for the very first paint — LandingOverlay's reduced-motion skip and
 // CameraRig's assembly-hold both read matchMedia on mount).
+// --headed: run on the real display instead of headless Chrome. The whole
+// perf matrix carries a caveat that headless rAF is not driven by a real
+// compositor and reads this machine's apparent ceiling regardless of scene
+// cost; a headed window is the only way to get an on-display FPS number from
+// this harness. Everything else (shots, evals) behaves identically, so
+// `--headed --shot x` is also a way to confirm a frame is not a headless
+// artifact.
 const mobile = args.includes('--mobile');
 const reduced = args.includes('--reduced');
+const headed = args.includes('--headed');
 
-const browser = await puppeteer.launch({ executablePath: CHROME, headless: 'new',
+const browser = await puppeteer.launch({ executablePath: CHROME, headless: headed ? false : 'new',
   args: [`--window-size=${mobile ? '375,812' : '1440,900'}`, '--use-gl=angle'] });
 const page = await browser.newPage();
 if (reduced) {

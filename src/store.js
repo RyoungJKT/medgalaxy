@@ -105,6 +105,11 @@ const useStore = create(
     tmPhase: 'idle',  // 'idle' | 'tour' | 'scrub'
     tmCaption: null,  // overtureCaption shape plus one field: { lines: string[], data?: string, micro?: string }
     tmFocusIdx: -1,   // -1 = inactive; >=0 isolates one disease (the tour's flatline finale)
+    // Latched the first time a narrated tour is started, by anyone: the film's
+    // own auto-tour, the "Try the Time Machine" hint chip, or the header
+    // button. The header reads it to decide whether its next press owes the
+    // viewer the decade story or just the scrubber (review gate F1c).
+    tmTourSeen: false,
     _tmSnapshot: null, // pre-Time-Machine state for a clean restore
 
     // ── Actions ──
@@ -226,6 +231,7 @@ const useStore = create(
       sceneRefs.fx.desat = 0;
       sceneRefs.fx.ember = 1;
       sceneRefs.fx.glowSuppress = 0;
+      sceneRefs.fx.igniteContrast = 1;
       // Hand the drift back to CameraRig's resting rule, still turning.
       sceneRefs.handover.speed = null;
       set({
@@ -399,6 +405,7 @@ const useStore = create(
         tmPhase: auto ? 'tour' : 'scrub',
         tmCaption: null,
         tmFocusIdx: -1,
+        tmTourSeen: s.tmTourSeen || !!auto,
         _tmSnapshot: s._tmSnapshot || { storyVisible: s.storyVisible },
         storyVisible: false,
         spotlightActive: false,

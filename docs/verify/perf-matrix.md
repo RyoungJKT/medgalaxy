@@ -216,3 +216,32 @@ original matrix, gate >=55, PASS). No regression.
 `manualChunks`-related breakage (Vite's dev server serves native ESM and
 does not apply `build.rollupOptions` at all, so this is expected but was
 verified rather than assumed).
+
+## 5. On-display (headed) FPS evidence — review gate, round 1
+
+Every FPS number above was measured in headless Chrome, whose
+`requestAnimationFrame` is not driven by a real compositor (see the caveat at
+the top of this file). `tools/verify.mjs` now takes a `--headed` flag
+(`headless: false`), which runs the same harness in a real Chrome window on
+this machine's actual display, so the numbers below are vsync-bound rather
+than headless-bound.
+
+Machine/display: Apple M2 Max, macOS 26.6.2, built-in display reporting
+`2304 x 1296 @ 120.00Hz` (`system_profiler SPDisplaysDataType`). The vsync
+ceiling for an on-screen tab here is therefore 120 fps, not 60.
+
+Harness: `node tools/verify.mjs --headed --eval "<drive>" --fps 5` against the
+`:5280` dev server, 1440x900 (HIGH tier), one run each.
+
+| Tier | Scenario | Drive method (`--eval`) | FPS | Gate | Result |
+|---|---|---|---:|---:|---|
+| HIGH | At rest (post-film) | `skipIntro()` then `finishOverture()` | 120 | >=55 | PASS |
+| HIGH | Beat 2 (the morph) | `__overture.seek(6.0)` then `resume()`, 5 s window (6.0-11.0 s: the suppress ramp at 6.2 s through the ignite landing at 9.6 s) | 120 | >=55 | PASS |
+
+Both scenarios hold the display's full 120 Hz refresh on the real compositor,
+with no dropped-frame margin visible at this sampling resolution (the rAF
+counter cannot distinguish 120 from "vsync-locked at 120"). This is the
+on-display evidence the headless matrix above could not supply; it confirms
+the headless readings were not hiding a real-compositor regression, and it
+does not supersede those rows (headless remains the reproducible harness for
+the full matrix).

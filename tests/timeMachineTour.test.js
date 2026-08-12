@@ -8,6 +8,8 @@ import {
   tourYearAt,
   buildTourCaptions,
   midSentence,
+  tourPreempted,
+  tourGate,
 } from '../src/components/TimeMachine';
 
 const idMap = Object.fromEntries(diseases.map((d, i) => [d.id, i]));
@@ -225,6 +227,68 @@ describe('buildTourCaptions', () => {
       expect(s[0]).toBe(s[0].toUpperCase());
       expect(s).not.toContain('Rheumatic Heart Disease never');
     }
+  });
+});
+
+// The auto-tour's one-shot slot. The bug this pins (review gate F1b): arming
+// the timer used to be what spent the tour, so a viewer who happened to have a
+// node selected when it came due lost the narrated tour for the whole session
+// without ever seeing a frame of it.
+describe('tourGate: consumed vs preempted', () => {
+  const free = {
+    selectedNode: null, activeMode: null, spotlightActive: false, storyActive: null,
+    tmPhase: 'idle', roulettePhase: 'idle', supernovaPhase: 'idle',
+  };
+
+  it('runs when the field is free', () => {
+    expect(tourPreempted(free)).toBe(false);
+    expect(tourGate(free, false)).toBe('run');
+  });
+
+  it('reads every takeover as a preemption, not a consumption', () => {
+    const busy = [
+      { ...free, selectedNode: { index: 3 } },
+      { ...free, activeMode: 'velocity' },
+      { ...free, spotlightActive: true },
+      { ...free, storyActive: 'mismatch' },
+      { ...free, tmPhase: 'scrub' },
+      { ...free, roulettePhase: 'spinup' },
+      { ...free, supernovaPhase: 'burst' },
+    ];
+    for (const s of busy) {
+      expect(tourPreempted(s)).toBe(true);
+      expect(tourGate(s, false)).toBe('preempted');
+    }
+  });
+
+  it('does not treat a settled supernova as a takeover', () => {
+    expect(tourPreempted({ ...free, supernovaPhase: 'complete' })).toBe(false);
+    expect(tourGate({ ...free, supernovaPhase: 'complete' }, false)).toBe('run');
+  });
+
+  it('leaves the slot unspent after a preemption, so the tour re-arms', () => {
+    // The exact session the fix is about: preempted by a selection, then the
+    // viewer deselects. Nothing has consumed the tour, so it can still run.
+    let consumed = false;
+    const preempted = { ...free, selectedNode: { index: 3 } };
+    const first = tourGate(preempted, consumed);
+    expect(first).toBe('preempted');
+    if (first === 'run') consumed = true;   // the caller's rule: only 'run' spends it
+    expect(consumed).toBe(false);
+
+    const second = tourGate(free, consumed);
+    expect(second).toBe('run');
+    if (second === 'run') consumed = true;
+    expect(consumed).toBe(true);
+
+    // ...and it is a one-shot: once spent, never again, whatever the field says.
+    expect(tourGate(free, consumed)).toBe('consumed');
+  });
+
+  it('is consumed by a Time Machine the viewer opened themselves', () => {
+    // startTimeMachine flips tmPhase, which is what latches `consumed` in the
+    // component; the gate then refuses regardless of the field being free again.
+    expect(tourGate(free, true)).toBe('consumed');
   });
 });
 

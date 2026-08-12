@@ -15,7 +15,13 @@ export const sceneRefs = {
   //   glowSuppress: 0..1 fade on the additive glow sprites, which the shader
   //     desaturation path cannot reach (they would float as saturated halos
   //     over a graphite galaxy during beat 2).
-  fx: { morphOverride: null, ignite: 0, desat: 0, ember: 0, glowSuppress: 0 },
+  //   igniteContrast: exponent applied to each node's own ignite weight before
+  //     the black-body ramp (1 = the raw weights). The hero's weight is exactly
+  //     1.0, so raising the exponent leaves it untouched and pulls every other
+  //     node's burn down — that is what keeps beat 2 a single flare instead of
+  //     two comparable ones (review gate F4). Only meaningful while
+  //     `ignite > 0`, i.e. inside the film.
+  fx: { morphOverride: null, ignite: 0, desat: 0, ember: 0, glowSuppress: 0, igniteContrast: 1 },
   // Velocity-matched handover: the overture's final glide writes its terminal
   // angular velocity here and CameraRig feeds it to the orbit controls, so the
   // film's motion continues into the instrument with no dead frame. `cancelled`

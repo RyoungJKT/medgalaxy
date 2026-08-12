@@ -108,8 +108,14 @@ export default function Header() {
   const startTimeMachine = useStore(s => s.startTimeMachine);
   const stopTimeMachine = useStore(s => s.stopTimeMachine);
   const setMethodologyOpen = useStore(s => s.setMethodologyOpen);
+  const tmTourSeen = useStore(s => s.tmTourSeen);
   const tmActive = tmPhase !== 'idle';
-  const toggleTimeMachine = () => { if (tmActive) stopTimeMachine(); else startTimeMachine(false); };
+  // First press owes the viewer the story (review gate F1c): if no narrated
+  // tour has run yet in this session — the film's auto-tour preempted, the
+  // hint chip never taken — this button is the only way the decade story can
+  // still be delivered, so it starts the tour rather than a bare scrubber.
+  // Once any tour has been seen, the button is the plain instrument it was.
+  const toggleTimeMachine = () => { if (tmActive) stopTimeMachine(); else startTimeMachine(!tmTourSeen); };
 
   // First activation is the user gesture that primes the AudioContext
   // (autoplay-safe); init() is idempotent so every toggle just calls it.

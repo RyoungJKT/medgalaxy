@@ -38,6 +38,7 @@ const T_B2 = 5.0;          // beat 2, the morph        7.0 s
 const T_B3 = 12.0;         // beat 3, release          4.5 s
 const T_END = 16.5;
 const T_SUPPRESS = T_B2 + 1.2;   // palette drained to graphite
+const T_HERO = T_B2 + 2.6;       // the hero caption + the ignition swell
 const T_IGNITE_END = T_B2 + 4.6; // radii + burn fully landed
 
 // Release internals, relative to the start of beat 3 (shared by the normal and
@@ -58,6 +59,22 @@ const C_HOLD_END = 2.7;    // hero caption held 1.5 s, then release
 
 const REDUCED_DISSOLVE = 0.3; // reduced motion: held frames, 300 ms dissolves
 
+// Beat 2's hero dominance (review gate F4, "two comparable flares"). Every
+// node's ignite weight is raised to this power before the black-body ramp.
+// The weights themselves are data (src/utils/igniteWeights.js) and stay data —
+// this shapes how the film *presents* them, not who burns. Sepsis is the only
+// node that reaches exactly 1.0, so pow() leaves the hero untouched and pulls
+// the field down behind it: the nearest competitor, COPD at 0.895, drops to
+// 0.717. Measured at the hero-caption frame (t=8.2, 1440x900, 120px box
+// around each node): COPD's mean luminance was 88 percent of sepsis's and its
+// core blew out white — the frame the review shot. At 3.0 it reads 52 percent
+// with 1,193 bright pixels against sepsis's 5,104, and sepsis itself is
+// unmoved (125.9 -> 125.0). The mid-field smolder survives: the sampled
+// mid-field box moves 44.3 -> 41.9. Nothing outside the film reads this
+// channel — `ignite` is 0 the moment the release finishes.
+const HERO_CONTRAST = 3.0;
+const contrastAt = (p) => 1 + (HERO_CONTRAST - 1) * p;
+
 // Sound (DIRECTION section 5, moments 1-3). Every call site guard-calls the
 // global so a session with sound never initialized costs nothing.
 const playSound = (name) => { if (typeof window !== 'undefined') window.__mgAudio?.play?.(name); };
@@ -68,8 +85,24 @@ const SEAT = {
   attention0: { m: 1.5, az: 0, el: 12 },
   attention1: { m: 1.15, az: 4, el: 10 },
   morph: { m: 1.45, az: 6, el: 12 },
+  // Portrait's beat-2 seat (review gate F7). The camera's 60 degree field is
+  // vertical, so a 375x812 frame has barely 30 degrees across — the seat that
+  // frames the field on a 1440x900 desktop runs the hero off the right edge on
+  // a phone. Measured at the ignite landing (t=9.6): sepsis projected to x=323
+  // of 375 with a 14.7px radius and a bloom halo several times that, clipped by
+  // the bezel; the field's own bounds ran -14..387. Pulling the seat back by
+  // the same 1.35 the framing was short by lands sepsis near x=288 with the
+  // whole field inside the frame. Portrait only — a landscape tablet has the
+  // width the desktop seat assumes.
+  morphPortrait: { m: 1.45 * 1.35, az: 6, el: 12 },
   rest: { m: 1.0, az: -15, el: 8 },
 };
+
+// Beat 2's seat depends on the frame's shape, not on the input device: a
+// portrait window is the thing that cannot hold the desktop framing.
+function isPortrait() {
+  return typeof window !== 'undefined' && window.innerHeight > window.innerWidth;
+}
 
 export function seatPos(camDist, s) {
   const r = camDist * s.m;
@@ -152,6 +185,9 @@ function releaseFx(r, o) {
   o.desat = 1 - back;
   o.glow = 1 - back;
   o.ignite = 1 - back;
+  // Held, not released: the burn fades out on `ignite` alone, so the field
+  // never brightens back toward the hero on its way to black.
+  o.contrast = HERO_CONTRAST;
   o.ember = sramp(r, R_EMBER_0, R_EMBER_1);
   o.morph =
     r < R_MORPH_HOLD ? 1 : r >= R_MORPH_END ? null : 1 - sramp(r, R_MORPH_HOLD, R_MORPH_END);
@@ -165,6 +201,7 @@ function fxNormal(t, o) {
     o.ember = 0;
     o.glow = 0;
     o.morph = 0;
+    o.contrast = 1;
   } else if (t < T_B3) {
     // Beat 2: suppression first, then the burn. Ignite is eased in (pow > 1) so
     // the eye reads deflation before it reads fire.
@@ -173,6 +210,12 @@ function fxNormal(t, o) {
     o.morph = sramp(t, T_SUPPRESS, T_IGNITE_END);
     o.ignite = Math.pow(sramp(t, T_SUPPRESS, T_IGNITE_END), 1.35);
     o.ember = 0;
+    // The hero's dominance is complete by the frame that names the hero. It
+    // rides the first half of the burn (suppression -> hero caption) rather
+    // than the whole ignite ramp: the finding's own frame is the caption
+    // moment, and a separation that only finished a second later still left
+    // two comparable flares under the sentence that names one of them.
+    o.contrast = contrastAt(sramp(t, T_SUPPRESS, T_HERO));
   } else {
     releaseFx(t - T_B3, o);
   }
@@ -182,13 +225,14 @@ function fxReduced(t, o) {
   const D = REDUCED_DISSOLVE;
   if (t < T_B2) {
     o.desat = 1 - ramp(t, 0, D);
-    o.ignite = 0; o.ember = 0; o.glow = 0; o.morph = 0;
+    o.ignite = 0; o.ember = 0; o.glow = 0; o.morph = 0; o.contrast = 1;
   } else if (t < T_B3) {
     o.desat = ramp(t, T_B2, T_B2 + D);
     o.glow = o.desat;
     o.morph = ramp(t, T_SUPPRESS, T_SUPPRESS + D);
     o.ignite = ramp(t, T_SUPPRESS, T_SUPPRESS + D);
     o.ember = 0;
+    o.contrast = contrastAt(ramp(t, T_SUPPRESS, T_SUPPRESS + D));
   } else {
     const r = t - T_B3;
     const back = ramp(r, 0, D);
@@ -196,6 +240,7 @@ function fxReduced(t, o) {
     o.glow = 1 - back;
     o.ignite = 1 - back;
     o.ember = ramp(r, 0, D);
+    o.contrast = HERO_CONTRAST;
     o.morph =
       r < R_MORPH_HOLD ? 1 : r >= R_MORPH_HOLD + D ? null : 1 - ramp(r, R_MORPH_HOLD, R_MORPH_HOLD + D);
   }
@@ -208,6 +253,10 @@ function fxCompressed(t, o, s0) {
     o.morph = s0.morph + (1 - s0.morph) * sramp(t, 0, C_MORPH_END);
     o.ignite = s0.ignite + (1 - s0.ignite) * Math.pow(sramp(t, C_SUPPRESS, C_MORPH_END), 1.2);
     o.ember = 0;
+    // Same rule on the compressed path: landed by the hero caption, which the
+    // skip fires at C_SUPPRESS.
+    const c0 = s0.contrast != null ? s0.contrast : 1;
+    o.contrast = c0 + (HERO_CONTRAST - c0) * sramp(t, 0, C_SUPPRESS);
   } else {
     releaseFx(t - C_HOLD_END, o);
   }
@@ -222,7 +271,7 @@ function fullCues(CAP, releaseAt, endAt) {
     { t: T_B2, run: (s) => s.setOvertureBeat(2) },
     { t: T_B2 + 1.4, run: (s) => s.setOvertureCaption(CAP.dies()) },
     // The odometer-flip moment: the hero caption and the ignition swell land together.
-    { t: T_B2 + 2.6, run: (s) => { s.setOvertureCaption(CAP.hero()); playSound('ignition'); } },
+    { t: T_HERO, run: (s) => { s.setOvertureCaption(CAP.hero()); playSound('ignition'); } },
     ...releaseCues(CAP, releaseAt, endAt),
   ];
 }
@@ -231,13 +280,23 @@ function releaseCues(CAP, r0, endAt) {
   return [
     { t: r0, run: (s) => { s.setOvertureBeat(3); s.setUiRevealed(true); playSound('release'); } },
     { t: r0 + 0.6, run: (s) => s.setOvertureCaption(CAP.explore()) },
-    { t: r0 + 1.2, run: () => useStore.setState({ hintsShown: true }) },
     { t: endAt - 0.7, run: (s) => s.setOvertureCaption(null) },
+    // The bottom band (hint chips + story chips) waits for the release caption
+    // to leave rather than being nudged clear of it (review gate F2): the card
+    // sits at bottom:110 desktop / 90 mobile and the chips at bottom:50 / 32,
+    // so on both viewports they were sharing the same band — "Explore the gap."
+    // printed straight over the story row (rg1-09, rg1-42). The caption's null
+    // cue fires 300 ms before this one and OvertureCaption's exit fade is
+    // 200 ms, so the band is never revealed while any of that card is still on
+    // screen. `hintsShown` gates both rows; finishOverture sets it too, which
+    // is what covers a film that ends early.
+    { t: endAt - 0.4, run: () => useStore.setState({ hintsShown: true }) },
     { t: endAt, run: (s) => s.finishOverture() },
   ];
 }
 
 function buildNormal(CAP) {
+  const morph = isPortrait() ? SEAT.morphPortrait : SEAT.morph;
   return {
     kind: 'normal',
     fx: fxNormal,
@@ -245,8 +304,8 @@ function buildNormal(CAP) {
     beatAt: (t) => (t < T_B2 ? 1 : t < T_B3 ? 2 : 3),
     segments: [
       { t0: T_B1, t1: T_B1 + 5.0, from: SEAT.attention0, to: SEAT.attention1, ease: easeExpoOut },
-      { t0: T_B2, t1: T_B2 + 2.5, from: SEAT.attention1, to: SEAT.morph, ease: easeSineInOut },
-      { t0: T_B3, t1: T_B3 + R_GLIDE, from: SEAT.morph, to: SEAT.rest, ease: easeGlide },
+      { t0: T_B2, t1: T_B2 + 2.5, from: SEAT.attention1, to: morph, ease: easeSineInOut },
+      { t0: T_B3, t1: T_B3 + R_GLIDE, from: morph, to: SEAT.rest, ease: easeGlide },
     ],
     cues: fullCues(CAP, T_B3, T_END),
   };
@@ -271,6 +330,7 @@ function buildReduced(CAP) {
 // held 1.5 s, then the release beat at its normal speed.
 function buildCompressed(CAP, snapshot, fromPos, reduced) {
   const end = C_HOLD_END + (T_END - T_B3);
+  const morph = isPortrait() ? SEAT.morphPortrait : SEAT.morph;
   return {
     kind: 'compressed',
     fx: (t, o) => fxCompressed(t, o, snapshot),
@@ -279,8 +339,8 @@ function buildCompressed(CAP, snapshot, fromPos, reduced) {
     // Reduced motion keeps its held frame through the skip too: the compressed
     // morph plays as a state change, with no camera move under it.
     segments: reduced ? [] : [
-      { t0: 0, t1: C_MORPH_END, fromPos, to: SEAT.morph, ease: easeSineInOut },
-      { t0: C_HOLD_END, t1: C_HOLD_END + R_GLIDE, from: SEAT.morph, to: SEAT.rest, ease: easeGlide },
+      { t0: 0, t1: C_MORPH_END, fromPos, to: morph, ease: easeSineInOut },
+      { t0: C_HOLD_END, t1: C_HOLD_END + R_GLIDE, from: morph, to: SEAT.rest, ease: easeGlide },
     ],
     cues: [
       { t: 0, run: (s) => s.setOvertureBeat(2) },
@@ -302,7 +362,7 @@ export default function OvertureSequence({ camDist }) {
     camDispatched: null,
     handoverArmed: false,
     reduced: false,
-    fx: { desat: 1, ignite: 0, ember: 0, glow: 0, morph: 0 },
+    fx: { desat: 1, ignite: 0, ember: 0, glow: 0, morph: 0, contrast: 1 },
   });
 
   // Beat 0 grade: the assembly is near-monochrome from the first painted frame.
@@ -318,6 +378,7 @@ export default function OvertureSequence({ camDist }) {
     sceneRefs.fx.ignite = 0;
     sceneRefs.fx.ember = 0;
     sceneRefs.fx.glowSuppress = 0;
+    sceneRefs.fx.igniteContrast = 1;
     sceneRefs.handover.speed = null;
     sceneRefs.handover.cancelled = false;
   }, []);
@@ -466,6 +527,7 @@ export default function OvertureSequence({ camDist }) {
     sceneRefs.fx.ember = o.ember;
     sceneRefs.fx.glowSuppress = o.glow;
     sceneRefs.fx.morphOverride = o.morph;
+    sceneRefs.fx.igniteContrast = o.contrast != null ? o.contrast : 1;
 
     if (r.paused != null) return;
 

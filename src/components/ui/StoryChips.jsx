@@ -48,11 +48,16 @@ export default function StoryChips() {
   const isRouletteActive = roulettePhase !== 'idle';
   // Chips arrive with the rest of the chrome, at the overture's release beat.
   const uiRevealed = useStore(s => s.uiRevealed);
+  // ...but not while the release caption still owns the bottom band. The film
+  // sets `hintsShown` once "Explore the gap." has left the frame (review gate
+  // F2, OvertureSequence's releaseCues); finishOverture sets it too, so a film
+  // that ends early still lands the chips. Outside the film it is simply true.
+  const bandShown = useStore(s => s.hintsShown);
 
   if (!storyVisible && uiRevealed) return null;
 
   const mob = isMob();
-  const show = storyVisible && uiRevealed;
+  const show = storyVisible && uiRevealed && bandShown;
 
   return (
     <div style={{
@@ -63,7 +68,16 @@ export default function StoryChips() {
       opacity: show ? 1 : 0, visibility: show ? 'visible' : 'hidden',
       pointerEvents: show ? 'auto' : 'none',
       transition: 'opacity 0.4s ease, visibility 0.4s ease',
-      width: mob ? '92vw' : undefined,
+      // Same Chromium shrink-to-fit trap the Task 17 mobile sweep found in
+      // HintChips (see HintChips.jsx): an absolutely positioned flex row
+      // anchored by `left:50%` with no explicit width resolves to roughly half
+      // its containing block, not its content's natural width. Mobile was
+      // already pinned at 92vw by that sweep, which is why only the desktop
+      // row was left broken — at 1440px, half is 720px against the ~880px
+      // seven chips need, so every label wrapped to two lines (review gate F3,
+      // rg1-09: "Most / Researched", "Rich / vs / Poor"). max-content sizes
+      // the row to the chips themselves.
+      width: mob ? '92vw' : 'max-content',
     }}>
       {chips.map(c => (
         <button
