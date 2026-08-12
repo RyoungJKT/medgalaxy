@@ -22,6 +22,7 @@ import PostFX from './components/PostFX';
 import SelectionRipple from './components/SelectionRipple';
 import GhostShells from './components/GhostShells';
 import IntroSequence from './components/IntroSequence';
+import AssemblyFlight from './components/AssemblyFlight';
 import OvertureSequence from './components/OvertureSequence';
 import AdaptiveDpr from './components/AdaptiveDpr';
 import GravityLens from './components/GravityLens';
@@ -156,7 +157,14 @@ export default function App() {
         camera={{
           fov: 60,
           near: 1,
-          far: camDist * 4,
+          // 8 R0, not 4 (ADDENDUM 1 section 3). Beat 0's spawn shell reaches
+          // 4.3 R0 from the origin with the camera 2.9 R0 out behind it, so at
+          // 4 R0 fifty-two of the 153 instances began the assembly beyond the
+          // far plane: hard-clipped, then popping into existence as they
+          // crossed it, which is precisely what "nothing appears from nothing"
+          // forbids. It also un-clips the background star shell, which lives at
+          // 4.0 to 5.2 R0 from the origin and had always been partly cut.
+          far: camDist * 8,
           position: [0, 0, camDist],
         }}
         gl={{
@@ -186,6 +194,11 @@ export default function App() {
 
         <Suspense fallback={null}>
           <TimeMachine camDist={camDist} />
+          {/* Beat 0's flight driver mounts before DiseaseNodes on purpose: its
+              effect publishes sceneRefs.assembly, which DiseaseNodes' own init
+              effect reads to place all 153 instances at their spawns on the
+              very first frame (ADDENDUM 1 section 3, first-frame integrity). */}
+          <AssemblyFlight camDist={camDist} />
           <DiseaseNodes />
           <EdgeNetwork />
           <GlowSprites />

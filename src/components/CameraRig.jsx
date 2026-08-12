@@ -6,9 +6,9 @@ import gsap from 'gsap';
 import useStore from '../store';
 import { sceneRefs } from '../sceneRefs';
 import { TIER } from '../utils/tiers';
+import { ASM, assemblySeat } from '../utils/assembly';
 
 const PARALLAX_STRENGTH = 3.0;
-const ASSEMBLY_ELEV = 12; // degrees above the galactic plane (DIRECTION beat 0)
 
 export default function CameraRig({ camDist }) {
   const controlsRef = useRef();
@@ -40,16 +40,21 @@ export default function CameraRig({ camDist }) {
     return () => { sceneRefs.cameraJump = null; };
   }, [camera]);
 
-  // Beat 0, assembly: the instrument turns on. Camera holds 2.2 R0, 12 degrees
-  // above the galactic plane, then drifts in to 1.5 R0 over the assembly's 4.0 s
-  // on a long sine.inOut ("held breath"). DIRECTION section 2, beat 0.
+  // Beat 0, assembly: the galaxy assembles itself. ADDENDUM 1 section 3 moves
+  // the opening seat out to 2.9 R0 (was 2.2) at 12 degrees above the galactic
+  // plane, drifting in to 1.5 R0 across the full 5.2 s on sine.inOut, plus a
+  // 2.5 degree azimuth counter-drift turning *against* the streams' curl so the
+  // ten ribbons sweep across frame rather than at it. Which way the ribbons
+  // wind is derived from the layout by makePlan, not chosen: `curlSign`.
+  //
+  // gsap interpolates the position in Cartesian under the same sine.inOut, and
+  // assemblySeat() states the identical seat analytically for the harness seek;
+  // over a 2.5 degree arc the chord and the arc differ by parts in ten
+  // thousand, so playback and seek agree to well under a pixel.
   useEffect(() => {
-    const seat = (m) => {
-      const el = (ASSEMBLY_ELEV * Math.PI) / 180;
-      return [0, camDist * m * Math.sin(el), camDist * m * Math.cos(el)];
-    };
-    const start = seat(2.2);
-    const end = seat(1.5);
+    const curl = sceneRefs.assembly ? sceneRefs.assembly.curlSign : 1;
+    const start = assemblySeat(camDist, curl, 0);
+    const end = assemblySeat(camDist, curl, ASM.total);
 
     // Reduced motion: no drift at all, take the beat 1 seat and hold it.
     const reduced =
@@ -73,12 +78,16 @@ export default function CameraRig({ camDist }) {
       });
     };
 
+    // The harness's beat-0 seek seats the camera analytically, which a live
+    // 5.2 s tween would immediately walk away from.
+    sceneRefs.killAssemblyDrift = () => { if (driftTween) driftTween.kill(); };
+
     // The clock starts when the landing overlay is dismissed, not at page load,
     // so a viewer who reads the landing copy still gets the whole assembly.
-    if (useStore.getState().introStarted) runDrift(4.0);
+    if (useStore.getState().introStarted) runDrift(ASM.total);
     const unsubStart = useStore.subscribe(
       s => s.introStarted,
-      (started) => { if (started) runDrift(4.0); }
+      (started) => { if (started) runDrift(ASM.total); }
     );
 
     // Skip during assembly: fast-forward to the beat 1 seat.
@@ -102,7 +111,12 @@ export default function CameraRig({ camDist }) {
       }
     );
 
-    return () => { if (driftTween) driftTween.kill(); unsubStart(); unsub(); };
+    return () => {
+      if (driftTween) driftTween.kill();
+      if (sceneRefs.killAssemblyDrift) sceneRefs.killAssemblyDrift = null;
+      unsubStart();
+      unsub();
+    };
   }, [camera, camDist]);
 
   // Subscribe to flyTarget changes

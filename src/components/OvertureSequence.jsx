@@ -81,7 +81,10 @@ const playSound = (name) => { if (typeof window !== 'undefined') window.__mgAudi
 
 // ── Camera seats, as multiples of R0 (camDist) ──
 export const SEAT = {
-  assembly: { m: 2.2, az: 0, el: 12 },
+  // ADDENDUM 1 section 3: beat 0's opening seat moves out to 2.9 R0 to hold the
+  // spawn shell in frame. CameraRig owns the drift itself (assemblySeat()); this
+  // entry is the board's record of where the piece starts.
+  assembly: { m: 2.9, az: 0, el: 12 },
   attention0: { m: 1.5, az: 0, el: 12 },
   attention1: { m: 1.15, az: 4, el: 10 },
   morph: { m: 1.45, az: 6, el: 12 },

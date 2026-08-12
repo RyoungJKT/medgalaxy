@@ -58,11 +58,21 @@ export default function GlowSprites() {
       groupRef.current.visible = opacity > 0.005;
     }
 
+    // Beat 0's fly-in (ADDENDUM 1 section 3): the halos wake at phase 4, with
+    // the last giants still in the air. A halo parked at an empty seat while
+    // its own node is visibly two-thirds of the way there is the one thing the
+    // assembly cannot afford, so while the flight owns the field these follow
+    // it — position from the bezier, and the node's own 0.35-to-1.00 flight
+    // brightness on top of the group fade, so a comet's halo arrives with it.
+    const asm = sceneRefs.assembly;
+    const flying = !!(asm && asm.active);
+
     for (const idx of glowIndices) {
       const ref = refsMap.current[idx];
       if (ref) {
-        ref.position.set(curPos[idx][0], curPos[idx][1], curPos[idx][2]);
-        if (ref.material) ref.material.opacity = opacity;
+        if (flying) ref.position.set(asm.pos[idx * 3], asm.pos[idx * 3 + 1], asm.pos[idx * 3 + 2]);
+        else ref.position.set(curPos[idx][0], curPos[idx][1], curPos[idx][2]);
+        if (ref.material) ref.material.opacity = flying ? opacity * Math.min(1, asm.bright[idx]) : opacity;
       }
     }
 

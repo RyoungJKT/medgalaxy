@@ -28,7 +28,9 @@ export const REVEAL_BASE_HZ = 440; // A4: the two-note rising-fifth motif's root
 export const SOUND_NAMES = ['assembly', 'ignition', 'release', 'tmBoom', 'reveal', 'tick'];
 
 // Rough foreground duration per sound (ms): how long the ambient duck holds.
-export const DUCK_MS = { assembly: 2900, ignition: 1400, release: 2000, tmBoom: 1600, reveal: 500, tick: 120 };
+// The assembly's window follows beat 0's own budget: the resolve lands at
+// 4.99 s and rings for 1.6 s after it (ADDENDUM 1 section 3).
+export const DUCK_MS = { assembly: 6600, ignition: 1400, release: 2000, tmBoom: 1600, reveal: 500, tick: 120 };
 
 function makeNoiseBuffer(ctx) {
   const len = Math.round(ctx.sampleRate * 2);
@@ -52,28 +54,73 @@ function envGain(ctx, dest, attack, hold, release, peak, t0) {
   return g;
 }
 
-// ── Moment 1: assembly shimmer. The granular bed fades in with the
-// filaments and resolves to a single soft consonance as the layout locks.
+// ── Moment 1: the assembly, rewritten for the fly-in (ADDENDUM 1 section 3).
+// "The granular bed fades in over the first 1.0 s, each of the ten streams adds
+// one partial as it launches (a rising ten-note cluster across 1.44 s),
+// resolving to the single soft consonance as the last giant lands at 4.99 s,
+// with one low thud at -18 dB on that landing."
+//
+// The ten partials are the ten streams, in the order they launch, so the ear
+// counts what the eye is counting. They are a stacked harmonic series over the
+// drone's own low A rather than a scale: ten simultaneous notes have to be
+// consonant by construction or the cluster turns into a chord nobody chose.
+// Each partial holds until the last landing, so the cluster is still ringing
+// when the consonance resolves it.
+export const ASSEMBLY_LAUNCH = 0.16;  // one stream every 160 ms, ten in 1.44 s
+export const ASSEMBLY_LAND = 4.99;    // the last giant
+export const ASSEMBLY_THUD_DB = -18;  // one low thud on that landing
+const ASSEMBLY_ROOT = 110;            // A2, an octave under the reveal motif's root
+
 function synthAssembly(e, t0) {
   const ctx = e.ctx;
   const bp = ctx.createBiquadFilter();
   bp.type = 'bandpass';
   bp.Q.value = 1.1;
   bp.frequency.setValueAtTime(2000, t0);
-  bp.frequency.linearRampToValueAtTime(6000, t0 + 1.6);
+  bp.frequency.linearRampToValueAtTime(6000, t0 + 2.4);
   const bed = ctx.createBufferSource();
   bed.buffer = e.noiseBuf;
   bed.loop = true;
-  bed.connect(bp).connect(envGain(ctx, e.master, 1.2, 0.4, 0.8, 0.12, t0));
+  // Fades in over the first 1.0 s, holds under the whole assembly, and is gone
+  // by the time beat 1 speaks.
+  bed.connect(bp).connect(envGain(ctx, e.master, 1.0, 3.4, 0.8, 0.10, t0));
   bed.start(t0);
-  bed.stop(t0 + 2.6);
+  bed.stop(t0 + 5.3);
 
+  for (let c = 0; c < 10; c++) {
+    const at = t0 + ASSEMBLY_LAUNCH * c;
+    const osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.value = ASSEMBLY_ROOT * (c + 2); // harmonics 2..11: rising, consonant
+    // Quieter the higher it sits, so the cluster reads as one widening tone
+    // rather than ten voices competing.
+    const peak = 0.030 / Math.sqrt(c + 1);
+    osc.connect(envGain(ctx, e.master, 0.35, ASSEMBLY_LAND - ASSEMBLY_LAUNCH * c - 0.35, 0.9, peak, at));
+    osc.start(at);
+    osc.stop(t0 + ASSEMBLY_LAND + 1.0);
+  }
+
+  // The resolve: the single soft consonance, on the frame the last giant lands.
+  const land = t0 + ASSEMBLY_LAND;
   const resolve = ctx.createOscillator();
   resolve.type = 'sine';
   resolve.frequency.value = 660; // consonant against the drone's low A
-  resolve.connect(envGain(ctx, e.master, 0.15, 0.5, 0.7, 0.06, t0 + 1.4));
-  resolve.start(t0 + 1.4);
-  resolve.stop(t0 + 2.8);
+  resolve.connect(envGain(ctx, e.master, 0.15, 0.5, 0.9, 0.06, land));
+  resolve.start(land);
+  resolve.stop(land + 1.6);
+
+  // ...and the thud under it: the biggest thing in the galaxy arriving.
+  const thudGain = dbToGain(ASSEMBLY_THUD_DB);
+  const thud = ctx.createOscillator();
+  thud.type = 'sine';
+  thud.frequency.setValueAtTime(70, land);
+  thud.frequency.exponentialRampToValueAtTime(38, land + 0.5);
+  const thudLp = ctx.createBiquadFilter();
+  thudLp.type = 'lowpass';
+  thudLp.frequency.value = 180;
+  thud.connect(thudLp).connect(envGain(ctx, e.master, 0.02, 0.12, 0.5, thudGain, land));
+  thud.start(land);
+  thud.stop(land + 0.8);
 }
 
 // ── Moment 2: ignition. 300ms of near-silence — the duck IS the drama —

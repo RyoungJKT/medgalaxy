@@ -131,6 +131,24 @@ export function arrival(x) {
 }
 
 /**
+ * arrival()'s own derivative, d/dx of the curve above:
+ *
+ *   arrival'(x) = 25 * x * e^(-5x) / ARRIVAL_NORM
+ *
+ * The assembly fly-in needs it because the comet stretch and the filament
+ * opacity are both functions of a node's *speed*, and a node on a bezier
+ * driven by arrival() has speed |dB/dp| * arrival'(q) / duration. Differencing
+ * two frames' positions would work too, but it lags by a frame and goes to
+ * pieces on the first frame and on any seek, which is exactly where the
+ * acceptance shots are taken. Exactly 0 at both endpoints, so a node at rest
+ * has no stretch and no filament by construction.
+ */
+export function arrivalRate(x) {
+  const c = x < 0 ? 0 : x > 1 ? 1 : x;
+  return (ARRIVAL_K * ARRIVAL_K * c * Math.exp(-ARRIVAL_K * c)) / ARRIVAL_NORM;
+}
+
+/**
  * arrival() under the same mass-weighted stagger staggeredEase applies to the
  * morph: a global 0..1 progress becomes this node's own eased 0..1 progress
  * from its lag factor L, so giants land last. The addendum's exit table asks

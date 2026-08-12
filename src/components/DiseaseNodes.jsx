@@ -9,6 +9,7 @@ import { TIER } from '../utils/tiers';
 import { useAttentionColors } from './AttentionMap';
 import { igniteWeights } from '../utils/igniteWeights';
 import { lagFactor, staggeredEase, springStepInto, DUR } from '../utils/motion';
+import { ASM, fogRangeAt } from '../utils/assembly';
 import plasmaVert from '../shaders/plasma.vert.glsl?raw';
 import plasmaFrag from '../shaders/plasma.frag.glsl?raw';
 import pulseVert from '../shaders/pulse.vert.glsl?raw';
@@ -22,6 +23,8 @@ const _s3 = new THREE.Vector3();
 // 60fps) — springStepInto writes into this instead of allocating a [x, v]
 // tuple every iteration of the instancing loop.
 const _spring = [0, 0];
+// Scratch [near, far] for the beat-0 fog range.
+const _fog = [0, 0];
 
 // Category index lookup for aCatId attribute
 const CAT_INDEX = {};
@@ -125,6 +128,11 @@ export default function DiseaseNodes() {
   // Intro scale tracking
   const introScalesRef = useRef(null);
   const introDoneRef = useRef(false);
+  // Beat 0 fly-in: the frame the flight stops owning the field, every channel
+  // it wrote has to be handed back exactly once (attribute to 1.0, colors to
+  // the category palette) rather than every frame for the rest of the session.
+  const asmWasActive = useRef(false);
+  const baseColRef = useRef(null);
   // Size-morph engine: smoothed sizeMode toggle + per-node hover breathe
   const morphRef = useRef(0);
   const hoverScaleRef = useRef(new Float32Array(count).fill(1));
@@ -147,6 +155,15 @@ export default function DiseaseNodes() {
     g.setAttribute('aCatId', new THREE.InstancedBufferAttribute(catIds, 1));
     g.setAttribute('aIgnite', new THREE.InstancedBufferAttribute(ignite, 1));
     g.setAttribute('aEmber', new THREE.InstancedBufferAttribute(ember, 1));
+    // ADDENDUM 1 section 3: the fly-in's brightness channel, 0.35 at launch to
+    // 1.00 at landing plus the 180 ms landing pip. HIGH and MEDIUM ride this
+    // shader attribute; LOW has no custom shaders and rides instanceColor
+    // instead (see the frame loop). Exactly 1.0 outside beat 0, so the shaders
+    // multiply by one for the whole rest of the session.
+    const flight = new Float32Array(count).fill(1);
+    const fa = new THREE.InstancedBufferAttribute(flight, 1);
+    fa.setUsage(THREE.DynamicDrawUsage);
+    g.setAttribute('aFlight', fa);
     return g;
   }, [count, mobDevice, diseases]);
 
@@ -206,10 +223,25 @@ export default function DiseaseNodes() {
     }
     sceneRefs.introScales = introScalesRef.current;
 
+    // First-frame integrity (ADDENDUM 1 section 3): if beat 0 is still ahead of
+    // us, the very first matrices written are the spawns at 0.55 radius, not
+    // the seats at full radius. The flight driver overwrites these on its first
+    // frame with the same values; this is what makes the promise hold even on a
+    // frame the driver has not run yet.
+    const asm = sceneRefs.assembly;
+    const pre = !introDoneRef.current && asm && asm.plan;
+
+    _q4.set(0, 0, 0, 1);
     for (let i = 0; i < count; i++) {
-      _v3.set(catPos[i][0], catPos[i][1], catPos[i][2]);
       const r = nR(diseases[i].papers);
-      const is = introScalesRef.current[i];
+      let is = introScalesRef.current[i];
+      if (pre) {
+        _v3.set(asm.plan.spawn[i * 3], asm.plan.spawn[i * 3 + 1], asm.plan.spawn[i * 3 + 2]);
+        is = ASM.rStart;
+        introScalesRef.current[i] = ASM.rStart;
+      } else {
+        _v3.set(catPos[i][0], catPos[i][1], catPos[i][2]);
+      }
       _s3.set(r * is, r * is, r * is);
       _m4.compose(_v3, _q4, _s3);
       mesh.setMatrixAt(i, _m4);
@@ -218,14 +250,20 @@ export default function DiseaseNodes() {
     mesh.instanceMatrix.needsUpdate = true;
     mesh.instanceColor.needsUpdate = true;
     mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    // LOW's brightness channel writes into instanceColor, so it needs the
+    // untouched category colors to scale (and to restore exactly on landing).
+    baseColRef.current = Float32Array.from(mesh.instanceColor.array);
     sceneRefs.instancedMesh = mesh;
   }, [count, diseases, shaderMode]);
 
-  // Update fog range based on data extent
+  // Update fog range based on data extent. The settled range; beat 0's fly-in
+  // widens it and hands it back here (see the frame loop).
+  const restFog = useRef([0, 0]);
   useEffect(() => {
     const rawMax = useStore.getState().rawMax || 600;
     const near = rawMax * 0.6;
     const far = rawMax * 3.0;
+    restFog.current = [near, far];
     if (plasmaMat) {
       plasmaMat.uniforms.fogNear.value = near;
       plasmaMat.uniforms.fogFar.value = far;
@@ -257,8 +295,32 @@ export default function DiseaseNodes() {
       mat.uniforms.igniteContrast.value = fx.igniteContrast ?? 1;
     }
 
+    // ── Beat 0 fly-in (ADDENDUM 1 section 3) ──────────────────────────────
+    // AssemblyFlight ran a moment ago at priority -1 and left this frame's
+    // flight state in sceneRefs.assembly. While it is active it replaces the
+    // old staged intro ramp entirely: position, scale multiplier, the comet's
+    // quaternion and non-uniform stretch, and the brightness channel. This loop
+    // still writes every matrix; the flight only supplies what goes into them.
+    const asm = sceneRefs.assembly;
+    const asmActive = !!(asm && asm.active);
+
+    // The fog has to reach the spawn shell or the whole first frame is black
+    // (see fogRangeAt). Only the shader tiers carry a fog term at all; LOW's
+    // MeshPhongMaterial has none and needs no widening.
+    if (mat.uniforms && (asmActive || asmWasActive.current)) {
+      const [rn, rf] = restFog.current;
+      if (asmActive) {
+        fogRangeAt(store.rawMax || 600, asm.t, rn, rf, _fog);
+        mat.uniforms.fogNear.value = _fog[0];
+        mat.uniforms.fogFar.value = _fog[1];
+      } else {
+        mat.uniforms.fogNear.value = rn;
+        mat.uniforms.fogFar.value = rf;
+      }
+    }
+
     // Intro scale logic
-    if (!introDoneRef.current) {
+    if (!asmActive && !introDoneRef.current) {
       const scales = introScalesRef.current;
       if (!scales) return;
 
@@ -309,8 +371,17 @@ export default function DiseaseNodes() {
     const morphT = fx.morphOverride ?? morphRef.current;
 
     const hoverIdx = store.hoveredNode ? store.hoveredNode.index : -1;
+    const flightAttr = mesh.geometry.getAttribute('aFlight');
+    const baseCol = baseColRef.current;
     for (let i = 0; i < count; i++) {
-      _v3.set(curPos[i][0], curPos[i][1], curPos[i][2]);
+      if (asmActive) {
+        _v3.set(asm.pos[i * 3], asm.pos[i * 3 + 1], asm.pos[i * 3 + 2]);
+        _q4.set(asm.quat[i * 4], asm.quat[i * 4 + 1], asm.quat[i * 4 + 2], asm.quat[i * 4 + 3]);
+        if (scales) scales[i] = asm.radius[i];
+      } else {
+        _v3.set(curPos[i][0], curPos[i][1], curPos[i][2]);
+        _q4.set(0, 0, 0, 1);
+      }
       let r;
       if (tm && tm.active) {
         r = tm.radiusAt(i); // Task 12
@@ -320,12 +391,51 @@ export default function DiseaseNodes() {
       springStepInto(_spring, hoverScaleRef.current[i], hoverVelRef.current[i], i === hoverIdx ? HOVER_SCALE : 1, dt, HOVER_TC);
       hoverScaleRef.current[i] = _spring[0];
       hoverVelRef.current[i] = _spring[1];
-      const is = (scales ? scales[i] : 1) * _spring[0];
-      _s3.set(r * is, r * is, r * is);
+      const is = (asmActive ? asm.radius[i] : (scales ? scales[i] : 1)) * _spring[0];
+      const rr = r * is;
+      // The comet: local +Y is the travel axis (that is what _q4 was built
+      // from), so the stretch goes on Y alone. It is exactly 1.000 by p = 0.92
+      // and for every landed node, which makes this a sphere again before any
+      // caption exists.
+      if (asmActive) _s3.set(rr, rr * asm.stretch[i], rr);
+      else _s3.set(rr, rr, rr);
       _m4.compose(_v3, _q4, _s3);
       mesh.setMatrixAt(i, _m4);
+
+      if (asmActive) {
+        const b = asm.bright[i];
+        if (mobDevice) {
+          // LOW: no custom shaders, so brightness rides instanceColor.
+          if (baseCol && mesh.instanceColor) {
+            mesh.instanceColor.array[i * 3] = baseCol[i * 3] * b;
+            mesh.instanceColor.array[i * 3 + 1] = baseCol[i * 3 + 1] * b;
+            mesh.instanceColor.array[i * 3 + 2] = baseCol[i * 3 + 2] * b;
+          }
+        } else if (flightAttr) {
+          flightAttr.array[i] = b;
+        }
+      }
     }
     mesh.instanceMatrix.needsUpdate = true;
+
+    if (asmActive) {
+      if (mobDevice) { if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true; }
+      else if (flightAttr) flightAttr.needsUpdate = true;
+      asmWasActive.current = true;
+    } else if (asmWasActive.current) {
+      // Hand back, once: beat 1 opens on the exact palette and the exact
+      // brightness the rest of the piece assumes.
+      asmWasActive.current = false;
+      if (mobDevice) {
+        if (baseCol && mesh.instanceColor) {
+          mesh.instanceColor.array.set(baseCol);
+          mesh.instanceColor.needsUpdate = true;
+        }
+      } else if (flightAttr) {
+        flightAttr.array.fill(1);
+        flightAttr.needsUpdate = true;
+      }
+    }
   });
 
   const onPointerOver = (e) => {

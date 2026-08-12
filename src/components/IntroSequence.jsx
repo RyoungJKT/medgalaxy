@@ -1,13 +1,26 @@
 import { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import useStore from '../store';
+import { sceneRefs } from '../sceneRefs';
+import { ASM } from '../utils/assembly';
 
-// Timeline thresholds (seconds)
-const T_HERO = 0.4;
-const T_CONSTELLATION = 1.0;
-const T_GALAXY = 1.8;
-const T_EFFECTS = 2.8;
-const T_DONE = 4.0;  // beat 0, assembly (DIRECTION section 2)
+// Timeline thresholds (seconds).
+//
+// ADDENDUM 1 section 3: "Budget: 4.0 s to 5.2 s." The staged scale-up these
+// thresholds used to drive is gone — AssemblyFlight owns node presence now, and
+// the flight's own per-node launch and landing times replace hero /
+// constellation / galaxy entirely. What the intermediate phases still gate is
+// the scene furniture that comes up around the arriving nodes (GlowSprites and
+// EdgeNetwork both wake at phase 4), so they are carried across at the same
+// fractions of the budget they had at 4.0 s: every threshold is its old value
+// times 5.2/4.0. Phase 5 is still "beat 0 is over, the film may speak", and it
+// still lands 210 ms after the last giant (measured 4.98 s on this table).
+const SCALE = ASM.total / 4.0;
+const T_HERO = 0.4 * SCALE;           // 0.52
+const T_CONSTELLATION = 1.0 * SCALE;  // 1.30
+const T_GALAXY = 1.8 * SCALE;         // 2.34
+const T_EFFECTS = 2.8 * SCALE;        // 3.64
+export const T_DONE = ASM.total;      // 5.20, beat 0, assembly (ADDENDUM 1 section 3)
 
 function smoothstep(a, b, t) {
   const x = Math.max(0, Math.min(1, (t - a) / (b - a)));
@@ -61,12 +74,20 @@ export default function IntroSequence() {
     // Wait for landing overlay to be dismissed
     if (!store.introStarted) return;
 
-    // Record start time on first frame after landing dismissed
+    // One clock for beat 0. AssemblyFlight runs at priority -1, i.e. earlier in
+    // this same frame, and publishes the moment the assembly began plus any
+    // frozen harness seek; the phases and the flight must never disagree about
+    // what time it is, or a seeked frame shows nodes from one moment with the
+    // scene furniture of another.
+    const asm = sceneRefs.assembly;
+    if (asm && asm.t0 != null) startTimeRef.current = asm.t0;
     if (startTimeRef.current === null) {
       startTimeRef.current = state.clock.getElapsedTime();
     }
 
-    const t = state.clock.getElapsedTime() - startTimeRef.current;
+    const t = asm && asm.seekT != null
+      ? asm.seekT
+      : state.clock.getElapsedTime() - startTimeRef.current;
 
     // Continuous progress
     const progress = smoothstep(0, T_DONE, t);

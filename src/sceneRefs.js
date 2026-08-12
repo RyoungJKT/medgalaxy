@@ -32,6 +32,18 @@ export const sceneRefs = {
   // so a not-yet-mounted or inactive Time Machine is a no-op, falling back to
   // the normal papers/mortality morph radius.
   tm: null,
+  // Beat 0's fly-in (ADDENDUM 1 section 3), owned + assigned by
+  // AssemblyFlight.jsx. Null until that component mounts and inert once
+  // `active` goes false, which is the whole rest of the session: DiseaseNodes
+  // guards with `assembly && assembly.active` and otherwise composes matrices
+  // exactly as it did before this wave. While active it carries this frame's
+  // per-node flight position, scale multiplier, comet quaternion + stretch and
+  // brightness, plus `t`/`seekT` so IntroSequence's phases share the flight's
+  // clock and the verify harness can freeze beat 0 the way it freezes the film.
+  assembly: null,
+  // Kills the 5.2 s beat-0 camera drift tween, so a harness seek can seat the
+  // camera analytically without the tween walking away from it.
+  killAssemblyDrift: null,
 };
 
 // Dev hooks: let the verify harness and console drive the grade directly and

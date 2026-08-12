@@ -2,14 +2,16 @@ attribute float aPhase;
 attribute float aCatId;
 attribute float aIgnite;   // 0..1 attention/death divergence weight
 attribute float aEmber;    // 1.0 for the overlooked decile, else 0
+attribute float aFlight;   // beat 0 fly-in brightness: 0.35 launch -> 1.00 landing (1.0 outside beat 0)
 varying vec3 vNormal, vWorldPos, vColor, vViewPos, vWorldNormal;
-varying float vPhase, vFogDepth, vCatId, vIgnite, vEmber;
+varying float vPhase, vFogDepth, vCatId, vIgnite, vEmber, vFlight;
 
 void main(){
   vPhase = aPhase;
   vCatId = aCatId;
   vIgnite = aIgnite;
   vEmber = aEmber;
+  vFlight = aFlight;
   #ifdef USE_INSTANCING_COLOR
     vColor = instanceColor;
   #else

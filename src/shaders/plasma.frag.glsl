@@ -9,7 +9,7 @@ uniform float emberAmount;    // beat 3 onward: standing scar on the overlooked 
 uniform float igniteContrast; // exponent on each node's own ignite weight (1 = raw weights)
 
 varying vec3 vNormal, vWorldPos, vColor, vViewPos, vWorldNormal, vObjPos;
-varying float vPhase, vFogDepth, vCatId, vIgnite, vEmber;
+varying float vPhase, vFogDepth, vCatId, vIgnite, vEmber, vFlight;
 
 // ── Tuning constants ──
 const vec3  KEY_DIR    = normalize(vec3(0.6, 0.8, 0.5));
@@ -176,6 +176,15 @@ void main(){
   float rim = pow(1.0 - NdotV, 3.0);
   col += vec3(1.0, 0.23, 0.08) * rim * vEmber * emberAmount
          * (0.30 + 0.05 * sin(time * 3.14159 + vPhase));
+
+  // ── Beat 0 fly-in brightness (ADDENDUM 1 section 3) ──
+  // 0.35 at launch to 1.00 at landing, plus the 180 ms 1.30x landing pip. It
+  // is the last thing applied and it is exactly 1.0 for every node outside
+  // beat 0, so nothing else in the piece can see this channel. The pip is
+  // allowed above 1.0 on purpose: it is the one frame a node's arrival is
+  // announced, and at 1.30x on a monochrome field it stays well under the
+  // composer's bloom threshold, which remains reserved for the ignite ramp.
+  col *= vFlight;
 
   gl_FragColor = vec4(col, alpha);
 }

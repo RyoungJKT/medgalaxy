@@ -1673,3 +1673,202 @@ noted). Run one task at a time; each owns the session's state.
    it was for wave 1, so the frames are local evidence rather than repository
    state. `tools/verify-wave2.mjs` is committed and regenerates any of them in
    one command, which is the reproducible half.
+
+---
+
+# Round 7, wave 3: the fly-in assembly
+
+ADDENDUM 1 section 3 in full, amendments A1/A3, delta-list item 3 and the
+first-frame/skip halves of item 10. The wave the client asked for by name:
+"maybe nodes fly in like the space."
+
+Branch `next/showcase`, one commit. `main` untouched, nothing pushed.
+
+## What landed
+
+**`src/utils/assembly.js` (new, pure).** The whole flight as math: two
+deterministic index hashes (never `Math.random`, so beat 0 is byte-identical on
+every load and seekable), the ten category entry vectors on a Fibonacci sphere
+with the -25/+55 degree elevation clamp, `makePlan` (spawn, bezier control
+point, launch time, flight duration per node), `flightAt` (one node's complete
+state at any assembly time), `forceLand` (the skip's 0.5 s fast-forward),
+`assemblySeat` (the camera channel) and `fogRangeAt`. Nothing in it touches
+THREE, the store or the DOM, which is what turns the addendum's acceptance
+items into 38 unit tests instead of pixel comparisons.
+
+**`src/components/AssemblyFlight.jsx` (new).** The driver, mounted *before*
+`DiseaseNodes` and running at `useFrame` priority -1 (after `IdleDrift`'s -2,
+before `DiseaseNodes`' 0). It publishes `sceneRefs.assembly` — this frame's
+per-node position, scale multiplier, comet quaternion, stretch and brightness —
+and owns the filaments (one `LineSegments`, one draw call, 153 tangent tails
+rewritten per frame, dead at beat 1, all tiers). It also owns the beat-0 clock
+and publishes it, so `IntroSequence`'s phases and the flight can never disagree
+about what time it is.
+
+**Ownership.** `DiseaseNodes`' matrix loop remains the sole writer of every node
+matrix on every frame in every mode. While `assembly.active` it composes from
+`assembly.pos` instead of `curPos`, uses `assembly.radius` as its scale
+multiplier in place of the old staged intro ramp, and applies the quaternion
+plus a non-uniform scale on local +Y (the axis the quaternion was built to
+align with the velocity). When it is false — which is the whole rest of the
+session — not one line of that loop behaves differently from before this wave.
+The quaternion and the non-uniform scale exist only while a node is in flight.
+`IdleDrift` is `introPhase >= 5`-gated and therefore inert for all of beat 0;
+verified, unchanged.
+
+**Brightness channel.** New `aFlight` instanced attribute through
+`plasma.vert/frag` and `pulse.vert/frag`, applied as the last multiply before
+`gl_FragColor`, exactly 1.0 outside beat 0. LOW rides `instanceColor` scaled
+from a captured base-color table and restored exactly on landing.
+
+**Everything else in section 3.** Camera seat 2.9 R0 elevation 12 drifting to
+1.5 R0 over 5.2 s sine.inOut with the 2.5 degree azimuth counter-drift, its
+direction *derived* from the layout (`curlSign` = the mean sense of the ten
+bows about the vertical) rather than chosen. HIGH-only dust settle (3 percent
+inward on the group's own scale, 0.4 percent per second rotation bump, back to
+the resting rate by 5.6 s, zero new objects). Moment 1 rewritten: bed in over
+1.0 s, ten harmonic partials one per stream launch across 1.44 s, the soft
+consonance plus a -18 dB low thud on the last giant's landing at 4.99 s.
+`GlowSprites` follow the flight position and its brightness while it is live
+(otherwise the biggest halo in the galaxy sits at an empty seat while its own
+node is still visibly two-thirds of the way there). Beat 0's budget is 5.2 s and
+`IntroSequence`'s intermediate thresholds moved with it (each old value times
+5.2/4.0); phase 5 still means "beat 0 is over".
+
+## Two deviations, both forced by the data, both documented in code
+
+**1. Stream launch order is derived, not legend order.** The addendum launches
+the streams "in legend order" and then states the result: "the last thing to
+land is the biggest thing", latest arrival 4.99 s, "and then 210 ms of
+stillness". Those cannot both hold on this table. The launch spread is 1.44 s
+and the entire flight-duration range is 1.15 s, so the galaxy's largest node can
+only land last if its category happens to launch last — and the largest node
+here is Heart Disease, whose category is third in legend order. Implemented
+literally, the assembly ends at **4.50 s** with the giant landing 0.64 s
+earlier: a 700 ms dead hold at the end of beat 0 and no "biggest thing last".
+
+So the launch *slot* is the one transcribed number that became derived: the ten
+streams still launch 0.16 s apart with the last at 1.44 s, but they are ordered
+by their own heaviest member, lightest first. Mass grows through the assembly,
+the giant is in the last stream, and the measured result is **latest arrival
+4.983 s, last lander = Heart Disease = the largest node in the galaxy,
+stillness 0.217 s** — against the addendum's 4.99 and 210 ms. The shape the
+addendum described is now true by construction on any table, including after a
+weekly PubMed refresh that reshuffles which category is biggest.
+
+**2. A spawn-shell floor at 3.4 layout radii.** `S = P * K + D_c * camDist *
+0.85` cannot deliver "0 instances inside 2.0 R0" for nodes near the layout's
+centre: the hero sits exactly at the origin, so its spawn would be the category
+offset alone — 0.85 R0, deep inside the galaxy it is supposed to be falling
+into. 31 of 153 were inside the gate. Spawns below the floor are pushed out
+along their own spawn direction to 3.4 layout radii, which is the addendum's own
+prose ("spawn distances between roughly 3.4 and 5.2 times the layout radius")
+made true for all 153 rather than for the 122 that already satisfied it.
+Measured desktop shell: **2.43 to 4.32 R0**, 0 inside 2.0 R0, 0 outside 6 R0.
+
+## Two defects found by the acceptance shots, both fixed
+
+**The fog rendered the entire spawn shell black.** The node shaders' atmospheric
+fog is tuned for the settled galaxy (0.6 to 3.0 layout radii). Every spawn is
+3.4 to 5.2 radii out with the camera 2.9 R0 behind that, so the first painted
+frame had all 153 instances present, correctly placed, correctly scaled — and
+fogged to pure black. The shot proved it: **40 pixels above 12/255 in a 1440x900
+frame.** A frame with nothing in it is exactly what "nothing appears from
+nothing" forbids. `fogRangeAt` opens the range to cover the shell and contracts
+it back to the settled one over the last 600 ms of beat 0, landing on the exact
+resting values at t = 5.2 so beat 1 is byte-identical. During a skip the
+assembly clock rides the same `arrival()` curve the nodes do, so the fog
+fast-forwards with them instead of snapping.
+
+**52 of 153 spawns began beyond the camera's far plane.** `far` was `camDist *
+4`; the worst spawn is 7.2 R0 from the opening seat. Those instances were
+hard-clipped and then *popped into existence* as they crossed the plane — the
+literal defect this wave exists to remove. `far` is now `camDist * 8`. It also
+un-clips the background star shell, which lives at 4.0 to 5.2 R0 from the origin
+and had always been partly cut. On-screen instances at t = 0 went from 20 to 68,
+and the first frame from 40 to 1,134 pixels above 12/255.
+
+## Verification
+
+`npx vitest run`: **275 passed** (16 files), up from 237. New file
+`tests/assembly.test.js`, 38 tests: hash determinism and plan reproducibility,
+the ten entry vectors and the per-stream chirality, first-frame integrity
+(153 present at exactly 0.55 radius at their spawns, 0 inside 2.0 R0, 0 outside
+6 R0), the timing table, `arrival()` monotonicity on the flight driver, radius
+0.55 to exactly 1.00 with no overshoot and no regression, stretch capped at
+1+1.8 and exactly 1.000 by p = 0.92, every quaternion identity at beat 1 frame 1,
+the brightness ramp and the pip's exact return to 1.000, filament velocity
+scaling and death on both sides of the flight, skip integrity (identity stretch
+and quaternion from the first fast-forward frame; the terminal state written,
+not lerped, so every node lands on its seat exactly), the camera seat, the fog
+range and the far plane. `npx vite build`: green.
+
+Browser (`tools/verify-wave3.mjs` against :5280, headless Chrome, 1440x900
+unless noted). Run one task at a time. Every geometric assertion is read off the
+live `instanceMatrix` array, not off the driver's own arrays.
+
+| check | result |
+|---|---|
+| **delta 3** seek set, desktop (0.0 / 1.6 / 3.2 / 4.9 / 5.0 / 5.2) | **PASS**. t=0: 153 present, **0 inside 2.0 R0**, 0 rotated, shell 2.43..4.32 R0, camera 2.9 R0, desat 1.00. t=1.6: 146 in flight, 146 stretched (max **2.80x**, the cap), 146 filament segments. t=3.2: 102 in flight / 51 landed, 43 still stretched. t=4.9: **1 in flight — the giant**. t=5.0: giant down, its landing pip live at **1.271**. t=5.2: 0 rotated, max anisotropy 1.000, 0 filaments, phase 5. Shots `w3-assembly-*`. |
+| **delta 3** seek set, portrait 375x812 (LOW) | **PASS on every gate except the literal 2.0 R0 one**, which is a desktop measurement: R0 is camDist and portrait's camera sits 2.4 layout radii out instead of 1.4, so the same shell is 1.42..2.86 R0 there and 104 instances read as "inside 2.0 R0". The scale-free form of the same promise (no spawn inside 3.4 layout radii) holds on both and is unit-tested. Everything else matches desktop: 146 stretched at 1.6 s (max 2.80x), 146 filaments, giant alone in flight at 4.9 s, clean at 5.2 s. Shots `w3m-assembly-*`. |
+| **first frame**, played rather than seeked | **PASS**. 153 present, 0 inside 2.0 R0, 0 rotated, camera 2.9 R0, desat 1. `w3-assembly-firstpaint`. |
+| **skip at t = 1.0 s** | **PASS**. 90 nodes in flight and 90 non-identity quaternions at the input; two frames later, on beat 1's first frame: phase 5, **0 non-identity quaternions**, max anisotropy **1.000**, 0 filaments. At +0.5 s: 0 in flight, assembly inactive, **worst distance from any node to its seat 0.0000**. |
+| **FPS during the 5.2 s window** | **120 fps** headless and **120 fps headed** on HIGH desktop (gate 55); **118 fps** on `--mobile` LOW portrait (gate 30). The headless caveat from earlier waves applies to the headless number; the headed run is the on-display one. |
+| **the film after the longer beat 0** | **PASS**. Phase 5 at **5.20 s** after dismissal; beats 1/2/3 at 5.2 / 10.2 / 17.2; release end at **21.70 s**. Film length beat 1 to release end **16.50 s**, exactly as boarded, and 21.7 s is the addendum's own stated total. |
+| **reduced motion** (`--reduced`, both viewports) | **PASS, unchanged from today**. Phase 5 on the first frame, driver `dead: true` and never active, all 153 seated at full radius, 0 filaments, camera at the 1.5 R0 beat-1 seat. |
+| **wave-1 delta 1 regression**, 60 s untouched | **PASS**. `tmPhase 'idle'`, `tmFocusIdx -1`, `tmCaption null`, `sizeMode 'papers'`, `uiRevealed`/`hintsShown`/`storyVisible` true, `autoRotate` true, `autoRotateSpeed` exactly 0.3, `tm.active` false, `tm.exit` 0, 0 ghosts, `ember` 1, `glowSuppress` 0, camera at 1.000 R0. Beat 0's driver inert (`active` false, `dead` true, 0 in flight, 0 filaments, max stretch 1). Budget is now 5.2 + 16.5 + 1.5 + 30.3 + 2.6 = **56.1 s**, the addendum's own figure, with 3.9 s of home before the 60 s mark. `w3-home-after-60s`. |
+
+## Visual verdict on the 1.6 s and 3.2 s frames, honestly
+
+**1.6 s: it reads as a meteor shower falling inward. It does not read as ten
+distinguishable ribbons.** About forty stretched comet ellipses are visible
+across the frame, each with a faint curved filament tail, and their directions
+are consistent enough that the whole frame reads as matter converging on a
+centre. A 3x-brightened crop (`w3-assembly-1p6-crop`) shows the mechanism
+clearly: a long, gently bowed tail behind a visibly elongated node. But the ten
+streams overlap heavily in screen space from the 2.6 R0 seat, so the viewer sees
+one shower from many directions rather than ten ribbons — the grouping the
+addendum promises ("ten streams, not 153 darts") is true in the geometry and weak
+in the projection.
+
+**3.2 s: this one lands.** The galaxy has taken its recognizable shape, roughly
+a third of the field is still arriving, and two or three late comets are still
+visibly stretched at the frame's edge. It reads unmistakably as assembly rather
+than as a switch being thrown, which is the note the client actually raised.
+
+**The frame is dark, by design and to a degree that is worth a decision.** Beat
+0 runs at `desat = 1` with node brightness climbing from 0.35, so mean frame
+luminance is 0.04/255 at t=0, 0.23 at 1.6 s, 0.86 at 3.2 s and 3.6 at 5.2 s.
+The old assembly was brighter mid-beat because nodes popped in at full radius
+and full brightness near the centre. The trade is the addendum's own ("the
+fly-in is monochrome, which is precisely what makes the color arrival the
+reward"), and the two fixes above recovered most of what was recoverable
+without touching a spec'd number. If the client wants beat 0 brighter, the one
+honest knob is `ASM.brightMin` (0.35) and the fog's `fogNear0`/`fogFar0`;
+everything else is load-bearing.
+
+## Concerns for wave 4 and beyond
+
+1. **The ten streams do not separate visually.** The addendum's mechanism for
+   "ten ribbons" is the per-category bow direction, which gives a shared
+   *chirality* about each stream's axis rather than a shared direction, and the
+   category offset (`D_c * camDist * 0.85`) is small next to the spawn spread
+   (`P * K`, up to 4.3 R0). The streams are real in the geometry and in the
+   launch timing; they are not legible in the projection. If the client wants
+   the ribbons to read, the lever is the category offset, not the curl.
+2. **Four nodes spawn behind the opening camera** (of 153) and enter frame from
+   the edges. The elevation clamp keeps whole *streams* from entering from
+   behind, which is what section 3 asks for, but individual members of a stream
+   whose seats are far off-axis can still land behind the seat.
+3. **68 of 153 instances are inside the frustum at t = 0**; the rest enter from
+   off-frame during the flight. That is honest comet behaviour rather than a
+   pop, and the stated acceptance is about instance state (which passes), but it
+   is worth knowing that "all 153 in the first painted frame" is true of the
+   scene and not of the screen.
+4. **The far-plane change (`camDist * 4` to `* 8`) is global.** It fixes real
+   clipping of both the spawn shell and the star shell, and depth precision is
+   dominated by `near: 1` rather than by far, but any wave that touches depth
+   sorting should know it moved.
+5. **`docs/verify` now holds 16 `w3-*`/`w3m-*` shots** plus three brightened
+   crops. That directory is gitignored, as in waves 1 and 2;
+   `tools/verify-wave3.mjs` is committed and regenerates any of them.
