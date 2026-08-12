@@ -58,6 +58,9 @@ const useStore = create(
     spotlightActive: false,
     spotlightCaption: '',
 
+    // ── Sound (Task 15; engine lives in src/audio/engine.js) ──
+    soundOn: false,
+
     // ── Methodology panel (credibility layer) ──
     methodologyOpen: false,
 
@@ -162,6 +165,7 @@ const useStore = create(
     setConnFocusIdx: (v) => set({ connFocusIdx: v }),
     setSpotlightActive: (v) => set({ spotlightActive: v }),
     setSpotlightCaption: (v) => set({ spotlightCaption: v }),
+    setSoundOn: (v) => set({ soundOn: v }),
     setMethodologyOpen: (v) => set({ methodologyOpen: v }),
     setMeshRef: (ref) => set({ meshRef: ref }),
     setFlyTarget: (v) => set({ flyTarget: v }),

@@ -454,9 +454,9 @@ export default function TimeMachine() {
       case 'shockwave': {
         const idx = s.idMap['covid-19'];
         if (idx !== undefined) fireRipple(idx, COVID_EMBER);
-        // The muffled 2020 boom (DIRECTION section 5, moment 4); no-op until
-        // the audio engine lands.
-        if (typeof window !== 'undefined') window.__mgAudio?.play?.('boom');
+        // The muffled 2020 boom (DIRECTION section 5, moment 4): smaller than
+        // the thesis ignition, history rhymes but does not shout.
+        if (typeof window !== 'undefined') window.__mgAudio?.play?.('tmBoom');
         break;
       }
       case 'camera-home':

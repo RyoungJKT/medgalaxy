@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import useStore from '../../store';
 import { isMob } from '../../utils/helpers';
 import SearchDropdown from './SearchDropdown';
+import audioEngine from '../../audio/engine';
 
 function SizeToggle() {
   const sizeMode = useStore(s => s.sizeMode);
@@ -93,6 +94,8 @@ export default function Header() {
   const setNeglectMode = useStore(s => s.setNeglectMode);
   const spotlightActive = useStore(s => s.spotlightActive);
   const setSpotlightActive = useStore(s => s.setSpotlightActive);
+  const soundOn = useStore(s => s.soundOn);
+  const setSoundOn = useStore(s => s.setSoundOn);
   const setActiveMode = useStore(s => s.setActiveMode);
   const sizeMode = useStore(s => s.sizeMode);
   const setSizeMode = useStore(s => s.setSizeMode);
@@ -107,6 +110,15 @@ export default function Header() {
   const setMethodologyOpen = useStore(s => s.setMethodologyOpen);
   const tmActive = tmPhase !== 'idle';
   const toggleTimeMachine = () => { if (tmActive) stopTimeMachine(); else startTimeMachine(false); };
+
+  // First activation is the user gesture that primes the AudioContext
+  // (autoplay-safe); init() is idempotent so every toggle just calls it.
+  const toggleSound = () => {
+    const next = !soundOn;
+    audioEngine.init();
+    audioEngine.setEnabled(next);
+    setSoundOn(next);
+  };
 
   const mob = isMob();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -226,6 +238,9 @@ export default function Header() {
                 <button onClick={() => { setSpotlightActive(!spotlightActive); setMenuOpen(false); }}
                   style={{ padding: '6px 10px', fontSize: 10, fontFamily: 'inherit', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, cursor: 'pointer', background: spotlightActive ? 'rgba(255,255,255,0.12)' : 'transparent', color: spotlightActive ? '#f59e0b' : '#e2e8f0', width: '100%', textAlign: 'left' }}
                 >{spotlightActive ? '✕ Spotlight' : 'Spotlight'}</button>
+                <button onClick={() => { toggleSound(); setMenuOpen(false); }}
+                  style={{ padding: '8px 10px', minHeight: 44, fontSize: 10, fontFamily: 'inherit', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, cursor: 'pointer', background: soundOn ? 'rgba(255,255,255,0.12)' : 'transparent', color: soundOn ? '#f59e0b' : '#e2e8f0', width: '100%', textAlign: 'left' }}
+                >{soundOn ? '✕ sound' : 'sound'}</button>
                 <div style={{ color: '#64748b', fontSize: 9, padding: '4px 4px 0' }}>About</div>
                 <button onClick={() => { setMethodologyOpen(true); setMenuOpen(false); }}
                   style={{ padding: '8px 10px', minHeight: 44, fontSize: 10, fontFamily: 'inherit', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, cursor: 'pointer', background: 'transparent', color: '#e2e8f0', width: '100%', textAlign: 'left' }}
@@ -262,6 +277,9 @@ export default function Header() {
           <button onClick={() => setSpotlightActive(!spotlightActive)}
             style={{ ...btnStyle, background: spotlightActive ? 'rgba(255,255,255,0.12)' : 'transparent', color: spotlightActive ? '#f59e0b' : '#e2e8f0' }}
           >{spotlightActive ? '✕ Spotlight' : 'Spotlight'}</button>
+          <button onClick={toggleSound}
+            style={{ ...btnStyle, background: soundOn ? 'rgba(255,255,255,0.12)' : 'transparent', color: soundOn ? '#f59e0b' : '#e2e8f0' }}
+          >{soundOn ? '✕ sound' : 'sound'}</button>
           <button onClick={() => setMethodologyOpen(true)} aria-label="Methodology" title="Methodology"
             style={{ ...btnStyle, width: 26, height: 26, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', fontWeight: 700, fontSize: 12, flexShrink: 0 }}
           >?</button>

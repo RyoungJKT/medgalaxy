@@ -58,6 +58,10 @@ const C_HOLD_END = 2.7;    // hero caption held 1.5 s, then release
 
 const REDUCED_DISSOLVE = 0.3; // reduced motion: held frames, 300 ms dissolves
 
+// Sound (DIRECTION section 5, moments 1-3). Every call site guard-calls the
+// global so a session with sound never initialized costs nothing.
+const playSound = (name) => { if (typeof window !== 'undefined') window.__mgAudio?.play?.(name); };
+
 // ── Camera seats, as multiples of R0 (camDist) ──
 const SEAT = {
   assembly: { m: 2.2, az: 0, el: 12 },
@@ -217,14 +221,15 @@ function fullCues(CAP, releaseAt, endAt) {
     { t: T_B2 - 0.3, run: (s) => s.setOvertureCaption(null) },
     { t: T_B2, run: (s) => s.setOvertureBeat(2) },
     { t: T_B2 + 1.4, run: (s) => s.setOvertureCaption(CAP.dies()) },
-    { t: T_B2 + 2.6, run: (s) => s.setOvertureCaption(CAP.hero()) },
+    // The odometer-flip moment: the hero caption and the ignition swell land together.
+    { t: T_B2 + 2.6, run: (s) => { s.setOvertureCaption(CAP.hero()); playSound('ignition'); } },
     ...releaseCues(CAP, releaseAt, endAt),
   ];
 }
 
 function releaseCues(CAP, r0, endAt) {
   return [
-    { t: r0, run: (s) => { s.setOvertureBeat(3); s.setUiRevealed(true); } },
+    { t: r0, run: (s) => { s.setOvertureBeat(3); s.setUiRevealed(true); playSound('release'); } },
     { t: r0 + 0.6, run: (s) => s.setOvertureCaption(CAP.explore()) },
     { t: r0 + 1.2, run: () => useStore.setState({ hintsShown: true }) },
     { t: endAt - 0.7, run: (s) => s.setOvertureCaption(null) },
@@ -279,7 +284,7 @@ function buildCompressed(CAP, snapshot, fromPos, reduced) {
     ],
     cues: [
       { t: 0, run: (s) => s.setOvertureBeat(2) },
-      { t: C_SUPPRESS, run: (s) => s.setOvertureCaption(CAP.hero()) },
+      { t: C_SUPPRESS, run: (s) => { s.setOvertureCaption(CAP.hero()); playSound('ignition'); } },
       ...releaseCues(CAP, C_HOLD_END, end),
     ],
   };
@@ -360,7 +365,13 @@ export default function OvertureSequence({ camDist }) {
     const clock = state.clock.getElapsedTime();
 
     if (!store.overtureActive) {
-      if (store.introStarted && !store.overtureDone) store.startOverture();
+      if (store.introStarted && !store.overtureDone) {
+        store.startOverture();
+        // Beat 0, assembly: the granular shimmer bed fades in with the
+        // filaments (moment 1). IntroSequence owns the visual; this is the
+        // earliest frame the film itself is live to cue from.
+        playSound('assembly');
+      }
       return;
     }
 

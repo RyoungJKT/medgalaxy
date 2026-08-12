@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber';
 import useStore from '../store';
 import { nR } from '../utils/helpers';
 import { TIER } from '../utils/tiers';
+import { igniteWeights } from '../utils/igniteWeights';
 
 // ── Phase durations (ms) ──
 const PREFOCUS_MS  = 1200;
@@ -23,6 +24,7 @@ export default function SupernovaReveal() {
   const batchTimerRef = useRef(0);
   const batchIdxRef = useRef(0);
   const basePosRef = useRef(null); // store target's base position for tremble
+  const emberRef = useRef(null);   // lazy igniteWeights().ember cache, for the reveal motif
 
   useFrame((state, delta) => {
     const s = useStore.getState();
@@ -87,6 +89,13 @@ export default function SupernovaReveal() {
         if (!s.storyActive) s.selectDisease(idx);
         batchTimerRef.current = 0;
         batchIdxRef.current = 0;
+        // Reveal motif (DIRECTION section 5, moment 5): the rising fifth,
+        // nudged down a minor third when this disease sits in the
+        // overlooked decile (igniteWeights' ember set).
+        if (!emberRef.current) emberRef.current = igniteWeights(diseases).ember;
+        if (typeof window !== 'undefined') {
+          window.__mgAudio?.play?.('reveal', { overlooked: emberRef.current[idx] === 1 });
+        }
       }
 
       if (supernovaPhase === 'linkwave') {

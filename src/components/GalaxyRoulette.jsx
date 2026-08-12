@@ -6,6 +6,7 @@ import useStore from '../store';
 import { TIER } from '../utils/tiers';
 import { nR, isMob } from '../utils/helpers';
 import { fmtFull, ppd } from '../utils/captions';
+import { igniteWeights } from '../utils/igniteWeights';
 
 // ── Module-level scratch objects (zero per-frame allocations) ──
 const _v3 = new THREE.Vector3();
@@ -74,6 +75,7 @@ export default function GalaxyRoulette() {
     winnerIdx: -1,
     tweens: [],
     didSelect: false,       // true after selectDisease called in reveal
+    ember: null,            // lazy igniteWeights().ember cache, for the reveal sound motif
   });
 
   useFrame((state, delta) => {
@@ -226,7 +228,7 @@ function onEnterSpinup(sr) {
 }
 
 function onEnterReveal(sr, store) {
-  const { curPos } = store;
+  const { curPos, diseases } = store;
 
   // Kill all tweens before starting reveal
   sr.tweens.forEach(t => t.kill());
@@ -242,6 +244,12 @@ function onEnterReveal(sr, store) {
         ease: 'power3.inOut',
       })
     );
+    // Reveal motif (DIRECTION section 5, moment 5): the same rising fifth
+    // supernova uses, nudged down a minor third for the overlooked decile.
+    if (!sr.ember) sr.ember = igniteWeights(diseases).ember;
+    if (typeof window !== 'undefined') {
+      window.__mgAudio?.play?.('reveal', { overlooked: sr.ember[sr.winnerIdx] === 1 });
+    }
   }
 }
 

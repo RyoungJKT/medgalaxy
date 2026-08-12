@@ -179,13 +179,21 @@ export default function MethodologyPanel() {
           </div>
 
           {/* 5. Size mapping */}
-          <div>
+          <div style={{ marginBottom: 20 }}>
             <div style={SH}>Size mapping</div>
             <div style={SP}>
               Node size follows a power law: floor, plus the square root of value divided by ceiling, times the range between floor and max size, computed from whichever value the Papers or Mortality toggle currently selects (src/utils/helpers.js, src/utils/constants.js). The square-root exponent compresses the range so a disease with over a million papers doesn't dwarf the display next to one with a few hundred.
             </div>
             <div style={SP}>
               The ceiling for each mode is set close to this edition's real maximum, about {fmt(MAX_PAPERS)} papers or {fmt(MAX_MORT)} deaths, not a shrunk-down cap. The single largest node in each mode is sized by its actual value, unclamped at the top as of this edition.
+            </div>
+          </div>
+
+          {/* 6. Sound */}
+          <div>
+            <div style={SH}>Sound</div>
+            <div style={SP}>
+              All audio is synthesized in the browser at runtime; no recordings are used.
             </div>
           </div>
 
