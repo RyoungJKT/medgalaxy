@@ -1,7 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import diseases from '../data/diseases.json';
 import meta from '../data/meta.json';
+import searchOverrides from '../data/search-overrides.json';
 import { nonDefaultMortalitySources } from '../src/components/ui/MethodologyPanel';
+import { pubmedTermFor } from '../src/utils/pubmedTerms';
 
 describe('methodology non-default mortality source table', () => {
   const rows = nonDefaultMortalitySources(diseases, meta.mortalityDefaultSource);
@@ -30,6 +32,47 @@ describe('methodology non-default mortality source table', () => {
       expect(d.label, d.id).toBeTruthy();
       expect(d.mortalityYear, d.id).toBeTruthy();
       expect(d.mortalitySource, d.id).toBeTruthy();
+    }
+  });
+});
+
+// The sidebar's "View on PubMed" link must reproduce the totals the pipeline
+// queried for, which means it has to resolve the same 11 overrides
+// scripts/refresh_pubmed.py and scripts/backfill_yearly.py use — all three
+// now load from the single data/search-overrides.json file.
+describe('data/search-overrides.json', () => {
+  it('holds exactly the 11 diseases the pipeline overrides', () => {
+    const expected = [
+      'plague', 'hpv', 'mrsa', 'nafld', 'als', 'copd',
+      'adhd', 'ocd', 'ptsd', 'c-difficile', 'hiv-aids',
+    ].sort();
+    expect(Object.keys(searchOverrides).sort()).toEqual(expected);
+  });
+
+  it('every override id is a real disease in diseases.json', () => {
+    const ids = new Set(diseases.map(d => d.id));
+    for (const id of Object.keys(searchOverrides)) {
+      expect(ids.has(id), id).toBe(true);
+    }
+  });
+});
+
+describe('pubmedTermFor (Sidebar link term)', () => {
+  it('resolves an overridden id to its expanded clinical phrase', () => {
+    expect(pubmedTermFor('copd', 'COPD')).toBe('chronic obstructive pulmonary disease');
+  });
+
+  it('resolves a non-overridden id to its plain label', () => {
+    expect(pubmedTermFor('dengue', 'Dengue')).toBe('Dengue');
+  });
+
+  it('strips a parenthetical from the label when there is no override', () => {
+    expect(pubmedTermFor('sleeping-sickness', 'Sleeping Sickness (African Trypanosomiasis)')).toBe('Sleeping Sickness');
+  });
+
+  it('every disease in diseases.json resolves to a non-empty term', () => {
+    for (const d of diseases) {
+      expect(pubmedTermFor(d.id, d.label), d.id).toBeTruthy();
     }
   });
 });

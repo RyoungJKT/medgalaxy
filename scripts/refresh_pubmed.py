@@ -15,21 +15,15 @@ import urllib.error
 
 DATA_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'diseases.json')
 META_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'meta.json')
+SEARCH_OVERRIDES_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'search-overrides.json')
 
-# Override search terms for diseases whose labels don't work as-is
-SEARCH_OVERRIDES = {
-    'plague': 'yersinia pestis plague',
-    'hpv': 'human papillomavirus',
-    'mrsa': 'methicillin-resistant staphylococcus aureus',
-    'nafld': 'non-alcoholic fatty liver disease OR NAFLD',
-    'als': 'amyotrophic lateral sclerosis',
-    'copd': 'chronic obstructive pulmonary disease',
-    'adhd': 'attention deficit hyperactivity disorder',
-    'ocd': 'obsessive compulsive disorder',
-    'ptsd': 'post-traumatic stress disorder',
-    'c-difficile': 'clostridioides difficile OR clostridium difficile',
-    'hiv-aids': 'HIV AIDS',
-}
+# Override search terms for diseases whose labels don't work as-is. Loaded
+# from data/search-overrides.json — the single source of truth shared with
+# scripts/backfill_yearly.py and src/utils/pubmedTerms.js (Sidebar's "View on
+# PubMed" link), so the query this script runs and the link the UI shows can
+# never drift apart.
+with open(SEARCH_OVERRIDES_PATH, 'r') as _f:
+    SEARCH_OVERRIDES = json.load(_f)
 
 YEARS = list(range(2015, 2025))  # 10 years of data
 RATE_LIMIT_DELAY = 0.35  # seconds between requests

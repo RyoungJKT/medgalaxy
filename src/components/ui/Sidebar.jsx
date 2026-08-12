@@ -4,6 +4,7 @@ import { CC, CL } from '../../utils/constants';
 import { fmt, isMob } from '../../utils/helpers';
 import Sparkline from './Sparkline';
 import insights from '../../../data/disease-insights.json';
+import { pubmedTermFor } from '../../utils/pubmedTerms';
 
 function SB({ l, v, s, vc }) {
   return (
@@ -142,7 +143,7 @@ export default function Sidebar() {
         {/* PubMed link */}
         <div style={{ padding: '0 16px 12px' }}>
           <a
-            href={`https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(disease.label)}&sort=date`}
+            href={`https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(pubmedTermFor(disease.id, disease.label))}&sort=date`}
             target="_blank" rel="noopener noreferrer"
             style={{ display: 'block', textAlign: 'center', padding: '8px 0', borderRadius: 6, background: c + '22', color: c, textDecoration: 'none', fontSize: 13, fontWeight: 500 }}
           >View on PubMed &rarr;</a>

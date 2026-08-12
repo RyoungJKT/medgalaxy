@@ -270,6 +270,10 @@ export default function TimeRail() {
       const tag = target && target.tagName;
       if (target && (tag === 'INPUT' || tag === 'TEXTAREA' || target.isContentEditable)) return;
       const s = useStore.getState();
+      // The methodology panel owns Escape while it's open (closing it is the
+      // only effect); the rail must not also leave the Time Machine underneath
+      // it (fix-14 review finding 4).
+      if (s.methodologyOpen) return;
       if (e.key === 'Escape') { s.stopTimeMachine(); return; }
       if (s.tmPhase !== 'scrub') return;
       if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;

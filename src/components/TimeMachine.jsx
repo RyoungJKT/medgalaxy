@@ -361,6 +361,11 @@ export default function TimeMachine() {
   useEffect(() => {
     const handover = () => {
       const s = useStore.getState();
+      // The methodology panel owns Escape (and, while it's up, every other
+      // keydown that would otherwise hand the tour over or release the
+      // finale) — the panel wins; closing it is the only effect while open
+      // (fix-14 review finding 4).
+      if (s.methodologyOpen) return;
       if (s.tmPhase === 'tour') {
         const tm = tmRef.current;
         if (tm) tm.targetYear = Math.round(tm.yearFloat);

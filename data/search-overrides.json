@@ -1,0 +1,13 @@
+{
+  "plague": "yersinia pestis plague",
+  "hpv": "human papillomavirus",
+  "mrsa": "methicillin-resistant staphylococcus aureus",
+  "nafld": "non-alcoholic fatty liver disease OR NAFLD",
+  "als": "amyotrophic lateral sclerosis",
+  "copd": "chronic obstructive pulmonary disease",
+  "adhd": "attention deficit hyperactivity disorder",
+  "ocd": "obsessive compulsive disorder",
+  "ptsd": "post-traumatic stress disorder",
+  "c-difficile": "clostridioides difficile OR clostridium difficile",
+  "hiv-aids": "HIV AIDS"
+}
