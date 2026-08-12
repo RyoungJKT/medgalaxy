@@ -1,6 +1,7 @@
 import React from 'react';
 import useStore from '../../store';
 import { CC } from '../../utils/constants';
+import { matchesSearch } from '../../utils/helpers';
 
 export default function SearchDropdown({ onSelect }) {
   const searchQuery = useStore(s => s.searchQuery);
@@ -9,7 +10,7 @@ export default function SearchDropdown({ onSelect }) {
   if (!searchQuery || searchQuery.length < 1) return null;
 
   const q = searchQuery.toLowerCase();
-  const matches = diseases.filter(d => d.label.toLowerCase().includes(q)).slice(0, 8);
+  const matches = diseases.filter(d => matchesSearch(d, q)).slice(0, 8);
 
   if (!matches.length) return null;
 

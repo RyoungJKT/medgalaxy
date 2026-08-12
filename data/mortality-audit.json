@@ -19,7 +19,7 @@
   },
   "chagas": {
     "value": 10000,
-    "year": 2026,
+    "year": null,
     "source": "WHO Chagas disease fact sheet (updated April 2026)",
     "action": "correct",
     "url": "https://www.who.int/news-room/fact-sheets/detail/chagas-disease-(american-trypanosomiasis)",
@@ -927,10 +927,10 @@
     "checked": "2026-08-12"
   },
   "covid-19": {
-    "value": 294000,
+    "value": 318570,
     "year": 2023,
-    "source": "WHO COVID-19 dashboard, reported deaths 2023; global reporting has since largely ceased",
-    "action": "keep",
+    "source": "WHO COVID-19 dashboard export, reported deaths 2023 (retrieved Aug 2026); reporting has since largely ceased",
+    "action": "correct",
     "url": "https://data.who.int/dashboards/covid19/deaths",
     "confidence": "high",
     "checked": "2026-08-12"

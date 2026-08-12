@@ -5,6 +5,17 @@ export function nRM(m){if(m<=0)return MN*0.2;return MN+Math.pow(Math.min(m,MAX_M
 export function fmt(n){if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=10000)return Math.round(n/1000)+'K';if(n>=1000)return(n/1000).toFixed(1)+'K';return String(n);}
 export function isMob(){return typeof window!=='undefined'&&(matchMedia('(pointer:coarse)').matches||window.innerWidth<768);}
 
+// A disease matches a search query on its canonical label or on any lay-term
+// alias it carries (e.g. colon-cancer's "Colon Cancer" alongside its
+// "Colorectal Cancer" label). sq must already be lower-cased; empty/falsy sq
+// matches everything. Every place the app filters or highlights by search
+// query goes through this so the alias list only has to be honored once.
+export function matchesSearch(d, sq){
+  if(!sq)return true;
+  if(d.label.toLowerCase().includes(sq))return true;
+  return!!d.aliases&&d.aliases.some(a=>a.toLowerCase().includes(sq));
+}
+
 export function decadeGrowth(yearlyPapers){
   // Always window onto the most recent 10 entries, regardless of how far
   // back yearlyPapers starts (yearStart) — keeps "last decade" meaning the

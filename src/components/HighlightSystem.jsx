@@ -3,7 +3,7 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import useStore from '../store';
 import { CC } from '../utils/constants';
-import { neglectColor, nR } from '../utils/helpers';
+import { neglectColor, nR, matchesSearch } from '../utils/helpers';
 import { sceneRefs } from '../sceneRefs';
 import { TIER } from '../utils/tiers';
 import { igniteWeights } from '../utils/igniteWeights';
@@ -119,7 +119,7 @@ export default function HighlightSystem() {
         _color.set(neg ? neglectColor(ppd) : CC[d.category]);
 
         const catVis = activeCats.has(d.category);
-        const searchMatch = !sq || d.label.toLowerCase().includes(sq);
+        const searchMatch = matchesSearch(d, sq);
 
         if (supernovaActive) {
           if (i === supernovaTargetIdx) {

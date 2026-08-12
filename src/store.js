@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import diseasesData from '../data/diseases.json';
 import connectionsData from '../data/connections.json';
-import { processData, nR, isMob } from './utils/helpers';
+import { processData, nR, isMob, matchesSearch } from './utils/helpers';
 import { computeLayouts } from './utils/layout';
 import { CATS } from './utils/constants';
 import { sceneRefs } from './sceneRefs';
@@ -259,7 +259,7 @@ const useStore = create(
       const eligible = [];
       for (let i = 0; i < ds.length; i++) {
         if (!activeCats.has(ds[i].category)) continue;
-        if (sq && !ds[i].label.toLowerCase().includes(sq)) continue;
+        if (!matchesSearch(ds[i], sq)) continue;
         eligible.push(i);
       }
       if (eligible.length < 6) return;

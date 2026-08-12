@@ -1010,3 +1010,118 @@ contradict the tile above it.
    entry.** Eight entries quoted numbers the audit moved; leaving them would
    have put a contradicted figure two inches below the corrected tile, which
    is exactly the credibility failure this pass exists to remove.
+
+## Round 5 punch-list wave: covid export refresh, tooltip truth, colon alias, chagas year
+
+Four non-blocking items left after the gate shipped at 9.06. One commit
+(`fix(polish): ship punch-list, covid export refresh, tooltip truth, colon
+alias, chagas year`).
+
+### 1 — COVID-19 2023 deaths: 294,000 -> 318,570
+
+Downloaded the live WHO global data export directly
+(`https://srhdpeuwpubsa.blob.core.windows.net/whdh/COVID/WHO-COVID-19-global-data.csv`,
+the file `data.who.int/dashboards/covid19/deaths` actually serves; the old
+`covid19.who.int/WHO-COVID-19-global-data.csv` URL now 404s to an HTML shell)
+and summed `New_deaths` over every row with `Date_reported` in `2023-01-01`
+through `2023-12-31`: **318,570**, across 12,720 country-day rows, matching
+the round-4 reviewer's export exactly. `data/diseases.json` and
+`data/mortality-audit.json`'s `covid-19` rows both now carry `"mortality":
+318570` / `"value": 318570` and the source string `"WHO COVID-19 dashboard
+export, reported deaths 2023 (retrieved Aug 2026); reporting has since
+largely ceased"`. The audit action moved `keep` -> `correct` (the number
+changed, not just the wording), so `tests/dataInvariants.test.js`'s action
+tally and its covid-19 spot-check both needed updating to match — both
+edited in place rather than left to rot against a manifest they no longer
+described.
+
+*Evidence, sidebar readback:* selected COVID-19 via search, sidebar tile
+reads "Deaths/yr · WHO reported 2023" / "319K" (the tile's own `fmt()`
+rounding of 318,570).
+
+### 2 — Mortality toggle tooltip
+
+`src/components/ui/Header.jsx`'s `SizeToggle` (the live component; the
+near-identical copy inside the unused, unimported `src/MedGalaxy.jsx` was
+left alone) read "Node size scaled by annual deaths reported by WHO" —
+false for the 114 of 153 rows whose figure comes from IHME, IARC, UNAIDS,
+CDC or a single study, not WHO. Reworded to "Node size scaled by annual
+deaths, per-disease sources shown in each sidebar", the exact string
+specified. Not length-matched to the old string (79 vs 51 characters) because
+the brief's literal text took precedence over the length note, and the
+tooltip box already wraps at `width: 220`.
+
+*Evidence, tooltip readback:* clicked Mortality, tooltip renders the new
+sentence in place, three lines, no clipping.
+
+### 3 — Colon Cancer alias
+
+`data/diseases.json`'s `colon-cancer` entry gained `"aliases": ["Colon
+Cancer"]`. Rather than patch only `SearchDropdown.jsx`, added one shared
+predicate, `matchesSearch(d, sq)` in `src/utils/helpers.js` (label match,
+falling back to any alias match), and pointed all three places that filter
+or highlight by `searchQuery` at it: `SearchDropdown.jsx` (the dropdown
+list), `HighlightSystem.jsx` (the 3D scene's dim/highlight pass), and
+`store.js`'s `startRoulette` (roulette eligibility). Before this, only the
+dropdown would have matched "colon" had it been patched alone — the 3D
+highlight and the roulette pool would have silently stayed unmatched,
+which is exactly the kind of inconsistency a reviewer would have caught next
+round. The dropdown still renders `d.label` ("Colorectal Cancer"), never the
+alias, so the canonical name is what a searcher sees.
+
+*Evidence, dropdown readback:* typed "colon" in the header search box,
+dropdown shows exactly one result, "Colorectal Cancer".
+
+### 4 — Chagas mortalityYear
+
+`data/diseases.json`'s chagas row borrowed 2026 — the fact sheet's revision
+date ("updated April 2026"), not a year its ~10,000 estimate describes.
+Every other yearless row in this dataset omits the `mortalityYear` key
+entirely (confirmed against `buruli-ulcer` and eight others); the key is now
+omitted for chagas too, rather than set to `null`, matching that convention
+and `tests/methodology.test.js`'s `typeof d.mortalityYear === 'number'`
+check for any row that carries the field at all. `mortality-audit.json`'s
+`year` stayed `null` (its existing convention for every yearless row, chagas
+included) — only `diseases.json`'s key needed removing.
+
+This reopened `tests/dataInvariants.test.js`'s "every disease carries a
+mortality source, and a year wherever a year exists" test, which had
+asserted *every* yearless row is both audit-flagged and matches
+`isNoGlobalEstimate()` — true for the other ten, false for chagas, which
+carries a real, named, published WHO estimate that simply has no reference
+year. Added a one-off carve-out for `id === 'chagas'` (asserts `action ===
+'correct'` and `isNoGlobalEstimate() === false` instead) and added `'chagas'`
+to the test's pinned, alphabetically-sorted yearless-id list.
+
+*Evidence, sidebar readback:* selected Chagas Disease via search; the deaths
+tile reads "Deaths/yr · WHO fact sheet" (no year, no crash, one line) —
+`mortalitySourceLabel`'s existing null-year handling (already exercised by
+`tests/mortalityLabel.test.js` for IHME GBD with a null year) needed no
+changes to render this cleanly.
+
+### Verification
+
+- `npx vitest run`: 166 tests, 14 files, green.
+- `npx vite build`: green.
+- Live app (`npx vite --port 5280`, Browser-pane MCP against the interactive
+  scene, not a scripted harness this round): `fix7-covid-sidebar` (COVID-19
+  tile: "Deaths/yr · WHO reported 2023", "319K"), `fix7-tooltip` (Mortality
+  toggle tooltip shows the new sentence), `fix7-colon-search` (typing "colon"
+  surfaces "Colorectal Cancer" and only that row), all three read back and
+  judged as above; chagas sidebar also spot-checked live.
+
+### Judgement calls worth flagging
+
+1. **The audit action for covid-19 changed from `keep` to `correct`**, which
+   the brief didn't explicitly call for but the invariant test enforces
+   consistently for every other row whose value moved — `keep` would have
+   quietly mislabeled a corrected figure as one that needed no correction.
+2. **The alias predicate was wired into all three search-matching call
+   sites, not just `SearchDropdown`.** The brief named the dropdown
+   specifically, but the app has exactly one `searchQuery` in the store and
+   three places read it; wiring only one would have made "colon" work in the
+   list but not in the scene it's supposed to be finding.
+3. **`mortalityYear` is omitted for chagas, not set to `null`**, because
+   that's what every other yearless row in the dataset already does and
+   `nonDefaultMortalitySources`'s field-type check expects — `null` would
+   have been a new, inconsistent representation of the same "no year" fact.

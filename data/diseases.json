@@ -148,7 +148,6 @@
       1032
     ],
     "region": "AMR",
-    "mortalityYear": 2026,
     "mortalitySource": "WHO Chagas disease fact sheet (updated April 2026)",
     "yearStart": 1990
   },
@@ -1121,6 +1120,7 @@
   {
     "id": "colon-cancer",
     "label": "Colorectal Cancer",
+    "aliases": ["Colon Cancer"],
     "category": "cancer",
     "description": "Cancer of the large intestine, highly treatable when detected early via screening.",
     "papers": 180574,
@@ -5251,7 +5251,7 @@
     "description": "Respiratory illness caused by SARS-CoV-2 that triggered a global pandemic.",
     "papers": 518131,
     "trend": 999,
-    "mortality": 294000,
+    "mortality": 318570,
     "fundingGap": "low",
     "yearlyPapers": [
       0,
@@ -5292,7 +5292,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2023,
-    "mortalitySource": "WHO COVID-19 dashboard, reported deaths 2023; global reporting has since largely ceased",
+    "mortalitySource": "WHO COVID-19 dashboard export, reported deaths 2023 (retrieved Aug 2026); reporting has since largely ceased",
     "yearStart": 1990
   },
   {

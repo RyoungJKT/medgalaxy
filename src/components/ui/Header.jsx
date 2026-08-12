@@ -47,7 +47,7 @@ function SizeToggle() {
         }}>
           {sizeMode === 'papers'
             ? 'Node size scaled by total publications on PubMed'
-            : 'Node size scaled by annual deaths reported by WHO'}
+            : 'Node size scaled by annual deaths, per-disease sources shown in each sidebar'}
         </div>
       )}
     </div>

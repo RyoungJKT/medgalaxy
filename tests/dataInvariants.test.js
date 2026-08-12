@@ -85,7 +85,7 @@ describe('data invariants', () => {
       expect(m.checked, id).toBe('2026-08-12');
       expect(['high', 'medium', 'low'], id).toContain(m.confidence);
     }
-    expect(actions).toEqual({ keep: 39, relabel: 61, correct: 23, flag: 30 });
+    expect(actions).toEqual({ keep: 38, relabel: 61, correct: 24, flag: 30 });
   });
 
   // Spot-checks that state, in the test itself, what the audit concluded for
@@ -100,9 +100,10 @@ describe('data invariants', () => {
       // WHO Global tuberculosis report 2025 factsheet: "Globally in 2024, TB
       // caused an estimated 1.23 million deaths".
       tuberculosis: [1230000, 2024, 'WHO Global Tuberculosis Report 2025'],
-      // WHO COVID-19 dashboard global daily data, New_deaths summed over 2023
-      // (= 294,000; the cumulative-column delta for 2023 agrees exactly).
-      'covid-19': [294000, 2023, 'WHO COVID-19 dashboard, reported deaths 2023; global reporting has since largely ceased'],
+      // WHO-COVID-19-global-data.csv (data.who.int export, retrieved Aug 2026),
+      // New_deaths summed over Date_reported 2023-01-01..2023-12-31 UTC = 318,570.
+      // Round-4 review found the prior 294,000 undercounted this same sum.
+      'covid-19': [318570, 2023, 'WHO COVID-19 dashboard export, reported deaths 2023 (retrieved Aug 2026); reporting has since largely ceased'],
       // The 2025 figure (DRC Kasai 45 plus Uganda 4) is superseded by the
       // ongoing 2026 Bundibugyo epidemic: ~4,400 confirmed cases and 2,013
       // deaths as of 11 Aug 2026, the largest outbreak since 2014-16.
@@ -155,19 +156,28 @@ describe('data invariants', () => {
     }
   });
   it('every disease carries a mortality source, and a year wherever a year exists', () => {
-    // A figure that describes no particular year must not borrow one. The only
-    // rows without a year are audit-flagged rows where no authority publishes a
-    // global estimate at all, so there is no reference year to state.
+    // A figure that describes no particular year must not borrow one. Most
+    // rows without a year are audit-flagged rows where no authority publishes
+    // a global estimate at all, so there is no reference year to state.
+    // Chagas is the one exception: WHO's fact sheet publishes a real ~10,000
+    // estimate, but only carries a revision date (the fact sheet was "updated
+    // April 2026"), which is not a year the figure describes, so the row stays
+    // 'correct' (a named, published source) rather than 'flag'.
     const yearless = [];
     for (const d of diseases) {
       expect(d.mortalitySource, d.id).toBeTruthy();
       if (d.mortalityYear) continue;
       yearless.push(d.id);
+      if (d.id === 'chagas') {
+        expect(audit[d.id].action, d.id).toBe('correct');
+        expect(isNoGlobalEstimate(d.mortalitySource), d.id).toBe(false);
+        continue;
+      }
       expect(audit[d.id].action, d.id).toBe('flag');
       expect(isNoGlobalEstimate(d.mortalitySource), d.id).toBe(true);
     }
     expect(yearless.sort()).toEqual([
-      'buruli-ulcer', 'deep-vein-thrombosis', 'huntingtons-disease', 'mycetoma',
+      'buruli-ulcer', 'chagas', 'deep-vein-thrombosis', 'huntingtons-disease', 'mycetoma',
       'prion-disease', 'pulmonary-embolism', 'traumatic-brain-injury',
       'wilsons-disease', 'yaws', 'zika',
     ]);
