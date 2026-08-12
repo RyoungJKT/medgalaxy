@@ -8,7 +8,10 @@
 // asserted by tools/verify-wave4.mjs against the running scene, where "exactly
 // 0" can actually be measured.
 import { describe, it, expect } from 'vitest';
-import { AMBIENT, cameraBreathe, nodeBreathe, edgeBreathe } from '../src/utils/motion';
+import {
+  AMBIENT, cameraBreathe, nodeBreathe, edgeBreathe,
+  BREATHE_RESUME_SEC, breatheResumeGain,
+} from '../src/utils/motion';
 
 describe('A4: no ambient channel exceeds 1 percent of what it modulates', () => {
   it('camera radius breathes by 0.6 percent, inside the ceiling', () => {
@@ -186,6 +189,43 @@ describe('the star shells (section 4 item 2)', () => {
   it('keeps the outermost shell inside the 9.6 R0 far plane from the 2.9 R0 assembly seat', () => {
     const outer = AMBIENT.stars.radii[2] * (1 + AMBIENT.stars.jitter);
     expect(outer + 2.9).toBeLessThan(9.6);
+  });
+});
+
+describe('breatheResumeGain (the onStart kill releases at idle, not for the session)', () => {
+  // CameraRig's onStart kills breathing outright, but the addendum's own
+  // eleven holds include "scrub at rest, idle" — idle only happens after an
+  // interaction ends, so the kill has to let go again. This is the pure ramp
+  // shape CameraRig drives with elapsed idle time once idleFrames crosses the
+  // same 300-frame threshold that brings autoRotate back.
+  it('is 0 at and before the release instant', () => {
+    expect(breatheResumeGain(0)).toBe(0);
+    expect(breatheResumeGain(-1)).toBe(0);
+  });
+
+  it('is exactly 1 at BREATHE_RESUME_SEC and stays clamped at 1 after', () => {
+    expect(BREATHE_RESUME_SEC).toBe(2.0);
+    expect(breatheResumeGain(BREATHE_RESUME_SEC)).toBe(1);
+    expect(breatheResumeGain(BREATHE_RESUME_SEC * 10)).toBe(1);
+  });
+
+  it('ramps linearly and monotonically between 0 and BREATHE_RESUME_SEC', () => {
+    expect(breatheResumeGain(BREATHE_RESUME_SEC / 2)).toBeCloseTo(0.5, 12);
+    let prev = -1;
+    for (let t = 0; t <= BREATHE_RESUME_SEC; t += 0.05) {
+      const g = breatheResumeGain(t);
+      expect(g).toBeGreaterThanOrEqual(prev);
+      prev = g;
+    }
+  });
+
+  it('is slower than the ~0.5s generic ramp elsewhere in the breathing block', () => {
+    // The generic ramp used for every other directed->undirected transition
+    // reaches full gain in 0.5s (rate 2/s); the interaction-resume ramp must
+    // still be well under full strength at that point, since the return from
+    // an active drag is deliberately slower.
+    expect(breatheResumeGain(0.5)).toBeLessThan(1);
+    expect(breatheResumeGain(0.5)).toBeCloseTo(0.25, 12);
   });
 });
 

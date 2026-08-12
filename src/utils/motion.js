@@ -330,6 +330,27 @@ export function cameraBreathe(t, out = [0, 0, 0]) {
   return out;
 }
 
+// ── The onStart kill's own resume (ADDENDUM 1 section 4 item 1, the eleven
+// holds) ───────────────────────────────────────────────────────────────────
+// Camera breathing is suppressed by three directed stillnesses (A4) plus one
+// more that is not directed at all: OrbitControls.onStart, a hand landing on
+// the mouse. That is not one of the eleven holds — it is the viewer taking
+// over — but the addendum's own list of holds that must never sit perfectly
+// still names "scrub at rest, idle", and idle is what follows an interaction,
+// not what precedes it. So the kill cannot last the session; it has to
+// release once the camera has actually gone idle, on the same idleFrames
+// threshold CameraRig already uses to bring autoRotate back, and it ramps
+// back in slower than the ~0.5s used elsewhere in that block (a directed
+// stillness ending, or a fly landing) so the return itself is not the thing
+// that catches the eye. Pure and testable without a scene: elapsed idle time
+// in, a clamped 0..1 gain out.
+export const BREATHE_RESUME_SEC = 2.0;
+
+export function breatheResumeGain(elapsedSec) {
+  if (!(elapsedSec > 0)) return 0;
+  return Math.min(1, elapsedSec / BREATHE_RESUME_SEC);
+}
+
 /**
  * One node's micro-breathe multiplier at time `t`. The node's own `phase`
  * (0..2pi, the aPhase attribute) sets both where in the cycle it sits and how

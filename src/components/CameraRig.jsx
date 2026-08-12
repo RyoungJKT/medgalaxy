@@ -7,7 +7,7 @@ import useStore from '../store';
 import { sceneRefs } from '../sceneRefs';
 import { TIER } from '../utils/tiers';
 import { ASM, assemblySeat } from '../utils/assembly';
-import { cameraBreathe } from '../utils/motion';
+import { cameraBreathe, breatheResumeGain } from '../utils/motion';
 
 const PARALLAX_STRENGTH = 3.0;
 
@@ -27,8 +27,11 @@ export default function CameraRig({ camDist }) {
   // ADDENDUM 1 section 4 item 1: camera breathing. `applied` is this rig's own
   // additive offset, held so it can be removed again before the next one is
   // computed (the cursor parallax two blocks down uses the same bookkeeping).
-  // `killed` is the handover's rule: the viewer taking the controls ends it for
-  // the session, so the rig never breathes against a hand on the mouse.
+  // `killed` is the handover's rule: the viewer taking the controls kills it
+  // immediately, but not for the session — "scrub at rest, idle" is itself
+  // one of the eleven holds the addendum lists, so the kill releases again the
+  // instant the camera goes idle (the useFrame block below ties this to the
+  // same idleFrames threshold that brings autoRotate back).
   const breathe = useRef({ applied: new THREE.Vector3(), killed: false });
   // prefers-reduced-motion, read once on mount (the same pattern OvertureSequence
   // and TimeMachine use). The film's reduced path replaces every camera move
@@ -269,22 +272,39 @@ export default function CameraRig({ camDist }) {
 
     // ── Camera breathing (ADDENDUM 1 section 4 item 1) ──────────────────────
     // The loudest tell of a canned demo is a perfectly static held frame, and
-    // this piece has eleven of them. An additive offset applied after all
-    // tweens: azimuth +-0.45 deg at 0.055 Hz, elevation +-0.25 deg at
-    // 0.083 Hz, radius +-0.6 percent at 0.037 Hz, about whatever the controls
-    // are currently looking at.
+    // this piece has eleven of them, including "scrub at rest, idle" — idle
+    // only happens after an interaction, so breathing has to resume there, not
+    // just stop. An additive offset applied after all tweens: azimuth +-0.45
+    // deg at 0.055 Hz, elevation +-0.25 deg at 0.083 Hz, radius +-0.6 percent
+    // at 0.037 Hz, about whatever the controls are currently looking at.
     //
     // Three stillnesses are directed and must stay absolute (A4): beat 2's
     // ignition hold, the detonation push-in, and any active fly. The last two
     // are the same test — every camera move in this piece is a gsap tween on
     // camera.position — and a tween owns the position outright, so the rig
     // simply forgets its offset rather than subtracting it out from under one.
-    // Off is instant; on eases back over ~0.5 s, because an offset re-applied
-    // whole on the frame a fly lands would be a visible step.
+    // Off is instant; on eases back over ~0.5 s in the general case, because
+    // an offset re-applied whole on the frame a fly lands would be a visible
+    // step.
+    //
+    // The fourth suppression, onStart's kill, is not a directed stillness —
+    // it is a hand on the mouse — so it does not follow that rule. It
+    // releases on the exact frame idleFrames crosses the same 300-frame
+    // threshold that flips autoRotate back on above, and it ramps in over
+    // BREATHE_RESUME_SEC (~2s, breatheResumeGain), slower than the usual
+    // ~0.5s: the return from an active drag is a slower context than the
+    // return from a directed hold ending.
     {
       const b = breathe.current;
       const controls = controlsRef.current;
       const flying = gsap.isTweening(camera.position);
+
+      if (b.killed && idleFrames.current > 300) {
+        b.killed = false;
+        b.resumeElapsed = 0;
+        b.slowResume = true;
+      }
+
       const directed = b.killed || reducedRef.current || introPhase < 5 ||
         (overtureActive && overtureBeat === 2);
       if (flying) {
@@ -299,7 +319,13 @@ export default function CameraRig({ camDist }) {
       } else {
         camera.position.sub(b.applied);
         b.applied.set(0, 0, 0);
-        b.gain = Math.min(1, (b.gain || 0) + delta * 2);
+        if (b.slowResume) {
+          b.resumeElapsed = (b.resumeElapsed || 0) + delta;
+          b.gain = breatheResumeGain(b.resumeElapsed);
+          if (b.gain >= 1) b.slowResume = false;
+        } else {
+          b.gain = Math.min(1, (b.gain || 0) + delta * 2);
+        }
         _base.copy(camera.position).sub(controls.target);
         const r = _base.length();
         if (r > 1e-6) {
@@ -331,9 +357,12 @@ export default function CameraRig({ camDist }) {
   });
 
   // The user taking the controls ends the handover for good — and, on the same
-  // rule, the breathing: the rig never adds motion under a hand on the mouse.
-  // The offset is left where it stands rather than snapped out, which is what
-  // makes this a stop rather than a jump.
+  // rule, kills the breathing immediately: the rig never adds motion under a
+  // hand on the mouse. The offset is left where it stands rather than snapped
+  // out, which is what makes this a stop rather than a jump. The kill itself
+  // is not permanent — see the useFrame breathing block, which releases it
+  // again once idleFrames (reset to 0 right here) crosses the same threshold
+  // that brings autoRotate back.
   const onStart = () => {
     idleFrames.current = 0;
     sceneRefs.handover.cancelled = true;
@@ -341,6 +370,8 @@ export default function CameraRig({ camDist }) {
     breathe.current.killed = true;
     breathe.current.applied.set(0, 0, 0);
     breathe.current.gain = 0;
+    breathe.current.slowResume = false;
+    breathe.current.resumeElapsed = 0;
     if (controlsRef.current) controlsRef.current.autoRotateSpeed = 0.3;
   };
 
