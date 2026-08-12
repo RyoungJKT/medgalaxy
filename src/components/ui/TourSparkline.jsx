@@ -48,7 +48,14 @@ export default function TourSparkline() {
   const idMap = useStore((s) => s.idMap);
   const diseases = useStore((s) => s.diseases);
 
-  const diseaseId = !mob && tmCaption ? tmCaption.sparklineFor : null;
+  // Round 3 (finding 6, craft nit): `tmCaption.sparklineFor` is `undefined`
+  // for the four pauses that don't carry one, while the mobile/no-caption
+  // branch used `null` for the same "nothing to draw" state. The mismatched
+  // sentinel meant `diseaseId` (and the effect below, keyed on it) could
+  // flip between `undefined` and `null` across two pauses that both mean
+  // "no sparkline," re-running the effect for no visible change. `?? null`
+  // normalizes both no-sparkline cases to the same value.
+  const diseaseId = mob ? null : (tmCaption?.sparklineFor ?? null);
   const idx = diseaseId != null ? idMap[diseaseId] : undefined;
   const disease = idx !== undefined ? diseases[idx] : null;
 

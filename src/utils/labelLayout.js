@@ -16,6 +16,22 @@ export function labelCap(viewportWidth) {
   return raw < LABEL_CAP_MIN ? LABEL_CAP_MIN : raw > LABEL_CAP_MAX ? LABEL_CAP_MAX : raw;
 }
 
+// Rest's own budget for wide (non-narrow) frames (review gate round 3,
+// finding 2). The tour keeps labelCap's 40 at desktop width on purpose: the
+// tour's whole argument is a handful of nodes, and 153 names over it read as
+// noise. Idle carries no such argument, so it gets more room; a 1440px rest
+// frame measured 117 labels and 20 overlapping pairs before this, and the
+// review's target for "well populated but readable" was 60-80. Narrow frames
+// never call this: they keep labelCap (12-40) at rest exactly as they did at
+// the tour, since a phone's floor is already tight enough that a second
+// number would just be the same number.
+export const REST_CAP_MIN = 60;
+export const REST_CAP_MAX = 80;
+export function restCap(viewportWidth) {
+  const raw = Math.round((viewportWidth || 0) / 20);
+  return raw < REST_CAP_MIN ? REST_CAP_MIN : raw > REST_CAP_MAX ? REST_CAP_MAX : raw;
+}
+
 // Monospace advance ratio: IBM Plex Mono's glyph box is 0.6em wide, and the
 // label carries no letter-spacing, so a name's rendered width is its character
 // count times 0.6 times its own font size. (A 22-character name at 12px is

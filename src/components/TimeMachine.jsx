@@ -288,10 +288,14 @@ export function buildTourCaptions(diseases, idMap, data) {
       data: `${hiv.label}: ${fmtFull(valueAt(hiv, first))} papers in ${first}, ${fmtFull(valueAt(hiv, surgeYear))} in ${surgeYear}.`,
     };
     const pk = peakOf(hiv);
-    const fadeYear = Math.min(2019, last);
+    // Round 3 (finding 3): the caption used to pair the peak against the
+    // fixed pause year (2019), a 9.1% dip that undersells the argument while
+    // papers rose across large stretches of the pause's own 1996-2019 travel
+    // window. Pairing the peak against the latest year on file instead is the
+    // honest, stronger comparison the same series actually supports.
     caps.hivFade = {
       lines: ['Attention faded long before the epidemic did.'],
-      data: `${hiv.label}: ${fmtFull(pk.value)} papers at its ${pk.year} peak, ${fmtFull(valueAt(hiv, fadeYear))} in ${fadeYear}. ${fmtWord(hiv.mortality)} people still die of it every year.`,
+      data: `${hiv.label} papers peaked at ${fmtFull(pk.value)} in ${pk.year}. ${fmtWord(hiv.mortality)} people still die of it every year.`,
       // Carry-over C (direction, deferred from Task 13): the in-world sparkline
       // this pause draws beneath the node it's about (DIRECTION section 3,
       // pause 2: "its ten-year sparkline draws in-world beneath it").

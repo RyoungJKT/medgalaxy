@@ -610,3 +610,254 @@ as section 5, stated there.
    five findings only reproduce under a specific drive (live tour, the
    hero-caption frame, the shared ceiling), so the before is the part of the
    evidence that is hard to re-obtain later.
+
+---
+
+## Round 3 fix wave: label ranking, rest culling, hivFade framing, favicon.ico, reduced-motion odometer
+
+Branch `next/showcase`, worktree `medgalaxy-next`, one commit
+(`fix(gate): round-3 label ranking, rest culling, hivFade framing, favicon.ico,
+reduced-motion odometer`). Verification: `npx vitest run` green (158 tests, 14
+files; 5 new), `npx vite build` green (2.5-2.7s, same pre-existing chunk-size
+warning). Shots carry the `fix5-` prefix; every one was read back and judged,
+and each numeric claim below was measured live against the running app (a
+headless Chrome harness driving `window._store`/`window.__tour`/`window.__tm`,
+the same dev-hook pattern `tools/verify.mjs` already uses), not inferred from
+the diff.
+
+### Finding 1 (MOST-CITED): Time Machine label ranking used the wrong radius
+
+`src/components/NodeLabels.jsx`. The label layer's priority (and its
+tiny-label cull) was computed from `nR(diseases[i].papers)`, the all-time
+radius, regardless of whether the Time Machine was up, while the node itself
+draws at `sceneRefs.tm.radiusAt(i)`, the per-year interpolated radius
+(`DiseaseNodes.jsx`'s own render loop). A disease with a huge all-time total
+but zero papers in the year on screen (COVID-19, most obviously, in any year
+before it existed) still ranked as if it were the biggest node in the galaxy.
+
+Fix: while `tmPhase !== 'idle'`, `nodeR` (and therefore `screenR`, which feeds
+both `c.pri` in the budget/cull pass and the existing `screenR < 0.3` tiny-label
+cull) is read from `sceneRefs.tm.radiusAt(i)` instead of `nR(papers)`. No new
+threshold was needed for "invisible nodes don't get labels": the existing
+0.3px cull already does that once it is fed the real per-year radius, since a
+disease at the Time Machine's zero-papers floor (`ZERO_RY = 0.05` in
+`timeMachineData.js`) projects to a screen radius far under it.
+
+*Evidence, live (headless, `window.__tm.radiusAt`):*
+
+| Pause | COVID-19 true radius | Diseases with bigger radius that year | Label visible before | Label visible after |
+|---|---:|---:|---|---|
+| 1996 (hivSurge) | 0.05 (the zero floor) | 152 of 152 | **true** (bug) | **false** |
+| 2021 (peak) | 18 (the ceiling) | 0 of 152 | true | true (unchanged, correctly) |
+
+At 1996 COVID-19 is, by true per-year radius, the *least* prominent node in
+the galaxy, yet the old ranking (all-time papers) kept its label on screen
+through every frame of the tour, the empty-1996 defect the finding names.
+Shot `fix5-tm-1996.png`: the 1996 pause, "HIV research climbed with the
+epidemic.", no COVID-19 label anywhere in the 40 shown.
+
+At 2021 COVID-19 was already the single biggest node under both metrics
+(all-time paper rank 7, true-radius rank 0), so its own presence never
+depended on this fix; the "typographic hierarchy contradicts the caption"
+part of the finding is about the *rest* of the cap's membership. Comparing the
+true-radius top 40 against the all-time-papers top 40 at the 2021 frame finds
+exactly the swap the finding describes: **Congenital Heart Defects** and
+**Stomach Cancer** (true 2021 radius 4.08 / 3.92) would have held a slot under
+the old ranking despite two other diseases having a bigger true 2021 radius
+that day, **Metabolic Syndrome** and **Multiple Sclerosis** (4.55 / 4.31),
+which the fix now promotes into the cap instead. Shot `fix5-tm-2021.png`:
+"Attention can move this fast. 141,958 COVID-19 papers in 2021 alone.",
+COVID-19 labeled and (per the table above) ranked first by the metric that now
+drives the cap.
+
+### Finding 2: desktop rest-frame label soup
+
+`src/components/NodeLabels.jsx` + `src/utils/labelLayout.js`. The budget/cull
+pass only ran `if (tmActive || narrow)`, so a 1440px idle galaxy was exempt
+from both the cap and the collision cull the tour and narrow frames already
+had, and measured 117 labels with 20 overlapping pairs live.
+
+Fix: the pass now always runs, every phase, every viewport width; only the cap
+differs. The tour keeps `labelCap`'s desktop-width 40 unchanged (still the
+narrative argument: a handful of nodes changing size). Rest at a wide
+viewport gets a new `restCap(viewportWidth)` (`src/utils/labelLayout.js`,
+same clamp shape as `labelCap`: `round(width/20)` clamped to `[60, 80]`, so
+1440px lands at 72). Narrow frames keep `labelCap` at both phases exactly as
+Task 20 round 2 left them (12-40), since a separate rest number there would
+just be the same number, and mobile's own before/after (12 labels, 0
+overlaps, both phases) was re-measured live and is unchanged. `cullOverlaps`
+is now called with `collide` always true (its own default), so the desktop
+tour also culls collisions for the first time; the round-2 judgement call
+that kept it narrow-only is explicitly overridden by this finding.
+
+*Evidence, live, desktop 1440px:*
+
+| | labels | overlapping pairs |
+|---|---:|---:|
+| rest, before (this pass never ran) | 117 | 20 |
+| rest, after | 72 | **0** |
+
+72 sits inside the review's 60-80 target band. Shot `fix5-rest-labels.png`:
+the settled rest frame, dense but with visibly separated names, `tmPhase`
+confirmed `'idle'` at capture time (the auto-tour's one-shot was deliberately
+spent and the machine stopped before measuring, so the 1.5s arm timer could
+not fire mid-shot and silently swap the frame to the tour's 40-cap instead of
+rest's 72). 8 new `labelLayout.test.js` tests pin `restCap`'s band, ceiling,
+floor, and that it is never smaller than `labelCap` at any desktop width.
+
+### Finding 3: hivFade caption leaned on a weak snapshot
+
+`src/components/TimeMachine.jsx`, `caps.hivFade`. The data line compared HIV's
+peak (7,534 papers, 2014) against a fixed pause year, 2019 (6,849), a 9.1%
+dip that undersells "attention faded," since papers moved both up and down
+across the pause's own 1996-2019 travel window and 2019 was not the series'
+low point.
+
+Fix: compare the peak against the latest year on file instead (2024: 6,050,
+a 19.7% decline from peak), the honest, stronger reading the same series
+supports, still fully derived at build time from `yearlyPapers` (no
+hard-coded 2019 anywhere in the new string) plus the store's own
+`hiv.mortality` (630,000, UNAIDS 2024).
+
+*New caption, verified live via `window._store.getState().tmCaption` at the
+hivFade pause:*
+
+> Attention faded long before the epidemic did.
+> HIV/AIDS papers peaked at 7,534 in 2014. 630,000 people still die of it
+> every year.
+
+Shot `fix5-hivfade.png` confirms the same text on screen. `tests/
+timeMachineTour.test.js` updated: the old assertions pinning the 2019
+snapshot are replaced with one pinning the peak-year phrase and the mortality
+figure, plus a new test asserting the string no longer contains "2019" or its
+figure at all, so a regression there would mean the weak framing crept back
+in.
+
+### Finding 4: residual /favicon.ico 404
+
+Chrome and Safari request `/favicon.ico` directly regardless of the
+`<link rel="icon">` PNG declaration round 2 already fixed (P3 #13), a
+browser-level fallback, not something the HTML controls. `public/favicon.ico`
+generated from the existing `public/favicon.png` via `sips -s format ico`
+(a real 32x32 ICO resource, not a renamed PNG, confirmed via `file`:
+"MS Windows icon resource"). `index.html` gets an explicit
+`<link rel="shortcut icon" href="/favicon.ico">` alongside the existing PNG
+link, and the build copies it to `dist/favicon.ico` automatically (Vite's
+`public/` passthrough, same as the PNG).
+
+*Evidence, live (response listener on a fresh page load):* `GET
+/favicon.ico` returns `200`, `Content-Type: image/x-icon`, zero console 404s
+matching `favicon`. `curl -I` against the dev server confirms the same
+status and mime type independently of the browser run.
+
+### Finding 5: Odometer digits still animated under reduced motion
+
+`src/components/ui/Odometer.jsx`. The digit-column strip's `transform`
+transition (`DUR.slow`, 480ms) ran unconditionally; `prefers-reduced-motion`
+was never read anywhere in the component. Fix: the inner strip carries a new
+`mg-odometer-col` class, and the component's existing injected `<style>` block
+(already used for the unit-label crossfade keyframes) gets a
+`@media (prefers-reduced-motion: reduce) { .mg-odometer-col { transition:
+none !important; } }` rule, a live media query rather than a one-time
+`matchMedia` read, so it also tracks the OS setting changing mid-session, and
+`!important` is required because the inline `transition` declaration would
+otherwise win on specificity.
+
+*Evidence, live, both with an actual Odometer mounted (the overture's hero
+caption, `window.__overture.seek(9.6)`, 8 digit columns on screen):*
+
+| | `transitionDuration` (computed) |
+|---|---|
+| normal | 0.48s |
+| `prefers-reduced-motion: reduce` | **0s** |
+
+The first probe (a synthetic detached element, no Odometer actually mounted)
+read a false pass at 0.5s: the class rule only exists in the DOM once an
+Odometer instance has rendered its own `<style>` tag, so the check was
+retried against a real mounted instance and is what the table above reports.
+
+### Finding 6: TourSparkline.jsx:51 craft nit
+
+`src/components/ui/TourSparkline.jsx`. `diseaseId` mixed two different
+"nothing to draw" sentinels: the mobile/no-caption branch used `null`, but a
+pause without a `sparklineFor` field (four of the six) left
+`tmCaption.sparklineFor` genuinely `undefined`, so `diseaseId` itself flipped
+between `undefined` and `null` across pauses that both mean "no sparkline."
+Since `diseaseId` sits in the driving effect's dependency array, this meant
+the effect (which starts/stops the sparkline's own rAF loop) could tear down
+and rebuild for a transition that was a no-op from the viewer's side. Fixed
+with a single nullish-coalescing normalization,
+`mob ? null : (tmCaption?.sparklineFor ?? null)`, matching the optional-
+chaining idiom already used elsewhere in this codebase (`NodeLabels.jsx`'s
+`hoveredNode?.index ?? -1`).
+
+*Evidence, live:* the sparkline still renders correctly at both of its two
+pauses post-fix, hivFade (`opacity: 1`, a real polyline with rising/falling
+points) and the finale's flatline (`opacity: 1`), confirming the
+normalization didn't change which pauses draw a sparkline, only the
+consistency of the "no sparkline" state between them.
+
+### Finding 7: mobile hint chips 9px legibility
+
+`src/components/ui/HintChips.jsx`. Mobile chip text was smaller than desktop's
+(9px vs 10px) at `#94a3b8`, the first30 review's held-back reason. Bumped to
+11px at `#cbd5e1` (desktop unchanged at 10px/`#94a3b8`).
+
+This alone widened the three-chip row from 348px to 408px, overflowing both
+edges of a 375px viewport (measured live, before/after); the row is
+`width: max-content` inside a `left:50%` / `translateX(-50%)` container (Task
+17), so the extra width was invisible until actually measured. Mobile padding
+(`10px` horizontal) and gap (`6px`) were trimmed to `5px`/`3px` to bring the
+row back to 372px, fitting again with a small margin. Desktop padding/gap are
+untouched.
+
+*Evidence, live (`getComputedStyle` + `getBoundingClientRect` on the chip
+row, 375px viewport):*
+
+| | font | color | row width | fits 375px? |
+|---|---:|---|---:|---|
+| before | 9px | `#94a3b8` | 348px | yes |
+| font bump alone (intermediate) | 11px | `#cbd5e1` | 408px | **no, overflows 16.5px each side** |
+| after (padding/gap trimmed) | 11px | `#cbd5e1` | 372px | yes |
+
+Shot `fix5-mob-hints.png`: all three chips fully on screen, "Try the Time
+Machine" no longer clipped at the right edge.
+
+### Verification
+
+- `npx vitest run`: **14 files, 158 tests, all pass** (was 153; +5: 4 new
+  `restCap` tests plus the hivFade regression test; one existing hivFade test
+  rewritten for the new caption text).
+- `npx vite build`: green (~2.5s). Same pre-existing >500 kB chunk warning
+  from Task 19.
+- Harness shots in `docs/verify/`, `fix5-` prefix: `fix5-tm-1996`,
+  `fix5-tm-2021`, `fix5-rest-labels`, `fix5-hivfade`, `fix5-mob-hints`, plus
+  `fix5-odometer-reduced-motion` (finding 5 has no named shot in the
+  verification contract but was checked and shot anyway). All read back and
+  judged against the numbers above.
+- `data/*.json` untouched, per the round's own constraint (a parallel audit
+  owns that tree), confirmed via `git status` before committing.
+
+### Judgement calls worth flagging
+
+1. **Finding 1's "minimum current radius" clause needed no new code.** The
+   existing `screenR < 0.3` cull already does this once fed the correct
+   radius; adding a second, redundant threshold would have been two numbers
+   to keep in sync instead of one.
+2. **`restCap` is a new named budget, not a parameter on `labelCap`.** The two
+   have different shapes (12-40 scaled by /36, 60-80 scaled by /20) driven by
+   different arguments (a story's attention budget vs. idle's "well
+   populated but readable"); folding them into one function with a mode flag
+   would have made the desktop-tour-unchanged guarantee harder to read at the
+   call site.
+3. **Finding 7 grew a second, unrequested change** (the padding/gap trim).
+   The font bump alone regressed the row past the viewport edge, measured,
+   not assumed, so leaving it unfixed would have shipped a new clipping bug
+   in the same commit that fixed the legibility one the finding named.
+4. **The odometer fix uses a live media query, not a one-time `matchMedia`
+   read.** Other components in this codebase (`TimeMachine.jsx`'s
+   `reducedRef`) read `matchMedia` once on mount, which is correct for a
+   value only consulted at a scripted moment (the tour's own start). The
+   digit transition is consulted continuously (every value change, for the
+   life of the session), so a live CSS rule tracks a mid-session OS setting
+   change where a mount-time ref would not.

@@ -77,7 +77,7 @@ export default function HintChips() {
     <div
       style={{
         position: 'absolute', bottom: mob ? 176 : 200, left: '50%', transform: 'translateX(-50%)',
-        zIndex: 45, display: 'flex', gap: mob ? 6 : 10,
+        zIndex: 45, display: 'flex', gap: mob ? 3 : 10,
         // Chromium's shrink-to-fit width for an absolutely positioned flex
         // container anchored by `left:50%` (no explicit width) resolves to
         // roughly half its containing block, not its content's natural
@@ -97,9 +97,19 @@ export default function HintChips() {
           key={h.key}
           onClick={() => onChip(h.key)}
           style={{
-            padding: mob ? '5px 10px' : '6px 14px', borderRadius: 999,
+            // Padding and gap (above) trimmed on mobile to make room for the
+            // finding-7 font bump without pushing the row past the 375px
+            // viewport: 348px wide at 9px font/10px padding/6px gap (fit,
+            // ~13.5px margin each side); 408px, overflowing both edges, at
+            // 11px font with padding/gap left unchanged; 372px, fit again,
+            // with padding trimmed to 5px and gap to 3px.
+            padding: mob ? '5px 5px' : '6px 14px', borderRadius: 999,
             background: 'rgba(10,16,30,0.85)', border: '1px solid rgba(255,255,255,0.1)',
-            color: '#94a3b8', fontSize: mob ? 9 : 10,
+            // Round 3 (finding 7): 9px at mobile measured as the first30
+            // review's held-back legibility reason. 11px plus the lighter
+            // #cbd5e1 (was #94a3b8, the same slate the desktop chip keeps)
+            // is the contrast floor the review set for the mobile chip text.
+            color: mob ? '#cbd5e1' : '#94a3b8', fontSize: mob ? 11 : 10,
             pointerEvents: 'auto', cursor: 'pointer',
             opacity: 0, animation: `hintChipIn 300ms ease ${i * 300}ms forwards`,
           }}

@@ -4,7 +4,7 @@ import useStore from '../store';
 import { CC } from '../utils/constants';
 import { nR, isMob, neglectColor } from '../utils/helpers';
 import { sceneRefs } from '../sceneRefs';
-import { labelCap, labelWidth, labelHeight, cullOverlaps } from '../utils/labelLayout';
+import { labelCap, restCap, labelWidth, labelHeight, cullOverlaps } from '../utils/labelLayout';
 import { railBandHeight } from './ui/TimeRail';
 
 const pv = new THREE.Vector3();
@@ -29,8 +29,14 @@ const RAIL_MARGIN = 8;
 // The number is now the frame's, not the desktop's: labelCap() still returns
 // exactly 40 at 1440px and falls to 12 on a 375px phone, where the round-2
 // craft review measured 26 overlapping label pairs at the tour's pauses
-// (P1 #5). Below NARROW the same budget also applies at rest, and every path
-// runs the greedy collision cull.
+// (P1 #5).
+// Round 3 (finding 2): the cull is no longer gated to the tour or to narrow
+// frames. A 1440px rest frame measured 117 labels and 20 overlapping pairs,
+// the same clutter the tour's pauses had before round 2; idle was never
+// actually exempt from the problem, only from the fix. Every phase x width
+// combination now runs the same greedy cull every frame; only the cap
+// differs (labelCap for the tour and for any narrow frame, the roomier
+// restCap for wide frames at rest).
 const NARROW = 768;
 // The finale's isolation reaches the label layer too. HighlightSystem dims the
 // instances and TimeMachine dims the halos; without this the names stayed at
@@ -104,6 +110,14 @@ export default function NodeLabels() {
       const rc = canvas.getBoundingClientRect();
       const kids = container.children;
       const tmActive = storeState.tmPhase !== 'idle';
+      // Round 3 (finding 1): while the Time Machine is up, the node itself
+      // draws at tm.radiusAt(i) (DiseaseNodes.jsx's own render loop reads it
+      // the same way), the per-year interpolated radius, not the all-time
+      // nR(papers) below. Ranking priority off the wrong radius is why
+      // COVID's label used to dominate the empty 1996 frame: its all-time
+      // paper count made it "big" on every tour frame, including years
+      // before it existed.
+      const tm = tmActive ? sceneRefs.tm : null;
       const focusIdx = storeState.tmFocusIdx;
       const topLimit = storeState.uiRevealed ? HEADER_ZONE : PRE_HEADER_ZONE;
       // The rail only exists while the Time Machine is up, so its band is only
@@ -146,7 +160,7 @@ export default function NodeLabels() {
         // Clamp so labels don't get cut off at screen edges
         sx = Math.max(40, Math.min(rc.width - 40, sx));
 
-        const nodeR = nR(diseases[i].papers);
+        const nodeR = tm && tm.radiusAt ? tm.radiusAt(i) : nR(diseases[i].papers);
         const screenR = nodeR * rc.height / (2 * nodeDist * tanHalfFov);
 
         // Hide labels for nodes not yet revealed during intro
@@ -187,34 +201,36 @@ export default function NodeLabels() {
         showA[i] = 1;
       }
 
-      // ── The budget, and (on a narrow frame) the collision cull ──
-      // The tour has always capped the field; below NARROW the cap applies at
-      // rest too, because the round-2 review found the idle phone frame as
-      // cluttered as the tour's pauses. The cull is the narrow frame's alone:
-      // a desktop label layer at 1440px has room for its 40 names, and the
-      // cull's cost is a per-frame sort the wide path does not need.
-      if (tmActive || narrow) {
-        const cap = labelCap(rc.width);
-        cands.length = 0;
-        for (let i = 0; i < diseases.length; i++) {
-          if (!showA[i]) continue;
-          const c = pool[i];
-          c.x = sxA[i];
-          c.top = topA[i];
-          c.w = labelWidth(nameLen[i], fsA[i]);
-          c.h = labelHeight(fsA[i]);
-          c.pri = rA[i];
-          // The frame's own subjects survive both the budget and the cull.
-          c.pinned = i === hovIdx || i === selIdx || i === focusIdx;
-          cands.push(c);
-        }
-        if (cands.length > cap || narrow) {
-          cands.sort(byPriority);
-          const keep = cullOverlaps(cands, cap, narrow);
-          for (let i = 0; i < diseases.length; i++) if (showA[i]) showA[i] = 0;
-          for (let k = 0; k < keep.length; k++) showA[keep[k]] = 1;
-        }
+      // ── The budget and the collision cull, every frame, every viewport ──
+      // Round 3 (finding 2): idle used to be exempt (only the tour, or a
+      // narrow frame, ran this pass); a 1440px rest frame measured 117
+      // labels with 20 overlapping pairs, the clutter round 2 already fixed
+      // for the tour and for narrow frames. Every combination of phase and
+      // width runs the same greedy cull now; only the cap differs. The tour
+      // keeps its narrative-driven 40 at desktop width (labelCap, unchanged
+      // since round 2); rest gets the roomier restCap (~60-80 at desktop
+      // widths), since idle has no story to compress attention to a handful
+      // of names; narrow keeps labelCap either way, its own 12-40 floor
+      // already tight enough that a separate rest number would be the same
+      // number.
+      const cap = narrow ? labelCap(rc.width) : (tmActive ? labelCap(rc.width) : restCap(rc.width));
+      cands.length = 0;
+      for (let i = 0; i < diseases.length; i++) {
+        if (!showA[i]) continue;
+        const c = pool[i];
+        c.x = sxA[i];
+        c.top = topA[i];
+        c.w = labelWidth(nameLen[i], fsA[i]);
+        c.h = labelHeight(fsA[i]);
+        c.pri = rA[i];
+        // The frame's own subjects survive both the budget and the cull.
+        c.pinned = i === hovIdx || i === selIdx || i === focusIdx;
+        cands.push(c);
       }
+      cands.sort(byPriority);
+      const keep = cullOverlaps(cands, cap);
+      for (let i = 0; i < diseases.length; i++) if (showA[i]) showA[i] = 0;
+      for (let k = 0; k < keep.length; k++) showA[keep[k]] = 1;
 
       // ── Pass 2: write the DOM ──
       for (let i = 0; i < diseases.length; i++) {

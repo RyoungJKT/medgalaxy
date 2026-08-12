@@ -28,6 +28,7 @@ function DigitColumn({ digit }) {
       }}
     >
       <span
+        className="mg-odometer-col"
         style={{
           display: 'block',
           transform: `translate3d(0, ${-n * 10}%, 0)`,
@@ -118,6 +119,9 @@ export default function Odometer({ value, unit }) {
       <style>{`
         @keyframes odometerUnitIn  { from { opacity: 0; } to { opacity: 1; } }
         @keyframes odometerUnitOut { from { opacity: 1; } to { opacity: 0; } }
+        @media (prefers-reduced-motion: reduce) {
+          .mg-odometer-col { transition: none !important; }
+        }
       `}</style>
     </span>
   );

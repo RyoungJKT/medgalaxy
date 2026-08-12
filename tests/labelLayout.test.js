@@ -1,11 +1,14 @@
 import { describe, it, expect } from 'vitest';
 import {
   labelCap,
+  restCap,
   labelWidth,
   rectsOverlap,
   cullOverlaps,
   LABEL_CAP_MIN,
   LABEL_CAP_MAX,
+  REST_CAP_MIN,
+  REST_CAP_MAX,
   ROW_H,
 } from '../src/utils/labelLayout';
 
@@ -36,6 +39,29 @@ describe('labelCap', () => {
     expect(labelCap(1024)).toBe(28);
     expect(labelCap(2560)).toBe(LABEL_CAP_MAX);
     expect(labelCap(0)).toBe(LABEL_CAP_MIN);
+  });
+});
+
+describe('restCap', () => {
+  it('lands inside the 60-80 band at desktop widths', () => {
+    expect(restCap(1440)).toBe(72);
+    expect(restCap(1280)).toBeGreaterThanOrEqual(REST_CAP_MIN);
+    expect(restCap(1280)).toBeLessThanOrEqual(REST_CAP_MAX);
+  });
+
+  it('never exceeds the ceiling on an ultrawide frame', () => {
+    expect(restCap(2560)).toBe(REST_CAP_MAX);
+  });
+
+  it('never falls under the floor near the narrow boundary', () => {
+    expect(restCap(768)).toBe(REST_CAP_MIN);
+    expect(restCap(0)).toBe(REST_CAP_MIN);
+  });
+
+  it('is roomier than the tour cap at every desktop width', () => {
+    for (const w of [768, 1024, 1280, 1440, 1920, 2560]) {
+      expect(restCap(w)).toBeGreaterThanOrEqual(labelCap(w));
+    }
   });
 });
 

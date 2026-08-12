@@ -14,6 +14,12 @@
          the browser's default tab icon (review gate round 2, P3 #13). -->
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="apple-touch-icon" href="/favicon.png" />
+    <!-- Round 3: browsers request /favicon.ico directly regardless of the
+         icon link above (a hardcoded fallback, not something this markup
+         controls), which kept logging its own 404 even after P3 #13 fixed
+         the PNG one. public/favicon.ico is the same icon, sips-converted to
+         a real ICO resource. -->
+    <link rel="shortcut icon" href="/favicon.ico" />
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />

@@ -217,9 +217,18 @@ describe('buildTourCaptions', () => {
     const peakValue = Math.max(...hiv.yearlyPapers);
     const peakYear = hiv.yearStart + hiv.yearlyPapers.indexOf(peakValue);
     expect(peakYear).toBe(2014);
-    expect(caps.hivFade.data).toContain('7,534 papers at its 2014 peak');
-    expect(caps.hivFade.data).toContain(`${at(hiv, 2019).toLocaleString('en-US')} in 2019`);
+    expect(caps.hivFade.data).toContain('papers peaked at 7,534 in 2014');
     expect(caps.hivFade.data).toContain('630,000');
+  });
+
+  // Review gate round 3, finding 3: the caption used to pair the peak against
+  // the fixed 2019 pause year, a 9.1% dip that undersells the argument. The
+  // honest, stronger comparison pairs the peak against the latest year on
+  // file (2024, 6,050 papers, a 19.7% decline). This pins that the fixed
+  // 2019 figure is gone from the copy entirely.
+  it('does not lean on the weak 2019 snapshot the fixed pause year used to cite', () => {
+    expect(caps.hivFade.data).not.toContain('2019');
+    expect(caps.hivFade.data).not.toContain(at(hiv, 2019).toLocaleString('en-US'));
   });
 
   // Review gate round 2, P3 #12: the HIV pause carries its own sparkline
