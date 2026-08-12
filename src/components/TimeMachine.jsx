@@ -1,18 +1,24 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
+import * as THREE from 'three';
 import useStore from '../store';
 import { nR, nRM } from '../utils/helpers';
 import { sceneRefs } from '../sceneRefs';
 import { buildTimeMachineData } from '../utils/timeMachineData';
 import { fmtFull, fmtWord } from '../utils/captions';
 import { fireRipple } from './SelectionRipple';
+import { DUR, springStep } from '../utils/motion';
 
-// Critically damped spring (damping ratio 1) with a 120ms time constant:
-// v += (k*(target-x) - c*v)*dt; x += v*dt, where k = (1/tau)^2, c = 2/tau.
-const TAU = 0.12;
-const OMEGA = 1 / TAU;
-const SPRING_K = OMEGA * OMEGA;
-const SPRING_C = 2 * OMEGA;
+// The scrub engine's critically damped spring (DIRECTION section 3, scrubber
+// interaction feel: "each node follows its target through a critically
+// damped spring with a 120ms time constant").
+const TAU = DUR.tick / 1000;
+
+// The 2020 detonation's white-core flash (DIRECTION section 3, pause 3):
+// exactly 12 rendered frames, the same literal-frame-count technique the
+// rail's own detent pip uses (TimeRail.jsx `pipFrames`).
+const FLASH_FRAMES = 12;
+const FLASH_COLOR = 0xfff3e0; // black-body white-hot core, DIRECTION section 1
 
 // Exit blend duration: how long `tm.exit` takes to ramp 0->1 after
 // stopTimeMachine(), mixing the last Time Machine radius toward the normal
@@ -227,6 +233,10 @@ export function buildTourCaptions(diseases, idMap, data) {
     caps.hivFade = {
       lines: ['Attention faded long before the epidemic did.'],
       data: `${hiv.label}: ${fmtFull(pk.value)} papers at its ${pk.year} peak, ${fmtFull(valueAt(hiv, fadeYear))} in ${fadeYear}. ${fmtWord(hiv.mortality)} people still die of it every year.`,
+      // Carry-over C (direction, deferred from Task 13): the in-world sparkline
+      // this pause draws beneath the node it's about (DIRECTION section 3,
+      // pause 2: "its ten-year sparkline draws in-world beneath it").
+      sparklineFor: 'hiv-aids',
     };
   }
 
@@ -250,6 +260,9 @@ export function buildTourCaptions(diseases, idMap, data) {
     const flat = {
       lines: [`${cap1(midSentence(rhd.label))} never surged at all.`],
       data: `Its best year: ${fmtFull(pk.value)} papers. Its toll: ${fmtWord(rhd.mortality)} deaths, every year.`,
+      // Carry-over C: the finale's own flat in-world sparkline (DIRECTION
+      // section 3, pause 5: "its flat in-world sparkline").
+      sparklineFor: 'rheumatic-heart-disease',
     };
     if (covid) {
       // Within one disease: the sum of rheumatic heart disease's own series,
@@ -266,10 +279,12 @@ export function buildTourCaptions(diseases, idMap, data) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Null-rendering engine half of the Time Machine. Owns `sceneRefs.tm`, the
-// interface DiseaseNodes' render loop already guards on (Task 9):
+// Almost-null-rendering engine half of the Time Machine. Owns `sceneRefs.tm`,
+// the interface DiseaseNodes' render loop already guards on (Task 9):
 //   { active: bool, yearFloat: number, targetYear: number, data, radiusAt(i), exit: number }
-// and, since Task 13, the auto-tour that drives yearFloat during 'tour'.
+// and, since Task 13, the auto-tour that drives yearFloat during 'tour'. Its
+// only rendered output is the 2020 detonation's white-core flash mesh
+// (carry-over D), an isolated primitive that owns no shared scene state.
 export default function TimeMachine() {
   const tmRef = useRef(null);
   const velRef = useRef(0);
@@ -277,6 +292,19 @@ export default function TimeMachine() {
   const tourRanRef = useRef(false);
   const tmSeenRef = useRef(false);
   const glowRef = useRef(0);
+  // Carry-over D (direction, deferred from Task 13): the 2020 detonation's
+  // white-core flash. `frames` counts down once per rendered frame, the same
+  // literal-frame technique TimeRail's own detent pip uses.
+  const flashRef = useRef({ idx: -1, frames: 0 });
+  const flashMeshRef = useRef(null);
+  const flashGeo = useMemo(() => new THREE.SphereGeometry(1, 12, 12), []);
+  const flashMat = useMemo(
+    () => new THREE.MeshBasicMaterial({
+      color: FLASH_COLOR, transparent: true, opacity: 1,
+      blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false,
+    }),
+    []
+  );
 
   if (!tmRef.current) {
     const diseases = useStore.getState().diseases;
@@ -453,7 +481,11 @@ export default function TimeMachine() {
       }
       case 'shockwave': {
         const idx = s.idMap['covid-19'];
-        if (idx !== undefined) fireRipple(idx, COVID_EMBER);
+        if (idx !== undefined) {
+          fireRipple(idx, COVID_EMBER);
+          // Carry-over D: the white-core flash rides the same cue as the ring.
+          flashRef.current = { idx, frames: FLASH_FRAMES };
+        }
         // The muffled 2020 boom (DIRECTION section 5, moment 4): smaller than
         // the thesis ignition, history rhymes but does not shout.
         if (typeof window !== 'undefined') window.__mgAudio?.play?.('tmBoom');
@@ -501,6 +533,24 @@ export default function TimeMachine() {
     const maxY = tm.data.nYears - 1;
     const r = tourRef.current;
 
+    // Carry-over D: count the flash down one rendered frame at a time,
+    // independent of tour phase/pause, so a harness seek that lands mid-flash
+    // still tears it down cleanly.
+    const fl = flashRef.current;
+    if (fl.frames > 0) {
+      fl.frames -= 1;
+      const p = store.curPos[fl.idx];
+      const mesh = flashMeshRef.current;
+      if (mesh && p) {
+        mesh.visible = true;
+        mesh.position.set(p[0], p[1], p[2]);
+        const r0 = tm.radiusAt ? tm.radiusAt(fl.idx) : 2;
+        mesh.scale.setScalar(Math.max(2, r0 * 1.4));
+      }
+    } else if (flashMeshRef.current && flashMeshRef.current.visible) {
+      flashMeshRef.current.visible = false;
+    }
+
     // Halo suppression follows the finale's focus, and only ever writes the
     // shared grade channel when it has something to say (the film owns it
     // while it plays).
@@ -517,9 +567,9 @@ export default function TimeMachine() {
       tm.exit = 0;
       if (r.tl) { r.tl = null; r.paused = null; r.pendingSeek = null; }
       const target = tm.targetYear < 0 ? 0 : (tm.targetYear > maxY ? maxY : tm.targetYear);
-      const v = velRef.current + (SPRING_K * (target - tm.yearFloat) - SPRING_C * velRef.current) * dt;
-      velRef.current = v;
-      tm.yearFloat += v * dt;
+      const [ny, nv] = springStep(tm.yearFloat, velRef.current, target, dt, TAU);
+      velRef.current = nv;
+      tm.yearFloat = ny;
       if (tm.yearFloat < 0) tm.yearFloat = 0;
       if (tm.yearFloat > maxY) tm.yearFloat = maxY;
     } else if (tmPhase === 'tour') {
@@ -603,5 +653,9 @@ export default function TimeMachine() {
     }
   });
 
-  return null;
+  // Almost entirely a null-rendering engine; the one exception is the 2020
+  // flash mesh, an isolated additive sprite that touches nothing else in the
+  // scene (no shared uniform, no ignite amount), so it cannot bloom anything
+  // but itself.
+  return <mesh ref={flashMeshRef} geometry={flashGeo} material={flashMat} visible={false} frustumCulled={false} />;
 }

@@ -5,12 +5,13 @@ import { isMob } from '../../utils/helpers';
 import { sceneRefs } from '../../sceneRefs';
 import { fmtFull } from '../../utils/captions';
 import { digitsOf } from './Odometer';
+import { DUR, EASE } from '../../utils/motion';
 
 // ─── Motion vocabulary (DIRECTION section 4) ─────────────────────────────────
-const ROLL_MS = 120;      // year numeral digit roll
-const SNAP_MS = 180;      // release snaps to the nearest detent
-const IN_MS = 240;        // rail entrance
-const PULSE_MS = 650;     // one handover pulse
+const ROLL_MS = DUR.tick;  // year numeral digit roll
+const SNAP_MS = DUR.fast;  // release snaps to the nearest detent
+const IN_MS = DUR.ui;      // rail entrance
+const PULSE_MS = DUR.world; // one handover pulse
 const FRICTION = 0.94;    // flick inertia, per frame
 const FLICK_MIN = 0.02;   // years/frame below which a release is just a snap
 const FLICK_STOP = 0.004; // years/frame at which momentum resolves to a detent
@@ -29,7 +30,7 @@ function DigitColumn({ digit }) {
         style={{
           display: 'block',
           transform: `translate3d(0, ${-n * 10}%, 0)`,
-          transition: `transform ${ROLL_MS}ms cubic-bezier(0.16,1,0.3,1)`,
+          transition: `transform ${ROLL_MS}ms ${EASE.ui}`,
         }}
       >
         {['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'].map((d) => (
@@ -295,9 +296,13 @@ export default function TimeRail() {
   // the rail (Task 13 review finding 4).
   useEffect(() => {
     if (tmPhase !== 'idle') return undefined;
+    // onPointerUp first: if a drag was still active it starts a fresh snap or
+    // flick RAF loop as its own side effect. Cancel *after*, so that loop is
+    // torn down too, rather than being kicked off on an already-idle machine
+    // (Task 13 review: teardown ordering).
+    onPointerUp();
     cancelInertia();
     cancelSnap();
-    onPointerUp();
     return undefined;
   }, [tmPhase, cancelInertia, cancelSnap, onPointerUp]);
 
@@ -431,7 +436,7 @@ export default function TimeRail() {
             padding: mob ? '10px 16px' : '6px 14px', minHeight: mob ? 44 : undefined,
             borderRadius: 999, border: '1px solid rgba(245,158,11,0.5)',
             background: 'rgba(10,16,30,0.9)', color: '#f59e0b', fontSize: mob ? 11 : 11,
-            animation: `tmChipIn ${IN_MS}ms cubic-bezier(0.16,1,0.3,1) both`,
+            animation: `tmChipIn ${IN_MS}ms ${EASE.ui} both`,
           }}
         >
           &#10005; Time Machine
@@ -456,7 +461,7 @@ export default function TimeRail() {
       {/* The rail */}
       {/* Mobile clears the legend's two wrapped lines; desktop clears its one. */}
       <div style={{ position: 'absolute', bottom: mob ? 52 : 40, left: '50%', transform: 'translateX(-50%)', zIndex: 46, fontFamily: "'IBM Plex Mono', monospace" }}>
-        <div style={{ width: railW, animation: `tmRailIn ${IN_MS}ms cubic-bezier(0.16,1,0.3,1) both` }}>
+        <div style={{ width: railW, animation: `tmRailIn ${IN_MS}ms ${EASE.ui} both` }}>
           <div ref={numeralRef} style={{ textAlign: 'center', marginBottom: mob ? 6 : 10 }}>
             <YearNumeral year={year} size={mob ? 26 : 38} />
           </div>

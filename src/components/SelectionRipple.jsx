@@ -5,8 +5,11 @@ import useStore from '../store';
 import { CC } from '../utils/constants';
 import { nR } from '../utils/helpers';
 import { sceneRefs } from '../sceneRefs';
+import { DUR } from '../utils/motion';
 
-const RIPPLE_DURATION = 1.0;
+// Select (DIRECTION section 4): "the existing selection ripple standardizes
+// to 480ms expo.out" — the sanctioned `slow` time constant.
+const RIPPLE_DURATION = DUR.slow / 1000;
 const MAX_RADIUS = 140;
 const RING_WIDTH = 6;
 

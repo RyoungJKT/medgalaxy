@@ -3,9 +3,18 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import useStore from '../store';
 import { TIER } from '../utils/tiers';
+import { neglectColor } from '../utils/helpers';
+import { ppd } from '../utils/captions';
+import { igniteWeights } from '../utils/igniteWeights';
 
-// ── Tier-based particle counts ──
-const DUST_COUNT = TIER === 'LOW' ? 60 : TIER === 'MID' ? 150 : 280;
+// ── Tier-based particle counts (tiers are HIGH/MEDIUM/LOW — 'MID' was always
+// false here, so MEDIUM silently fell through to the HIGH count) ──
+const DUST_COUNT = TIER === 'LOW' ? 60 : TIER === 'MEDIUM' ? 150 : 280;
+
+// Flat warm default; overridden per DIRECTION section 4 ("Supernova and
+// roulette, brought into the family") when the reveal lands on a disease in
+// the overlooked ember decile.
+const DEFAULT_COLOR = 0xffeebb;
 
 // ── Shared scratch vector ──
 const _v3 = new THREE.Vector3();
@@ -20,6 +29,12 @@ const RING_TILTS = [
 export default function RouletteDust() {
   const pointsRef = useRef();
   const matRef = useRef();
+  const diseases = useStore(s => s.diseases);
+
+  // Bottom-decile-of-papers-per-death membership, same runtime-derived weights
+  // the ignite ramp uses (DIRECTION section 4: "dust particles tint by the
+  // revealed disease's papers-per-death color on the Attention Map scale").
+  const ember = useMemo(() => igniteWeights(diseases).ember, [diseases]);
 
   // Pre-compute per-particle ring assignment, base angle, radius offset, speed jitter
   const particleData = useMemo(() => {
@@ -48,7 +63,7 @@ export default function RouletteDust() {
 
   useFrame((state, delta) => {
     const store = useStore.getState();
-    const { roulettePhase, rawMax } = store;
+    const { roulettePhase, rawMax, rouletteWinner } = store;
     const dt = Math.min(delta, 0.05);
 
     if (!pointsRef.current || !matRef.current) return;
@@ -57,7 +72,13 @@ export default function RouletteDust() {
     const ringRadii = [rm * 0.25, rm * 0.45, rm * 0.70];
 
     // Dust speed matches GalaxyRoulette's MAX_SPEEDS
-    const maxSpeeds = TIER === 'LOW' ? [9.0, 5.5, 3.5] : TIER === 'MID' ? [13.0, 8.5, 5.5] : [16.0, 11.0, 7.0];
+    const maxSpeeds = TIER === 'LOW' ? [9.0, 5.5, 3.5] : TIER === 'MEDIUM' ? [13.0, 8.5, 5.5] : [16.0, 11.0, 7.0];
+
+    // Ember tint: once the reveal has a winner in the overlooked decile, the
+    // dust throws that disease's neglect color instead of the flat default.
+    const winnerOverlooked =
+      roulettePhase === 'reveal' && rouletteWinner != null && rouletteWinner >= 0 && ember[rouletteWinner] === 1;
+    matRef.current.color.set(winnerOverlooked ? neglectColor(ppd(diseases[rouletteWinner])) : DEFAULT_COLOR);
 
     // Target opacity and speed multiplier based on phase
     let targetOpacity = 0;
@@ -125,7 +146,7 @@ export default function RouletteDust() {
       </bufferGeometry>
       <pointsMaterial
         ref={matRef}
-        color={0xffeebb}
+        color={DEFAULT_COLOR}
         size={TIER === 'LOW' ? 1.8 : 2.2}
         transparent
         opacity={0}

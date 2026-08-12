@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { DUR, EASE } from '../../utils/motion';
 
 // Unit-label crossfade duration (sanctioned time constant).
-const UNIT_MS = 240;
+const UNIT_MS = DUR.ui;
 
 // ─── Digit decomposition ──────────────────────────────────────────────────────
 // Splits a number into an ordered array of single characters: digits '0'-'9'
@@ -30,7 +31,7 @@ function DigitColumn({ digit }) {
         style={{
           display: 'block',
           transform: `translate3d(0, ${-n * 10}%, 0)`,
-          transition: 'transform 480ms cubic-bezier(0.16,1,0.3,1)',
+          transition: `transform ${DUR.slow}ms ${EASE.ui}`,
         }}
       >
         {DIGITS.map((d) => (

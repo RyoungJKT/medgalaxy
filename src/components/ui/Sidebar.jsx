@@ -5,6 +5,18 @@ import { fmt, isMob } from '../../utils/helpers';
 import Sparkline from './Sparkline';
 import insights from '../../../data/disease-insights.json';
 import { pubmedTermFor } from '../../utils/pubmedTerms';
+import { DUR, EASE } from '../../utils/motion';
+
+// Select (DIRECTION section 4): "sidebar slides in 280ms expo.out with a
+// 40ms per-section content stagger." 280/40 are the paragraph's own explicit
+// values, not the general sanctioned-constant list, so they stay local here
+// rather than joining DUR — EASE.ui is still the shared curve.
+const ENTRANCE_MS = 280;
+const SECTION_STAGGER_MS = 40;
+const sectionAnim = (i) => ({
+  animation: `sidebarSectionIn ${DUR.ui}ms ${EASE.ui} both`,
+  animationDelay: `${i * SECTION_STAGGER_MS}ms`,
+});
 
 function SB({ l, v, s, vc }) {
   return (
@@ -108,7 +120,11 @@ export default function Sidebar() {
   return (
     <>
       {mob && <div onClick={onClose} style={{ position: 'absolute', inset: 0, zIndex: 49, background: 'rgba(0,0,0,0.4)', pointerEvents: 'auto' }} />}
-      <div ref={panelRef} style={{ ...panelStyle, pointerEvents: 'auto' }}>
+      <div
+        key={disease.id}
+        ref={panelRef}
+        style={{ ...panelStyle, pointerEvents: 'auto', animation: `sidebarSlideIn ${ENTRANCE_MS}ms ${EASE.ui} both` }}
+      >
         {mob && (
           <div onTouchStart={onSwipeStart} onTouchMove={onSwipeMove} onTouchEnd={onSwipeEnd}
             style={{ display: 'flex', justifyContent: 'center', padding: '18px 0 14px', cursor: 'grab', touchAction: 'none', minHeight: 48 }}>
@@ -116,7 +132,7 @@ export default function Sidebar() {
           </div>
         )}
         {/* Header */}
-        <div style={{ padding: '16px 16px 8px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <div style={{ padding: '16px 16px 8px', borderBottom: '1px solid rgba(255,255,255,0.06)', ...sectionAnim(0) }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
               <div style={{ fontSize: 17, fontWeight: 600, marginBottom: 4 }}>{disease.label}</div>
@@ -126,9 +142,9 @@ export default function Sidebar() {
           </div>
         </div>
         {/* Description */}
-        <div style={{ padding: '10px 16px', color: '#94a3b8', lineHeight: 1.5, fontSize: 13 }}>{disease.description}</div>
+        <div style={{ padding: '10px 16px', color: '#94a3b8', lineHeight: 1.5, fontSize: 13, ...sectionAnim(1) }}>{disease.description}</div>
         {/* Stats */}
-        <div style={{ padding: '0 16px 12px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+        <div style={{ padding: '0 16px 12px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, ...sectionAnim(2) }}>
           <SB l="Publications" v={fmt(disease.papers)} s={trendSurged ? <span style={{ color: '#22c55e' }}>new</span> : <span style={{ color: tc }}>{ar}{Math.abs(t)}%</span>} />
           <SB l="Connections" v={cc} />
           <SB l="WHO Deaths/yr" v={disease.mortality > 0 ? fmt(disease.mortality) : 'N/A'} />
@@ -136,12 +152,12 @@ export default function Sidebar() {
           <SB l="Papers/Death" v={ppdStr} />
         </div>
         {/* Sparkline */}
-        <div style={{ padding: '0 16px 12px' }}>
+        <div style={{ padding: '0 16px 12px', ...sectionAnim(3) }}>
           <div style={{ color: '#94a3b8', fontSize: 11, marginBottom: 4 }}>{`Publication Trend (${disease.yearStart ?? 2015}-2024)`}</div>
           <Sparkline data={disease.yearlyPapers} color={c} yearStart={disease.yearStart ?? 2015} yearEnd={2024} />
         </div>
         {/* PubMed link */}
-        <div style={{ padding: '0 16px 12px' }}>
+        <div style={{ padding: '0 16px 12px', ...sectionAnim(4) }}>
           <a
             href={`https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(pubmedTermFor(disease.id, disease.label))}&sort=date`}
             target="_blank" rel="noopener noreferrer"
@@ -149,7 +165,7 @@ export default function Sidebar() {
           >View on PubMed &rarr;</a>
         </div>
         {/* Connections */}
-        <div style={{ padding: '0 16px 16px' }}>
+        <div style={{ padding: '0 16px 16px', ...sectionAnim(5) }}>
           <div style={{ color: '#94a3b8', fontSize: 11, marginBottom: 2 }}>Connections ({conns.length})</div>
           <div style={{ color: '#64748b', fontSize: 11, marginBottom: 6 }}>Diseases that appear together in published medical research, suggesting shared biology, risk factors, or clinical overlap</div>
           <div style={{ maxHeight: 240, overflowY: 'auto' }}>
@@ -178,7 +194,7 @@ export default function Sidebar() {
           const ins = insights[disease.id];
           if (!ins) return null;
           return (
-            <>
+            <div style={sectionAnim(6)}>
               <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', margin: '4px 0 0' }} />
               <div style={{ ...SD, paddingTop: 12 }}>
                 <div style={SH}>What It Is</div>
@@ -221,9 +237,13 @@ export default function Sidebar() {
                 <div style={{ fontSize: 11, color: '#3399ff', fontWeight: 600, marginBottom: 4 }}>Could related disease research accelerate progress here?</div>
                 <div style={{ fontSize: 12, color: '#94a3b8', lineHeight: 1.5 }}>{ins.accelerateAnswer}</div>
               </div>
-            </>
+            </div>
           );
         })()}
+        <style>{`
+          @keyframes sidebarSlideIn { from { opacity: 0; transform: translateX(16px); } to { opacity: 1; transform: translateX(0); } }
+          @keyframes sidebarSectionIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+        `}</style>
       </div>
     </>
   );

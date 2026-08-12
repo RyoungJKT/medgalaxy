@@ -45,6 +45,10 @@ export default function OvertureMicroLabels() {
     if (!idxKey) return undefined;
     const nodes = idxKey.split(',').map(Number);
     let running = true;
+    // Side hysteresis (Task 11 review): latched the first time each label is
+    // actually shown, so lateral camera drift crossing the frame midline mid-
+    // beat does not flip which side it reads on. null = not yet latched.
+    const sides = new Array(nodes.length).fill(null);
 
     function update() {
       if (!running) return;
@@ -95,8 +99,12 @@ export default function OvertureMicroLabels() {
         // Sit beside the giant, reading outward from the middle of the frame:
         // two labels near the galactic core would otherwise run into each other
         // as one line of text. Outward first, inward as the fallback, and a
-        // one-line vertical nudge if both sides are taken.
-        const outward = sx < rc.width / 2
+        // one-line vertical nudge if both sides are taken. Which side counts as
+        // "outward" is latched on first placement (once the label is actually
+        // visible) so the beat's lateral camera drift never flips it mid-beat.
+        if (on && sides[k] === null) sides[k] = sx < rc.width / 2;
+        const preferLeft = sides[k] === null ? sx < rc.width / 2 : sides[k];
+        const outward = preferLeft
           ? [sx - screenR - GAP - w, sx + screenR + GAP]
           : [sx + screenR + GAP, sx - screenR - GAP - w];
         let left = null;

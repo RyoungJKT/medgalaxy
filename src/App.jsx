@@ -17,7 +17,6 @@ import StoryEngine from './components/StoryEngine';
 import ExplodeView from './components/ExplodeView';
 import ConnectionsView from './components/ConnectionsView';
 import VelocityMap from './components/VelocityMap';
-import AttentionMap from './components/AttentionMap';
 import Spotlight from './components/Spotlight';
 import PostFX from './components/PostFX';
 import SelectionRipple from './components/SelectionRipple';
@@ -198,7 +197,6 @@ export default function App() {
           <ExplodeView />
           <ConnectionsView />
           <VelocityMap />
-          <AttentionMap />
           <Spotlight />
           <PostFX />
           <SelectionRipple />

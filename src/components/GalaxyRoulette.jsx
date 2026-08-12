@@ -11,10 +11,11 @@ import { igniteWeights } from '../utils/igniteWeights';
 // ── Module-level scratch objects (zero per-frame allocations) ──
 const _v3 = new THREE.Vector3();
 
-// ── Tier-based constants ──
-const MAX_PER_RING = TIER === 'LOW' ? 10 : TIER === 'MID' ? 16 : 20;
+// ── Tier-based constants (tiers are HIGH/MEDIUM/LOW — 'MID' was always false
+// here, so MEDIUM silently fell through to the HIGH ring size and speed) ──
+const MAX_PER_RING = TIER === 'LOW' ? 10 : TIER === 'MEDIUM' ? 16 : 20;
 const TOTAL_CAP = MAX_PER_RING * 3;
-const MAX_SPEEDS = TIER === 'LOW' ? [9.0, 5.5, 3.5] : TIER === 'MID' ? [13.0, 8.5, 5.5] : [16.0, 11.0, 7.0];
+const MAX_SPEEDS = TIER === 'LOW' ? [9.0, 5.5, 3.5] : TIER === 'MEDIUM' ? [13.0, 8.5, 5.5] : [16.0, 11.0, 7.0];
 const ASSEMBLE_DUR = TIER === 'LOW' ? 0.8 : 1.2;
 const RAMP_DUR = TIER === 'LOW' ? 1.4 : 2.2;
 const SUSTAIN_DUR = TIER === 'LOW' ? 1.8 : 3.0;

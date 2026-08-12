@@ -8,6 +8,7 @@ import { sceneRefs } from '../sceneRefs';
 import { TIER } from '../utils/tiers';
 import { useAttentionColors } from './AttentionMap';
 import { igniteWeights } from '../utils/igniteWeights';
+import { lagFactor, staggeredEase, springStep, DUR } from '../utils/motion';
 import plasmaVert from '../shaders/plasma.vert.glsl?raw';
 import plasmaFrag from '../shaders/plasma.frag.glsl?raw';
 import pulseVert from '../shaders/pulse.vert.glsl?raw';
@@ -21,6 +22,42 @@ const _s3 = new THREE.Vector3();
 // Category index lookup for aCatId attribute
 const CAT_INDEX = {};
 CATS.forEach((c, i) => { CAT_INDEX[c] = i; });
+
+// Hover (DIRECTION section 4): "Node scales 1.00 to 1.06 in 120ms" — the
+// world family's critically damped spring, at the sanctioned `tick` constant.
+const HOVER_TC = DUR.tick / 1000;
+const HOVER_SCALE = 1.06;
+
+// ── Carry-over A (direction 9/10 item 5, deferred from Task 11): mass-weighted
+// morph stagger. "Per-node duration scales with sqrt of target radius so
+// massive nodes move slowly" (DIRECTION section 2 beat 2 / section 6 item 5).
+// Exported so the endpoint guarantee — morphT 0 lands on exactly nR(papers)
+// and morphT 1 on exactly nRM(mortality), for every node, regardless of lag —
+// is a plain unit test rather than a pixel comparison.
+//
+// `towardMortality` is the current direction of travel (true = morphing
+// toward the mortality radius, false = back toward papers); the per-node lag
+// factors are only ever recomputed when that direction reverses, not every
+// frame, so a node's stagger does not jitter mid-transition.
+export function computeLagFactors(diseases, towardMortality) {
+  const n = diseases.length;
+  const L = new Float32Array(n);
+  const rTarget = new Float32Array(n);
+  let rMax = 0;
+  for (let i = 0; i < n; i++) {
+    rTarget[i] = towardMortality ? nRM(diseases[i].mortality) : nR(diseases[i].papers);
+    if (rTarget[i] > rMax) rMax = rTarget[i];
+  }
+  for (let i = 0; i < n; i++) L[i] = lagFactor(rTarget[i], rMax);
+  return L;
+}
+
+// This node's radius at a given global morph progress `morphT` (0 = papers,
+// 1 = mortality) and its own lag factor `L` from computeLagFactors.
+export function morphRadiusAt(disease, morphT, L) {
+  const ease = staggeredEase(morphT, L);
+  return nR(disease.papers) * (1 - ease) + nRM(disease.mortality) * ease;
+}
 
 export default function DiseaseNodes() {
   const meshRef = useRef();
@@ -82,6 +119,12 @@ export default function DiseaseNodes() {
   // Size-morph engine: smoothed sizeMode toggle + per-node hover breathe
   const morphRef = useRef(0);
   const hoverScaleRef = useRef(new Float32Array(count).fill(1));
+  const hoverVelRef = useRef(new Float32Array(count));
+  // Carry-over A: per-node lag factors, recomputed only when the morph
+  // reverses direction (see computeLagFactors above).
+  const lagRef = useRef(null);
+  const morphDirRef = useRef(true); // true = toward mortality; the overture's own direction
+  const prevMorphTRef = useRef(null);
 
   const geo = useMemo(() => {
     const g = new THREE.SphereGeometry(1, mobDevice ? 16 : 32, mobDevice ? 16 : 32);
@@ -154,6 +197,12 @@ export default function DiseaseNodes() {
     }
     sceneRefs.introScales = introScalesRef.current;
 
+    // Reset the morph stagger cache too: a data reload invalidates any
+    // lag factors computed from the previous disease list.
+    lagRef.current = null;
+    morphDirRef.current = true;
+    prevMorphTRef.current = null;
+
     for (let i = 0; i < count; i++) {
       _v3.set(catPos[i][0], catPos[i][1], catPos[i][2]);
       const r = nR(diseases[i].papers);
@@ -185,12 +234,13 @@ export default function DiseaseNodes() {
   }, [plasmaMat, pulseMat]);
 
   // Every frame: rebuild matrices from curPos + update shader time
-  useFrame((state) => {
+  useFrame((state, delta) => {
     if (!meshRef.current) return;
     const mesh = meshRef.current;
     const store = useStore.getState();
     const curPos = store.curPos;
     const sizeMode = store.sizeMode;
+    const dt = delta > 0.05 ? 0.05 : delta; // clamp so a stalled tab doesn't fling the hover spring
 
     if (mat.uniforms) {
       mat.uniforms.time.value = state.clock.getElapsedTime();
@@ -250,18 +300,35 @@ export default function DiseaseNodes() {
     const morphTarget = fx.morphOverride ?? (sizeMode === 'mortality' ? 1 : 0);
     morphRef.current += (morphTarget - morphRef.current) * (fx.morphOverride != null ? 1 : 0.06);
     const morphT = fx.morphOverride ?? morphRef.current;
-    const ease = morphT * morphT * (3 - 2 * morphT); // smoothstep
+
+    // Carry-over A: recompute the per-node lag factors only when the morph's
+    // direction of travel reverses (or on the very first frame), so a node's
+    // stagger stays fixed through a single transition instead of jittering.
+    if (prevMorphTRef.current === null) {
+      lagRef.current = computeLagFactors(diseases, morphDirRef.current);
+    } else if (morphT !== prevMorphTRef.current) {
+      const towardMortality = morphT > prevMorphTRef.current;
+      if (towardMortality !== morphDirRef.current) {
+        morphDirRef.current = towardMortality;
+        lagRef.current = computeLagFactors(diseases, towardMortality);
+      }
+    }
+    prevMorphTRef.current = morphT;
+    const lag = lagRef.current;
+
     const hoverIdx = store.hoveredNode ? store.hoveredNode.index : -1;
     for (let i = 0; i < count; i++) {
       _v3.set(curPos[i][0], curPos[i][1], curPos[i][2]);
       let r;
       if (tm && tm.active) {
-        r = tm.radiusAt(i); // Task 11
+        r = tm.radiusAt(i); // Task 12
       } else {
-        r = nR(diseases[i].papers) * (1 - ease) + nRM(diseases[i].mortality) * ease;
+        r = morphRadiusAt(diseases[i], morphT, lag ? lag[i] : 1);
       }
-      hoverScaleRef.current[i] += (((i === hoverIdx) ? 1.06 : 1) - hoverScaleRef.current[i]) * 0.25;
-      const is = (scales ? scales[i] : 1) * hoverScaleRef.current[i];
+      const [hs, hv] = springStep(hoverScaleRef.current[i], hoverVelRef.current[i], i === hoverIdx ? HOVER_SCALE : 1, dt, HOVER_TC);
+      hoverScaleRef.current[i] = hs;
+      hoverVelRef.current[i] = hv;
+      const is = (scales ? scales[i] : 1) * hs;
       _s3.set(r * is, r * is, r * is);
       _m4.compose(_v3, _q4, _s3);
       mesh.setMatrixAt(i, _m4);
