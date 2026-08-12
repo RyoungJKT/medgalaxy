@@ -116,6 +116,61 @@ describe('buildTourTimeline', () => {
   });
 });
 
+describe('buildTourTimeline reduced motion', () => {
+  const rtl = buildTourTimeline(data, data.nYears - 1, true);
+
+  it('collapses every leg to a zero-duration step, no year tween', () => {
+    expect(rtl.segs.length).toBeGreaterThan(0);
+    for (const s of rtl.segs) expect(s.t1).toBe(s.t0);
+  });
+
+  it('still visits every pause year, in order, holding for the same durations', () => {
+    // No travel time between legs: consecutive pauses are separated by
+    // exactly the previous pause's hold, not hold + a leg duration.
+    for (let i = 1; i < rtl.pauses.length; i++) {
+      expect(rtl.pauseAt[i]).toBeCloseTo(rtl.pauseAt[i - 1] + rtl.pauses[i - 1].hold, 6);
+    }
+    expect(rtl.end).toBeCloseTo(
+      rtl.pauseAt[rtl.pauses.length - 1] + rtl.pauses[rtl.pauses.length - 1].hold,
+      6
+    );
+  });
+
+  it('jumps straight to the pause year with no interpolated frame in between', () => {
+    rtl.pauses.forEach((p, i) => {
+      const t = rtl.pauseAt[i];
+      // The instant the pause is reached, and for its whole hold, the year is
+      // pinned exactly on the pause (a step function, not an eased approach).
+      expect(tourYearAt(rtl.segs, t)).toBeCloseTo(p.yearIdx, 6);
+      expect(tourYearAt(rtl.segs, t + p.hold * 0.5)).toBeCloseTo(p.yearIdx, 6);
+      if (i > 0) {
+        // A hair before this pause, the year is still the previous one — the
+        // whole leg is zero-width, so there is no fractional year on screen.
+        expect(tourYearAt(rtl.segs, t - 1e-6)).toBeCloseTo(rtl.pauses[i - 1].yearIdx, 4);
+      }
+    });
+  });
+
+  it('drops the detonation overshoot: every leg uses the same non-overshoot curve', () => {
+    for (const s of rtl.segs) {
+      for (let p = 0; p <= 1; p += 0.05) expect(s.ease(p)).toBeLessThanOrEqual(1 + 1e-9);
+    }
+  });
+
+  it('still fires the shockwave and camera cues, with zero-duration camera moves', () => {
+    const shock = rtl.cues.find((c) => c.kind === 'shockwave');
+    expect(shock).toBeTruthy();
+    expect(shock.t).toBeCloseTo(rtl.pauseAt[3], 6);
+    const detCam = rtl.cues.find((c) => c.kind === 'camera-node' && c.node === 'covid-19');
+    expect(detCam.dur).toBe(0);
+  });
+
+  it('keeps one caption per pause plus the flatline, same as the normal tour', () => {
+    const captionCount = rtl.cues.filter((c) => c.kind === 'caption').length;
+    expect(captionCount).toBe(rtl.pauses.length + 1);
+  });
+});
+
 describe('buildTourCaptions', () => {
   it('derives the rules pause from the span of the file', () => {
     expect(caps.rules.lines[0]).toBe('35 years of attention, year by year.');

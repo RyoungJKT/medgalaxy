@@ -98,20 +98,30 @@ export function buildTourPauses(data) {
  * the frame the board describes.
  * @param {object} data the Time Machine radius table (nYears/yearStart)
  * @param {number} startYearIdx where the galaxy stands when the tour opens
+ * @param {boolean} [reduced] prefers-reduced-motion: every leg collapses to a
+ *   zero-duration step (a hold-to-hold jump, no year tween) and the
+ *   detonation's back.out overshoot — the tour's one sanctioned overshoot —
+ *   is dropped for the same non-overshoot curve every other leg uses.
+ *   tourYearAt still resolves a zero-duration segment correctly: its
+ *   `t >= sg.t1` branch (== sg.t0 here) always fires before the eased branch
+ *   that would divide by zero is ever reached, so the year just snaps.
+ *   Pause holds, captions and the shockwave/flash cues are untouched — only
+ *   the travel between pauses stops tweening.
  */
-export function buildTourTimeline(data, startYearIdx) {
+export function buildTourTimeline(data, startYearIdx, reduced = false) {
   const pauses = buildTourPauses(data);
   const segs = [];
   const cues = [];
   const pauseAt = [];
   let t = 0;
+  const rewindDur = reduced ? 0 : REWIND;
 
   // The opening rewind: the galaxy deflates back to the first year on screen
   // while the camera pulls to the overview seat.
   cues.push({ t: 0, kind: 'camera-home', effect: true });
   if (startYearIdx !== pauses[0].yearIdx) {
-    segs.push({ t0: 0, t1: REWIND, from: startYearIdx, to: pauses[0].yearIdx, ease: easeExpoOut });
-    t = REWIND;
+    segs.push({ t0: 0, t1: rewindDur, from: startYearIdx, to: pauses[0].yearIdx, ease: easeExpoOut });
+    t = rewindDur;
   }
 
   for (let i = 0; i < pauses.length; i++) {
@@ -119,12 +129,12 @@ export function buildTourTimeline(data, startYearIdx) {
     if (i > 0) {
       const from = pauses[i - 1].yearIdx;
       const steps = Math.abs(p.yearIdx - from);
-      const dur = Math.min(steps, LEG_CAP_STEPS) * STEP;
+      const dur = reduced ? 0 : Math.min(steps, LEG_CAP_STEPS) * STEP;
       const detonation = p.kind === 'detonation';
       // The push-in rides the year-step itself, so the move and the eruption
       // are one gesture rather than two.
-      if (detonation) cues.push({ t, kind: 'camera-node', node: 'covid-19', factor: PUSH_IN, dur: STEP, effect: true });
-      segs.push({ t0: t, t1: t + dur, from, to: p.yearIdx, ease: detonation ? easeBackOut : easeExpoOut });
+      if (detonation) cues.push({ t, kind: 'camera-node', node: 'covid-19', factor: PUSH_IN, dur: reduced ? 0 : STEP, effect: true });
+      segs.push({ t0: t, t1: t + dur, from, to: p.yearIdx, ease: detonation && !reduced ? easeBackOut : easeExpoOut });
       t += dur;
     }
     pauseAt.push(t);
@@ -292,6 +302,18 @@ export default function TimeMachine() {
   const tourRanRef = useRef(false);
   const tmSeenRef = useRef(false);
   const glowRef = useRef(0);
+  // prefers-reduced-motion, read once on mount (same pattern as
+  // OvertureSequence's own reducedRef): the tour becomes stepped year holds
+  // under it — no year tweens, no shockwave overshoot (see buildTourTimeline
+  // and runCue above). Captions, holds and the shockwave/flash cues fire on
+  // the same schedule either way.
+  const reducedRef = useRef(false);
+  useEffect(() => {
+    reducedRef.current =
+      typeof window !== 'undefined' &&
+      !!window.matchMedia &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }, []);
   // Carry-over D (direction, deferred from Task 13): the 2020 detonation's
   // white-core flash. `frames` counts down once per rendered frame, the same
   // literal-frame technique TimeRail's own detent pip uses.
@@ -494,8 +516,12 @@ export default function TimeMachine() {
   }, []);
 
   // Executes one timeline cue. Kept out of the builder so the timeline stays
-  // pure data (and testable without a scene).
-  const runCue = (cue, caps) => {
+  // pure data (and testable without a scene). `reduced` forces every camera
+  // move this fires to duration 0 (a snap, not a fly) — the same "no year
+  // tweens" rule as the segments above, applied to the camera cues that live
+  // outside buildTourTimeline's own duration math (camera-home's duration is
+  // fixed at REWIND here, not threaded through the cue).
+  const runCue = (cue, caps, reduced) => {
     const s = useStore.getState();
     switch (cue.kind) {
       case 'caption':
@@ -533,7 +559,7 @@ export default function TimeMachine() {
         // push-ins (HIV, detonation) left the camera pulled in. `radius: null`
         // is explicit here, the same pattern store.deselect uses for its own
         // fly-home.
-        s.setFlyTarget({ position: [0, 0, 0], radius: null, duration: REWIND, ease: 'sine.inOut' });
+        s.setFlyTarget({ position: [0, 0, 0], radius: null, duration: reduced ? 0 : REWIND, ease: 'sine.inOut' });
         break;
       case 'camera-node': {
         const idx = s.idMap[cue.node];
@@ -548,7 +574,7 @@ export default function TimeMachine() {
           s.setFlyTarget({
             position: [p[0], p[1], p[2]],
             radius,
-            duration: cue.dur || REWIND,
+            duration: reduced ? 0 : (cue.dur || REWIND),
             ease: 'sine.inOut',
           });
         }
@@ -622,7 +648,7 @@ export default function TimeMachine() {
 
       if (!r.tl) {
         r.caps = buildTourCaptions(store.diseases, store.idMap, tm.data);
-        r.tl = buildTourTimeline(tm.data, Math.round(tm.yearFloat));
+        r.tl = buildTourTimeline(tm.data, Math.round(tm.yearFloat), reducedRef.current);
         r.t0 = clock;
         r.fired = new Set();
         r.paused = null;
@@ -649,9 +675,9 @@ export default function TimeMachine() {
           r.fired.add(k);
           if (c.kind === 'camera-home' || c.kind === 'camera-node') { lastCam = c; continue; }
           if (c.effect && target - c.t > 0.4) continue;
-          runCue(c, r.caps);
+          runCue(c, r.caps, reducedRef.current);
         }
-        if (lastCam) runCue(lastCam, r.caps);
+        if (lastCam) runCue(lastCam, r.caps, reducedRef.current);
         tm.yearFloat = tourYearAt(r.tl.segs, target);
         tm.targetYear = tm.yearFloat;
         return;
@@ -669,7 +695,7 @@ export default function TimeMachine() {
       for (let k = 0; k < r.tl.cues.length; k++) {
         if (!r.fired.has(k) && t >= r.tl.cues[k].t) {
           r.fired.add(k);
-          runCue(r.tl.cues[k], r.caps);
+          runCue(r.tl.cues[k], r.caps, reducedRef.current);
         }
       }
 

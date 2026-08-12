@@ -27,9 +27,28 @@ export default function Legend() {
         </>
       )}
       {/* Header hides its count below 1539px with nothing standing in for it
-          (Task 13 review finding 10); the legend footer carries it always. */}
-      <span>{diseases.length} diseases &middot; {displayEdges.length} connections</span>
-      <span style={{ marginLeft: 'auto' }}>{`Data: PubMed, refreshed weekly (latest: ${meta.pubmedLastRefresh}) · WHO GHE 2021 and per-disease sources · Project by Russell J. Young`}</span>
+          (Task 13 review finding 10), so the legend footer carries it on
+          desktop. On mobile this pushed the legend to a second line (43px ->
+          57px at 390px width), eating the TimeRail's tuned gutter above it
+          (Task 17: rail clearance went to -4px). The stat is still reachable
+          on mobile through the Methodology panel's own disease/connection
+          counts, so it is scoped out here rather than duplicated. */}
+      {!mob && (
+        <span>{diseases.length} diseases &middot; {displayEdges.length} connections</span>
+      )}
+      {/* The full desktop credit line (with the refresh date, both source
+          names and the author credit) is well over 100 characters — even
+          alone, at 375px it wraps to multiple lines and the row grows past
+          the rail's tuned gutter regardless of the counts span above (Task
+          17 measured this live: removing only the counts span still left an
+          18px overlap with the rail's hit target). Mobile gets the same
+          shortened shape Header.jsx already uses for its own responsive
+          breakpoints: the essential claim (source, cadence) survives here;
+          the full citation (exact date, WHO source name, author credit) is
+          one tap away in the Methodology panel. */}
+      <span style={{ marginLeft: 'auto' }}>
+        {mob ? 'Data: PubMed, weekly · WHO GHE' : `Data: PubMed, refreshed weekly (latest: ${meta.pubmedLastRefresh}) · WHO GHE 2021 and per-disease sources · Project by Russell J. Young`}
+      </span>
     </div>
   );
 }

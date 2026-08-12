@@ -8,10 +8,25 @@ const URL = 'http://localhost:5280';
 const args = process.argv.slice(2);
 const get = (f) => { const i = args.indexOf(f); return i >= 0 ? args[i + 1] : null; };
 
+// --mobile: emulate a phone (375x812, isMobile+hasTouch — the width<768 half
+// of tiers.js's detectTier()/helpers.js's isMob() alone is enough to land LOW
+// tier and the mobile UI branch, regardless of how headless Chrome reports
+// pointer:coarse).
+// --reduced: emulate prefers-reduced-motion: reduce, set before goto (has to
+// be live for the very first paint — LandingOverlay's reduced-motion skip and
+// CameraRig's assembly-hold both read matchMedia on mount).
+const mobile = args.includes('--mobile');
+const reduced = args.includes('--reduced');
+
 const browser = await puppeteer.launch({ executablePath: CHROME, headless: 'new',
-  args: ['--window-size=1440,900', '--use-gl=angle'] });
+  args: [`--window-size=${mobile ? '375,812' : '1440,900'}`, '--use-gl=angle'] });
 const page = await browser.newPage();
-await page.setViewport({ width: 1440, height: 900 });
+if (reduced) {
+  await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
+}
+await page.setViewport(
+  mobile ? { width: 375, height: 812, isMobile: true, hasTouch: true } : { width: 1440, height: 900 }
+);
 await page.goto(URL, { waitUntil: 'networkidle2' });
 await page.waitForFunction('window._store !== undefined', { timeout: 15000 });
 

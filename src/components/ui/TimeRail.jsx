@@ -63,7 +63,18 @@ function TimeCaption({ caption, mob, tall }) {
         position: 'absolute', bottom: mob ? 150 : 178, left: '50%', transform: 'translateX(-50%)',
         zIndex: 46, background: 'rgba(10,16,30,0.95)', backdropFilter: 'blur(16px)',
         border: '1px solid rgba(255,255,255,0.15)', borderRadius: 12,
-        padding: mob ? '12px 18px' : '16px 28px', maxWidth: mob ? '90vw' : '76vw',
+        padding: mob ? '12px 18px' : '16px 28px',
+        // The existing maxWidth is a ceiling for genuinely long captions
+        // (the finale's micro-line); it was never a floor. With `width`
+        // left `auto`, Chromium's shrink-to-fit for this absolutely
+        // positioned `left:50%` box resolves to roughly half its containing
+        // block regardless of maxWidth, invisible at 1440px (half is still
+        // wider than any tour caption) but at 375px half is 149.5px, well
+        // under a short sentence's natural width — "HIV research climbed
+        // with the epidemic." wrapped to three lines (Task 17 mobile sweep).
+        // max-content sizes the card to its content, still capped by
+        // maxWidth below for the long ones.
+        width: 'max-content', maxWidth: mob ? '90vw' : '76vw',
         fontFamily: "'IBM Plex Mono', monospace", textAlign: 'center',
         boxShadow: '0 8px 32px rgba(0,0,0,0.5)', pointerEvents: 'none',
       }}

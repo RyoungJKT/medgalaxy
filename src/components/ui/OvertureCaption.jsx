@@ -62,6 +62,17 @@ export default function OvertureCaption() {
         zIndex: 46, background: 'rgba(10,16,30,0.95)', backdropFilter: 'blur(16px)',
         border: '1px solid rgba(255,255,255,0.15)', borderRadius: 12,
         padding: mob ? '14px 20px' : '18px 32px',
+        // Chromium's shrink-to-fit width for an absolutely positioned,
+        // auto-width box anchored by `left:50%` resolves to roughly half its
+        // containing block, not the content's natural width — invisible at
+        // 1440px (half is still wider than any caption line) but at 375px
+        // half is 187.5px, well under a line's own 85vw allowance, so the
+        // card clamped itself and wrapped short sentences to three lines
+        // (Task 17 mobile sweep, mob-film-caption: "Where the world's
+        // attention goes." wrapped 1 word per line). max-content sizes the
+        // card to its content; the lines' own maxWidth below still caps
+        // genuinely long captions.
+        width: 'max-content',
         fontFamily: "'IBM Plex Mono', monospace", textAlign: 'center',
         boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
         opacity: visible ? 1 : 0,

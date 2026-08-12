@@ -1,15 +1,31 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
+import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import useStore from '../store';
 import { CC } from '../utils/constants';
 import { neglectColor, nR } from '../utils/helpers';
 import { sceneRefs } from '../sceneRefs';
+import { TIER } from '../utils/tiers';
+import { igniteWeights } from '../utils/igniteWeights';
 
 const _color = new THREE.Color();
+const _graphite = new THREE.Color();
 const _m4 = new THREE.Matrix4();
 const _p = new THREE.Vector3();
 const _q = new THREE.Quaternion();
 const _s = new THREE.Vector3();
+
+// LOW tier (phones) renders nodes with MeshPhongMaterial, not the plasma/pulse
+// shaders — there is no per-instance emissive channel, so the overture's
+// beat 2 desat/ignite grade (plasma.frag.glsl section 8) does nothing there
+// today. The flat approximation below mirrors that shader math one step
+// simpler (instanceColor is one flat color per node, not the shader's radial
+// rim-to-core ramp): every node drains toward graphite by fx.desat, then
+// nodes with a nonzero ignite weight lerp further toward the same ember-red
+// DIRECTION uses elsewhere (TimeRail's EMBER, the shockwave ring), weighted
+// by fx.ignite * aIgnite[i].
+const EMBER_RED = '#ff4d1a';
+const _ember = new THREE.Color(EMBER_RED);
 
 /**
  * Logic-only component that updates instanced mesh colors and edge
@@ -34,6 +50,17 @@ export default function HighlightSystem() {
   const supernovaRevealedLinks = useStore(s => s.supernovaRevealedLinks);
   const supernovaNeighborBatches = useStore(s => s.supernovaNeighborBatches);
   const tmFocusIdx = useStore(s => s.tmFocusIdx);
+  const overtureActive = useStore(s => s.overtureActive);
+  const diseases = useStore(s => s.diseases);
+
+  // Ignite weights only matter on LOW tier (the only place this component
+  // drives them), and only need recomputing when the disease list itself
+  // changes — same caching shape RouletteDust/SupernovaDust use for the same
+  // function.
+  const igniteArr = useMemo(
+    () => (TIER === 'LOW' ? igniteWeights(diseases).ignite : null),
+    [diseases]
+  );
 
   useEffect(() => {
     const raf = requestAnimationFrame(() => {
@@ -251,7 +278,41 @@ export default function HighlightSystem() {
     supernovaRevealedLinks,
     supernovaNeighborBatches,
     tmFocusIdx,
+    // Fires once at overture start (a harmless normal-color repaint, hover is
+    // guarded off during the film anyway) and once at release — the release
+    // firing is what restores every node's real color after the LOW-tier
+    // ignite pass below has been overwriting instanceColor every frame.
+    overtureActive,
   ]);
+
+  // ── LOW tier only: beat 2's desat/ignite grade, driven onto instanceColor
+  // every frame while the film owns it. HIGH/MEDIUM get this from the plasma/
+  // pulse shader uniforms in DiseaseNodes instead (uniforms per fragment);
+  // this is the same two-stage blend (desat toward graphite, then ignite
+  // toward ember-red) flattened to one color per instance. Follows the write
+  // pattern of the main effect above (:142 in the pre-Task-17 file):
+  // iMesh.setColorAt(i, _color) then a single instanceColor.needsUpdate flip.
+  useFrame(() => {
+    if (!overtureActive || TIER !== 'LOW') return;
+    const iMesh = sceneRefs.instancedMesh;
+    if (!iMesh || !iMesh.instanceColor || !igniteArr) return;
+    const fx = sceneRefs.fx;
+    const desat = fx.desat || 0;
+    const ignite = fx.ignite || 0;
+    for (let i = 0; i < diseases.length; i++) {
+      const d = diseases[i];
+      _color.set(CC[d.category]);
+      if (desat > 0.001) {
+        const lum = _color.r * 0.299 + _color.g * 0.587 + _color.b * 0.114;
+        _graphite.setRGB(lum * 0.72, lum * 0.78, lum * 0.92);
+        _color.lerp(_graphite, Math.min(1, desat * 0.85));
+      }
+      const ig = ignite * igniteArr[i];
+      if (ig > 0.001) _color.lerp(_ember, Math.min(1, ig));
+      iMesh.setColorAt(i, _color);
+    }
+    iMesh.instanceColor.needsUpdate = true;
+  });
 
   return null;
 }

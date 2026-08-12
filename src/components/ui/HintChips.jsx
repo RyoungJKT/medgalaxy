@@ -66,6 +66,17 @@ export default function HintChips() {
       style={{
         position: 'absolute', bottom: mob ? 176 : 200, left: '50%', transform: 'translateX(-50%)',
         zIndex: 45, display: 'flex', gap: mob ? 6 : 10,
+        // Chromium's shrink-to-fit width for an absolutely positioned flex
+        // container anchored by `left:50%` (no explicit width) resolves to
+        // roughly half its containing block, not its content's natural
+        // width. Invisible on the 1440px desktop harness (half of that is
+        // still wider than three short chip labels), but at 375px half is
+        // 187.5px, well under the ~350px the three chips need, so each
+        // chip's own text wrapped to 2-3 lines instead of staying a single
+        // pill (Task 17 mobile sweep, mob-hints). max-content sizes the row
+        // to its actual content instead of that artificial half-viewport cap
+        // (verified live: 187.5px -> 348px, chip height 52.5px -> 25.5px).
+        width: 'max-content',
         fontFamily: "'IBM Plex Mono', monospace", pointerEvents: 'none',
       }}
     >
