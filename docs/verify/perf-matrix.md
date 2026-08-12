@@ -142,3 +142,77 @@ above — the two findings are the same fact read two ways.)
   unsplit ~581 kB gzip entry bundle under Fast 3G; no in-scope knob
   addresses this, flagged for follow-up (bundle code-splitting).
 - Bundle sanity: main chunk 2,040.87 kB raw, under the 2.2 MB flag line.
+
+## 4. Task 20 fix: instant pre-React shell + vendor chunk splitting
+
+Fixes the one failing gate above (landing-overlay-paint <2s). Full writeup
+in `.superpowers/sdd/task-19-report.md`'s appended fix section; this section
+records the re-measured numbers using the same harness/setup as section 2
+above (production build, `vite preview`, CPU 4x + Fast 3G, cache disabled,
+375x812 mobile viewport).
+
+**What changed:**
+1. `index.html` now ships static pre-React markup inside `#root` (brand row
+   + pulsing dot + "loading the galaxy..." line, inline CSS, no JS) that
+   paints from the raw HTML response itself. React's `createRoot().render()`
+   replaces it on mount, same as before. The Google Fonts `<link>` was also
+   switched to a non-render-blocking load (`media="print"` + `onload` swap,
+   `<noscript>` fallback) so it can no longer gate first paint of anything.
+2. `vite.config.js` adds `build.rollupOptions.output.manualChunks`, splitting
+   `three` and a combined `vendor-anim` (react/react-dom + gsap +
+   @react-three/fiber + @react-three/drei + @react-three/postprocessing +
+   postprocessing) out of the entry chunk. A standalone `vendor-react` group
+   was tried first per the brief but produced an empty 0 kB chunk (Rollup
+   folded react into `vendor-anim` anyway because @react-three/fiber/drei
+   import it synchronously, forming a chunk cycle) — merged into
+   `vendor-anim` instead, per the brief's "adjust groupings if the build
+   warns about circular imports" allowance.
+
+**New bundle chunk table** (`npx vite build`):
+
+| Chunk | Raw | Gzip |
+|---|---:|---:|
+| `dist/index.html` | 6.68 kB | 2.37 kB |
+| `assets/index-*.css` | 14.42 kB | 3.33 kB |
+| `assets/vendor-anim-*.js` | 451.81 kB | 142.55 kB |
+| `assets/three-*.js` | 724.72 kB | 187.57 kB |
+| `assets/index-*.js` (entry) | 860.82 kB | 248.63 kB |
+
+Entry chunk: **860.82 kB raw / 248.63 kB gzip**, down from the single
+2,040.87 kB raw / 580.92 kB gzip chunk (58% smaller gzip). The `>500 kB`
+chunk-size warning persists (now on `three` and the entry chunk individually)
+— expected, unchanged concern, not newly flagged. Vite auto-emits
+`modulepreload` links for `three`/`vendor-anim` so the browser fetches all
+three chunks in parallel rather than discovering them serially at runtime.
+
+**Re-measured cold load** (5 runs each unless noted):
+
+| Metric | Measured | Gate | Result |
+|---|---:|---:|---|
+| (a) Shell paint (nav start -> static "loading the galaxy" text present, pure HTML/CSS, no JS) | 633-643 ms | < 2 s | **PASS** |
+| (b) React landing (nav start -> real `LandingOverlay` "Cartography" text committed) | 5.15-5.18 s | — (reported only; superseded by (a) as the meaningful-paint gate) | informational |
+| (c) First galaxy frame after click, `introPhase>=1` ("hero") | 550-571 ms | — | informational |
+| (c) First galaxy frame after click, `introPhase>=3` ("galaxy") | 1.95-1.96 s (3 runs) | < 3 s | **PASS** |
+
+Metric (b) did not meaningfully improve (still ~5.15s, essentially flat vs.
+the pre-fix ~5.0-5.1s) because none of App.jsx's ~30 component imports are
+dynamic — the whole module graph, split across 3 chunks or not, must still
+download and evaluate before React's first render, and total bytes shipped
+is about the same, just reorganized. That is expected and is why the fix
+targets (a) rather than (b): the brief's actual finding was "the page is
+blank white" until React mounts; the pre-React shell means the page is never
+blank, painting the branded loading state at 633-643 ms regardless of how
+long full interactivity takes. (c) stayed comfortably under its <3s gate
+(1.95s vs. the original 1.45s for the same `introPhase>=3` threshold — a
+bit higher, plausibly split-chunk request overhead sharing Fast 3G's fixed
+throughput, but still well inside the gate).
+
+**FPS regression spot-check:** HIGH tier, at rest (post-film), same drive
+method as section 1 row 1 (`skipIntro()` -> `finishOverture()`, settle 30
+frames, 5s window), dev server, 1440x900: **120 fps** (unchanged from the
+original matrix, gate >=55, PASS). No regression.
+
+**Dev mode:** `:5280` dev server loads clean, no console errors, no
+`manualChunks`-related breakage (Vite's dev server serves native ESM and
+does not apply `build.rollupOptions` at all, so this is expected but was
+verified rather than assumed).

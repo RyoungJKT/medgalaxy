@@ -50,7 +50,16 @@
     }
     </script>
 
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <!-- Non-blocking font load: the stylesheet fetch to a third-party origin
+         would otherwise gate first paint of everything below, including the
+         pre-React shell. media="print" keeps it out of the render-blocking
+         set; the onload swap applies it once it lands. display=swap (and the
+         monospace fallback in the font-family stack) means the shell paints
+         instantly in fallback monospace and swaps in place, no invisible text. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" /></noscript>
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
       html, body, #root {
@@ -62,10 +71,45 @@
         overscroll-behavior: none;
       }
       body { padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); background: linear-gradient(180deg, #06080d 0%, #0a1019 50%, #0d0f18 100%); }
+
+      /* Instant pre-React shell: pure HTML/CSS, paints before any JS runs.
+         React's createRoot().render() replaces #root's children on mount,
+         so this markup is only ever visible during the cold-load window. */
+      .mg-preshell {
+        position: absolute; inset: 0;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        gap: 10px;
+        background: #06080d;
+      }
+      .mg-preshell-brand {
+        display: flex; align-items: center; gap: 8px;
+      }
+      .mg-preshell-dot {
+        width: 8px; height: 8px; border-radius: 50%;
+        background: #22c55e; box-shadow: 0 0 6px #22c55e;
+        animation: mgPreshellPulse 2s ease-in-out infinite;
+      }
+      .mg-preshell-name {
+        font-weight: 600; font-size: 15px; color: #e2e8f0;
+      }
+      .mg-preshell-status {
+        font-size: 11px; color: #64748b; letter-spacing: 0.04em;
+        animation: mgPreshellPulse 2s ease-in-out infinite;
+      }
+      @keyframes mgPreshellPulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.4; }
+      }
     </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"><div class="mg-preshell">
+      <div class="mg-preshell-brand">
+        <span class="mg-preshell-dot"></span>
+        <span class="mg-preshell-name">MedGalaxy</span>
+      </div>
+      <span class="mg-preshell-status">loading the galaxy...</span>
+    </div></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
