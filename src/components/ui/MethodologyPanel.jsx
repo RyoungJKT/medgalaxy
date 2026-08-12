@@ -1,8 +1,13 @@
 import React, { useCallback, useEffect, useMemo } from 'react';
 import useStore from '../../store';
+import { sceneRefs } from '../../sceneRefs';
 import { isMob, fmt } from '../../utils/helpers';
-import { MAX_PAPERS, MAX_MORT } from '../../utils/constants';
+import { fmtFull } from '../../utils/captions';
+import { MAX_PAPERS, MAX_MORT, MX } from '../../utils/constants';
 import { isNoGlobalEstimate } from '../../utils/mortalityLabel';
+import {
+  buildTimeMachineData, KNEE_PCT, KNEE_SHARE, BULK_EXP, MXY,
+} from '../../utils/timeMachineData';
 import meta from '../../../data/meta.json';
 
 const SH = { fontSize: 11, color: '#3399ff', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 6 };
@@ -17,6 +22,40 @@ export function nonDefaultMortalitySources(diseases, defaultSource) {
     .filter(d => d.mortalitySource && d.mortalitySource !== defaultSource)
     .slice()
     .sort((a, b) => a.label.localeCompare(b.label));
+}
+
+// ─── "Time Machine size mapping" (ADDENDUM 1 section 2.1, honesty line 4) ────
+// The per-year curve is shaped for legibility past the area-proportional
+// convention the cumulative view follows, so it has to be described where every
+// other mapping is described. This panel was truthful by omission before; it is
+// no longer allowed to be, and that disclosure is the price of the extra drama.
+//
+// Pure and exported for the same reason nonDefaultMortalitySources above is:
+// the assertion that every numeral here is read from the built table rather than
+// transcribed is a unit test, not a promise. Feed it a different table and every
+// figure in the sentence moves.
+export function timeMachineMapping(data) {
+  if (!data) return null;
+  const kneed = data.knee > 0 && data.knee < data.maxYearly;
+  return {
+    file: 'src/utils/timeMachineData.js',
+    kneePct: KNEE_PCT,
+    knee: data.knee,
+    sharePct: Math.round(KNEE_SHARE * 100),
+    exponent: BULK_EXP,
+    ceiling: MXY,
+    maxYearly: data.maxYearly,
+    kneed,
+    text:
+      `The Time Machine sizes each node by that one year's paper count instead, on its own curve `
+      + `(${'src/utils/timeMachineData.js'}). The knee is the ${KNEE_PCT}th percentile of every `
+      + `disease-year count in the table, ${fmtFull(data.knee)} papers, computed when the table is `
+      + `built rather than written in. Below it radius is proportional to the count, exponent `
+      + `${BULK_EXP.toFixed(2)}, and that segment owns ${Math.round(KNEE_SHARE * 100)} percent of the `
+      + `size range; above it the curve runs straight to the single biggest year on record, `
+      + `${fmtFull(data.maxYearly)} papers, at the ceiling of ${MXY} units. That ceiling is under half `
+      + `the ${MX} the cumulative curve above reaches, so one year is never bigger than the whole record.`,
+  };
 }
 
 export default function MethodologyPanel() {
@@ -66,6 +105,15 @@ export default function MethodologyPanel() {
       noEstimateCount: diseases.filter(d => isNoGlobalEstimate(d.mortalitySource)).length,
     };
   }, [diseases, displayEdges]);
+
+  // The live table if the Time Machine has been mounted (it builds one on mount
+  // and publishes it), else built here. Either way the numerals below are the
+  // ones the instrument is actually using.
+  const tmMap = useMemo(() => {
+    if (!methodologyOpen || !diseases.length) return null;
+    const live = sceneRefs.tm && sceneRefs.tm.data;
+    return timeMachineMapping(live || buildTimeMachineData(diseases));
+  }, [methodologyOpen, diseases]);
 
   if (!methodologyOpen || !stats) return null;
 
@@ -210,6 +258,17 @@ export default function MethodologyPanel() {
               The ceiling for each mode is set close to this edition's real maximum, about {fmt(MAX_PAPERS)} papers or {fmt(MAX_MORT)} deaths, not a shrunk-down cap. The single largest node in each mode is sized by its actual value, unclamped at the top as of this edition.
             </div>
           </div>
+
+          {/* 5b. The Time Machine's own curve */}
+          {tmMap && (
+            <div style={{ marginBottom: 20 }}>
+              <div style={SH}>Time Machine size mapping</div>
+              <div style={SP}>{tmMap.text}</div>
+              <div style={SP}>
+                The two curves answer different questions, which is why they are different curves: the cumulative view compares diseases to each other, and the Time Machine tracks one disease through time. Both are monotone in their own value, so a bigger count is always a bigger node in either, and every figure in the paragraph above is read from the built table when this panel opens rather than written in by hand.
+              </div>
+            </div>
+          )}
 
           {/* 6. Sound */}
           <div>

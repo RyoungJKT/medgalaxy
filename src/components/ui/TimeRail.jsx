@@ -6,6 +6,7 @@ import { sceneRefs } from '../../sceneRefs';
 import { fmtFull } from '../../utils/captions';
 import { digitsOf } from './Odometer';
 import { DUR, EASE, TM_EXIT, TM_EXIT_FAST, TM_EXIT_REDUCED, exitDelay } from '../../utils/motion';
+import { accentPicks, ACCENT_MAX_RATE } from '../../utils/timeMachineData';
 
 // ─── Motion vocabulary (DIRECTION section 4) ─────────────────────────────────
 const ROLL_MS = DUR.tick;  // year numeral digit roll
@@ -398,6 +399,7 @@ export default function TimeRail() {
     let raf = 0;
     let lastDetent = -999;
     let pipFrames = 0;
+    let lastSweeping = false;
     const v3 = new THREE.Vector3();
     const loop = () => {
       const t = sceneRefs.tm;
@@ -410,13 +412,38 @@ export default function TimeRail() {
         if (playheadRef.current) playheadRef.current.style.transform = `translate3d(${frac * w - 1}px, 0, 0)`;
         if (fillRef.current) fillRef.current.style.transform = `scaleX(${frac})`;
 
+        // Accent 2.3's own rate gate, published by the engine: above 4.0 years
+        // per second the numeral is not a readable year any more, it is a blur
+        // of digits, so it says so. The rewind and the long leg's sweep both
+        // land here; every stair, every single-year leg and every deliberate
+        // scrub stay crisp, and the restore lands on the first stair.
+        const sweeping = (t.rate || 0) > ACCENT_MAX_RATE;
+        if (sweeping !== lastSweeping) {
+          lastSweeping = sweeping;
+          if (numeralRef.current) {
+            numeralRef.current.style.opacity = sweeping ? '0.55' : '1';
+            numeralRef.current.style.filter = sweeping ? 'blur(0.6px)' : 'none';
+          }
+          if (sweeping) pipFrames = 0;
+        }
+
         const detent = Math.round(yf);
         if (detent !== lastDetent) {
+          const prev = lastDetent;
           lastDetent = detent;
           setYear(t.data.yearStart + detent);
-          // A visual click: one frame of 4 percent extra brightness.
-          if (numeralRef.current) numeralRef.current.style.filter = 'brightness(1.04)';
-          pipFrames = 1;
+          // Accent 4, the numeral pip. One frame of 4 percent extra brightness,
+          // as it always was — but on a step whose rank-1 mover clears the ring
+          // threshold it becomes two frames at 8 percent, which is what ties the
+          // rail to the field: the numeral and the node flare together. Gated on
+          // the same rate the accents are, so a sweep's numeral does not strobe.
+          const big =
+            !sweeping && prev >= 0 && Math.abs(detent - prev) === 1 &&
+            (accentPicks(t.data, prev, detent, 1)[0] || {}).ring === true;
+          if (!sweeping && numeralRef.current) {
+            numeralRef.current.style.filter = big ? 'brightness(1.08)' : 'brightness(1.04)';
+          }
+          pipFrames = sweeping ? 0 : (big ? 2 : 1);
           // Sound arrives with the audio engine; until then this is a no-op.
           if (typeof window !== 'undefined') window.__mgAudio?.play?.('tick');
         } else if (pipFrames > 0) {
@@ -541,7 +568,7 @@ export default function TimeRail() {
               : `tmRailIn ${IN_MS}ms ${EASE.ui} both`,
           }}
         >
-          <div ref={numeralRef} style={{ textAlign: 'center', marginBottom: mob ? 6 : 10 }}>
+          <div ref={numeralRef} data-mg-rail-numeral style={{ textAlign: 'center', marginBottom: mob ? 6 : 10 }}>
             <YearNumeral year={year} size={mob ? 26 : 38} />
           </div>
 

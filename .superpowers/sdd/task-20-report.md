@@ -1435,3 +1435,241 @@ Two layout fixes came out of looking at the shots rather than the numbers:
 the header micro-line was landing on the filter bar row (moved clear of it,
 with a backdrop), and on mobile it hung centred under the Menu button at the
 right edge and ran off the viewport (right-anchored there instead).
+
+---
+
+# Round 7, wave 2: cinematic year-scaling (addendum 1, section 2)
+
+Implements `docs/direction/2026-08-13-addendum-1.md` section 2 in full (2.1 the
+curve, 2.2 the staircase, 2.3 the accents, 2.4 the acceptance tests), plus
+amendment A2 and delta-list items 2, 6 and 7. Sections 3 and 4 belong to later
+waves and are untouched: `IntroSequence` and the assembly, camera breathing,
+star parallax, tour leg choreography and the resting micro-breathe are all
+exactly as they were. Wave 1's exit and entry choreography is untouched except
+for the one constant wave 1 handed over (below).
+
+## 2.1 The curve
+
+`src/utils/timeMachineData.js`: `MXY` 18 to **26**, `KNEE_SHARE` 0.38 to
+**0.42**, `BULK_EXP` 0.85 to **1.00**. `KNEE_PCT` stays 90 and stays derived at
+build time; `MIN_RY` and `ZERO_RY` are unchanged. All four are now exported,
+because the methodology panel and the tests read them rather than restating
+them.
+
+Measured against `data/diseases.json` as it stands, every figure in the
+addendum's own table reproduces exactly:
+
+| | shipped | new | addendum |
+|---|---|---|---|
+| HIV/AIDS 1990 to 2014 | 3.13 to 7.02, 2.24x, travel 3.89 | **4.22 to 11.10, 2.628x, travel 6.87** | 4.22 / 11.10 / 2.63x / 6.87 |
+| HIV at the 1996 pause | 4.96 | **7.34** | 7.34 |
+| COVID-19 2019 / 2020 / 2021 / 2024 | 0.69 / 14.13 / 18.00 / 11.28 | **0.68 / 20.75 / 26.00 / 16.87** | same |
+| COVID's 2020 lead | 1.1114x, gap 1.42 | **1.1021x, gap 1.92** | 1.102x, 1.92 |
+| rheumatic heart disease span | 0.56, 3.1 percent | **0.66, 2.5 percent** | 0.66, 2.5 percent |
+| median non-zero cell | 1.63 | **1.93** | 1.93 |
+| nodes moving 0.15+ per step, mean | 33.8 | **48.7** | 48.7 |
+| per-step delta percentiles | p50 0.057 p90 0.255 | **p50 0.076 p90 0.423 p99 1.068** | same |
+
+The top-3 accent gate is now met on all 34 steps; under the shipped curve 2017's
+third mover fell under it at 0.235.
+
+## 2.2 The staircase
+
+`STEP = 0.65` continuous legs are gone. `pushLeg` in `TimeMachine.jsx` builds
+every leg out of 360 ms years (240 ms expo.out travel plus a 120 ms dwell), with
+three exceptions the addendum names: a single-year leg keeps its 650 ms and the
+detonation keeps `back.out(1.2)`; a leg longer than 8 years sweeps its first
+S-6 years in 1.30 s on sine.inOut and then ratchets the last 6; the rewind is
+unchanged.
+
+The dwell is deliberately **not** a segment. It is the gap between one stair's
+`t1` and the next stair's `t0`, which `tourYearAt` already resolves by holding
+the previous segment's destination. That keeps the year a step function of the
+clock with no special case, and makes "held for at least 120 ms" a property of
+the built timeline that a test reads rather than a frame it samples.
+
+Every segment now carries a `kind` and a `rate` in years per second, and
+`tourRateAt(segs, t)` reads the rate at any moment (zero in every dwell and
+hold). That is accent gate G2's input on the tour. It is deliberately the
+segment's average rate rather than the instantaneous derivative of its easing:
+expo.out opens at an enormous slope for a millisecond and closes at nearly zero,
+so gating on the derivative would suppress the first frame of every stair and
+pass the last frame of the rewind. The addendum's own numbers are segment rates,
+and the built timeline reproduces them: rewind 26.15, sweep 13.08, stair 2.78,
+single-year leg 1.54.
+
+Built timeline, against the boarded one:
+
+| leg or hold | shipped | new | boarded |
+|---|---|---|---|
+| rewind | 1.30 | 1.30 | 1.30 |
+| 1990 to 1996 | 3.90 | **2.16** | 2.16 |
+| 1996 to 2019 | 3.90 | **3.46** (1.30 sweep + 6 stairs) | 3.46 |
+| 2019 to 2020 | 0.65 | 0.65 | 0.65 |
+| 2020 to 2021 | 0.65 | 0.65 | 0.65 |
+| 2021 to 2024 | 1.95 | **1.08** | 1.08 |
+| six holds | 21.00 | 21.00 | 21.00 |
+| **total** | 33.35 | **30.30** | 30.30 |
+
+Manual scrub is untouched: the critically damped 120 ms spring stays, drag stays
+analog and continuous between detents.
+
+**Wave 1's concern 4, resolved.** `finaleExitAt` was opening the exit at
+`lastPause + FINALE_SPLIT + FINALE_HOLD` = 4.4 s into a 4.5 s finale hold, so the
+tour's last 100 ms ran underneath a choreography that had already taken the
+frame. Wave 2 owns the holds, and the free variable is `FINALE_SPLIT`, which no
+direction document pins: 1.8 becomes **1.9**. `FINALE_HOLD` stays the addendum's
+2.6, `TOUR_HOLDS` stays `[3.0, 3.5, 3.0, 4.0, 3.0, 4.5]` summing to 21.00, the
+tour still totals 30.30, and `finaleExitAt(tl) === tl.end` is now an identity
+asserted in `tests/timeMachineExit.test.js`. No overlap, one constant, and the
+cooling line reads 100 ms longer before the flatline takes over.
+
+## 2.3 The accents
+
+All four gates. G1 and G2 are the engine's (`stepAccents` in `TimeMachine.jsx`),
+because only the running engine knows where the year is and how fast it got
+there; G3 and G4 are `accentPicks` in `timeMachineData.js`, pure over the built
+table and therefore unit-tested rather than sampled.
+
+- **Ghost shells** (`src/components/GhostShells.jsx`, mounted in App's Canvas):
+  one pooled 8-slot `InstancedMesh`, LRU recycled, one geometry, one material,
+  one draw call, `MeshBasicMaterial`, normal blending, never additive, held at
+  the radius the node had in the year just left, 0.30 to 0 linear over 480 ms,
+  never scaled. `mesh.visible` is false whenever the pool is empty, so the whole
+  cost is proportional to the ~1.4 s a year that accents are actually up.
+- **Mover ring**: `fireRipple(idx, color)` on rank 1 at `|delta r| >= 1.50`,
+  category color on growth and `#64748b` on shrinkage. `SelectionRipple` needed
+  no change at all: its `trigger` already takes a color and already starts the
+  ring at the node's live Time Machine radius.
+- **Year-step settle**: amendment A2's half sine, applied multiplicatively
+  inside `tm.radiusAt`, which is the one place a node's Time Machine radius is
+  decided. `settleScale` is exactly 1 outside its 240 ms window, so an
+  unaccented node's radius is bit-identical to the mapping.
+- **Numeral pip**: `TimeRail` computes `accentPicks(data, prev, detent, 1)` on
+  its own detent edge, so the rail needs no channel from the engine; on a ring
+  step the existing 1-frame 4 percent pip becomes 2 frames at 8 percent.
+- **Mover micro-label** (`src/components/ui/MoverLabel.jsx`): rank-1, ring
+  fired, and the year still standing on that detent 360 ms later. Both numerals
+  are the difference of two file values.
+
+Reduced motion: shells become a single 300 ms dissolve, and rings, settles and
+micro-labels are dropped by one branch. The staircase already collapses to
+stepped holds through `buildTourTimeline(…, reduced)`.
+
+Tier budgets HIGH 3 / MEDIUM 2 / LOW 1, from `ACCENT_BUDGET[TIER]`.
+
+## 2.1 honesty line 4, and delta 7
+
+`MethodologyPanel` gains a "Time Machine size mapping" subsection.
+`timeMachineMapping(data)` is pure and exported for the same reason
+`nonDefaultMortalitySources` is: the claim that every numeral is read from the
+built table is a unit test, not a promise. The test feeds it a table built from
+a third of the counts and asserts every data figure moves while the two curve
+constants do not. The panel prefers the live table `TimeMachine` publishes and
+falls back to building one.
+
+## Three defects the harness found
+
+1. **A growth ghost was invisible.** With depth testing on, a shell smaller than
+   the node it belongs to is inside an opaque sphere, so every growth ghost in
+   the piece would have been culled and only shrinkage would ever have read.
+   `depthTest: false`, the same deliberate overdraw the 2020 flash already
+   makes, and here it is the accent rather than a tradeoff: the old radius stays
+   legible in both directions, as a translucent disc of the previous silhouette
+   with the new node around it or inside it. `w2-ghost-closeup.png` is the
+   proof, a 150px shell on a 247px pneumonia.
+2. **The scrub's rate gate dimmed the numeral after every deliberate step.**
+   `stepAccents` was publishing one number for two questions. The gate asks how
+   fast the twelve months just crossed were travelled, which is a property of a
+   completed step; the rail asks whether the numeral is a readable year right
+   now, which is instantaneous velocity. On the frame after a crossing the first
+   quantity is 1/0.016 s, so the numeral blurred for a third of a second every
+   time the viewer stepped a year. The engine now takes both: `gate` and
+   `shown`, identical on the tour and different on the scrub (spring velocity).
+   Measured after the fix: a deliberate step blurs 0 frames; a full-rail flick
+   peaks at 105.5 yr/s, blurs, and fires 0 ghosts and 0 settles.
+3. **A seek or a jump fired a shell for a year nobody watched.** Crossings are
+   now required to be adjacent (`|detent - from| === 1`), and `clearAccents`
+   re-seats the detent on every harness seek, on tour open and on close.
+
+## Two disclosed deviations
+
+- **Per-instance opacity needs a shader patch.** The addendum says "one draw
+  call, no shader". A crossing lights up to three shells and the next crossing
+  arrives 360 ms later while the previous generation still has 120 ms of fade
+  left, so two generations are alive at different alphas by design (8 slots is
+  deliberately more than one generation of 3). `instanceColor` multiplies the
+  diffuse term only, and fading a normal-blended sphere toward black on a dark
+  field reads as a hole rather than a fade. So the stock basic shader carries a
+  three-line `onBeforeCompile` injection of an `aGhostAlpha` instanced
+  attribute. It is a patch to a built-in program, not an authored shader: no new
+  program, no per-frame uniforms, no tier gate, and it behaves identically on
+  the LOW path (confirmed: LOW fires exactly one shell per crossing).
+- **The ring's ninth year does not exist.** The addendum's ledger lists nine
+  ring years including 2004 (obesity). Measured, 2004's rank-1 delta is
+  **1.498** against the 1.50 gate: the prediction was right about the year and
+  0.002 radius units wrong about the threshold. The addendum also says "do not
+  tune the threshold away from it", so the threshold stands at 1.50 and the ring
+  fires on eight years, every one of which lands on an outbreak or its
+  aftermath (2009 and 2010 influenza, 2014 Ebola, 2016 Zika, and COVID-19's
+  2020, 2021, 2023, 2024). The test pins both the eight-member set and 2004's
+  1.498, so a data refresh that moves either is visible rather than silent.
+  Note that 2014 Ebola sits at 1.502, the same 0.002 the other side of the gate:
+  two of the thirty-four steps are knife-edge on this threshold.
+
+## Verification
+
+`npx vitest run`: **237 passed** (15 files), up from 200. New coverage:
+`tests/timeMachine.test.js` 15 to 25 (acceptance 1 to 6 and 8, plus the
+`accentPicks` gate suite), `tests/timeMachineTour.test.js` 30 to 44 (acceptance
+9, the staircase shape, the segment rates, `scrubRate`),
+`tests/motion.test.js` 21 to 30 (acceptance 7 and the new constants),
+`tests/methodology.test.js` 11 to 15 (delta 7), `tests/timeMachineExit.test.js`
+20 to 21 (the resolved overlap). `npx vite build`: green.
+
+Browser (`tools/verify-wave2.mjs` against :5280, headless Chrome 1440x900 unless
+noted). Run one task at a time; each owns the session's state.
+
+| check | result |
+|---|---|
+| **2.4 #10** HIV 1990 vs 2014, frozen camera | **PASS**. Camera drift between the two shots **0.0000 units**. 1990 radius 4.223 -> 3.3px on screen; 2014 radius 11.098 -> 8.8px. On-screen diameter ratio **2.627** against a 2.50 gate (radius ratio 2.628, so the projection is not flattering it). Shots `w2-hiv-1990`, `w2-hiv-2014`. |
+| **2.4 #11** COVID largest silhouette in 2020 | **PASS** on both. Desktop: covid-19 20.75 / 15.5px, ahead of heart-disease 13.4px and pneumonia 12.6px. Mobile 375x812 (LOW tier): covid-19 8.1px, heart-disease 7.1px, pneumonia 6.9px. Largest by radius and by projected silhouette in both. Shots `w2-2020-covid`, `w2-2020-covid-mobile`. |
+| **2.4 #12** three shells at +200 ms, none at +600 ms | **PASS**. 2019 -> 2020: 3 shells, alphas 0.170 / 0.170 / 0.170 at crossing + 200 ms (0.30 x (1 - 200/480) = 0.175), **0 live at +600 ms**. 2021 -> 2022: same. Shots `w2-ghosts-mid` (captured with the shells aged 85 to 209 ms), `w2-ghosts-mid-crop`, `w2-ghosts-gone` (0 live), `w2-ghost-closeup`. |
+| **tour length**, wall clock | **PASS**. **30.31 s** measured from `startTimeMachine(true)` to the exit opening, against 30.30 boarded and a 31.0 gate. |
+| **staircase + sweep** | **PASS**. Mid-sweep: rate **13.08 yr/s**, numeral computed opacity **0.55**, filter **blur(0.6px)** (`w2-sweep`). First stair: rate **2.78**, opacity **1**, filter **none** (`w2-staircase`). Measured dwells across the 2013 to 2019 staircase: 108, 108, 109, 117, 117 ms at 60 Hz sampling (120 ms boarded; the sampler can miss a frame at each end), then 633 ms and climbing as the 2019 pause takes over. |
+| **accents 3, 4, 5** | **PASS**. Settle multiplier on COVID at the 2020 crossing: peak **1.04496** (spec 1.045 at rank 1), floor 1.00000, and it returns to **1.000000000000** with 0 settles live. Numeral pip: exactly **2 frames at brightness(1.08)**, 0 blur frames. Micro-label: `COVID-19 +94,344 papers`, 9px, up at crossing + 369 ms (`w2-mover-label`). |
+| **gate G2, the flick end** | **PASS**. A throw across all 34 years peaks at **105.5 yr/s**, blurs the numeral for 92 frames, fires **0 ghosts and 0 settles**, and restores to `filter: none` at rest. |
+| **LOW tier budget** (`--mobile`) | **PASS**. Exactly **1** shell per crossing, both directions. |
+| **reduced motion** (`--reduced`) | **PASS**. Shells lit, 3 live at +200 ms, **0 by +320 ms** (the 300 ms dissolve), and **0 settles ever live**, no ring, no micro-label. |
+| **delta 7**, methodology | **PASS**. Subsection renders knee 7,238 at the 90th percentile, exponent 1.00, share 42 percent, ceiling 26 against the cumulative 55, naming `src/utils/timeMachineData.js` (`w2-methodology-tm`). |
+| **wave-1 delta 1 regression**, 60 s untouched | **PASS**, and with more room than before. Tour opens at 22.0 s, exit at **52.3 s**, home at **53.7 s** (was 57.9 s with the 33.35 s tour). At t = 60 s: `tmPhase 'idle'`, `tmFocusIdx -1`, `tmCaption null`, `sizeMode 'papers'`, `uiRevealed`/`hintsShown`/`storyVisible` true, `autoRotate` true, `autoRotateSpeed` exactly **0.3**, `tm.active` false, `tm.exit` 0, **0 ghosts, 0 settles**, `tm.rate` 0, `glowSuppress` 0, `ember` 1 (`w2-home-after-60s`). |
+
+## Concerns for later waves
+
+1. **The tour frames its own subject small.** At the 1996 HIV pause the camera
+   sits at radius 1776 and HIV is 5.7px across; at 2014 it would be 8.8px. The
+   curve did its part (the same node was 3.9px and 5.5px before), but the
+   remaining half of "year deltas read as change" is camera distance, and
+   section 4 item 3 (tour leg choreography: a 3 percent dolly per leg, 6 percent
+   on a sweep) is where that gets paid. Wave 4 should measure on-screen
+   diameters at the pauses, not only radii.
+2. **The ghost shell is a quiet accent at tour framing.** It peaks at alpha 0.30
+   and the median accented node's shell differs from its node by 14 percent of
+   radius, which at 10 to 15 screen pixels is a few pixels of rim. It reads
+   clearly at close range (`w2-ghost-closeup`) and on the loud steps (COVID
+   2020 is 30x, Zika 2016 is 9.3x, Ebola 2014 is 4.5x); it is nearly invisible on the
+   quiet ones. Concern 1's dolly is the same fix.
+3. **Two of the 34 steps are knife-edge on the ring threshold** (2004 at 1.498,
+   2014 at 1.502). The weekly PubMed refresh can flip either. The test pins both
+   so the flip is loud, but a future wave may want the ring gate expressed as a
+   percentile of the step-delta distribution rather than an absolute.
+4. **The micro-label fires three times on the tour, not twice.** The addendum
+   predicted 2023 and 2024; the literal rule (rank-1 + ring + the year still
+   standing 360 ms later) selects **2020, 2021 and 2024** and rejects 2023,
+   whose dwell is 120 ms. The rule is implemented as written rather than tuned
+   to the parenthetical. If the intent was to keep the label off the narrated
+   pauses, the extra gate belongs in wave 3 or 4, not here.
+5. **`docs/verify` now holds 13 `w2-*` shots.** That directory is gitignored, as
+   it was for wave 1, so the frames are local evidence rather than repository
+   state. `tools/verify-wave2.mjs` is committed and regenerates any of them in
+   one command, which is the reproducible half.

@@ -20,6 +20,7 @@ import VelocityMap from './components/VelocityMap';
 import Spotlight from './components/Spotlight';
 import PostFX from './components/PostFX';
 import SelectionRipple from './components/SelectionRipple';
+import GhostShells from './components/GhostShells';
 import IntroSequence from './components/IntroSequence';
 import OvertureSequence from './components/OvertureSequence';
 import AdaptiveDpr from './components/AdaptiveDpr';
@@ -200,6 +201,7 @@ export default function App() {
           <Spotlight />
           <PostFX />
           <SelectionRipple />
+          <GhostShells />
           <IntroSequence />
           <OvertureSequence camDist={camDist} />
           <AdaptiveDpr />

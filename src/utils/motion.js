@@ -146,6 +146,68 @@ export function staggeredArrival(t, L) {
   return arrival((t - offset) / li);
 }
 
+// ── A2: the year-step settle (ADDENDUM 1 section 0) ──────────────────────────
+// The third sanctioned overshoot, and the quietest. One half sine,
+//
+//   m(t) = 1 + A * sin(pi * t / 240ms)
+//
+// which is exactly 1.000 at t = 0 and exactly 1.000 at t = 240 ms, peaks at
+// 1 + A, and never dips below 1. Peak magnitude 4.5 percent at rank 1, so it
+// sits strictly under `back.out(1.2)`'s 5.29 percent: the detonation and the
+// supernova pop stay the two loudest events in the piece by construction, not
+// by taste. At most three nodes per detent crossing, only inside the Time
+// Machine.
+export const TM_SETTLE = { dur: 240, amps: [0.045, 0.030, 0.020] };
+
+/**
+ * The settle multiplier at `t` ms into a 240 ms settle of amplitude `A`.
+ * Outside [0, dur] it is exactly 1, so a caller can apply it unconditionally
+ * and a node that is not settling is a node at exactly its mapped radius.
+ * @param {number} t milliseconds since the detent landed
+ * @param {number} amp peak fraction, e.g. 0.045
+ * @param {number} [dur] settle length in ms
+ */
+export function settleScale(t, amp, dur = TM_SETTLE.dur) {
+  if (!(amp > 0) || !(dur > 0) || t <= 0 || t >= dur) return 1;
+  return 1 + amp * Math.sin((Math.PI * t) / dur);
+}
+
+// ── The staircase (ADDENDUM 1 section 2.2) ───────────────────────────────────
+// The tour stops lerping and starts ratcheting. A leg used to be one continuous
+// eased tween from pause year to pause year, so every intermediate year was
+// motion blur with no stable frame to compare against: thirty-five years went
+// by and the eye never got a before and an after. The dwell is what makes the
+// change legible, because it is a still frame at a real year.
+//
+// The 360 ms year is a composite of two sanctioned durations (240 travel plus
+// 120 dwell), not a new constant. `sweep` and the single-year leg's 650 ms are
+// covered by amendment A3's over-700 exemption and by the original 650
+// respectively.
+export const TM_STAIR = {
+  travel: DUR.ui,     // 240 ms, expo.out, one year
+  dwell: DUR.tick,    // 120 ms held on that year
+  year: DUR.ui + DUR.tick, // 360 ms per stair
+  single: DUR.world,  // a one-year leg keeps its 650 ms (and the detonation its back.out)
+  stairCap: 8,        // legs of 8 years or fewer are pure staircase
+  sweepTail: 6,       // a longer leg ratchets its last 6 years
+  sweep: 1300,        // ...after sweeping the rest continuously in 1.30 s
+  rewind: 1300,       // the tour's opening rewind, unchanged
+};
+
+// ── Ghost shells (ADDENDUM 1 section 2.3, accent 1) ──────────────────────────
+// A sphere at the node's centre held at the radius it had in the year just
+// left. Growth reads as a node breaking out of its old shell; shrinkage reads
+// as a node falling inside it. It renders the year-over-year delta as a visible
+// geometric difference rather than asking the eye to remember a frame from
+// 360 ms ago, which is the actual perceptual problem. The ghost never scales.
+export const TM_GHOST = { dur: 480, alpha: 0.30, slots: 8, reduced: 300 };
+// Tertiary ink: the shrinkage color for the mover ring. Never #ff4d1a, which
+// belongs to the detonation and the overlooked-decile scar.
+export const TM_SHRINK_INK = '#64748b';
+// The mover micro-label: in 180 ms, holds 650 ms, out 240 ms, and only on a
+// step the year actually rests on for at least one stair's length.
+export const TM_MICRO = { in: DUR.fast, hold: DUR.world, out: DUR.ui, dwell: TM_STAIR.year };
+
 // ── The exit choreography, as data (ADDENDUM 1 section 1) ────────────────────
 // The opening sequence ends at the home screen: every automatic path
 // terminates in tmPhase 'idle', papers sizing, the rest camera seat, no

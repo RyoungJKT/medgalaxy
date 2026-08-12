@@ -6,15 +6,23 @@
 // Yearly counts are a different domain than cumulative papers (a single year's
 // publication count is orders of magnitude smaller than a disease's lifetime
 // total), so this gets its own normalization curve rather than reusing nR/nRM
-// from helpers.js. 18 keeps the biggest yearly node (COVID-19, 2021) well
-// below the cumulative-view giants (helpers.js's MX is 55), so the galaxy
-// never looks bigger in the Time Machine than it does in the normal view.
-const MIN_RY = 0.25;
-const MXY = 18;
+// from helpers.js. 26 keeps the biggest yearly node (COVID-19, 2021) below half
+// of the cumulative-view ceiling (helpers.js's MX is 55) and under that view's
+// own 90th-percentile radius of 23.96, so the galaxy never looks bigger in the
+// Time Machine than it does in the normal view.
+export const MIN_RY = 0.25;
+// ADDENDUM 1 section 2.1: 18 -> 26. "The whole per-year domain gets 45 percent
+// more range. This is the biggest single lever and it costs nothing in honesty:
+// it is a uniform scale." Round 6 fixed the *ratio* HIV's arc reads at and left
+// the absolute size on the table; a 2.24x climb from radius 3.13 to 7.02 inside
+// an 18-unit ceiling, against a median cell of 1.63, is a real change that is
+// still not a visible change. Absolute travel in radius units is the criterion
+// this answers: HIV 1990 -> 2014 now moves 6.87 units, against 3.89.
+export const MXY = 26;
 // Present-but-invisible floor for a year with zero recorded papers. Bigger
 // than 0 so a node never fully vanishes (it's still a point in the galaxy),
 // small enough to read as "nothing happened here yet."
-const ZERO_RY = 0.05;
+export const ZERO_RY = 0.05;
 
 // ─── The knee (round 6, user feedback) ───────────────────────────────────────
 // The curve used to be a single sqrt against the one global maximum (COVID-19,
@@ -44,19 +52,24 @@ const ZERO_RY = 0.05;
 // the honesty invariant that a bigger count is always a bigger node. It is
 // linear, which is the least compressive bounded tail available and so
 // preserves the top-end separation the detonation depends on: COVID-19 still
-// leads 2020's field by 11.1 percent (it led by 10.5 percent before), and its
-// 2019 -> 2020 jump goes from 14.0x to 20.6x — the biggest single-year size
-// change in the table, by both ratio and absolute delta, before and after.
-const KNEE_PCT = 90;
+// leads 2020's field, and its 2019 -> 2020 jump is the biggest single-year size
+// change in the table by both ratio and absolute delta, under every version of
+// this curve. Round 7 trades a hair of that ratio lead (1.111x to 1.102x) for a
+// wider absolute silhouette margin (1.42 units clear of pneumonia to 1.92),
+// which is the margin the eye actually reads at a glance.
+export const KNEE_PCT = 90;
 // Share of the radius range the sub-knee segment owns. The 90th percentile is
-// the knee, so 90 percent of all yearly counts share 38 percent of the range
-// (they shared 22.6 percent under the old sqrt) and the top decile — which
-// spans 7,238 to 141,958, a 20x span of its own — keeps the remaining 62.
-const KNEE_SHARE = 0.38;
-// Sub-knee exponent. Close to proportional so a year-over-year climb reads at
-// close to its true rate, still under 1 so the decile inside the knee doesn't
-// flatten the diseases beneath it.
-const BULK_EXP = 0.85;
+// the knee, so 90 percent of all yearly counts share 42 percent of the range
+// (they shared 22.6 percent under the old sqrt, 38 percent in round 6) and the
+// top decile — which spans 7,238 to 141,958, a 20x span of its own — keeps the
+// remaining 58.
+export const KNEE_SHARE = 0.42;
+// Sub-knee exponent, 0.85 -> 1.00 (ADDENDUM 1 section 2.1). At exactly 1.00 the
+// sentence "below the knee, a node's radius is proportional to that year's
+// paper count" is true and printable, which is where the honesty line sits:
+// BULK_EXP is capped at 1.00 forever, because above it that sentence is false
+// and no amount of drama buys it back. Unit-tested as a hard guard.
+export const BULK_EXP = 1.00;
 
 /**
  * The knee count: the KNEE_PCT-th percentile of every (disease, year) yearly
@@ -190,7 +203,93 @@ export function buildTimeMachineData(diseases) {
     return movers;
   }
 
-  return { nYears, yearStart, radii, maxYearly, knee, moversFor };
+  return { nYears, yearStart, radii, maxYearly, knee, count, moversFor };
+}
+
+// ─── Accents (ADDENDUM 1 section 2.3) ────────────────────────────────────────
+// Accents dramatize. They are transient, they return to identity, they are
+// invisible in an at-rest frame, and none of them can change which node is
+// bigger. Four gates, all required, and the two that are pure data live here so
+// the selection is a unit test rather than a frame capture.
+//
+//   G1  fire only on integer-year crossings          (the engine's detent edge)
+//   G2  suppressed above ACCENT_MAX_RATE years/sec   (the engine's rate gate)
+//   G3  at most three nodes, each >= ACCENT_MIN_DELTA          (accentPicks)
+//   G4  tier budget HIGH 3 / MEDIUM 2 / LOW 1                  (accentPicks)
+
+// The 78th percentile of all 5,202 per-step radius deltas: below this a node's
+// change is not a change anyone can see, so an accent on it is decoration.
+export const ACCENT_MIN_DELTA = 0.25;
+// The mover ring's own, much higher bar. This threshold fires on 8 of the 34
+// steps and every one of them lands on an outbreak or its aftermath: 2009 and
+// 2010 influenza, 2014 Ebola, 2016 Zika, and COVID-19's 2020, 2021, 2023, 2024.
+// Nobody authored that; the data did. Do not tune it.
+export const ACCENT_RING_DELTA = 1.50;
+// Years per second above which every accent is suppressed. Kills the rewind
+// (26.2 yr/s) and the long-leg sweep (13.1 yr/s), passes every staircase step
+// (2.78 yr/s), every single-year leg (1.54 yr/s) and every deliberate scrub.
+export const ACCENT_MAX_RATE = 4.0;
+export const ACCENT_BUDGET = { HIGH: 3, MEDIUM: 2, LOW: 1 };
+
+/**
+ * Every node's radius change across one year step, ranked by magnitude. Pure
+ * over the built table, so the whole accent selection is testable without a
+ * scene.
+ * @param {object} data a table from buildTimeMachineData
+ * @param {number} fromIdx the year index being left
+ * @param {number} toIdx the year index being landed on
+ * @returns {Array<{index:number, delta:number, abs:number}>} descending by abs
+ */
+export function stepDeltas(data, fromIdx, toIdx) {
+  const { radii, count, nYears } = data;
+  const a = Math.max(0, Math.min(nYears - 1, fromIdx));
+  const b = Math.max(0, Math.min(nYears - 1, toIdx));
+  const rowA = a * count;
+  const rowB = b * count;
+  const out = new Array(count);
+  for (let i = 0; i < count; i++) {
+    const delta = radii[rowB + i] - radii[rowA + i];
+    out[i] = { index: i, delta, abs: delta < 0 ? -delta : delta };
+  }
+  out.sort((x, y) => y.abs - x.abs);
+  return out;
+}
+
+/**
+ * Gates G3 and G4 applied: the accented nodes for one year crossing, at most
+ * `budget` of them, each clearing ACCENT_MIN_DELTA, ranked by |delta radius|.
+ * Each pick carries the radius it *had* in the year just left, because that is
+ * what the ghost shell is: a sphere held at the old size while the node grows
+ * out of it or falls inside it.
+ * @param {object} data a table from buildTimeMachineData
+ * @param {number} fromIdx the year index being left
+ * @param {number} toIdx the year index being landed on
+ * @param {number} [budget] tier budget, ACCENT_BUDGET's values
+ * @returns {Array<{index:number, delta:number, abs:number, rank:number, from:number, to:number, ring:boolean}>}
+ */
+export function accentPicks(data, fromIdx, toIdx, budget = 3) {
+  const cap = Math.max(0, Math.min(3, budget));
+  if (!cap || fromIdx === toIdx) return [];
+  const { radii, count, nYears } = data;
+  const a = Math.max(0, Math.min(nYears - 1, fromIdx));
+  const b = Math.max(0, Math.min(nYears - 1, toIdx));
+  const ranked = stepDeltas(data, a, b);
+  const out = [];
+  for (let k = 0; k < ranked.length && out.length < cap; k++) {
+    const r = ranked[k];
+    if (r.abs < ACCENT_MIN_DELTA) break; // ranked descending: nothing below clears it either
+    out.push({
+      index: r.index,
+      delta: r.delta,
+      abs: r.abs,
+      rank: out.length + 1,
+      from: radii[a * count + r.index],
+      to: radii[b * count + r.index],
+      // The mover ring is rank-1 only, and only above its own threshold.
+      ring: out.length === 0 && r.abs >= ACCENT_RING_DELTA,
+    });
+  }
+  return out;
 }
 
 export default buildTimeMachineData;

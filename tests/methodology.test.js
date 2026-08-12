@@ -2,7 +2,10 @@ import { describe, it, expect } from 'vitest';
 import diseases from '../data/diseases.json';
 import meta from '../data/meta.json';
 import searchOverrides from '../data/search-overrides.json';
-import { nonDefaultMortalitySources } from '../src/components/ui/MethodologyPanel';
+import { nonDefaultMortalitySources, timeMachineMapping } from '../src/components/ui/MethodologyPanel';
+import {
+  buildTimeMachineData, KNEE_PCT, KNEE_SHARE, BULK_EXP, MXY,
+} from '../src/utils/timeMachineData';
 import { isNoGlobalEstimate } from '../src/utils/mortalityLabel';
 import { pubmedTermFor } from '../src/utils/pubmedTerms';
 
@@ -91,5 +94,54 @@ describe('pubmedTermFor (Sidebar link term)', () => {
     for (const d of diseases) {
       expect(pubmedTermFor(d.id, d.label), d.id).toBeTruthy();
     }
+  });
+});
+
+// ─── Delta-list item 7: disclosure keeps pace with drama ─────────────────────
+// The per-year curve is now shaped for legibility past the area-proportional
+// convention the cumulative view follows, so it has to be described where every
+// other mapping is described. This is the price of the extra drama.
+describe('methodology "Time Machine size mapping" subsection', () => {
+  const data = buildTimeMachineData(diseases);
+  const map = timeMachineMapping(data);
+
+  it('names the file the curve lives in', () => {
+    expect(map.file).toBe('src/utils/timeMachineData.js');
+    expect(map.text).toContain('src/utils/timeMachineData.js');
+  });
+
+  it('states the knee percentile, the knee count, the exponent, the share and the ceiling', () => {
+    expect(map.kneePct).toBe(KNEE_PCT);
+    expect(map.knee).toBe(data.knee);
+    expect(map.sharePct).toBe(Math.round(KNEE_SHARE * 100));
+    expect(map.exponent).toBe(BULK_EXP);
+    expect(map.ceiling).toBe(MXY);
+    expect(map.text).toContain(`${KNEE_PCT}th percentile`);
+    expect(map.text).toContain(data.knee.toLocaleString('en-US'));
+    expect(map.text).toContain(data.maxYearly.toLocaleString('en-US'));
+    expect(map.text).toContain(`${Math.round(KNEE_SHARE * 100)} percent`);
+    expect(map.text).toContain(BULK_EXP.toFixed(2));
+    expect(map.text).toContain(`ceiling of ${MXY} units`);
+  });
+
+  it('reads every numeral from the built table rather than transcribing one', () => {
+    // Feed it a different table and every figure in the sentence moves. A
+    // transcribed numeral would survive this unchanged.
+    const half = buildTimeMachineData(
+      diseases.map(d => ({ ...d, yearlyPapers: d.yearlyPapers.map(v => Math.round(v / 3)) }))
+    );
+    const other = timeMachineMapping(half);
+    expect(other.knee).not.toBe(map.knee);
+    expect(other.maxYearly).not.toBe(map.maxYearly);
+    expect(other.text).not.toBe(map.text);
+    expect(other.text).toContain(half.knee.toLocaleString('en-US'));
+    // The shape of the curve is a constant, not data: those do not move.
+    expect(other.ceiling).toBe(map.ceiling);
+    expect(other.exponent).toBe(map.exponent);
+  });
+
+  it('keeps the house copy rules', () => {
+    expect(map.text).not.toContain('—'); // em dash
+    expect(map.text).not.toContain('§'); // section sign
   });
 });

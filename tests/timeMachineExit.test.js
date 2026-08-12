@@ -126,6 +126,17 @@ describe('the exit opens where the addendum says it does', () => {
     const lastPause = tl.pauseAt[tl.pauses.length - 1];
     expect(finaleExitAt(tl) - lastPause).toBeGreaterThanOrEqual(FINALE_SPLIT);
   });
+
+  // Wave 1 concern 4, resolved in wave 2 (which owns the holds). At
+  // FINALE_SPLIT 1.8 the exit opened 4.4 s into a 4.5 s finale hold, so the
+  // tour's last 100 ms ran underneath a choreography that had already taken the
+  // frame. At 1.9 the two coincide: the tour ends on the frame the exit opens,
+  // and the six holds still total 21.0 s.
+  it('opens exactly on the tour\'s own last frame, with no overlap', () => {
+    expect(FINALE_SPLIT + FINALE_HOLD).toBeCloseTo(tl.pauses[tl.pauses.length - 1].hold, 6);
+    expect(finaleExitAt(tl)).toBeCloseTo(tl.end, 6);
+    expect(tl.pauses.reduce((a, p) => a + p.hold, 0)).toBeCloseTo(21.0, 6);
+  });
 });
 
 // ─── Delta-list item 8: "no frame during the blend shows a radius outside the

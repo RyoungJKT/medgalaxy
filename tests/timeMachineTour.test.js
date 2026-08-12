@@ -6,11 +6,14 @@ import {
   buildTourPauses,
   buildTourTimeline,
   tourYearAt,
+  tourRateAt,
+  scrubRate,
   buildTourCaptions,
   midSentence,
   tourPreempted,
   tourGate,
 } from '../src/components/TimeMachine';
+import { ACCENT_MAX_RATE } from '../src/utils/timeMachineData';
 
 const idMap = Object.fromEntries(diseases.map((d, i) => [d.id, i]));
 const data = buildTimeMachineData(diseases);
@@ -70,13 +73,21 @@ describe('buildTourTimeline', () => {
     expect(tl.segs[0].to).toBe(0);
   });
 
-  it('runs 650 ms per year-step, capped so the quiet decades sweep past', () => {
-    // 2019 -> 2020 and 2020 -> 2021 are single steps: the sanctioned 650 ms.
-    const single = tl.segs.filter((s) => Math.abs(s.to - s.from) === 1);
-    expect(single.length).toBeGreaterThanOrEqual(2);
+  it('keeps the single-year legs at 650 ms and every other year at 360', () => {
+    // 2019 -> 2020 and 2020 -> 2021 are single-year legs: the sanctioned 650 ms.
+    const single = tl.segs.filter((s) => s.kind === 'single');
+    expect(single).toHaveLength(2);
     for (const s of single) expect(s.t1 - s.t0).toBeCloseTo(0.65, 6);
-    // No leg runs longer than the 6-step cap (6 x 650 ms).
-    for (const s of tl.segs) expect(s.t1 - s.t0).toBeLessThanOrEqual(3.9 + 1e-6);
+    // Every stair is 240 ms of travel inside a 360 ms year.
+    const stairs = tl.segs.filter((s) => s.kind === 'stair');
+    expect(stairs.length).toBeGreaterThan(0);
+    for (const s of stairs) {
+      expect(s.t1 - s.t0).toBeCloseTo(0.24, 6);
+      expect(Math.abs(s.to - s.from)).toBe(1);
+    }
+    // Nothing runs longer than the rewind and the sweep, the two 1.30 s beats
+    // amendment A3 exempts.
+    for (const s of tl.segs) expect(s.t1 - s.t0).toBeLessThanOrEqual(1.30 + 1e-6);
   });
 
   it('gives the detonation the tour only overshoot', () => {
@@ -141,6 +152,118 @@ describe('buildTourTimeline', () => {
       const v = d.yearlyPapers[year - d.yearStart] || 0;
       expect(v).toBeLessThan(covidCount);
     }
+  });
+});
+
+// ─── ADDENDUM 1 section 2.4, acceptance 9 ────────────────────────────────────
+// The tour ratchets instead of lerping. Asserted on the built timeline, not
+// observed: "the 1996 to 2019 leg is a 1.30 s sweep followed by six 360 ms
+// stairs" is a property of the data structure or it is nothing.
+describe('the staircase (addendum 1 section 2.2)', () => {
+  const tl = buildTourTimeline(data, data.nYears - 1);
+
+  it('runs the whole tour in 31.0 s or less', () => {
+    expect(tl.end).toBeLessThanOrEqual(31.0);
+    // The boarded total: 1.30 rewind + 2.16 + 3.46 + 0.65 + 0.65 + 1.08 legs
+    // + 21.00 of holds, against the shipped 33.35.
+    expect(tl.end).toBeCloseTo(30.30, 6);
+    expect(tl.pauses.reduce((a, p) => a + p.hold, 0)).toBeCloseTo(21.0, 6);
+  });
+
+  it('holds every intermediate year of a non-swept leg for at least 120 ms', () => {
+    const stairs = tl.segs.filter((s) => s.kind === 'stair');
+    expect(stairs.length).toBe(6 + 6 + 3); // 1990->1996, the 1996->2019 tail, 2021->2024
+    for (let i = 0; i < tl.segs.length - 1; i++) {
+      if (tl.segs[i].kind !== 'stair') continue;
+      // The dwell is the gap to whatever comes next: another stair, or the
+      // pause hold at the end of the leg.
+      const gap = tl.segs[i + 1].t0 - tl.segs[i].t1;
+      expect(gap, `stair landing on year ${tl.segs[i].to}`).toBeGreaterThanOrEqual(0.12 - 1e-9);
+      // And the year is genuinely parked there for the whole gap, not easing.
+      const mid = tl.segs[i].t1 + gap / 2;
+      expect(tourYearAt(tl.segs, mid)).toBeCloseTo(tl.segs[i].to, 9);
+    }
+    // The last stair of the tour is followed by the finale hold, not a segment.
+    const last = tl.segs[tl.segs.length - 1];
+    expect(last.kind).toBe('stair');
+    expect(tl.end - last.t1).toBeGreaterThanOrEqual(0.12);
+  });
+
+  it('sweeps 1996 to 2019 in 1.30 s and then ratchets its last six years', () => {
+    const legStart = tl.pauseAt[1] + tl.pauses[1].hold;
+    const leg = tl.segs.filter((s) => s.t0 >= legStart - 1e-9 && s.t1 <= tl.pauseAt[2] + 1e-9);
+    expect(leg[0].kind).toBe('sweep');
+    expect(leg[0].t1 - leg[0].t0).toBeCloseTo(1.30, 6);
+    expect(leg[0].from).toBe(6);   // 1996
+    expect(leg[0].to).toBe(23);    // 2013: 23 years less the six that ratchet
+    expect(leg.slice(1).map((s) => s.kind)).toEqual(Array(6).fill('stair'));
+    expect(leg.slice(1).map((s) => s.to)).toEqual([24, 25, 26, 27, 28, 29]);
+    // 1.30 + 6 x 0.36 = 3.46, against the shipped 3.90.
+    expect(tl.pauseAt[2] - legStart).toBeCloseTo(3.46, 6);
+  });
+
+  it('makes the short legs pure staircases', () => {
+    // 1990 -> 1996 is six years: 2.16, against the shipped 3.90.
+    expect(tl.pauseAt[1] - (tl.pauseAt[0] + tl.pauses[0].hold)).toBeCloseTo(2.16, 6);
+    // 2021 -> 2024 is three: 1.08, against 1.95.
+    expect(tl.pauseAt[5] - (tl.pauseAt[4] + tl.pauses[4].hold)).toBeCloseTo(1.08, 6);
+  });
+
+  it('leaves the rewind and the detonation exactly as they were', () => {
+    expect(tl.segs[0].kind).toBe('rewind');
+    expect(tl.segs[0].t1 - tl.segs[0].t0).toBeCloseTo(1.30, 6);
+    const det = tl.segs.find((s) => s.from === 29 && s.to === 30);
+    expect(det.kind).toBe('single');
+    expect(det.t1 - det.t0).toBeCloseTo(0.65, 6);
+  });
+
+  it('carries a year rate on every segment, which is accent gate G2 input', () => {
+    const rate = (kind) => tl.segs.find((s) => s.kind === kind).rate;
+    // Suppressed: the rewind at 26.2 and the sweep at 13.1 years per second.
+    expect(rate('rewind')).toBeGreaterThan(ACCENT_MAX_RATE);
+    expect(rate('sweep')).toBeGreaterThan(ACCENT_MAX_RATE);
+    expect(rate('rewind')).toBeCloseTo(34 / 1.3, 6);
+    expect(rate('sweep')).toBeCloseTo(17 / 1.3, 6);
+    // Passed: every stair at 2.78 and every single-year leg at 1.54.
+    expect(rate('stair')).toBeCloseTo(1 / 0.36, 6);
+    expect(rate('single')).toBeCloseTo(1 / 0.65, 6);
+    expect(rate('stair')).toBeLessThan(ACCENT_MAX_RATE);
+    expect(rate('single')).toBeLessThan(ACCENT_MAX_RATE);
+  });
+
+  it('reads zero rate in every dwell and every hold, so accents fire at rest', () => {
+    for (const t of tl.pauseAt) expect(tourRateAt(tl.segs, t + 0.5)).toBe(0);
+    const stair = tl.segs.find((s) => s.kind === 'stair');
+    expect(tourRateAt(tl.segs, stair.t0 + 0.1)).toBeCloseTo(1 / 0.36, 6);
+    expect(tourRateAt(tl.segs, stair.t1 + 0.06)).toBe(0);
+    // Before the first segment and after the last, nothing is travelling.
+    expect(tourRateAt(tl.segs, -1)).toBe(0);
+    expect(tourRateAt(tl.segs, tl.end)).toBe(0);
+  });
+});
+
+// The manual scrub's own G2 input. Nothing about drag changes: the critically
+// damped 120 ms spring stays and the rail stays analog between detents; this
+// only decides whether the crossing it produces is allowed an accent.
+describe('scrubRate (gate G2 off the timeline)', () => {
+  it('passes a deliberate step and suppresses a flick', () => {
+    expect(scrubRate(0.5, 0.2)).toBeCloseTo(2, 6);     // a year every half second
+    expect(scrubRate(0.5, 0.2)).toBeLessThan(ACCENT_MAX_RATE);
+    expect(scrubRate(0.02, 0.2)).toBeGreaterThan(ACCENT_MAX_RATE); // 50 yr/s
+  });
+
+  it('suppresses anything whose target is more than a year and a half away', () => {
+    // A drag or a flick parks the target wherever the pointer went; an arrow
+    // key snaps to the neighbouring year and never exceeds one.
+    expect(scrubRate(1.0, 1.0)).toBe(1);
+    expect(scrubRate(1.0, 1.5)).toBe(1);
+    expect(scrubRate(1.0, 1.6)).toBe(Infinity);
+    expect(scrubRate(1.0, 12)).toBe(Infinity);
+  });
+
+  it('treats a zero-length step as infinitely fast rather than dividing by zero', () => {
+    expect(scrubRate(0, 0)).toBe(Infinity);
+    expect(scrubRate(-1, 0)).toBe(Infinity);
   });
 });
 

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   DUR, EASE, springStep, lagFactor, staggeredEase,
-  arrival, staggeredArrival,
+  arrival, staggeredArrival, settleScale, TM_SETTLE, TM_STAIR, TM_GHOST, TM_MICRO,
 } from '../src/utils/motion';
 
 describe('motion tokens', () => {
@@ -183,5 +183,78 @@ describe('staggeredArrival (arrival under the morph\'s mass-weighted lag)', () =
         prev = e;
       }
     }
+  });
+});
+
+// ─── A2, the year-step settle (ADDENDUM 1 section 0 + acceptance 2.4 item 7) ──
+describe('settleScale (amendment A2)', () => {
+  it('is exactly 1 at both ends of its 240 ms window', () => {
+    expect(settleScale(0, 0.045)).toBe(1);
+    expect(settleScale(TM_SETTLE.dur, 0.045)).toBe(1);
+    // And outside it, so a node that is not settling is at exactly its mapping.
+    expect(settleScale(-1, 0.045)).toBe(1);
+    expect(settleScale(1000, 0.045)).toBe(1);
+    expect(settleScale(120, 0)).toBe(1);
+  });
+
+  it('peaks at exactly 1 + A, halfway through', () => {
+    const A = TM_SETTLE.amps[0];
+    expect(settleScale(TM_SETTLE.dur / 2, A)).toBeCloseTo(1 + A, 12);
+    let max = 0;
+    for (let t = 0; t <= TM_SETTLE.dur; t += 0.5) max = Math.max(max, settleScale(t, A));
+    expect(max).toBeCloseTo(1 + A, 10);
+  });
+
+  it('never dips below 1: a half sine, not a full one', () => {
+    for (let t = -50; t <= TM_SETTLE.dur + 50; t += 0.5) {
+      expect(settleScale(t, TM_SETTLE.amps[0])).toBeGreaterThanOrEqual(1);
+    }
+  });
+
+  it('stays strictly under back.out(1.2), so the overshoot hierarchy holds', () => {
+    // back.out(1.2) peaks 5.29 percent past its target, at p = 0.6364. The
+    // year-step settle is the third sanctioned overshoot and must be the
+    // quietest of the three, by construction rather than by taste.
+    const c1 = 1.2;
+    const c3 = c1 + 1;
+    let backPeak = 0;
+    for (let p = 0; p <= 1; p += 0.0001) {
+      backPeak = Math.max(backPeak, 1 + c3 * Math.pow(p - 1, 3) + c1 * Math.pow(p - 1, 2));
+    }
+    expect(backPeak - 1).toBeCloseTo(0.0529, 4);
+    expect(TM_SETTLE.amps[0]).toBeLessThanOrEqual(0.045);
+    expect(TM_SETTLE.amps[0]).toBeLessThan(backPeak - 1);
+  });
+
+  it('ranks its three amplitudes 4.5, 3.0 and 2.0 percent, descending', () => {
+    expect(TM_SETTLE.amps).toEqual([0.045, 0.030, 0.020]);
+    expect(TM_SETTLE.dur).toBe(DUR.ui);
+  });
+});
+
+describe('the staircase, ghost and micro-label constants', () => {
+  it('composes the 360 ms year out of two sanctioned durations, not a new one', () => {
+    expect(TM_STAIR.travel).toBe(DUR.ui);   // 240
+    expect(TM_STAIR.dwell).toBe(DUR.tick);  // 120
+    expect(TM_STAIR.year).toBe(360);
+    expect(TM_STAIR.single).toBe(DUR.world);
+    expect(TM_STAIR.stairCap).toBe(8);
+    expect(TM_STAIR.sweepTail).toBe(6);
+    expect(TM_STAIR.sweep).toBe(1300);
+    expect(TM_STAIR.rewind).toBe(1300);
+  });
+
+  it('fades the ghost shell 0.30 to 0 over 480 ms from a pool of 8', () => {
+    expect(TM_GHOST).toEqual({ dur: 480, alpha: 0.30, slots: 8, reduced: 300 });
+    expect(TM_GHOST.dur).toBe(DUR.slow);
+    // Eight slots against three per crossing: an eviction only ever takes a
+    // shell two generations and 720 ms old, which is past its own fade.
+    expect(TM_GHOST.slots).toBeGreaterThan(2 * 3);
+    expect(TM_GHOST.dur).toBeGreaterThan(TM_STAIR.year);
+    expect(TM_GHOST.dur).toBeLessThan(2 * TM_STAIR.year);
+  });
+
+  it('runs the micro-label in 180, holds 650, out 240, on a 360 ms dwell gate', () => {
+    expect(TM_MICRO).toEqual({ in: 180, hold: 650, out: 240, dwell: 360 });
   });
 });

@@ -3,13 +3,20 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import useStore from '../store';
 import { sceneRefs } from '../sceneRefs';
-import { buildTimeMachineData } from '../utils/timeMachineData';
+import {
+  buildTimeMachineData, accentPicks, ACCENT_BUDGET, ACCENT_MAX_RATE,
+} from '../utils/timeMachineData';
 import { fmtFull, fmtWord } from '../utils/captions';
 import { fireRipple } from './SelectionRipple';
 import {
-  DUR, springStep, staggeredArrival,
+  DUR, springStep, staggeredArrival, settleScale,
   TM_EXIT, TM_EXIT_FAST, TM_EXIT_REDUCED, TM_ENTER_DUR,
+  TM_STAIR, TM_SETTLE, TM_SHRINK_INK, TM_MICRO,
 } from '../utils/motion';
+import { TIER } from '../utils/tiers';
+import { CC } from '../utils/constants';
+import { fireGhosts, clearGhosts } from './GhostShells';
+import { showMoverLabel, hideMoverLabel } from './ui/MoverLabel';
 import { morphRadiusAt, computeLagFactors } from './DiseaseNodes';
 // The exit's camera glide is the film's release glide, literally: same seat,
 // same easeGlide, same residual, same arming window and decay. "The second
@@ -43,17 +50,38 @@ const EXIT_DUR = TM_EXIT.radius.dur / 1000;
 // The mirror, for header re-entry.
 const ENTER_DUR = TM_ENTER_DUR / 1000;
 
-// ─── Tour vocabulary (DIRECTION section 3 + 4) ───────────────────────────────
-// Sanctioned constants only: a year-step is 650 ms, the rewind is two of them,
-// and no single leg runs longer than six (3.9 s). The cap is what keeps the
-// quiet stretch between the HIV surge and 2019 a sweep rather than a wait: 23
-// year-steps at the full rate would be fifteen seconds of nothing happening.
-const STEP = 0.65;
-const LEG_CAP_STEPS = 6;
-const REWIND = 2 * STEP;
+// ─── Tour vocabulary (DIRECTION section 3 + 4, ADDENDUM 1 section 2.2) ───────
+// The tour ratchets instead of lerping. A leg used to be one continuous eased
+// tween from pause year to pause year, capped at six year-steps, so every
+// intermediate year was motion blur: thirty-five years went by and the eye
+// never got a before and an after. Now one year is 240 ms of travel plus a
+// 120 ms dwell, and the dwell is the whole point — it is a still frame at a
+// real year, which is what makes the change legible.
+//
+//   legs of 8 years or fewer   pure staircase, 360 ms a year
+//   legs longer than 8 years   1.30 s sweep of the first S-6, then 6 stairs
+//   single-year legs           650 ms, unchanged (2019->2020 keeps back.out)
+//   the rewind                 1.30 s, unchanged, accents suppressed
+//
+// Shorter and far more legible, which is the whole trade: 30.30 s against the
+// shipped 33.35 s.
+const STEP = TM_STAIR.single / 1000;          // 0.65, a single-year leg
+const STAIR_TRAVEL = TM_STAIR.travel / 1000;  // 0.24, one stair's travel
+const STAIR_YEAR = TM_STAIR.year / 1000;      // 0.36, travel plus dwell
+const SWEEP = TM_STAIR.sweep / 1000;          // 1.30, the long leg's rush
+const REWIND = TM_STAIR.rewind / 1000;        // 1.30
 // Inside the finale hold: the cooling line reads first, then the galaxy dims
 // around rheumatic heart disease and the flatline caption takes the frame.
-export const FINALE_SPLIT = 1.8;
+//
+// 1.9, not 1.8, and the extra 100 ms is load-bearing rather than cosmetic
+// (wave 1 concern 4). The exit opens FINALE_HOLD after the flatline cue, so the
+// exit's own moment is FINALE_SPLIT + FINALE_HOLD into the finale hold; at 1.8
+// that was 4.4 against a 4.5 s hold, and the tour's last 100 ms ran underneath
+// a choreography that had already taken the frame. At 1.9 the two coincide
+// exactly: `finaleExitAt(tl) === tl.end` for any file whose finale hold is the
+// boarded one, the six holds still total 21.00 s and the tour still totals
+// 30.30 s. FINALE_HOLD stays the addendum's own 2.6.
+export const FINALE_SPLIT = 1.9;
 // The 2020 camera move: a micro push-in onto the node that detonates, 15
 // percent closer, so the shockwave leaves frame center rather than a corner.
 const PUSH_IN = 0.85;
@@ -138,6 +166,78 @@ export function buildTourPauses(data) {
 }
 
 /**
+ * One leg of the tour, appended to `segs` as a staircase (ADDENDUM 1 section
+ * 2.2). Every segment carries the `kind` it belongs to and the year rate it
+ * travels at, so the accent gate G2 ("suppressed whenever |d(year)/dt| exceeds
+ * 4.0 years per second") is read off the timeline rather than differentiated
+ * out of a noisy per-frame delta.
+ *
+ * The dwell is not a segment: it is the gap between one stair's `t1` and the
+ * next stair's `t0`, which `tourYearAt` already resolves by holding the last
+ * segment's destination. That keeps the year a step function of the clock with
+ * no special case, and makes "held for at least 120 ms" a property of the
+ * built timeline that a test can read.
+ *
+ * @returns {number} the clock time the leg ends at
+ */
+function pushLeg(segs, t0, from, to, reduced, detonation) {
+  const steps = Math.abs(to - from);
+  if (steps === 0) return t0;
+  if (reduced) {
+    // Reduced motion: the whole leg collapses to a zero-duration step, exactly
+    // as it did before the staircase existed. Rate is infinite by construction
+    // and every accent is dropped anyway.
+    segs.push({ t0, t1: t0, from, to, ease: easeExpoOut, kind: 'stepped', rate: Infinity });
+    return t0;
+  }
+  if (steps === 1) {
+    segs.push({
+      t0, t1: t0 + STEP, from, to,
+      ease: detonation ? easeBackOut : easeExpoOut,
+      kind: 'single', rate: 1 / STEP,
+    });
+    return t0 + STEP;
+  }
+  const dir = to > from ? 1 : -1;
+  let t = t0;
+  let y = from;
+  if (steps > TM_STAIR.stairCap) {
+    // A rush of years, then an arrival that ticks.
+    const swept = steps - TM_STAIR.sweepTail;
+    const mid = from + dir * swept;
+    segs.push({ t0: t, t1: t + SWEEP, from, to: mid, ease: easeSineInOut, kind: 'sweep', rate: swept / SWEEP });
+    t += SWEEP;
+    y = mid;
+  }
+  while (y !== to) {
+    const next = y + dir;
+    segs.push({ t0: t, t1: t + STAIR_TRAVEL, from: y, to: next, ease: easeExpoOut, kind: 'stair', rate: 1 / STAIR_YEAR });
+    t += STAIR_YEAR; // travel, then the dwell that makes the year legible
+    y = next;
+  }
+  return t;
+}
+
+/**
+ * The year rate the tour is travelling at, in years per second, at time `t`:
+ * the rate of the segment `t` falls inside, and zero in a dwell or a hold. This
+ * is accent gate G2's input. Deliberately the segment's own average rate rather
+ * than the instantaneous derivative of its easing: expo.out opens at an
+ * enormous slope for a millisecond and closes at nearly zero, and gating on
+ * that would suppress the first frame of every stair and pass the last frame of
+ * the rewind. The addendum's own numbers are segment rates (staircase 2.78,
+ * sweep 13.1, rewind 26.2, single-year leg 1.54).
+ */
+export function tourRateAt(segs, t) {
+  for (let i = 0; i < segs.length; i++) {
+    const sg = segs[i];
+    if (t < sg.t0) return 0;
+    if (t <= sg.t1) return sg.t1 > sg.t0 ? sg.rate : Infinity;
+  }
+  return 0;
+}
+
+/**
  * Builds the whole tour as data: travel segments (pure functions of time) plus
  * discrete cues fired once as the clock crosses them. Same split the overture
  * uses, and for the same reason: the harness can seek any pause and get exactly
@@ -166,7 +266,11 @@ export function buildTourTimeline(data, startYearIdx, reduced = false) {
   // while the camera pulls to the overview seat.
   cues.push({ t: 0, kind: 'camera-home', effect: true });
   if (startYearIdx !== pauses[0].yearIdx) {
-    segs.push({ t0: 0, t1: rewindDur, from: startYearIdx, to: pauses[0].yearIdx, ease: easeExpoOut });
+    const back = Math.abs(startYearIdx - pauses[0].yearIdx);
+    segs.push({
+      t0: 0, t1: rewindDur, from: startYearIdx, to: pauses[0].yearIdx, ease: easeExpoOut,
+      kind: 'rewind', rate: rewindDur > 0 ? back / rewindDur : Infinity,
+    });
     t = rewindDur;
   }
 
@@ -174,14 +278,11 @@ export function buildTourTimeline(data, startYearIdx, reduced = false) {
     const p = pauses[i];
     if (i > 0) {
       const from = pauses[i - 1].yearIdx;
-      const steps = Math.abs(p.yearIdx - from);
-      const dur = reduced ? 0 : Math.min(steps, LEG_CAP_STEPS) * STEP;
       const detonation = p.kind === 'detonation';
       // The push-in rides the year-step itself, so the move and the eruption
       // are one gesture rather than two.
       if (detonation) cues.push({ t, kind: 'camera-node', node: 'covid-19', factor: PUSH_IN, dur: reduced ? 0 : STEP, effect: true });
-      segs.push({ t0: t, t1: t + dur, from, to: p.yearIdx, ease: detonation && !reduced ? easeBackOut : easeExpoOut });
-      t += dur;
+      t = pushLeg(segs, t, from, p.yearIdx, reduced, detonation);
     }
     pauseAt.push(t);
     if (p.kind === 'finale') {
@@ -217,6 +318,26 @@ export function buildTourTimeline(data, startYearIdx, reduced = false) {
 
   cues.sort((a, b) => a.t - b.t);
   return { segs, cues, pauses, pauseAt, end: t };
+}
+
+// How far ahead of the field the scrubber's target may sit and still count as a
+// deliberate step rather than a drag or a flick. One year plus half a detent:
+// an arrow key snaps to the neighbouring year, so its target is never more than
+// one away, while a drag or a flick parks the target wherever the pointer went.
+const SCRUB_LEAD = 1.5;
+
+/**
+ * Accent gate G2's input on the manual scrub, where there is no timeline to
+ * read a segment rate off: the years-per-second implied by how long the field
+ * spent on the year it just left, plus the flick guard above. Same quantity the
+ * tour's `tourRateAt` returns, measured instead of boarded, so one threshold
+ * governs both paths.
+ * @param {number} dtSinceCross seconds since the previous detent crossing
+ * @param {number} lead |targetYear - yearFloat| at the moment of the crossing
+ */
+export function scrubRate(dtSinceCross, lead) {
+  if (!(lead <= SCRUB_LEAD)) return Infinity;
+  return dtSinceCross > 0 ? 1 / dtSinceCross : Infinity;
 }
 
 // ─── The auto-tour's gate ────────────────────────────────────────────────────
@@ -413,6 +534,11 @@ export default function TimeMachine({ camDist = 900 }) {
   const tourConsumedRef = useRef(false);
   const tourTimerRef = useRef(null);
   const glowRef = useRef(0);
+  // The accent engine's bookkeeping. `detent` is the integer year the field is
+  // standing on, which is the edge gate G1 watches; `crossedAt` is when it last
+  // changed, which is what the manual scrub's rate is measured across;
+  // `pendingLabel` is accent 5 waiting out its 360 ms dwell.
+  const accentRef = useRef({ detent: -1, crossedAt: 0, lastStepRate: 0, pendingLabel: null });
   // prefers-reduced-motion, read once on mount (same pattern as
   // OvertureSequence's own reducedRef): the tour becomes stepped year holds
   // under it — no year tweens, no shockwave overshoot (see buildTourTimeline
@@ -483,6 +609,16 @@ export default function TimeMachine({ camDist = 900 }) {
       enter: 1,
       // Mass-weighted stagger on both blends, off under reduced motion.
       stagger: true,
+      // Years per second, published for accent gate G2 and for the rail (the
+      // year numeral drops to 55 percent and 0.6px of blur while a sweep runs
+      // past it). Written once per frame by the engine below.
+      rate: 0,
+      // Accent 3, the year-step settle: at most three live records of
+      // { i, t0, amp }, read by radiusAt against `clockMs`. A node that is not
+      // settling multiplies by exactly 1, and every settle returns to exactly
+      // 1.000 at 240 ms, so the settled frame is always exactly the mapping.
+      settles: [],
+      clockMs: 0,
       radiusAt: null,
     };
 
@@ -499,7 +635,17 @@ export default function TimeMachine({ camDist = 900 }) {
       const frac = yf - y0;
       const r0 = radii[y0 * count + i];
       const r1 = radii[y1 * count + i];
-      const tmR = r0 + (r1 - r0) * frac;
+      // Accent 3 rides here, multiplicatively, because this is the one place a
+      // node's Time Machine radius is decided. `settleScale` is exactly 1
+      // outside its own 240 ms window, so an unaccented node's radius is
+      // bit-identical to the mapping and the cost of the lookup is a scan of a
+      // list that is empty or three long.
+      let settle = 1;
+      const ss = tm.settles;
+      for (let k = 0; k < ss.length; k++) {
+        if (ss[k].i === i) { settle = settleScale(tm.clockMs - ss[k].t0, ss[k].amp); break; }
+      }
+      const tmR = (r0 + (r1 - r0) * frac) * settle;
       if (tm.exit <= 0 && tm.enter >= 1) return tmR;
 
       const store = useStore.getState();
@@ -761,6 +907,127 @@ export default function TimeMachine({ camDist = 900 }) {
     }
   };
 
+  // ─── The accent engine (ADDENDUM 1 section 2.3) ────────────────────────────
+  // Four gates, all required. G1 (integer-year crossings) and G2 (the rate) are
+  // here, because only the running engine knows where the year is and how fast
+  // it got there; G3 (three nodes, each clearing 0.25 radius units) and G4 (the
+  // tier budget) are `accentPicks`, pure over the built table.
+  //
+  // Everything an accent writes is transient and returns to identity: the ghost
+  // pool empties itself, the settle multiplier is exactly 1.000 outside its
+  // 240 ms, the ring is the selection ripple's own one-shot, and the micro-label
+  // tears itself down. An at-rest frame is byte-identical with accents on or off.
+  const TIER_BUDGET = ACCENT_BUDGET[TIER] || 1;
+
+  // `gate` and `shown` are the same number on the tour and deliberately
+  // different on the manual scrub, because they answer different questions.
+  // The gate asks "how fast were the twelve months just crossed", which is a
+  // property of a completed step and is what G2 was written against. The rail
+  // asks "is the numeral a readable year right now or a blur of digits", which
+  // is the instantaneous velocity. Publishing the gate's own 1/dt to the rail
+  // dimmed the numeral for a third of a second after every deliberate step,
+  // because on the frame after a crossing that quantity is 1/0.016 s.
+  const stepAccents = (tm, gate, shown, nowMs) => {
+    const acc = accentRef.current;
+    tm.rate = shown;
+
+    // Expire settles. Three at most, so this is a scan of a list that is empty
+    // almost all the time.
+    for (let k = tm.settles.length - 1; k >= 0; k--) {
+      if (nowMs - tm.settles[k].t0 >= TM_SETTLE.dur) tm.settles.splice(k, 1);
+    }
+
+    // Accent 5 is armed on the crossing and spent only if the year is still
+    // standing on that detent one stair later. That is the literal reading of
+    // "only during a step whose dwell is at least 360 ms", and it needs no
+    // knowledge of whether a tour or a hand is driving.
+    const pending = acc.pendingLabel;
+    if (pending) {
+      if (Math.round(tm.yearFloat) !== pending.detent) acc.pendingLabel = null;
+      else if (nowMs - pending.t0 >= TM_MICRO.dwell) {
+        acc.pendingLabel = null;
+        showMoverLabel(pending.index, pending.delta);
+      }
+    }
+
+    // ── G1: the integer-year crossing ──
+    const detent = Math.round(tm.yearFloat);
+    if (detent === acc.detent) return;
+    const from = acc.detent;
+    const dt = (nowMs - acc.crossedAt) / 1000;
+    acc.detent = detent;
+    acc.crossedAt = nowMs;
+    if (from < 0) return; // nothing was left behind: this is the first detent seen
+    acc.lastStepRate = gate;
+    // ── G2: nothing fires above 4.0 years per second ──
+    // The rewind (26 yr/s), the sweep (13 yr/s) and any hard flick, killed;
+    // every staircase step (2.78), every single-year leg (1.54) and every
+    // deliberate scrub, passed.
+    if (!(gate <= ACCENT_MAX_RATE)) return;
+    // Not a neighbouring year: a seek, a jump, or the frame the machine opened
+    // on. There is no "year just left" to hold a shell at.
+    if (Math.abs(detent - from) !== 1) return;
+
+    // ── G3 and G4 ──
+    const picks = accentPicks(tm.data, from, detent, TIER_BUDGET);
+    if (!picks.length) return;
+    const store = useStore.getState();
+    const reduced = reducedRef.current;
+
+    // Accent 1, the hero: a shell at the radius the node had in the year just
+    // left. Every tier, and the only accent reduced motion keeps (as a single
+    // 300 ms dissolve).
+    fireGhosts(
+      picks.map((p) => ({
+        index: p.index,
+        radius: p.from,
+        color: CC[store.diseases[p.index].category],
+      })),
+      reduced
+    );
+    // Reduced motion drops rings, settles and micro-labels entirely.
+    if (reduced) return;
+
+    // Accent 3, the year-step settle: 4.5 / 3.0 / 2.0 percent by rank, starting
+    // on the frame the detent lands.
+    for (const p of picks) {
+      const amp = TM_SETTLE.amps[p.rank - 1];
+      if (amp > 0) tm.settles.push({ i: p.index, t0: nowMs, amp });
+    }
+
+    // Accent 2, the mover ring: rank-1 only, and only above its own much higher
+    // threshold. Color says direction — the category color on growth, tertiary
+    // ink on shrinkage, never the detonation's ember.
+    const top = picks[0];
+    if (!top.ring) return;
+    const d = store.diseases[top.index];
+    fireRipple(top.index, top.delta >= 0 ? CC[d.category] : TM_SHRINK_INK);
+
+    // Accent 4's upgrade is the rail's own (it owns the numeral); accent 5 is
+    // armed here. Both numerals in it are the difference of two file values,
+    // which is the precedent the rail's hover chip already set.
+    const yearStart = tm.data.yearStart;
+    acc.pendingLabel = {
+      index: top.index,
+      delta: valueAt(d, yearStart + detent) - valueAt(d, yearStart + from),
+      detent,
+      t0: nowMs,
+    };
+  };
+
+  // Everything the accents own, dropped on the same frame. Called when the
+  // machine closes, when a skip fast-forwards it, and when a harness seek jumps
+  // the year: no orphan ghost, no half-applied settle, no floating label.
+  const clearAccents = (tm) => {
+    const acc = accentRef.current;
+    acc.pendingLabel = null;
+    acc.detent = -1;
+    tm.settles.length = 0;
+    tm.rate = 0;
+    clearGhosts();
+    hideMoverLabel();
+  };
+
   // ─── The exit choreography (ADDENDUM 1 section 1) ──────────────────────────
   // Opens when the finale's closing shot has held FINALE_HOLD seconds after the
   // flatline cue, and lands 2.60 s later on the home screen. The table it
@@ -963,6 +1230,11 @@ export default function TimeMachine({ camDist = 900 }) {
     const tmPhase = store.tmPhase;
     const maxY = tm.data.nYears - 1;
     const r = tourRef.current;
+    // One clock for every accent channel, published so radiusAt (which is
+    // called by DiseaseNodes, not from in here) can resolve a live settle
+    // without reaching for performance.now() 153 times a frame.
+    const nowMs = state.clock.getElapsedTime() * 1000;
+    tm.clockMs = nowMs;
 
     // Carry-over D: count the flash down one rendered frame at a time,
     // independent of tour phase/pause, so a harness seek that lands mid-flash
@@ -1034,6 +1306,20 @@ export default function TimeMachine({ camDist = 900 }) {
       tm.yearFloat = ny;
       if (tm.yearFloat < 0) tm.yearFloat = 0;
       if (tm.yearFloat > maxY) tm.yearFloat = maxY;
+      // The manual scrub's own G2 input, measured rather than boarded: the
+      // years-per-second implied by the year just crossed, plus the flick guard.
+      // A deliberate step passes; a drag or a flick does not. The rail gets the
+      // spring's own instantaneous velocity instead, which is what "the numeral
+      // is a blur of digits right now" actually means.
+      stepAccents(
+        tm,
+        scrubRate(
+          (nowMs - accentRef.current.crossedAt) / 1000,
+          Math.abs(tm.targetYear - tm.yearFloat)
+        ),
+        Math.abs(velRef.current),
+        nowMs
+      );
     } else if (tmPhase === 'tour') {
       // The tour owns yearFloat outright: a pure function of the tour clock,
       // so a seeked frame and a played frame are the same frame.
@@ -1055,6 +1341,11 @@ export default function TimeMachine({ camDist = 900 }) {
         // hold may be under FINALE_SPLIT + FINALE_HOLD, still exits rather than
         // running past its last frame.
         r.exitAt = finaleExitAt(r.tl);
+        // The tour opens on a rewind: nothing was "just left", and the first
+        // detent the engine sees must not read as a crossing.
+        clearAccents(tm);
+        accentRef.current.detent = Math.round(tm.yearFloat);
+        accentRef.current.crossedAt = nowMs;
       }
 
       // Harness seek: reposition the clock, replay the state cues up to it, and
@@ -1083,6 +1374,12 @@ export default function TimeMachine({ camDist = 900 }) {
         if (lastCam) runCue(lastCam, r.caps, reducedRef.current);
         tm.yearFloat = tourYearAt(r.tl.segs, target);
         tm.targetYear = tm.yearFloat;
+        // A seek is a jump, not a crossing: drop anything the accents were
+        // holding and re-seat the detent so the frame after a seek does not
+        // fire a shell for a year the viewer never watched go by.
+        clearAccents(tm);
+        accentRef.current.detent = Math.round(tm.yearFloat);
+        accentRef.current.crossedAt = nowMs;
         return;
       }
 
@@ -1093,7 +1390,14 @@ export default function TimeMachine({ camDist = 900 }) {
       tm.yearFloat = y;
       tm.targetYear = y;
 
-      if (r.paused != null) return;
+      if (r.paused != null) { tm.rate = 0; return; }
+
+      // Gate G2's input on the tour: the rate of the segment the clock is
+      // inside, straight off the timeline, and zero in every dwell and hold. The
+      // gate and the rail read the same number here, because a boarded segment
+      // rate is both what the step travelled at and what the numeral is doing.
+      const segRate = tourRateAt(r.tl.segs, t);
+      stepAccents(tm, segRate, segRate, nowMs);
 
       for (let k = 0; k < r.tl.cues.length; k++) {
         if (!r.fired.has(k) && t >= r.tl.cues[k].t) {
@@ -1118,6 +1422,10 @@ export default function TimeMachine({ camDist = 900 }) {
       velRef.current = 0;
       if (r.tl) { r.tl = null; r.paused = null; r.pendingSeek = null; }
       r.exitAt = null; // the machine is closing; nothing left to hand over
+      // Accents belong to the instrument, not to the galaxy it exits into: no
+      // orphan shell survives the close, and no settle is left half-applied
+      // while the radius blends home.
+      if (tm.settles.length || accentRef.current.detent >= 0) clearAccents(tm);
       const ex = exitRef.current;
       let dur = EXIT_DUR;
       let hold = 0;
