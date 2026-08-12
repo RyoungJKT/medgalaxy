@@ -5,6 +5,7 @@ import { fmt, isMob } from '../../utils/helpers';
 import Sparkline from './Sparkline';
 import insights from '../../../data/disease-insights.json';
 import { pubmedTermFor } from '../../utils/pubmedTerms';
+import { deathsStatLabel } from '../../utils/mortalityLabel';
 import { DUR, EASE } from '../../utils/motion';
 
 // Select (DIRECTION section 4): "sidebar slides in 280ms expo.out with a
@@ -18,9 +19,9 @@ const sectionAnim = (i) => ({
   animationDelay: `${i * SECTION_STAGGER_MS}ms`,
 });
 
-function SB({ l, v, s, vc }) {
+function SB({ l, v, s, vc, span }) {
   return (
-    <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 6, padding: '8px 10px', border: '1px solid rgba(255,255,255,0.04)' }}>
+    <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 6, padding: '8px 10px', border: '1px solid rgba(255,255,255,0.04)', ...(span ? { gridColumn: '1 / -1' } : null) }}>
       <div style={{ color: '#94a3b8', fontSize: 11, marginBottom: 2 }}>{l}</div>
       <div style={{ fontSize: 16, fontWeight: 600, color: vc || '#e2e8f0' }}>{v} {s && <span style={{ fontSize: 12, fontWeight: 400 }}>{s}</span>}</div>
     </div>
@@ -107,9 +108,17 @@ export default function Sidebar() {
     .filter(e => e.si === idx || e.ti === idx)
     .map(e => {
       const oi = e.si === idx ? e.ti : e.si;
-      return { d: diseases[oi], sp: e.sharedPapers, t: e.trend, oi };
+      return { d: diseases[oi], sp: e.sharedPapers, oi };
     })
     .sort((a, b) => b.sp - a.sp);
+
+  const deathsLabel = deathsStatLabel(disease.mortality, disease.mortalitySource, disease.mortalityYear);
+
+  // The 1990-2024 series and the all-time total are separate PubMed queries,
+  // so for a handful of diseases the windowed series sums slightly above the
+  // headline total. Say so where it happens rather than let a reader find it.
+  const windowSum = disease.yearlyPapers.reduce((a, b) => a + b, 0);
+  const windowExceedsTotal = windowSum > disease.papers;
 
 
 
@@ -147,7 +156,7 @@ export default function Sidebar() {
         <div style={{ padding: '0 16px 12px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, ...sectionAnim(2) }}>
           <SB l="Publications" v={fmt(disease.papers)} s={trendSurged ? <span style={{ color: '#22c55e' }}>new</span> : <span style={{ color: tc }}>{ar}{Math.abs(t)}%</span>} />
           <SB l="Connections" v={cc} />
-          <SB l="WHO Deaths/yr" v={disease.mortality > 0 ? fmt(disease.mortality) : 'N/A'} />
+          <SB span l={deathsLabel} v={disease.mortality > 0 ? fmt(disease.mortality) : 'N/A'} />
           <SB l="Funding Gap" v={disease.fundingGap.toUpperCase()} vc={gc[disease.fundingGap]} />
           <SB l="Papers/Death" v={ppdStr} />
         </div>
@@ -155,6 +164,11 @@ export default function Sidebar() {
         <div style={{ padding: '0 16px 12px', ...sectionAnim(3) }}>
           <div style={{ color: '#94a3b8', fontSize: 11, marginBottom: 4 }}>{`Publication Trend (${disease.yearStart ?? 2015}-2024)`}</div>
           <Sparkline data={disease.yearlyPapers} color={c} yearStart={disease.yearStart ?? 2015} yearEnd={2024} />
+          {windowExceedsTotal && (
+            <div style={{ color: '#64748b', fontSize: 10, lineHeight: 1.45, marginTop: 5 }}>
+              This series sums to {fmt(windowSum)}, above the {fmt(disease.papers)} total above. The two are separate PubMed queries, and a record carrying more than one publication date is counted in each year it names.
+            </div>
+          )}
         </div>
         {/* PubMed link */}
         <div style={{ padding: '0 16px 12px', ...sectionAnim(4) }}>
@@ -167,11 +181,10 @@ export default function Sidebar() {
         {/* Connections */}
         <div style={{ padding: '0 16px 16px', ...sectionAnim(5) }}>
           <div style={{ color: '#94a3b8', fontSize: 11, marginBottom: 2 }}>Connections ({conns.length})</div>
-          <div style={{ color: '#64748b', fontSize: 11, marginBottom: 6 }}>Diseases that appear together in published medical research, suggesting shared biology, risk factors, or clinical overlap</div>
+          <div style={{ color: '#64748b', fontSize: 11, marginBottom: 6 }}>Diseases that appear together in published medical research, suggesting shared biology, risk factors, or clinical overlap. The count beside each is PubMed's own all-time result count for the two disease terms searched together.</div>
           <div style={{ maxHeight: 240, overflowY: 'auto' }}>
             {conns.map((cn, i) => {
               const cc2 = CC[cn.d.category];
-              const ta = cn.t === 'up' ? '\u2191' : cn.t === 'down' ? '\u2193' : '\u2192';
               return (
                 <div
                   key={i}
@@ -183,7 +196,6 @@ export default function Sidebar() {
                   <span style={{ width: 6, height: 6, borderRadius: '50%', background: cc2, flexShrink: 0 }} />
                   <span style={{ flex: 1, color: '#cbd5e1' }}>{cn.d.label}</span>
                   <span style={{ color: '#94a3b8', fontSize: 12 }}>{fmt(cn.sp)}</span>
-                  <span style={{ color: cn.t === 'up' ? '#22c55e' : cn.t === 'down' ? '#ef4444' : '#64748b', fontSize: 12 }}>{ta}</span>
                 </div>
               );
             })}

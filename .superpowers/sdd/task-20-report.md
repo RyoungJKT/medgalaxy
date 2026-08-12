@@ -234,3 +234,162 @@ does not replace those rows.
 The film's beat clock, holds and captions; the ignite/ember weights; the tour
 board; every mobile width fix from Task 17. The `>500 kB` chunk warning is the
 pre-existing one from Task 19.
+
+---
+
+## Data-integrity fix wave (round-2 depth findings)
+
+Every figure below was re-verified against its primary document during this
+pass; the quoted strings are the figures as printed there.
+
+### P0 — four mortality attributions reconciled (data/diseases.json)
+
+| Disease | Was | Now | Primary source, as printed |
+|---|---|---|---|
+| Malaria | 608,000 (2024) | **610,000** (2024) | WHO *World malaria report 2025*, executive summary p1: "an estimated 282 million cases and 610 000 deaths worldwide in 2024" |
+| Tuberculosis | 1,250,000 (2024) | **1,230,000** (2024) | WHO *Global tuberculosis report 2025* factsheet: "Globally in 2024, TB caused an estimated 1.23 million deaths, including 150 000 people with HIV, compared with 1.25 million in 2023" (the old value was the 2023 figure) |
+| COVID-19 | 250,000 (2023) | **294,000** (2023) | WHO COVID-19 dashboard global daily data: `New_deaths` summed over 2023 = 294,000. Verified twice, independently: the `Cumulative_deaths` column delta across 2023 gives the same 294,000. The round-2 reviewer's 318,570 does not reproduce against the current dashboard export. |
+| Ebola | 32 (2025) | **49** (2025) | WHO DON, 1 Dec 2025 (DRC Kasai): "a total of 64 cases (53 confirmed, 11 probable), including 45 deaths (CFR 70.3%)". Uganda MoH / WHO, 26 Apr 2025 (Sudan virus): 12 confirmed + 2 probable cases "including four deaths". 45 + 4 = 49. Episodic note kept. |
+
+### P1 — connections layer regenerated from live PubMed (736 pairs)
+
+`scripts/regenerate_connections.py` (new) mirrors `refresh_pubmed.py` exactly:
+same `pubmed_count`, same `data/search-overrides.json` terms, same
+`MedGalaxy-Refresh/1.0` UA, same 0.35s rate limit, resumable via a progress
+cache. For each existing pair it queries `(<termA>) AND (<termB>)` all-time,
+matching the all-time semantics of the `papers` field the score divides by.
+
+- 736/736 fetched, 0 failures, ~7 min.
+- **0 pairs dropped**: the invariant's zero-co-occurrence risk did not
+  materialise, minimum real count is 3 (Guinea Worm x River Blindness); the
+  maximum is 326,154 (COVID-19 x Pneumonia).
+- sharedPapers now min 3 / median 2,266 / max 326,154, 688 distinct values.
+  The authored set had 53 distinct values across 736 pairs, every one a
+  multiple of 100.
+- Authored vs real: median 0.77x, worst 120x. 288 pairs were overstated, 448
+  understated.
+- **Layout verdict: composition holds.** Recomputing the top-7-per-node layout
+  edge set both ways: 590 -> 619 layout edges, 87% of the union shared;
+  same-category share of layout edges 57.6% -> 56.5%; zero isolated nodes;
+  degree distribution unchanged (min 3 / median 7 / max 42, since the curated
+  pair list is untouched). Screenshot `fix3-galaxy-post-connections.png` reads
+  the same as `baseline.png`: category clusters intact, no clumping, no voids.
+- **`trend` removed entirely.** The per-pair up/stable/down was authored, is
+  not derivable from one count query, and was rendered as a coloured arrow
+  directly beside the now-measured count. Only two consumers existed:
+  `Sidebar.jsx` (removed) and the unimported legacy artifact `MedGalaxy.jsx`
+  (removed there too). The field is gone from `data/connections.json`, so
+  nothing can re-adopt it by accident; a new invariant asserts the key set.
+- Methodology's Connections section now states the counts are live PubMed
+  co-occurrence queries reproducible by hand, refreshed by that script rather
+  than by the weekly Action, **and** that the pair list itself is curated, not
+  an exhaustive all-pairs sweep. That second admission was not requested and is
+  the more exposed one.
+
+### P1 — provenance accounting made true (17 relabels + 4 corrections)
+
+The "N of 153" claim was already derived at runtime; it now reads 118 of 153
+(was 139 before this pass) because the exceptions grew from 14 to 35. Added a
+derived `globocanCount` so the prose's "all 19 cancers" also cannot drift.
+
+- **All 19 cancers** carry GLOBOCAN 2022 values and now say so (17 were
+  labelled WHO GHE 2021; the reviewer found 16). Every one re-checked against
+  the archived IARC GLOBOCAN 2022 world fact sheet (v1.1, 08.02.2024), each
+  matching to the nearest thousand: lung 1 817 469, colorectum 904 019, liver
+  758 725, breast 666 103, stomach 660 175, pancreas 467 409, oesophagus
+  445 391, prostate 397 430, cervix 348 874, leukaemia 305 405, NHL 250 679,
+  brain/CNS 248 500, bladder 220 596, ovary 206 956, kidney 155 953, myeloma
+  121 388, corpus uteri 97 723, melanoma 58 667, thyroid 47 507. Note the live
+  GCO URL now serves GLOBOCAN **2024**; the 2022 sheet came from the Wayback
+  snapshot of the same URL, which is why the label pins the vintage.
+- **Stroke** -> IHME GBD 2021. GBD 2021 (Lancet Neurol 2024;23:973-1003):
+  "In 2021, stroke was the third most common GBD level 3 cause of death (7.3
+  million [95% UI 6.6-7.8] deaths)". Value unchanged.
+- **Pneumonia** -> IHME GBD 2021 (lower respiratory infections), and the value
+  moved 2,200,000 -> **2,180,000**. GBD 2021 LRI (Lancet Infect Dis
+  2024;24:974-1002) prints "2.18 million deaths (1.98-2.36)". The brief said to
+  keep 2.2M; `fmt()` still renders 2,180,000 as "2.2M", so the display is
+  unchanged while the stored value now matches the source exactly. The caveat
+  paragraph also now says the category excludes COVID-19 deaths by
+  construction, which the GBD figure does.
+- **Measles** -> 108,000 (2021) was the **2023** estimate (107,500) carrying a
+  2021 label. Rather than relabel a stale vintage while malaria and TB carry
+  2024, it moves to the current one: **95,000 (2024)**, WHO, 28 Nov 2025: "an
+  estimated 95 000 people, mostly children younger than 5 years of age, died
+  due to measles in 2024".
+- **Hepatitis C** -> 242,000 relabelled from GHE 2021 to WHO *Global hepatitis
+  report 2024*, year 2022, which prints "242 000 (197 000-288 000) deaths" for
+  2022 in Fig. 2.2. Worth knowing: the same report's prose says "hepatitis C
+  244 000 deaths (17% of all viral hepatitis deaths)". The stored value matches
+  the figure, not the prose; both are 2022.
+- Three cancer rows are broader than their labels (colon = colorectum, lymphoma
+  = NHL only, brain = brain and CNS). Added to the caveats section rather than
+  left for a reviewer to find.
+
+### P1 — flagship metric description corrected
+
+`refresh_pubmed.py:71` stores the **undated all-time** count, so "PubMed's own
+count ... summed across 35 years" was false for all 153 records. The panel now
+says: papers is the all-time count from a single esearch query with no date
+filter; the sparkline is a separate per-year series over 1990-2024.
+
+While checking this I found the two do not merely differ, they can invert: for
+six diseases the windowed series sums **above** the all-time total
+(hepatitis-c +4,136, ptsd +1,566, adhd +698, nafld +474, norovirus +76,
+covid-19 +589). Demonstrated the cause directly against PubMed rather than
+assuming it: "Hepatitis C" for 2019+2020+2021 as three per-year queries returns
+12,679, the same span as one range query returns 11,594. Per-year date
+filtering counts a record in every year its publication dates name. Both the
+panel and a per-disease sidebar footnote now say so.
+
+### P2 #8 — point-of-display sourcing
+
+- New `src/utils/mortalityLabel.js` derives a compact per-disease label from
+  `mortalitySource`/`mortalityYear`. The blanket "WHO Deaths/yr" (wrong for
+  every IHME, IARC, UNAIDS and CDC row) becomes "Deaths/yr · GHE 2021",
+  "· GLOBOCAN 2022", "· GBD 2021", "· WMR 2024", "· UNAIDS 2024",
+  "· US only, CDC 2023" (West Nile), "· outbreak records 2025" (Ebola),
+  "· WHO reported 2023" (COVID), "· GBD 2017, sepsis-associated". The year is
+  always the year the figure describes, never the report's year.
+- The deaths tile now spans both sidebar columns. This was needed for the
+  longest label to stay on one line at 11px, and it also removes the orphan
+  fifth tile: the grid is now 2 / 1 / 2 instead of 2 / 2 / 1-and-a-gap.
+- Sparkline footnote (above) fires generically on `sum(yearlyPapers) > papers`.
+- Sepsis `memorableFact` overreach fixed. "Surveys consistently show that fewer
+  than half of the general public in high-income countries have heard of
+  sepsis" is not supportable: campaign-driven awareness has since passed half
+  in the US, UK and Germany. Replaced with the specific primary result
+  (Rubulotta et al., Crit Care Med 2009;37:167-70, n=6,021: "a mean of 88% of
+  interviewees had never heard of the term 'sepsis'. In Germany 53% of people
+  knew the word") plus an explicit note that awareness has risen where
+  campaigns ran.
+
+### Verification
+
+- `npx vitest run`: **13 files, 135 tests, all pass** (was 124; +11). The
+  corrections test is rewritten to assert value **and** year **and** source
+  together for 13 diseases, so a number can no longer drift from its citation
+  without failing. New: every-cancer-is-GLOBOCAN, every-disease-has-a-source,
+  connections-are-not-round-numbers, connections-carry-no-trend, and 7
+  `mortalityLabel` tests including a 40-char width bound over all 153 records.
+- `npx vite build`: green (2.55s). The >500 kB chunk warning is the
+  pre-existing Task 19 one.
+- Harness shots in `docs/verify/`: `fix3-galaxy-post-connections`,
+  `fix3-sidebar-sources` (malaria / west-nile-virus / breast-cancer stitched,
+  plus the three singles), `fix3-methodology-provenance` and
+  `-provenance-table`, `fix3-sparkline-footnote`. All read as intended.
+
+### Judgement calls worth flagging
+
+1. COVID 2023 is **294,000**, not the reviewer's 318,570. Two independent
+   reductions of WHO's own export agree on 294,000; I could not reproduce
+   318,570 by any method.
+2. Measles moved vintage rather than being relabelled in place, so the panel's
+   claim that the named annual-report diseases carry their most current figures
+   stays true.
+3. Pneumonia's stored value moved 20,000 against the brief's "keep 2.2M",
+   because the rendered string is "2.2M" either way and only one of the two
+   values matches what GBD prints.
+4. `trend` was deleted rather than kept as an unused key. Nothing needed it,
+   and an authored field sitting beside measured ones invites the next reader
+   to trust it.

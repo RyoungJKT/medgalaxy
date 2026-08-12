@@ -54,6 +54,9 @@ export default function MethodologyPanel() {
       yearSpan: yearEnd - yearStart + 1,
       nonDefault,
       defaultCount: diseases.length - nonDefault.length,
+      // Derived, never a literal: the prose below must not be able to claim a
+      // count the exceptions table then contradicts.
+      globocanCount: diseases.filter(d => /GLOBOCAN/.test(d.mortalitySource || '')).length,
     };
   }, [diseases, displayEdges]);
 
@@ -106,10 +109,13 @@ export default function MethodologyPanel() {
           <div style={{ marginBottom: 20 }}>
             <div style={SH}>What the numbers are</div>
             <div style={SP}>
-              Papers is PubMed's own count of publications whose publication date falls in a given year, queried through PubMed's E-utilities esearch endpoint (datetype=pdat, per-year mindate and maxdate) and summed across {stats.yearSpan} years, {stats.yearStart} to {stats.yearEnd}. The search term is each disease's name; a handful of diseases use a more precise override for accurate matching, documented in data/search-overrides.json (COPD queries the full phrase "chronic obstructive pulmonary disease", NAFLD adds an alternate spelling, and several acronyms expand the same way). Every disease's sidebar carries a live "View on PubMed" link, so any total shown here can be checked directly against PubMed's own search; the 11 diseases queried under an expanded clinical name use that same expansion in their sidebar link, not the shorter display label, so the link always reproduces the total shown.
+              Papers is PubMed's own all-time result count for the disease's search term: a single E-utilities esearch query with no date filter, which is everything PubMed has indexed under that term, not a sum over a window. The sparkline beneath it in the sidebar is a separate series, one dated query per year (datetype=pdat, per-year mindate and maxdate) across the {stats.yearSpan} years {stats.yearStart} to {stats.yearEnd}. The search term is each disease's name; a handful of diseases use a more precise override for accurate matching, documented in data/search-overrides.json (COPD queries the full phrase "chronic obstructive pulmonary disease", NAFLD adds an alternate spelling, and several acronyms expand the same way). Every disease's sidebar carries a live "View on PubMed" link, so any total shown here can be checked directly against PubMed's own search; the 11 diseases queried under an expanded clinical name use that same expansion in their sidebar link, not the shorter display label, so the link always reproduces the total shown.
             </div>
             <div style={SP}>
-              Deaths do not come from PubMed at all. They are entered by hand from named sources: {stats.defaultCount} of {stats.diseaseCount} diseases use the shared default below, and the other {stats.nonDefault.length} use a disease-specific source, each with the year its figure describes. The vintages are deliberately mixed, not uniform: cancers use GLOBOCAN 2022, malaria and tuberculosis and HIV/AIDS use their own most current annual reports, and everything else defaults to WHO Global Health Estimates 2021, still the latest GHE vintage as of this edition.
+              The all-time total and the year-by-year series are different queries, so they are not required to agree. For six diseases the series sums slightly above the all-time total, because PubMed counts a record in every year its publication dates name, and a record carrying both an electronic and a print date names two. The sidebar prints a note under the sparkline on exactly those diseases rather than leaving the arithmetic to be discovered.
+            </div>
+            <div style={SP}>
+              Deaths do not come from PubMed at all. They are entered by hand from named sources: {stats.defaultCount} of {stats.diseaseCount} diseases use the shared default below, and the other {stats.nonDefault.length} use a disease-specific source, each with the year its figure describes. Every count in this paragraph is computed from the data file when this panel opens, not written in by hand, so it cannot drift away from the table below it. The vintages are deliberately mixed, not uniform: all {stats.globocanCount} cancers use IARC GLOBOCAN 2022, malaria, tuberculosis, HIV/AIDS and measles use their own most current annual reports, a handful of causes that IHME estimates more precisely than WHO's cause list allows use IHME GBD 2021, and everything else defaults to WHO Global Health Estimates 2021, still the latest GHE vintage as of this edition. The sidebar repeats the source in short form next to every deaths figure, so the attribution travels with the number.
             </div>
             <div style={{ fontSize: 11, color: '#cbd5e1', marginBottom: 8 }}>
               Default source, {stats.defaultCount} of {stats.diseaseCount} diseases: {meta.mortalityDefaultSource}
@@ -146,7 +152,10 @@ export default function MethodologyPanel() {
               Sepsis's mortality figure counts sepsis-associated deaths: deaths where sepsis contributed alongside an underlying cause such as pneumonia, cancer, or ischaemic heart disease. It is not an independent cause on top of the others; adding mortality rows together into a single total would double-count it.
             </div>
             <div style={SP}>
-              Pneumonia uses WHO's lower respiratory infections category, which also includes influenza, RSV, and bronchiolitis deaths, not narrowly bacterial pneumonia. Rotavirus and norovirus are both subsets of overall diarrhoeal disease deaths, not separate causes; neither should be summed with the other or treated as the full diarrhoeal burden.
+              Pneumonia uses IHME's lower respiratory infections category, which also includes influenza, RSV, and bronchiolitis deaths, not narrowly bacterial pneumonia, and which excludes COVID-19 deaths by construction. Rotavirus and norovirus are both subsets of overall diarrhoeal disease deaths, not separate causes; neither should be summed with the other or treated as the full diarrhoeal burden.
+            </div>
+            <div style={SP}>
+              Three cancer rows are broader than their labels, because that is how IARC reports them: colon cancer carries GLOBOCAN's colorectum figure, which includes rectal cancer; lymphoma carries non-Hodgkin lymphoma only, with Hodgkin lymphoma counted separately by IARC and not added in; and brain cancer carries the brain and central nervous system category.
             </div>
             <div style={SP}>
               Heart disease reports ischaemic heart disease specifically (heart attacks and related coronary disease), not all cardiovascular disease, which WHO estimates at roughly 19 to 20 million deaths a year. Alzheimer's disease includes Alzheimer's and other dementias combined, per WHO and IHME reporting, not Alzheimer's alone. Type 2 diabetes shows all diabetes direct deaths, type 1 and type 2 together as WHO reports it, and excludes diabetes-attributed kidney deaths, which WHO estimates separately at roughly half a million more.
@@ -160,7 +169,10 @@ export default function MethodologyPanel() {
           <div style={{ marginBottom: 20 }}>
             <div style={SH}>Connections</div>
             <div style={SP}>
-              Every pair of diseases that shares PubMed papers gets a co-occurrence score: shared papers divided by the square root of the product of both diseases' total papers (processData, src/utils/helpers.js). Raw shared-paper counts would be dominated by huge topics like heart disease appearing in nearly every list; dividing by the geometric mean of both totals surfaces pairs that are unusually connected to each other specifically, not just individually popular.
+              A connection's shared-papers count is a measurement, not an estimate: for every pair, PubMed's own all-time result count for the two disease terms searched together, one esearch query per pair, run by scripts/regenerate_connections.py using the same terms, endpoint and rate limit as the publication pipeline. Anyone can reproduce any weight in the galaxy by running that one query. What is curated is which pairs exist: the {stats.connectionCount} pairs were chosen by hand as clinically or biologically plausible links, not swept exhaustively across all {stats.diseaseCount} diseases, so a missing edge means nobody drew it, not that the two topics never co-occur.
+            </div>
+            <div style={SP}>
+              Each pair's score is that shared-papers count divided by the square root of the product of both diseases' total papers (processData, src/utils/helpers.js). Raw counts would be dominated by huge topics like heart disease appearing in nearly every list; dividing by the geometric mean of both totals surfaces pairs that are unusually connected to each other specifically, not just individually popular.
             </div>
             <div style={SP}>
               Each node's top 7 highest-scoring edges feed the 3D layout, the force simulation that clusters diseases spatially. All {stats.connectionCount} scored connections are drawn in the galaxy, but only those top-7-per-node edges are part of the layout; the rest render faint in the background and brighten on hover or selection.
@@ -171,7 +183,7 @@ export default function MethodologyPanel() {
           <div style={{ marginBottom: 20 }}>
             <div style={SH}>The pipeline</div>
             <div style={SP}>
-              A GitHub Action re-runs the PubMed query above every Monday at 06:00 UTC (.github/workflows/refresh-pubmed.yml, calling scripts/refresh_pubmed.py). It rewrites exactly three fields per disease: total papers, the year-by-year counts, and the trend percentage. It never touches mortality, description, category, funding gap, or the connections file; those stay fixed until someone updates them by hand from the sources named above.
+              A GitHub Action re-runs the PubMed query above every Monday at 06:00 UTC (.github/workflows/refresh-pubmed.yml, calling scripts/refresh_pubmed.py). It rewrites exactly three fields per disease: total papers, the year-by-year counts, and the trend percentage. It never touches mortality, description, category, or funding gap; those stay fixed until someone updates them by hand from the sources named above. The connection weights are refreshed by their own script (scripts/regenerate_connections.py), run on demand rather than weekly, because it is one query per pair.
             </div>
             <div style={SP}>
               The {stats.yearSpan}-year publication history was backfilled once, extending each disease's record back to {stats.yearStart}. The weekly refresh rewrites a fixed 2015-2024 window, not a rolling one: earlier years are frozen history, and the window itself advances only when the pipeline is updated.

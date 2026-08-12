@@ -57,7 +57,7 @@
     "description": "Parasitic disease transmitted by Anopheles mosquitoes, causing fever and organ damage.",
     "papers": 124875,
     "trend": 3,
-    "mortality": 608000,
+    "mortality": 610000,
     "fundingGap": "high",
     "yearlyPapers": [
       1094,
@@ -1168,8 +1168,8 @@
       6836
     ],
     "region": "EUR",
-    "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalityYear": 2022,
+    "mortalitySource": "IARC GLOBOCAN 2022",
     "yearStart": 1990
   },
   {
@@ -1219,8 +1219,8 @@
       10337
     ],
     "region": "EUR",
-    "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalityYear": 2022,
+    "mortalitySource": "IARC GLOBOCAN 2022",
     "yearStart": 1990
   },
   {
@@ -1270,8 +1270,8 @@
       12553
     ],
     "region": "EUR",
-    "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalityYear": 2022,
+    "mortalitySource": "IARC GLOBOCAN 2022",
     "yearStart": 1990
   },
   {
@@ -1321,8 +1321,8 @@
       12529
     ],
     "region": "EUR",
-    "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalityYear": 2022,
+    "mortalitySource": "IARC GLOBOCAN 2022",
     "yearStart": 1990
   },
   {
@@ -1372,8 +1372,8 @@
       11900
     ],
     "region": "EUR",
-    "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalityYear": 2022,
+    "mortalitySource": "IARC GLOBOCAN 2022",
     "yearStart": 1990
   },
   {
@@ -1423,8 +1423,8 @@
       7140
     ],
     "region": "EUR",
-    "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalityYear": 2022,
+    "mortalitySource": "IARC GLOBOCAN 2022",
     "yearStart": 1990
   },
   {
@@ -1474,8 +1474,8 @@
       8439
     ],
     "region": "EUR",
-    "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalityYear": 2022,
+    "mortalitySource": "IARC GLOBOCAN 2022",
     "yearStart": 1990
   },
   {
@@ -1525,8 +1525,8 @@
       19649
     ],
     "region": "WPR",
-    "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalityYear": 2022,
+    "mortalitySource": "IARC GLOBOCAN 2022",
     "yearStart": 1990
   },
   {
@@ -1576,8 +1576,8 @@
       5897
     ],
     "region": "WPR",
-    "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalityYear": 2022,
+    "mortalitySource": "IARC GLOBOCAN 2022",
     "yearStart": 1990
   },
   {
@@ -1627,8 +1627,8 @@
       7034
     ],
     "region": "AFR",
-    "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalityYear": 2022,
+    "mortalitySource": "IARC GLOBOCAN 2022",
     "yearStart": 1990
   },
   {
@@ -1678,8 +1678,8 @@
       5428
     ],
     "region": "EUR",
-    "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalityYear": 2022,
+    "mortalitySource": "IARC GLOBOCAN 2022",
     "yearStart": 1990
   },
   {
@@ -1729,8 +1729,8 @@
       15093
     ],
     "region": "EUR",
-    "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalityYear": 2022,
+    "mortalitySource": "IARC GLOBOCAN 2022",
     "yearStart": 1990
   },
   {
@@ -1780,8 +1780,8 @@
       7682
     ],
     "region": "EUR",
-    "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalityYear": 2022,
+    "mortalitySource": "IARC GLOBOCAN 2022",
     "yearStart": 1990
   },
   {
@@ -1831,8 +1831,8 @@
       6302
     ],
     "region": "WPR",
-    "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalityYear": 2022,
+    "mortalitySource": "IARC GLOBOCAN 2022",
     "yearStart": 1990
   },
   {
@@ -1882,8 +1882,8 @@
       4763
     ],
     "region": "WPR",
-    "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalityYear": 2022,
+    "mortalitySource": "IARC GLOBOCAN 2022",
     "yearStart": 1990
   },
   {
@@ -1933,8 +1933,8 @@
       3440
     ],
     "region": "EUR",
-    "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalityYear": 2022,
+    "mortalitySource": "IARC GLOBOCAN 2022",
     "yearStart": 1990
   },
   {
@@ -2036,7 +2036,7 @@
     ],
     "region": "WPR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "IHME GBD 2021",
     "yearStart": 1990
   },
   {
@@ -3474,7 +3474,7 @@
     "description": "Lung infection causing inflammation of the air sacs, a major killer globally.",
     "papers": 605564,
     "trend": 656,
-    "mortality": 2200000,
+    "mortality": 2180000,
     "fundingGap": "high",
     "yearlyPapers": [
       2986,
@@ -3515,7 +3515,7 @@
     ],
     "region": "AFR",
     "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalitySource": "IHME GBD 2021 (lower respiratory infections)",
     "yearStart": 1990
   },
   {
@@ -3525,7 +3525,7 @@
     "description": "Bacterial lung infection and one of the deadliest infectious diseases worldwide.",
     "papers": 320619,
     "trend": 15,
-    "mortality": 1250000,
+    "mortality": 1230000,
     "fundingGap": "high",
     "yearlyPapers": [
       2317,
@@ -5259,7 +5259,7 @@
     "description": "Respiratory illness caused by SARS-CoV-2 that triggered a global pandemic.",
     "papers": 518131,
     "trend": 999,
-    "mortality": 250000,
+    "mortality": 294000,
     "fundingGap": "low",
     "yearlyPapers": [
       0,
@@ -5300,7 +5300,7 @@
     ],
     "region": "EUR",
     "mortalityYear": 2023,
-    "mortalitySource": "WHO reported deaths, 2023; global reporting has since largely ceased",
+    "mortalitySource": "WHO COVID-19 dashboard, reported deaths 2023; global reporting has since largely ceased",
     "yearStart": 1990
   },
   {
@@ -5401,8 +5401,8 @@
       2641
     ],
     "region": "EMR",
-    "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalityYear": 2022,
+    "mortalitySource": "WHO Global Hepatitis Report 2024",
     "yearStart": 1990
   },
   {
@@ -5463,7 +5463,7 @@
     "description": "Highly contagious viral disease preventable by vaccination.",
     "papers": 34752,
     "trend": 5,
-    "mortality": 108000,
+    "mortality": 95000,
     "fundingGap": "high",
     "yearlyPapers": [
       509,
@@ -5503,8 +5503,8 @@
       899
     ],
     "region": "AFR",
-    "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalityYear": 2024,
+    "mortalitySource": "WHO measles estimates, 2024",
     "yearStart": 1990
   },
   {
@@ -5514,7 +5514,7 @@
     "description": "Severe hemorrhagic fever virus with high fatality rates in outbreaks.",
     "papers": 13359,
     "trend": -59,
-    "mortality": 32,
+    "mortality": 49,
     "fundingGap": "medium",
     "yearlyPapers": [
       19,
@@ -5555,7 +5555,7 @@
     ],
     "region": "AFR",
     "mortalityYear": 2025,
-    "mortalitySource": "WHO/CDC outbreak records 2025; episodic, 2014-16 averaged ~3,800/yr",
+    "mortalitySource": "WHO/CDC outbreak records 2025, DRC 45 plus Uganda 4; episodic, 2014-16 averaged ~3,800/yr",
     "yearStart": 1990
   },
   {
@@ -7288,8 +7288,8 @@
       2891
     ],
     "region": "EUR",
-    "mortalityYear": 2021,
-    "mortalitySource": "WHO Global Health Estimates 2021",
+    "mortalityYear": 2022,
+    "mortalitySource": "IARC GLOBOCAN 2022",
     "yearStart": 1990
   },
   {
