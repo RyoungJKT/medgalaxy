@@ -10,6 +10,8 @@ import {
   scrubRate,
   buildTourCaptions,
   midSentence,
+  HIV_SURGE_IN,
+  HIV_FADE_IN,
   tourPreempted,
   tourGate,
 } from '../src/components/TimeMachine';
@@ -239,6 +241,99 @@ describe('the staircase (addendum 1 section 2.2)', () => {
     // Before the first segment and after the last, nothing is travelling.
     expect(tourRateAt(tl.segs, -1)).toBe(0);
     expect(tourRateAt(tl.segs, tl.end)).toBe(0);
+  });
+});
+
+describe('leg choreography (addendum 1 section 4 item 3)', () => {
+  const tl = buildTourTimeline(data, data.nYears - 1);
+  const legs = tl.cues.filter((c) => c.kind === 'camera-leg');
+
+  it('puts a truck and a dolly under every staircase, and under every sweep', () => {
+    // Three multi-year legs (1990-1996, 1996-2019, 2021-2024) contribute a
+    // staircase cue each; the long one contributes a sweep cue as well.
+    expect(legs.length).toBe(4);
+    const sweeps = legs.filter((c) => c.deg === 9.0);
+    const stairs = legs.filter((c) => c.deg === 4.0);
+    expect(sweeps.length).toBe(1);
+    expect(stairs.length).toBe(3);
+    expect(sweeps[0].dolly).toBe(0.06);
+    expect(stairs.every((c) => c.dolly === 0.03)).toBe(true);
+  });
+
+  it('leaves the single-year legs alone: the detonation is its own gesture', () => {
+    // 2019->2020 and 2020->2021 are 650 ms legs with the detonation push-in and
+    // its weight already on them. Nothing here may sit on top of that.
+    const singles = tl.segs.filter((s) => s.kind === 'single');
+    expect(singles.length).toBe(2);
+    for (const sg of singles) {
+      expect(legs.some((c) => Math.abs(c.t - sg.t0) < 1e-9)).toBe(false);
+    }
+  });
+
+  it('opens each leg move on the frame the leg opens, and lands it on the pause', () => {
+    for (const c of legs) {
+      // Every leg cue coincides with the start of a travel segment.
+      expect(tl.segs.some((s) => Math.abs(s.t0 - c.t) < 1e-9)).toBe(true);
+      expect(c.dur).toBeGreaterThan(0);
+    }
+    // The long leg: 1.30 s of sweep, then the six stairs, and the two cues
+    // tile the leg exactly, so the dolly is released at the pause and nowhere
+    // else.
+    const legStart = tl.pauseAt[1] + tl.pauses[1].hold;
+    const onLeg = legs.filter((c) => c.t >= legStart - 1e-9 && c.t < tl.pauseAt[2]);
+    expect(onLeg.length).toBe(2);
+    expect(onLeg[0].deg).toBe(9.0);
+    expect(onLeg[0].dur).toBeCloseTo(1.30, 6);
+    expect(onLeg[1].t).toBeCloseTo(legStart + 1.30, 6);
+    expect(onLeg[1].deg).toBe(4.0);
+    expect(onLeg[0].dur + onLeg[1].dur).toBeCloseTo(tl.pauseAt[2] - legStart, 6);
+  });
+
+  it('never lands a leg move on top of a pause cue: the pause cue is always later', () => {
+    for (const c of legs) {
+      const pauseCues = tl.cues.filter(
+        (x) => (x.kind === 'camera-node' || x.kind === 'camera-home') && Math.abs(x.t - c.t) < 1e-9,
+      );
+      expect(pauseCues.length).toBe(0);
+    }
+    // ...and every pause that re-frames does so after its leg's move began.
+    for (const pi of [1, 2, 4, 5]) {
+      const cam = tl.cues.find(
+        (x) => (x.kind === 'camera-node' || x.kind === 'camera-home') &&
+          Math.abs(x.t - tl.pauseAt[pi]) < 1e-9,
+      );
+      expect(cam, `pause ${pi} keeps its own camera cue`).toBeTruthy();
+    }
+  });
+
+  it('adds no time to the tour: the choreography is a camera channel, not a beat', () => {
+    expect(tl.end).toBeCloseTo(30.30, 6);
+  });
+
+  it('is dropped entirely under reduced motion', () => {
+    const r = buildTourTimeline(data, data.nYears - 1, true);
+    expect(r.cues.filter((c) => c.kind === 'camera-leg').length).toBe(0);
+  });
+});
+
+describe('the HIV pause framing (carried note, waves 2 and 3)', () => {
+  it('deepens the surge and softens the fade by exactly the same factor', () => {
+    // The shipped pair was 0.80 then 0.62. The surge is the pause whose caption
+    // claims growth, so it takes the deeper push; the product is preserved, so
+    // the 2019 close-up is framed exactly where it always was.
+    expect(HIV_SURGE_IN).toBe(0.62);
+    expect(HIV_FADE_IN).toBe(0.80);
+    expect(HIV_SURGE_IN * HIV_FADE_IN).toBeCloseTo(0.80 * 0.62, 12);
+    expect(HIV_SURGE_IN).toBeLessThan(HIV_FADE_IN);
+  });
+
+  it('still puts both HIV pauses on the HIV node, and nothing else', () => {
+    const tl = buildTourTimeline(data, data.nYears - 1);
+    const hivCues = tl.cues.filter((c) => c.kind === 'camera-node' && c.node === 'hiv-aids');
+    expect(hivCues.length).toBe(2);
+    expect(hivCues.map((c) => c.factor)).toEqual([HIV_SURGE_IN, HIV_FADE_IN]);
+    expect(hivCues[0].t).toBeCloseTo(tl.pauseAt[1], 9);
+    expect(hivCues[1].t).toBeCloseTo(tl.pauseAt[2], 9);
   });
 });
 

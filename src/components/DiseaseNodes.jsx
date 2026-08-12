@@ -8,7 +8,7 @@ import { sceneRefs } from '../sceneRefs';
 import { TIER } from '../utils/tiers';
 import { useAttentionColors } from './AttentionMap';
 import { igniteWeights } from '../utils/igniteWeights';
-import { lagFactor, staggeredEase, springStepInto, DUR } from '../utils/motion';
+import { lagFactor, staggeredEase, springStepInto, DUR, AMBIENT } from '../utils/motion';
 import { ASM, fogRangeAt } from '../utils/assembly';
 import plasmaVert from '../shaders/plasma.vert.glsl?raw';
 import plasmaFrag from '../shaders/plasma.frag.glsl?raw';
@@ -141,13 +141,37 @@ export default function DiseaseNodes() {
   // computeLagFactors above), so this only needs to change when the disease
   // list itself changes, never mid-transition.
   const lag = useMemo(() => computeLagFactors(diseases), [diseases]);
+  // prefers-reduced-motion, read once on mount: the micro-breathe is ambient
+  // motion with no informational content, which is exactly what that preference
+  // asks to be spared.
+  const reducedMotion = useMemo(
+    () => typeof window !== 'undefined' && !!window.matchMedia &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+    [],
+  );
+
+  // ADDENDUM 1 section 4 item 4: the resting galaxy micro-breathe rides the
+  // same aPhase the shaders do, so the geometry's own attribute is built here
+  // and kept, rather than generated inside the memo and thrown away. `bFreq` is
+  // that phase mapped once onto 0.10-0.16 Hz — a per-node frequency, so the
+  // field never pulses as one mass, precomputed because the frame loop may not
+  // do division 153 times for an ambient channel that costs "literally zero".
+  const breathe = useMemo(() => {
+    const phases = new Float32Array(count);
+    const freq = new Float32Array(count);
+    const [lo, hi] = AMBIENT.node.hz;
+    for (let i = 0; i < count; i++) {
+      phases[i] = Math.random() * Math.PI * 2;
+      freq[i] = 2 * Math.PI * (lo + (hi - lo) * (phases[i] / (2 * Math.PI)));
+    }
+    return { phases, freq };
+  }, [count]);
 
   const geo = useMemo(() => {
     const g = new THREE.SphereGeometry(1, mobDevice ? 16 : 32, mobDevice ? 16 : 32);
-    const phases = new Float32Array(count);
+    const phases = breathe.phases;
     const catIds = new Float32Array(count);
     for (let i = 0; i < count; i++) {
-      phases[i] = Math.random() * Math.PI * 2;
       catIds[i] = CAT_INDEX[diseases[i].category] || 0;
     }
     const { ignite, ember } = igniteWeights(diseases);
@@ -165,7 +189,7 @@ export default function DiseaseNodes() {
     fa.setUsage(THREE.DynamicDrawUsage);
     g.setAttribute('aFlight', fa);
     return g;
-  }, [count, mobDevice, diseases]);
+  }, [count, mobDevice, diseases, breathe]);
 
   const fogUniforms = useMemo(() => ({
     fogColor: { value: new THREE.Color(0x000000) },
@@ -373,6 +397,25 @@ export default function DiseaseNodes() {
     const hoverIdx = store.hoveredNode ? store.hoveredNode.index : -1;
     const flightAttr = mesh.geometry.getAttribute('aFlight');
     const baseCol = baseColRef.current;
+
+    // ── The resting galaxy micro-breathe (ADDENDUM 1 section 4 item 4) ───────
+    // +-0.8 percent of radius at a per-node 0.10-0.16 Hz, off the aPhase the
+    // geometry already carries, written into the matrix compose that already
+    // runs every frame. It is off wherever scale is carrying a meaning:
+    //   - the Time Machine (year deltas must not be muddied by ambient scale,
+    //     and that includes the exit blend, which is still year radius),
+    //   - beat 2, where every radius on screen is the papers-to-deaths morph,
+    //   - beat 0, where the flight owns radius outright,
+    //   - the selected node, whose size is being read against a panel,
+    // and on LOW, which has no cycles to spare for it.
+    const bAmp = mobDevice || reducedMotion ? 0 : AMBIENT.node.amp;
+    const bOn = bAmp > 0 && !asmActive && !(tm && (tm.active || tm.exit > 0)) &&
+      !(store.overtureActive && store.overtureBeat === 2);
+    const bSel = store.selectedNode ? store.selectedNode.index : -1;
+    const bT = state.clock.getElapsedTime();
+    const bPhase = breathe.phases;
+    const bFreq = breathe.freq;
+
     for (let i = 0; i < count; i++) {
       if (asmActive) {
         _v3.set(asm.pos[i * 3], asm.pos[i * 3 + 1], asm.pos[i * 3 + 2]);
@@ -392,7 +435,9 @@ export default function DiseaseNodes() {
       hoverScaleRef.current[i] = _spring[0];
       hoverVelRef.current[i] = _spring[1];
       const is = (asmActive ? asm.radius[i] : (scales ? scales[i] : 1)) * _spring[0];
-      const rr = r * is;
+      const rr = bOn && i !== bSel
+        ? r * is * (1 + bAmp * Math.sin(bFreq[i] * bT + bPhase[i]))
+        : r * is;
       // The comet: local +Y is the travel axis (that is what _q4 was built
       // from), so the stretch goes on Y alone. It is exactly 1.000 by p = 0.92
       // and for every landed node, which makes this a sphere again before any

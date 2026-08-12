@@ -7,8 +7,14 @@ import useStore from '../store';
 import { sceneRefs } from '../sceneRefs';
 import { TIER } from '../utils/tiers';
 import { ASM, assemblySeat } from '../utils/assembly';
+import { cameraBreathe } from '../utils/motion';
 
 const PARALLAX_STRENGTH = 3.0;
+
+// Scratch for the breathing offset — one triple, reused every frame.
+const _br = [0, 0, 0];
+const _base = new THREE.Vector3();
+const _want = new THREE.Vector3();
 
 export default function CameraRig({ camDist }) {
   const controlsRef = useRef();
@@ -18,6 +24,20 @@ export default function CameraRig({ camDist }) {
   const mouseRef = useRef({ x: 0, y: 0 });
   const parallaxOffset = useRef({ x: 0, y: 0 });
   const introStarted = useRef(false);
+  // ADDENDUM 1 section 4 item 1: camera breathing. `applied` is this rig's own
+  // additive offset, held so it can be removed again before the next one is
+  // computed (the cursor parallax two blocks down uses the same bookkeeping).
+  // `killed` is the handover's rule: the viewer taking the controls ends it for
+  // the session, so the rig never breathes against a hand on the mouse.
+  const breathe = useRef({ applied: new THREE.Vector3(), killed: false });
+  // prefers-reduced-motion, read once on mount (the same pattern OvertureSequence
+  // and TimeMachine use). The film's reduced path replaces every camera move
+  // with stillness; an ambient drift underneath it would be the one motion that
+  // preference could not turn off, so the breathing is simply not armed.
+  const reducedRef = useRef(
+    typeof window !== 'undefined' && !!window.matchMedia &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  );
 
   // Expose camera to sceneRefs for NodeLabels projection
   useEffect(() => {
@@ -220,8 +240,8 @@ export default function CameraRig({ camDist }) {
     return () => window.removeEventListener('mousemove', onMove);
   }, []);
 
-  useFrame((state) => {
-    const { introPhase, roulettePhase, supernovaPhase, overtureActive } = useStore.getState();
+  useFrame((state, delta) => {
+    const { introPhase, roulettePhase, supernovaPhase, overtureActive, overtureBeat } = useStore.getState();
     const handover = sceneRefs.handover;
 
     if (controlsRef.current) {
@@ -247,6 +267,55 @@ export default function CameraRig({ camDist }) {
       }
     }
 
+    // ── Camera breathing (ADDENDUM 1 section 4 item 1) ──────────────────────
+    // The loudest tell of a canned demo is a perfectly static held frame, and
+    // this piece has eleven of them. An additive offset applied after all
+    // tweens: azimuth +-0.45 deg at 0.055 Hz, elevation +-0.25 deg at
+    // 0.083 Hz, radius +-0.6 percent at 0.037 Hz, about whatever the controls
+    // are currently looking at.
+    //
+    // Three stillnesses are directed and must stay absolute (A4): beat 2's
+    // ignition hold, the detonation push-in, and any active fly. The last two
+    // are the same test — every camera move in this piece is a gsap tween on
+    // camera.position — and a tween owns the position outright, so the rig
+    // simply forgets its offset rather than subtracting it out from under one.
+    // Off is instant; on eases back over ~0.5 s, because an offset re-applied
+    // whole on the frame a fly lands would be a visible step.
+    {
+      const b = breathe.current;
+      const controls = controlsRef.current;
+      const flying = gsap.isTweening(camera.position);
+      const directed = b.killed || reducedRef.current || introPhase < 5 ||
+        (overtureActive && overtureBeat === 2);
+      if (flying) {
+        b.applied.set(0, 0, 0);
+        b.gain = 0;
+      } else if (directed || !controls) {
+        if (b.applied.lengthSq() > 0) {
+          camera.position.sub(b.applied);
+          b.applied.set(0, 0, 0);
+        }
+        b.gain = 0;
+      } else {
+        camera.position.sub(b.applied);
+        b.applied.set(0, 0, 0);
+        b.gain = Math.min(1, (b.gain || 0) + delta * 2);
+        _base.copy(camera.position).sub(controls.target);
+        const r = _base.length();
+        if (r > 1e-6) {
+          cameraBreathe(state.clock.getElapsedTime(), _br);
+          const g = b.gain;
+          const az = Math.atan2(_base.x, _base.z) + _br[0] * g;
+          const el = Math.asin(Math.max(-1, Math.min(1, _base.y / r))) + _br[1] * g;
+          const rr = r * (1 + _br[2] * g);
+          const c = Math.cos(el);
+          _want.set(rr * c * Math.sin(az), rr * Math.sin(el), rr * c * Math.cos(az)).add(controls.target);
+          b.applied.copy(_want).sub(camera.position);
+          camera.position.add(b.applied);
+        }
+      }
+    }
+
     // Subtle cursor parallax (desktop only, after intro and after the film)
     if (TIER !== 'LOW' && introPhase >= 5 && !overtureActive) {
       const targetX = mouseRef.current.x * PARALLAX_STRENGTH;
@@ -261,11 +330,17 @@ export default function CameraRig({ camDist }) {
     }
   });
 
-  // The user taking the controls ends the handover for good.
+  // The user taking the controls ends the handover for good — and, on the same
+  // rule, the breathing: the rig never adds motion under a hand on the mouse.
+  // The offset is left where it stands rather than snapped out, which is what
+  // makes this a stop rather than a jump.
   const onStart = () => {
     idleFrames.current = 0;
     sceneRefs.handover.cancelled = true;
     sceneRefs.handover.speed = null;
+    breathe.current.killed = true;
+    breathe.current.applied.set(0, 0, 0);
+    breathe.current.gain = 0;
     if (controlsRef.current) controlsRef.current.autoRotateSpeed = 0.3;
   };
 

@@ -164,7 +164,16 @@ export default function App() {
           // crossed it, which is precisely what "nothing appears from nothing"
           // forbids. It also un-clips the background star shell, which lives at
           // 4.0 to 5.2 R0 from the origin and had always been partly cut.
-          far: camDist * 8,
+          //
+          // 9.6 R0, not 8 (ADDENDUM 1 section 4 item 2). The star field is now
+          // three shells and the outermost reaches 6.57 R0 from the origin, so
+          // from beat 0's 2.9 R0 seat its far hemisphere needs 9.47 R0 of
+          // depth; at 8 R0 thirty-odd of its hundred points were cut, and a
+          // backdrop with a hole in it during the assembly is the one frame
+          // where the eye has nothing else to look at. Near stays 1, so the
+          // depth ratio moves 12,000:1 to 14,400:1 — no measurable change to
+          // the precision the nodes (all inside 2 R0) actually use.
+          far: camDist * 9.6,
           position: [0, 0, camDist],
         }}
         gl={{

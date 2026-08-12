@@ -276,3 +276,82 @@ export function exitDelay(t0, atMs, now) {
   const remaining = atMs - (clock - t0);
   return remaining > 0 ? remaining : 0;
 }
+
+// ── Ambient micro-motion (ADDENDUM 1 section 4, amendment A4) ────────────────
+// Four continuous oscillators, exempt from the duration table because they are
+// not transitions. They are governed by amplitude and frequency, and by one
+// rule: no ambient channel exceeds 1.0 percent of the quantity it modulates,
+// and every one of them stops the instant a directed stillness is called
+// (beat 2's ignition hold, the detonation push-in, any active fly).
+//
+// The frequencies inside each channel are deliberately incommensurate, so the
+// sum never visibly repeats: 0.055 / 0.083 / 0.037 Hz have a common period
+// measured in hours.
+export const AMBIENT = {
+  // Item 1: camera breathing on every hold. Degrees and a radius fraction,
+  // applied as an additive offset after all tweens — exactly like the cursor
+  // parallax, and killed by OrbitControls.onStart exactly like the handover.
+  camera: { azDeg: 0.45, azHz: 0.055, elDeg: 0.25, elHz: 0.083, radFrac: 0.006, radHz: 0.037 },
+  // Item 2: the three star shells. Fractions of CFG.particles, multiples of
+  // camDist, rad/s, point sizes, colors — near shell first.
+  stars: {
+    split: [0.30, 0.45, 0.25],
+    radii: [2.8, 4.0, 6.2],
+    rates: [0.00090, 0.00040, 0.00015],
+    sizes: [2.2, 1.5, 1.0],
+    colors: [0x3b4a63, 0x334155, 0x232f42],
+    jitter: 0.06,          // +-6% shell thickness, so a shell is not a shrink-wrap
+    twinkle: [0.55, 1.0],  // HIGH only, through the points shader
+  },
+  // Item 3: tour leg choreography. Truck in degrees of azimuth about the
+  // current framing, dolly as a fraction of the current distance to it.
+  leg: { stairDeg: 4.0, stairDolly: 0.03, sweepDeg: 9.0, sweepDolly: 0.06 },
+  // Item 4: the resting galaxy micro-breathe. +-0.8 percent of radius, at a
+  // per-node frequency between 0.10 and 0.16 Hz taken off the aPhase attribute
+  // the geometry already carries.
+  node: { amp: 0.008, hz: [0.10, 0.16] },
+  // Item 5: edge shimmer during the film. The global opacity breathe every
+  // tier gets; HIGH and MEDIUM additionally get the per-vertex phase wave.
+  edge: { lo: 0.06, hi: 0.13, hz: 0.2, waveSpeed: 0.55, waveLength: 0.9 },
+};
+
+/**
+ * The camera's ambient offset at time `t`, in (azimuth radians, elevation
+ * radians, radius fraction). Pure, so the amplitudes are testable without a
+ * scene and A4's one percent ceiling is an assertion rather than a promise.
+ * @param {number} t seconds on any monotonic clock
+ * @param {[number,number,number]} [out] scratch triple
+ */
+export function cameraBreathe(t, out = [0, 0, 0]) {
+  const c = AMBIENT.camera;
+  out[0] = ((c.azDeg * Math.PI) / 180) * Math.sin(2 * Math.PI * c.azHz * t);
+  out[1] = ((c.elDeg * Math.PI) / 180) * Math.sin(2 * Math.PI * c.elHz * t + 1.7);
+  out[2] = c.radFrac * Math.sin(2 * Math.PI * c.radHz * t + 3.9);
+  return out;
+}
+
+/**
+ * One node's micro-breathe multiplier at time `t`. The node's own `phase`
+ * (0..2pi, the aPhase attribute) sets both where in the cycle it sits and how
+ * fast it breathes, so no two neighbours pulse together and the field reads as
+ * alive rather than as one throbbing mass. Exactly within 1 +- amp, always.
+ * @param {number} t seconds
+ * @param {number} phase the node's aPhase, 0..2pi
+ */
+export function nodeBreathe(t, phase) {
+  const n = AMBIENT.node;
+  const f = n.hz[0] + (n.hz[1] - n.hz[0]) * (phase / (2 * Math.PI));
+  return 1 + n.amp * Math.sin(2 * Math.PI * f * t + phase);
+}
+
+/**
+ * The film's global edge alpha at time `t`: 0.06 to 0.13 at 0.2 Hz, scaled by
+ * how much of the film's shimmer is live (0 outside beats 0 and 1).
+ * @param {number} t seconds
+ * @param {number} amount 0..1
+ */
+export function edgeBreathe(t, amount) {
+  const e = AMBIENT.edge;
+  const w = 0.5 + 0.5 * Math.sin(2 * Math.PI * e.hz * t);
+  return (e.lo + (e.hi - e.lo) * w) * amount;
+}

@@ -11,7 +11,7 @@ import { fireRipple } from './SelectionRipple';
 import {
   DUR, springStep, staggeredArrival, settleScale,
   TM_EXIT, TM_EXIT_FAST, TM_EXIT_REDUCED, TM_ENTER_DUR,
-  TM_STAIR, TM_SETTLE, TM_SHRINK_INK, TM_MICRO,
+  TM_STAIR, TM_SETTLE, TM_SHRINK_INK, TM_MICRO, AMBIENT,
 } from '../utils/motion';
 import { TIER } from '../utils/tiers';
 import { CC } from '../utils/constants';
@@ -85,6 +85,12 @@ export const FINALE_SPLIT = 1.9;
 // The 2020 camera move: a micro push-in onto the node that detonates, 15
 // percent closer, so the shockwave leaves frame center rather than a corner.
 const PUSH_IN = 0.85;
+// The two HIV pauses' push-ins. Exported so the tour test can assert the one
+// invariant that matters about the pair: their product is unchanged from the
+// shipped 0.80 x 0.62, so deepening the surge did not quietly re-frame the
+// fade. See the cue site in buildTourTimeline for why they swapped.
+export const HIV_SURGE_IN = 0.62;
+export const HIV_FADE_IN = 0.80;
 const COVID_EMBER = '#ff4d1a';
 // The finale's isolation reaches the halos too: HighlightSystem can only dim
 // instance colors, and an undimmed additive glow would keep 152 diseases
@@ -180,7 +186,7 @@ export function buildTourPauses(data) {
  *
  * @returns {number} the clock time the leg ends at
  */
-function pushLeg(segs, t0, from, to, reduced, detonation) {
+function pushLeg(segs, t0, from, to, reduced, detonation, cues) {
   const steps = Math.abs(to - from);
   if (steps === 0) return t0;
   if (reduced) {
@@ -205,15 +211,28 @@ function pushLeg(segs, t0, from, to, reduced, detonation) {
     // A rush of years, then an arrival that ticks.
     const swept = steps - TM_STAIR.sweepTail;
     const mid = from + dir * swept;
+    // ADDENDUM 1 section 4 item 3: the sweep gets the bigger move (9 degrees of
+    // truck, 6 percent of dolly) so the fast-forward has motion under it rather
+    // than being a pure numeral change.
+    if (cues) cues.push({ t, kind: 'camera-leg', deg: AMBIENT.leg.sweepDeg, dolly: AMBIENT.leg.sweepDolly, dur: SWEEP });
     segs.push({ t0: t, t1: t + SWEEP, from, to: mid, ease: easeSineInOut, kind: 'sweep', rate: swept / SWEEP });
     t += SWEEP;
     y = mid;
   }
+  // The staircase's own move: 4 degrees of truck and 3 percent of dolly across
+  // the whole run of stairs, both sine.inOut, released at the pause (the
+  // pause's own camera cue fires on the frame the last stair lands and
+  // overwrites this tween, which is what "the existing per-pause cues are
+  // unchanged and still win" means in code).
+  const stairT0 = t;
   while (y !== to) {
     const next = y + dir;
     segs.push({ t0: t, t1: t + STAIR_TRAVEL, from: y, to: next, ease: easeExpoOut, kind: 'stair', rate: 1 / STAIR_YEAR });
     t += STAIR_YEAR; // travel, then the dwell that makes the year legible
     y = next;
+  }
+  if (cues && t > stairT0) {
+    cues.push({ t: stairT0, kind: 'camera-leg', deg: AMBIENT.leg.stairDeg, dolly: AMBIENT.leg.stairDolly, dur: t - stairT0 });
   }
   return t;
 }
@@ -282,7 +301,9 @@ export function buildTourTimeline(data, startYearIdx, reduced = false) {
       // The push-in rides the year-step itself, so the move and the eruption
       // are one gesture rather than two.
       if (detonation) cues.push({ t, kind: 'camera-node', node: 'covid-19', factor: PUSH_IN, dur: reduced ? 0 : STEP, effect: true });
-      t = pushLeg(segs, t, from, p.yearIdx, reduced, detonation);
+      // Reduced motion keeps its held frame: no leg choreography, same as every
+      // other camera move on that path.
+      t = pushLeg(segs, t, from, p.yearIdx, reduced, detonation, reduced ? null : cues);
     }
     pauseAt.push(t);
     if (p.kind === 'finale') {
@@ -300,8 +321,17 @@ export function buildTourTimeline(data, startYearIdx, reduced = false) {
       cues.push({ t, kind: 'caption', caption: p.kind });
       // The two HIV pauses are the one place the camera leaves the overview:
       // it drifts onto the node the caption is about, then deeper for the fade.
-      if (p.kind === 'hivSurge') cues.push({ t, kind: 'camera-node', node: 'hiv-aids', factor: 0.80, effect: true });
-      if (p.kind === 'hivFade') cues.push({ t, kind: 'camera-node', node: 'hiv-aids', factor: 0.62, effect: true });
+      //
+      // The two factors are swapped from the shipped pair (0.80 then 0.62), and
+      // this is the wave-2/3 carried note answered: the tour framed HIV at
+      // 12.7px at the 1996 pause, on a caption whose whole claim is that the
+      // node grew. The curve delivers the growth (1.74x across this leg, 2.63x
+      // to its peak); the camera has to let it be seen. Deepening the *surge*
+      // to 0.62 lifts that pause to ~17px, and handing the fade the shallower
+      // 0.80 keeps the product exactly what it was (0.62 x 0.80 = 0.80 x 0.62),
+      // so the 2019 close-up — which was never the defect — is unmoved.
+      if (p.kind === 'hivSurge') cues.push({ t, kind: 'camera-node', node: 'hiv-aids', factor: HIV_SURGE_IN, effect: true });
+      if (p.kind === 'hivFade') cues.push({ t, kind: 'camera-node', node: 'hiv-aids', factor: HIV_FADE_IN, effect: true });
       if (p.kind === 'detonation') cues.push({ t, kind: 'shockwave', effect: true });
       // The peak's own recenter (review gate round 2, P2 #7). By 2021 the
       // camera has inherited three compounded push-ins (HIV 0.80, HIV again
@@ -883,6 +913,34 @@ export default function TimeMachine({ camDist = 900 }) {
         // fly-home.
         s.setFlyTarget({ position: [0, 0, 0], radius: null, duration: reduced ? 0 : REWIND, ease: 'sine.inOut' });
         break;
+      case 'camera-leg': {
+        // ADDENDUM 1 section 4 item 3. A truck and a dolly about whatever the
+        // controls are currently looking at, so a leg that leaves a pause
+        // framed on HIV orbits HIV rather than snapping the target home. Both
+        // are read off the live camera at the moment the leg opens, which is
+        // what makes this one extra flyTarget per leg and no state at all.
+        const cam = sceneRefs.camera;
+        const controls = sceneRefs.controls;
+        if (!cam) break;
+        const tx = controls ? controls.target.x : 0;
+        const ty = controls ? controls.target.y : 0;
+        const tz = controls ? controls.target.z : 0;
+        const ox = cam.position.x - tx, oy = cam.position.y - ty, oz = cam.position.z - tz;
+        const a = (cue.deg * Math.PI) / 180;
+        const k = 1 - cue.dolly;
+        const ca = Math.cos(a), sa = Math.sin(a);
+        s.setFlyTarget({
+          position: [tx, ty, tz],
+          cameraPos: [
+            tx + (ox * ca - oz * sa) * k,
+            ty + oy * k,
+            tz + (ox * sa + oz * ca) * k,
+          ],
+          duration: cue.dur,
+          ease: 'sine.inOut',
+        });
+        break;
+      }
       case 'camera-node': {
         const idx = s.idMap[cue.node];
         const cam = sceneRefs.camera;
@@ -1367,6 +1425,11 @@ export default function TimeMachine({ camDist = 900 }) {
           const c = r.tl.cues[k];
           if (c.t > target) break;
           r.fired.add(k);
+          // A leg's truck and dolly are relative to the camera at the moment
+          // the leg opened, so they mean nothing replayed from a seeked seat:
+          // a seeked frame is defined by its pause's own cue, which is always
+          // the later one. Marked fired, never run.
+          if (c.kind === 'camera-leg') continue;
           if (c.kind === 'camera-home' || c.kind === 'camera-node') { lastCam = c; continue; }
           if (c.effect && target - c.t > 0.4) continue;
           runCue(c, r.caps, reducedRef.current);

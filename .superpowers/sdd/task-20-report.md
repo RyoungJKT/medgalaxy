@@ -1872,3 +1872,220 @@ everything else is load-bearing.
 5. **`docs/verify` now holds 16 `w3-*`/`w3m-*` shots** plus three brightened
    crops. That directory is gitignored, as in waves 1 and 2;
    `tools/verify-wave3.mjs` is committed and regenerates any of them.
+
+---
+
+# Round 7, wave 4: more motion, everywhere it is cheap
+
+ADDENDUM 1 section 4 (all five ranked ambient upgrades), amendment A4,
+delta-list item 4 (nothing on screen is ever perfectly still) and delta-list
+item 10 (skip integrity under all the new motion), plus the two carried notes
+from waves 2 and 3. Waves 1-3 landed first: the film ends at home, the tour
+ratchets with accents, the galaxy assembles itself.
+
+## What landed
+
+**1. Camera breathing on every hold** (`CameraRig.jsx`, `utils/motion.js`).
+An additive offset applied after all tweens, about whatever the controls are
+looking at: azimuth +-0.45 deg at 0.055 Hz, elevation +-0.25 deg at 0.083 Hz,
+radius +-0.6 percent at 0.037 Hz. In millihertz the three are 55, 83 and 37 —
+pairwise coprime, so the pattern's exact repeat period is 1000 s against a 56 s
+piece and it cannot loop inside a viewing.
+
+The bookkeeping is the cursor parallax's, one block down in the same frame loop:
+hold the offset that was applied, remove it, compute the next, add it.
+`OrbitControls.onStart` kills it for the session exactly as it kills the
+handover, and the offset is left where it stands rather than snapped out, which
+is what makes that a stop rather than a jump.
+
+Three stillnesses are directed and stay absolute (A4): beat 2's ignition hold,
+the detonation push-in, and any active fly. The last two are one test —
+`gsap.isTweening(camera.position)` — because every camera move in this piece is
+a gsap tween on that object, and a tween owns the position outright, so the rig
+forgets its offset rather than subtracting it out from under one. Off is
+instant; on eases back over ~0.5 s, since an offset re-applied whole on the
+frame a fly lands would be a visible step.
+
+**2. Star parallax, three shells** (`BackgroundParticles.jsx`). `CFG.particles`
+split 0.30 / 0.45 / 0.25 into 120 / 180 / 100 points at 2.8 / 4.0 / 6.2 times
+`camDist` (+-6 percent of shell thickness, so a shell is not a shrink-wrap),
+turning at 0.00090 / 0.00040 / 0.00015 rad/s off the frame delta so the parallax
+is the same on a 60 Hz and a 120 Hz display; sizes 2.2 / 1.5 / 1.0, colors
+`#3b4a63` / `#334155` / `#232f42`. HIGH gets a per-point twinkle through a small
+points shader whose size attenuation reproduces `pointsMaterial`'s own
+(`size * (scale / -mvPosition.z)`), so a tier switch is not a size change;
+MEDIUM keeps `pointsMaterial` and gets parallax only; LOW's budget is 0 and the
+component returns null. Beat 0's dust settle still rides the parent group's
+scale, so it moves all three shells as one volume.
+
+**3. Tour leg choreography** (`TimeMachine.jsx`). One `camera-leg` cue per leg,
+executed as one extra `flyTarget`: 4.0 degrees of truck and 3 percent of dolly
+across a staircase, 9.0 degrees and 6 percent across a sweep, both sine.inOut,
+both about the controls' current target rather than the origin — so a leg that
+leaves a pause framed on HIV orbits HIV instead of snapping the target home. The
+dolly is released at the pause because the pause's own camera cue fires on the
+frame the last stair lands and overwrites the tween; that is what "the existing
+per-pause cues are unchanged and still win" means in code. Single-year legs
+(2019-2020, 2020-2021) get nothing: the detonation is its own gesture. A seek
+never replays a leg cue (it is relative to a camera that no longer exists);
+reduced motion never builds one.
+
+**4. Resting galaxy micro-breathe** (`DiseaseNodes.jsx`). +-0.8 percent of
+radius at a per-node frequency between 0.10 and 0.16 Hz, read off the `aPhase`
+attribute the geometry already carries, applied as one multiply inside the
+matrix compose that already runs every frame. Off wherever scale is carrying a
+meaning: the Time Machine (including its exit blend, which is still year
+radius), beat 2 (where every radius is the morph), beat 0 (where the flight owns
+radius), and the selected node. Off on LOW and under reduced motion.
+
+**5. Edge shimmer during the film** (`EdgeNetwork.jsx`, `edge.vert.glsl`,
+`edge.frag.glsl`). A global opacity breathe from 0.06 to 0.13 at 0.2 Hz, film
+only, with a per-vertex phase wave on HIGH and MEDIUM travelling outward from
+the galactic centre (`vRad = length(position) / uR0`, `uR0` measured off the
+layout's own extent on the first frame that has positions). The film alpha is a
+floor under the hover neighborhood's alpha and never a lift on it — `max()`, not
+`+` — so the existing 0.1-to-0.35 rise is untouched. It eases out with beat 2's
+palette rather than cutting, and at rest it is exactly 0.
+
+## The two carried notes, answered
+
+**(a) The HIV pause now frames its own growth.** The two HIV push-in factors are
+swapped: the surge takes 0.62 and the fade takes 0.80, where the shipped pair
+was 0.80 then 0.62. The surge is the pause whose caption claims growth, so it
+takes the deeper push; the product is preserved exactly
+(0.62 x 0.80 = 0.80 x 0.62), so the 2019 close-up, which was never the defect,
+is framed where it always was. Measured on the **played** tour, not a seek —
+a pause's framing is the sum of every leg dolly and every earlier push-in the
+camera inherited on the way there, and a seek replays only the last camera cue:
+
+| | before | after |
+|---|---|---|
+| HIV at the 1996 pause | **12.7px** (camera 0.45 R0, 902 units out) | **17.0px** (camera 0.32 R0, 673 units out) |
+| HIV at the 1990 pause, where the leg starts | 4.3px | 4.3px |
+| HIV at the 2019 pause | 56.6px | 69.2px |
+
+So across the 1990-to-1996 leg the node goes 4.3px to 17.0px on screen while the
+data grows 1.74x: the camera stops hiding the curve. Judged honestly on
+`w4-hiv-pause-1.png`, HIV is now a legible teal sphere under its own label with
+the field still readable around it, where before it was a 4px dot under a
+caption claiming it had climbed. It is still not a large node — the 1996 galaxy
+is genuinely small — but the growth reads.
+
+**(b) Ghost shells at tour framing.** No shell code changed, as instructed. The
+closer tour camera from (a) plus the per-leg 3 percent dolly are the whole
+answer: the 1996 pause is 25 percent closer than it was, which is 25 percent
+more shell.
+
+## Two disclosed deviations
+
+1. **The far plane moved again, `camDist * 8` to `camDist * 9.6`** (`App.jsx`).
+   Wave 3 raised it to 8 for the spawn shell; the outermost star shell reaches
+   6.57 R0 from the origin, so from beat 0's 2.9 R0 seat its far hemisphere
+   needs 9.47 R0 of depth. At 8 R0 part of that shell was cut, and a backdrop
+   with a hole in it during the assembly is the one frame where the eye has
+   nothing else to look at. `near` stays 1, so the depth ratio moves 12,000:1 to
+   14,400:1 — no measurable change to the precision the nodes, all inside 2 R0,
+   actually use. Harness-confirmed: 0 of 400 stars beyond the plane from the
+   deepest seat.
+
+2. **Camera breathing and the node micro-breathe are off under
+   `prefers-reduced-motion`.** Section 4 does not name reduced motion, but the
+   film's reduced path replaces every camera move with stillness, and an ambient
+   drift underneath it would be the one motion that preference could not turn
+   off. Star rotation and edge shimmer stay: the star field already rotated
+   under reduced motion before this wave, and the shimmer is an opacity channel,
+   not a move. Verified: camera delta exactly 0 across a reduced held frame,
+   node scale drift exactly 0 percent at rest, edge alpha 0.
+
+## Verification
+
+`npx vitest run`: **301 passed** (275 before this wave; +18 in a new
+`tests/ambient.test.js`, +8 in `tests/timeMachineTour.test.js`).
+`npx vite build`: green. New harnesses: `tools/verify-wave4.mjs` (tasks
+`breathe`, `stars`, `hiv`, `microbreathe`, `shimmer`, `fps`) and
+`tools/verify-fuzz.mjs`.
+
+**delta-4, camera breathing** (`verify-wave4.mjs breathe`):
+- 2020 pause, played, two shots 1.5 s apart: **0.541 percent of R0** — inside
+  the (0.2, 1.0) band. PASS.
+- The same pause frozen with the rest rotation zeroed, three consecutive 1.5 s
+  gaps: 0.182 / 0.218 / 0.319 percent. Reported as a diagnostic, not the
+  acceptance: with every other channel removed what is left is three
+  incommensurate sinusoids, and a window straddling a common turning point reads
+  lower than one that does not.
+- Beat 2's ignition hold, 1.5 s apart: **|delta| = 0 world units, exactly**.
+  PASS.
+
+**Star shells** (`stars`): 120 / 180 / 100 points at 2.63-2.96, 3.76-4.24 and
+5.84-6.57 R0, sizes 2.2 / 1.5 / 1.0, `ShaderMaterial` (the twinkle) on HIGH;
+0 of 400 stars beyond the 9.60 R0 far plane from the 2.85 R0 assembly seat, and
+7.74 R0 furthest from the rest seat. Across a 10 degree orbit the median screen
+travel per shell is **67.4 / 82.6 / 96.4 px**, monotone in shell radius, near-to-
+far separation **1.43x**. The sign is the opposite of walk-past parallax because
+the camera orbits the origin rather than translating: a shell at infinity would
+sweep the full 10 degrees of view (150px) and the shell the camera orbits inside
+sweeps least. Three distinct rates is the point. `--mobile`: 0 shells, LOW's
+budget is 0 and stays 0.
+
+**Micro-breathe** (`microbreathe`, at the real home screen 60 s in, not the
+22 s window before the tour arms): 146 of 153 nodes changed scale across 3 s;
+largest change **1.609 percent** trough-to-peak against a ceiling of
+2A/(1-A) = 1.613 percent, i.e. an amplitude of **0.798 percent of radius**.
+Inside the Time Machine, worst scale drift across 1.5 s at a held pause:
+**0.0000 percent**.
+
+**Edge shimmer** (`shimmer`): film alpha over a full 6 s sample runs
+**0.060 to 0.130**, both ends of the boarded band, at 0.2 Hz; per-vertex wave
+uniform 1 on HIGH; at rest, after `overtureDone`, alpha is exactly **0**.
+`w4-shimmer-film.png` and `-b.png` are two frames of the same frozen beat-1
+moment 1.25 s apart: the net is visibly lit differently in each.
+
+**FPS** (`fps`, one linear pass, no seeks): desktop HIGH **120 / 120 / 120** fps
+(film / tour / rest) headless and **120 / 120 / 120** headed; `--mobile` LOW
+**119 / 120 / 120**. Same caveat waves 2 and 3 filed: this machine's ceiling is
+120 and neither headless nor headed Chrome here is a phone. What the numbers
+establish is that no ambient channel introduced a stall.
+
+**FUZZ, delta-10** (`tools/verify-fuzz.mjs`, 40 clicks evenly spaced 0.0 to
+56.1 s, each on its own page load, two browsers): **40/40 green, 0 retries.**
+Structural group, three seconds after each click: 40/40 (no node in flight, no
+filament left drawn, every quaternion identity and every scale isotropic,
+`tm.exit` in {0, 1}, no live ghost, 153 of 153 instances present, no page
+errors). Narrative group, once the sequence the click landed in finished: 40/40
+(chrome up, thesis caption seen at least once). Terminal states: 14 at
+`tmPhase: 'idle'` (the piece ended at home), 21 at `'scrub'` (clicks during the
+tour, which is the documented exception — an interrupted tour is not a park),
+5 with the tour still playing at the moment the narrative pair came true.
+
+**Regression** (`verify-wave3.mjs delta1`): 60 s untouched still ends at home —
+`tmPhase: 'idle'`, `tmFocusIdx: -1`, no caption, papers sizing, chrome up,
+`autoRotate` true at 0.3, 0 ghosts, the assembly driver dead, camera at
+**0.999 R0** (the breathing does not move it outside the 3 percent gate).
+
+## Concerns
+
+1. **The edge shimmer is a real change to beat 1's look.** The whole 736-edge
+   net is now faintly visible during the film where before it was invisible
+   until hover. It is at the addendum's own numbers (0.06 to 0.13) and it reads
+   as structure rather than noise, but it is the one item in this wave a viewer
+   would notice as *new content* rather than as life. The knob is
+   `AMBIENT.edge.lo`/`hi`.
+2. **Camera breathing is killed permanently by the first `onStart`**, per "killed
+   by `OrbitControls.onStart` exactly like the handover". A viewer who orbits
+   once never sees breathing again in that session, including at every later
+   idle. That is literal to the spec and it is also the safe reading (never add
+   motion under a hand on the mouse), but if the intent was "pause while the
+   viewer drives", the change is one line.
+3. **The leg dollies compound with the pause push-ins.** The 2019 HIV pause is
+   about 18 percent closer than before this wave (56.6px to 69.2px), from the
+   sweep's 6 percent plus the staircase's 3 percent plus the deeper surge it now
+   inherits. It still frames well; a sixth pause, or a longer tour, would want
+   this watched.
+4. **`verify-fuzz.mjs` cannot be trusted while the tree is being edited.** Vite
+   full-reloads every open page when any project file changes, which resets the
+   fuzz recorder mid-assertion and reads as "chrome never came up". Two earlier
+   passes scored 12/40 and 38/40 for exactly that reason. The harness now stamps
+   a session id and treats a lost document as an infrastructure event to retry,
+   but the operational rule is simpler: do not touch the tree while it runs.
+5. **`docs/verify` now holds 13 more `w4-*`/`w4m-*` shots.** That directory is
+   gitignored, as in waves 1-3; `tools/verify-wave4.mjs` regenerates any of them.
