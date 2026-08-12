@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { DUR, EASE, springStep, lagFactor, staggeredEase } from '../src/utils/motion';
+import {
+  DUR, EASE, springStep, lagFactor, staggeredEase,
+  arrival, staggeredArrival,
+} from '../src/utils/motion';
 
 describe('motion tokens', () => {
   it('DUR carries exactly the sanctioned time constants (DIRECTION section 4)', () => {
@@ -91,5 +94,94 @@ describe('staggeredEase (per-node progress from a global 0..1 morph clock)', () 
 
   it('treats a missing lag as no lag at all (L=1, the plain global curve)', () => {
     expect(staggeredEase(0.5, null)).toBeCloseTo(staggeredEase(0.5, 1), 10);
+  });
+});
+
+// ─── Addendum 1, amendment A1: the world spring's analytic form ──────────────
+
+describe('arrival (ADDENDUM 1 amendment A1)', () => {
+  // The addendum's formula, transcribed once here so the implementation is
+  // checked against the document rather than against itself.
+  const spec = (x) => (1 - Math.exp(-5 * x) * (1 + 5 * x)) / (1 - 6 * Math.exp(-5));
+
+  it('lands on both endpoints exactly, not approximately', () => {
+    // Load-bearing: the entry and exit blends lerp between the per-year radius
+    // and the settled papers/mortality radius, so an arrival that returned
+    // 0.999 at x=1 would leave every node a hair off the mapping on the frame
+    // the blend ends.
+    expect(arrival(0)).toBe(0);
+    expect(arrival(1)).toBe(1);
+  });
+
+  it('matches the addendum formula across the domain', () => {
+    for (let i = 0; i <= 200; i++) {
+      const x = i / 200;
+      expect(arrival(x)).toBeCloseTo(spec(x), 12);
+    }
+  });
+
+  it('is strictly increasing', () => {
+    let prev = -Infinity;
+    for (let i = 0; i <= 1000; i++) {
+      const y = arrival(i / 1000);
+      expect(y).toBeGreaterThan(prev);
+      prev = y;
+    }
+  });
+
+  it('clamps outside [0,1], so a blend can never leave its endpoints', () => {
+    expect(arrival(-3)).toBe(0);
+    expect(arrival(-0.001)).toBe(0);
+    expect(arrival(1.4)).toBe(1);
+    for (let i = 0; i <= 100; i++) {
+      const y = arrival(i / 100);
+      expect(y).toBeGreaterThanOrEqual(0);
+      expect(y).toBeLessThanOrEqual(1);
+    }
+  });
+
+  it('is a critically damped arrival: decelerating, no overshoot', () => {
+    // Fastest progress in the first half, and never above 1 on the way.
+    const d = (a, b) => arrival(b) - arrival(a);
+    expect(d(0.1, 0.3)).toBeGreaterThan(d(0.7, 0.9));
+    expect(arrival(0.5)).toBeGreaterThan(0.5); // ahead of linear, then eases in
+  });
+});
+
+describe('staggeredArrival (arrival under the morph\'s mass-weighted lag)', () => {
+  it('keeps the endpoint invariant for every lag factor', () => {
+    for (let L = 0.3; L <= 1.0001; L += 0.01) {
+      expect(staggeredArrival(0, L)).toBe(0);
+      expect(staggeredArrival(1, L)).toBe(1);
+    }
+    expect(staggeredArrival(0, null)).toBe(0);
+    expect(staggeredArrival(1, null)).toBe(1);
+  });
+
+  it('stays inside [0,1] at every global progress and lag', () => {
+    for (let L = 0.35; L <= 1.0001; L += 0.05) {
+      for (let i = 0; i <= 100; i++) {
+        const e = staggeredArrival(i / 100, L);
+        expect(e).toBeGreaterThanOrEqual(0);
+        expect(e).toBeLessThanOrEqual(1);
+      }
+    }
+  });
+
+  it('makes giants land last: mid-blend, a small mover reads further along', () => {
+    // "Thirty-five years collapse back into the whole record, giants landing
+    // last" (ADDENDUM 1 section 1, exit table t = 0.15).
+    expect(staggeredArrival(0.5, 0.35)).toBeGreaterThan(staggeredArrival(0.5, 1));
+  });
+
+  it('is monotone in global progress for every lag factor', () => {
+    for (let L = 0.35; L <= 1.0001; L += 0.05) {
+      let prev = -Infinity;
+      for (let i = 0; i <= 200; i++) {
+        const e = staggeredArrival(i / 200, L);
+        expect(e).toBeGreaterThanOrEqual(prev);
+        prev = e;
+      }
+    }
   });
 });

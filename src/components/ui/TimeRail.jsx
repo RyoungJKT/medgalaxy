@@ -5,7 +5,7 @@ import { isMob } from '../../utils/helpers';
 import { sceneRefs } from '../../sceneRefs';
 import { fmtFull } from '../../utils/captions';
 import { digitsOf } from './Odometer';
-import { DUR, EASE } from '../../utils/motion';
+import { DUR, EASE, TM_EXIT, TM_EXIT_FAST, TM_EXIT_REDUCED, exitDelay } from '../../utils/motion';
 
 // ─── Motion vocabulary (DIRECTION section 4) ─────────────────────────────────
 const ROLL_MS = DUR.tick;  // year numeral digit roll
@@ -30,7 +30,12 @@ const HIT_H = 44;         // touch target height, mobile and desktop alike
  * and a second hand-copied constant there would drift the first time this
  * layout moves.
  */
-export const railBandHeight = (mob) => (mob ? 52 + 26 + 6 : 40 + 38 + 10) + HIT_H;
+// REPLAY_ROW: the "replay the decade story" affordance added below the track
+// on the scrub path (ADDENDUM 1 section 1). Counted unconditionally, even
+// though the tour itself never shows it, because the band is an exclusion zone
+// and erring wide costs nothing while erring short puts a label on the rail.
+const REPLAY_ROW = 22;
+export const railBandHeight = (mob) => (mob ? 52 + 26 + 6 : 40 + 38 + 10) + HIT_H + REPLAY_ROW;
 const easeExpoOut = (p) => (p >= 1 ? 1 : 1 - Math.pow(2, -10 * p));
 
 // Digit column, same technique as the odometer (a 0-9 strip translated behind a
@@ -67,12 +72,17 @@ function YearNumeral({ year, size }) {
 
 // The tour's caption card. Same glass treatment as the overture's, one hero
 // line, one data line, plus the finale's optional derived micro-line.
-function TimeCaption({ caption, mob, tall }) {
+// `leaving` is the exit's t = 0.00 channel: the flatline card exits on the
+// standard 200 ms fade, no rise (ADDENDUM 1 section 1).
+function TimeCaption({ caption, mob, tall, leaving }) {
   if (!caption) return null;
   const { lines = [], data, micro } = caption;
   return (
     <div
       style={{
+        ...(leaving
+          ? { animation: `tmCardOut ${leaving}ms linear both`, pointerEvents: 'none' }
+          : null),
         position: 'absolute', bottom: mob ? 150 : 178, left: '50%', transform: 'translateX(-50%)',
         zIndex: 46, background: 'rgba(10,16,30,0.95)', backdropFilter: 'blur(16px)',
         border: '1px solid rgba(255,255,255,0.15)', borderRadius: 12,
@@ -128,6 +138,9 @@ export default function TimeRail() {
   const tmPhase = useStore((s) => s.tmPhase);
   const tmCaption = useStore((s) => s.tmCaption);
   const stopTimeMachine = useStore((s) => s.stopTimeMachine);
+  const startTimeMachine = useStore((s) => s.startTimeMachine);
+  const tmExitAt = useStore((s) => s.tmExitAt);
+  const tmExitMode = useStore((s) => s.tmExitMode);
 
   const trackRef = useRef(null);
   const playheadRef = useRef(null);
@@ -151,6 +164,28 @@ export default function TimeRail() {
   const [year, setYear] = useState(yearStart + maxY);
   const [hoverIdx, setHoverIdx] = useState(-1);
   const [pulse, setPulse] = useState(0);
+  // The exit's rail channel (ADDENDUM 1 section 1, t = 0.10): the rail slides
+  // down and out over 240 ms expo.out, and the year numeral, ember dot and
+  // reticle leave with it. tmPhase is already 'idle' by then, so the rail
+  // outlives its own phase by exactly the length of its exit.
+  const [leaving, setLeaving] = useState(0);
+  // The caption card has to survive tmCaption going null on the exit's first
+  // frame, or the flatline card would cut rather than fade.
+  const lastCaptionRef = useRef(null);
+  if (tmCaption) lastCaptionRef.current = tmCaption;
+
+  const railOutMs = tmExitMode === 'reduced' ? TM_EXIT_REDUCED
+    : tmExitMode === 'fast' ? TM_EXIT_FAST : TM_EXIT.rail.dur;
+  const railOutDelay = tmExitMode === 'normal' ? exitDelay(tmExitAt, TM_EXIT.rail.at) : 0;
+  const captionOutMs = tmExitMode === 'reduced' ? TM_EXIT_REDUCED
+    : tmExitMode === 'fast' ? TM_EXIT_FAST : TM_EXIT.caption.dur;
+
+  useEffect(() => {
+    if (!tmExitAt) return undefined;
+    setLeaving(tmExitAt);
+    const timer = setTimeout(() => setLeaving(0), railOutDelay + railOutMs + 40);
+    return () => clearTimeout(timer);
+  }, [tmExitAt, tmExitMode, railOutDelay, railOutMs]);
 
   const railW = mob ? Math.max(220, vp.w - 32) : RAIL_W;
 
@@ -444,7 +479,8 @@ export default function TimeRail() {
     };
   }, [hoverIdx, maxY]);
 
-  if (tmPhase === 'idle' || !tm) return null;
+  const isLeaving = tmPhase === 'idle' && leaving > 0;
+  if ((tmPhase === 'idle' && !isLeaving) || !tm) return null;
 
   const emberX = maxY > 0 ? ((2020 - yearStart) / maxY) * 100 : 0;
   const emberOnRail = 2020 >= yearStart && 2020 <= yearStart + maxY;
@@ -457,7 +493,7 @@ export default function TimeRail() {
           the machine is up, so this floating chip was a second, identical exit
           control eight pixels below it. Mobile keeps it: there the header
           collapses to a Menu button and the exit lives two taps deep. */}
-      {mob && (
+      {mob && !isLeaving && (
       <div style={{ position: 'absolute', top: 56, left: '50%', transform: 'translateX(-50%)', zIndex: 47 }}>
         <button
           onClick={() => stopTimeMachine()}
@@ -474,7 +510,12 @@ export default function TimeRail() {
       </div>
       )}
 
-      <TimeCaption caption={tmCaption} mob={mob} tall={vp.h >= 700} />
+      <TimeCaption
+        caption={isLeaving ? lastCaptionRef.current : tmCaption}
+        mob={mob}
+        tall={vp.h >= 700}
+        leaving={isLeaving ? captionOutMs : 0}
+      />
 
       {/* Finale reticle */}
       <div
@@ -492,7 +533,14 @@ export default function TimeRail() {
       {/* The rail */}
       {/* Mobile clears the legend's two wrapped lines; desktop clears its one. */}
       <div style={{ position: 'absolute', bottom: mob ? 52 : 40, left: '50%', transform: 'translateX(-50%)', zIndex: 46, fontFamily: "'IBM Plex Mono', monospace" }}>
-        <div style={{ width: railW, animation: `tmRailIn ${IN_MS}ms ${EASE.ui} both` }}>
+        <div
+          style={{
+            width: railW,
+            animation: isLeaving
+              ? `tmRailOut ${railOutMs}ms ${EASE.ui} ${railOutDelay}ms both`
+              : `tmRailIn ${IN_MS}ms ${EASE.ui} both`,
+          }}
+        >
           <div ref={numeralRef} style={{ textAlign: 'center', marginBottom: mob ? 6 : 10 }}>
             <YearNumeral year={year} size={mob ? 26 : 38} />
           </div>
@@ -567,11 +615,34 @@ export default function TimeRail() {
               ))}
             </div>
           </div>
+
+          {/* The replay affordance (ADDENDUM 1 section 1, header re-entry).
+              The only route back into the narrated tour, and it exists because
+              a live demo needs to run the story twice without a page reload.
+              Scrub only: during the tour it would be offering what is already
+              playing, and during the exit the rail is on its way out. */}
+          {tmPhase === 'scrub' && !isLeaving && (
+            <div style={{ position: 'relative', height: 14, marginTop: mob ? 10 : 8 }}>
+              <button
+                onClick={() => startTimeMachine(true)}
+                style={{
+                  position: 'absolute', left: 0, top: 0, padding: 0,
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  fontFamily: 'inherit', fontSize: 9, color: '#64748b',
+                  pointerEvents: 'auto', whiteSpace: 'nowrap', lineHeight: 1.4,
+                }}
+              >
+                replay the decade story
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
       <style>{`
         @keyframes tmRailIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes tmRailOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(14px); } }
+        @keyframes tmCardOut { from { opacity: 1; } to { opacity: 0; } }
         @keyframes tmChipIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes tmLineIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes tmRailPulse { 0% { filter: brightness(1); } 35% { filter: brightness(1.6); } 100% { filter: brightness(1); } }

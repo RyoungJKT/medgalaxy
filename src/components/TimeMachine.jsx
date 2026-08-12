@@ -6,8 +6,20 @@ import { sceneRefs } from '../sceneRefs';
 import { buildTimeMachineData } from '../utils/timeMachineData';
 import { fmtFull, fmtWord } from '../utils/captions';
 import { fireRipple } from './SelectionRipple';
-import { DUR, springStep } from '../utils/motion';
-import { morphRadiusAt } from './DiseaseNodes';
+import {
+  DUR, springStep, staggeredArrival,
+  TM_EXIT, TM_EXIT_FAST, TM_EXIT_REDUCED, TM_ENTER_DUR,
+} from '../utils/motion';
+import { morphRadiusAt, computeLagFactors } from './DiseaseNodes';
+// The exit's camera glide is the film's release glide, literally: same seat,
+// same easeGlide, same residual, same arming window and decay. "The second
+// handover must be indistinguishable from the first" (ADDENDUM 1 section 1) is
+// not a code convenience, it is the point, so these are imported rather than
+// restated.
+import {
+  SEAT, seatPos, easeGlide, handoverSpeed, sramp,
+  HANDOVER_LEAD, HANDOVER_DECAY, REST_ROTATE_SPEED,
+} from './OvertureSequence';
 
 // The scrub engine's critically damped spring (DIRECTION section 3, scrubber
 // interaction feel: "each node follows its target through a critically
@@ -20,10 +32,16 @@ const TAU = DUR.tick / 1000;
 const FLASH_FRAMES = 12;
 const FLASH_COLOR = 0xfff3e0; // black-body white-hot core, DIRECTION section 1
 
-// Exit blend duration: how long `tm.exit` takes to ramp 0->1 after
-// stopTimeMachine(), mixing the last Time Machine radius toward the normal
+// Exit blend duration: how long `tm.exit` takes to ramp 0->1 after the machine
+// closes, mixing the last Time Machine radius toward the normal
 // papers/mortality radius before DiseaseNodes stops calling radiusAt at all.
-const EXIT_DUR = 0.4;
+// 1.10 s, up from 0.40 (ADDENDUM 1 section 1, and amendment A3, which adds
+// travel beats to the over-700 ms exemption: "node travel is world motion and
+// mass takes time"). Thirty-five years collapse back into the whole record,
+// giants landing last. Every close uses it, automatic or manual.
+const EXIT_DUR = TM_EXIT.radius.dur / 1000;
+// The mirror, for header re-entry.
+const ENTER_DUR = TM_ENTER_DUR / 1000;
 
 // ─── Tour vocabulary (DIRECTION section 3 + 4) ───────────────────────────────
 // Sanctioned constants only: a year-step is 650 ms, the rewind is two of them,
@@ -35,7 +53,7 @@ const LEG_CAP_STEPS = 6;
 const REWIND = 2 * STEP;
 // Inside the finale hold: the cooling line reads first, then the galaxy dims
 // around rheumatic heart disease and the flatline caption takes the frame.
-const FINALE_SPLIT = 1.8;
+export const FINALE_SPLIT = 1.8;
 // The 2020 camera move: a micro push-in onto the node that detonates, 15
 // percent closer, so the shockwave leaves frame center rather than a corner.
 const PUSH_IN = 0.85;
@@ -49,14 +67,36 @@ const GLOW_RAMP = 0.48;
 
 export const TOUR_HOLDS = [3.0, 3.5, 3.0, 4.0, 3.0, 4.5];
 
-// How long the film's hand-off waits before the auto-tour offers itself, and
-// how long the finale's closing shot holds before it tells the viewer the rail
-// is theirs (review gate F6).
+// How long the film's hand-off waits before the auto-tour offers itself.
 const TOUR_ARM_DELAY = 1500;
-const FINALE_HANDOVER = 2.5;
+// How long the finale's closing shot holds after the flatline cue before the
+// exit begins (ADDENDUM 1 section 1). This replaces FINALE_HANDOVER = 2.5 and
+// the "Scrub the decades." chip, which is deleted from the automatic path
+// entirely: the shipped sequence ended in a permanent park, and "the fix is not
+// a smaller park, it is an exit".
+export const FINALE_HOLD = 2.6;
+
+/**
+ * When the exit opens, on the tour's own clock: the flatline cue plus
+ * FINALE_HOLD, capped at the timeline's end so a shorter (decade-only) data
+ * file whose finale hold is under FINALE_SPLIT + FINALE_HOLD still exits rather
+ * than running past its last frame. Pure, so the one moment the whole ending
+ * restage hangs on is a unit test rather than a stopwatch.
+ * @param {object} tl a timeline from buildTourTimeline
+ */
+export function finaleExitAt(tl) {
+  if (!tl || !tl.pauses.length) return null;
+  const lastPause = tl.pauseAt[tl.pauses.length - 1];
+  return Math.min(lastPause + FINALE_SPLIT + FINALE_HOLD, tl.end);
+}
+
+// The exit's sound: moment 3's release pad, reused at -4 dB against the film's
+// own (ADDENDUM 1 section 1, exit table t = 0.00).
+export const EXIT_PAD_DB = -4;
 
 const clamp01 = (x) => (x < 0 ? 0 : x > 1 ? 1 : x);
 const easeExpoOut = (p) => (p >= 1 ? 1 : 1 - Math.pow(2, -10 * p));
+const easeSineInOut = (p) => -(Math.cos(Math.PI * p) - 1) / 2;
 // back.out(1.2): the tour's single sanctioned overshoot, reserved for the
 // detonation (DIRECTION section 4, two motion families).
 const BACK_C1 = 1.2;
@@ -359,10 +399,14 @@ export function buildTourCaptions(diseases, idMap, data) {
 // and, since Task 13, the auto-tour that drives yearFloat during 'tour'. Its
 // only rendered output is the 2020 detonation's white-core flash mesh
 // (carry-over D), an isolated primitive that owns no shared scene state.
-export default function TimeMachine() {
+export default function TimeMachine({ camDist = 900 }) {
   const tmRef = useRef(null);
   const velRef = useRef(0);
-  const tourRef = useRef({ tl: null, caps: null, t0: 0, fired: null, paused: null, pendingSeek: null, handoverAt: null });
+  const tourRef = useRef({ tl: null, caps: null, t0: 0, fired: null, paused: null, pendingSeek: null, exitAt: null });
+  // The exit choreography's clock and one-shot bookkeeping. `t0` is the frame
+  // clock the exit began at; `fired` guards the staged channels; `glide` is the
+  // camera segment the velocity-matched handover is computed from.
+  const exitRef = useRef(null);
   // The auto-tour's one-shot slot. Spent only when the tour actually opens (or
   // when the viewer opens the Time Machine themselves) — never by a timer that
   // came due and found the field busy. See tourGate above.
@@ -421,12 +465,24 @@ export default function TimeMachine() {
     const data = buildTimeMachineData(diseases);
     const lastYear = data.nYears - 1;
 
+    // Mass-weighted stagger for both blends, the same direction-independent
+    // table DiseaseNodes' morph already uses (one per disease list, computed
+    // from the larger of a node's two radii). "Giants landing last" in the exit
+    // table is exactly this.
+    const lag = computeLagFactors(diseases);
+
     const tm = {
       active: false,
       yearFloat: lastYear,
       targetYear: lastYear,
       data,
+      lag,
       exit: 0,
+      // 1 = fully inside the Time Machine. Ramps 0 -> 1 over 650 ms on a
+      // manual (header) entry; the narrated tour opens at 1.
+      enter: 1,
+      // Mass-weighted stagger on both blends, off under reduced motion.
+      stagger: true,
       radiusAt: null,
     };
 
@@ -444,7 +500,7 @@ export default function TimeMachine() {
       const r0 = radii[y0 * count + i];
       const r1 = radii[y1 * count + i];
       const tmR = r0 + (r1 - r0) * frac;
-      if (tm.exit <= 0) return tmR;
+      if (tm.exit <= 0 && tm.enter >= 1) return tmR;
 
       const store = useStore.getState();
       const fx = sceneRefs.fx;
@@ -459,7 +515,21 @@ export default function TimeMachine() {
       const morphT = fx.morphOverride != null ? fx.morphOverride : (store.sizeMode === 'mortality' ? 1 : 0);
       const d = store.diseases[i];
       const normalR = morphRadiusAt(d, morphT, 1);
-      return tmR + (normalR - tmR) * tm.exit;
+      // Both blends are the same lerp between the same two endpoints, shaped by
+      // arrival() under this node's own lag (amendment A1 sanctions it for
+      // exactly these two channels). arrival is clamped to [0,1], so no frame
+      // of either blend can show a radius outside its endpoints — the delta
+      // list's item-8 acceptance, guaranteed by construction rather than
+      // sampled.
+      // Reduced motion drops the stagger with every other ramp: L = 1 makes
+      // staggeredArrival the plain arrival curve, one dissolve for all 153.
+      const L = tm.stagger === false ? 1 : tm.lag[i];
+      if (tm.exit > 0) {
+        const e = staggeredArrival(tm.exit, L);
+        return tmR + (normalR - tmR) * e;
+      }
+      const e = staggeredArrival(tm.enter, L);
+      return normalR + (tmR - normalR) * e;
     };
 
     tmRef.current = tm;
@@ -524,9 +594,25 @@ export default function TimeMachine() {
       // finale) — the panel wins; closing it is the only effect while open
       // (fix-14 review finding 4).
       if (s.methodologyOpen) return;
+      // Skip during the exit (ADDENDUM 1 section 1): any input fast-forwards
+      // to the landed state over 240 ms. Checked before the tour branch
+      // because by now tmPhase is already 'idle'.
+      if (exitRef.current && !exitRef.current.landed) {
+        s.tmExitSkip();
+        return;
+      }
       if (s.tmPhase === 'tour') {
+        // The one exception to "the opening sequence ends at the home screen",
+        // stated in the addendum so nobody removes it: a tour the viewer
+        // interrupted is not a park. If any input hands the scrubber over
+        // mid-tour, the viewer owns the rail and it stays up until they close
+        // it. The exit sequence runs only when the tour reaches its own end
+        // untouched — which is exactly what dropping `exitAt` here guarantees,
+        // since the tour clock stops being read the moment the phase leaves
+        // 'tour'.
         const tm = tmRef.current;
         if (tm) tm.targetYear = Math.round(tm.yearFloat);
+        tourRef.current.exitAt = null;
         s.setTmFocusIdx(-1);
         s.setTmCaption(tourRef.current.caps ? tourRef.current.caps.handover : { lines: ['Scrub the decades.'], handover: true });
         s.setTmPhase('scrub');
@@ -571,7 +657,8 @@ export default function TimeMachine() {
         if (!s.overtureDone) s.finishOverture();
         tourConsumedRef.current = true; // the harness owns the tour from here
         tourRef.current.tl = null;
-        tourRef.current.handoverAt = null;
+        tourRef.current.exitAt = null;
+        exitRef.current = null;
         useStore.getState().setTmFocusIdx(-1);
         useStore.getState().startTimeMachine(true);
         useStore.getState().setTmPhase('tour');
@@ -579,6 +666,13 @@ export default function TimeMachine() {
         return waitFrames(frames);
       },
       resume: () => { tourRef.current.paused = null; },
+      // The exit choreography's live state, for the harness's own acceptance
+      // checks (delta-list items 1 and 5).
+      exit: () => {
+        const ex = exitRef.current;
+        if (!ex) return null;
+        return { ...ex, fired: [...ex.fired], glide: ex.glide ? { t0: ex.glide.t0, t1: ex.glide.t1 } : null };
+      },
       state: () => {
         const r = tourRef.current;
         const tm = tmRef.current;
@@ -667,6 +761,201 @@ export default function TimeMachine() {
     }
   };
 
+  // ─── The exit choreography (ADDENDUM 1 section 1) ──────────────────────────
+  // Opens when the finale's closing shot has held FINALE_HOLD seconds after the
+  // flatline cue, and lands 2.60 s later on the home screen. The table it
+  // follows lives in motion.js so the rail, the hint row, the header and the
+  // tests all read the same offsets.
+
+  const beginExit = (clock) => {
+    const s = useStore.getState();
+    const mode = reducedRef.current ? 'reduced' : 'normal';
+    const tm = tmRef.current;
+    // Reduced motion drops the mass-weighted stagger with everything else: the
+    // radii come home as one 300 ms dissolve, not a staggered blend.
+    if (tm) tm.stagger = mode !== 'reduced';
+    exitRef.current = {
+      t0: clock,
+      mode,
+      fired: new Set(),
+      glide: null,
+      handoverArmed: false,
+      handoverBase: 0,
+      landed: false,
+      glow0: sceneRefs.fx.glowSuppress,
+      fastAt: 0,
+    };
+    s.beginTmExit(mode);
+    // Moment 3's release pad, reused at -4 dB against the film's own: the same
+    // exhale, quieter, because this is the second handover and not the first.
+    if (typeof window !== 'undefined') window.__mgAudio?.play?.('release', { gainDb: EXIT_PAD_DB });
+    // Reduced motion: no glide. The camera takes the rest seat outright.
+    if (mode === 'reduced' && sceneRefs.cameraJump) {
+      const p = seatPos(camDist, SEAT.rest);
+      sceneRefs.cameraJump(p[0], p[1], p[2]);
+    }
+  };
+
+  // Everything the exit still owes the viewer, applied at once. Shared by the
+  // skip fast-forward and by the landing itself, so a skipped exit and a
+  // watched one leave byte-identical state.
+  const settleExit = () => {
+    const s = useStore.getState();
+    s.setTmIso(-1, 1);
+    sceneRefs.fx.glowSuppress = 0;
+    glowRef.current = 0;
+    sceneRefs.fx.ember = 1;
+    if (s.storyVisible === false) s.tmExitChrome();
+    // The hint the viewer just watched play out in full is not an invitation
+    // any more (exit table, t = 1.60).
+    s.hintDismiss('timeMachine');
+  };
+
+  const stepExit = (clock) => {
+    const ex = exitRef.current;
+    // `landed` is the end of the 2.60 s choreography; `done` is the end of this
+    // driver. They are not the same instant on purpose: the glide's handover
+    // decays to the resting drift over a full second from the end of the glide
+    // at 1.75 s, which runs 150 ms past the exit itself. Stopping at `landed`
+    // truncated the decay and left the galaxy turning at 0.32 instead of 0.30
+    // (delta-list item 5 asserts the film's exact terminal value).
+    if (!ex || ex.done) return;
+    const s = useStore.getState();
+
+    // Re-entry mid-exit (the header button is live from t = 0): the instrument
+    // wins, and the choreography stops writing rather than fighting it.
+    if (s.tmPhase !== 'idle') { ex.landed = true; ex.done = true; return; }
+
+    // ── Skip during the exit: 240 ms to the landed state ──
+    if (s.tmExitMode === 'fast' && ex.mode !== 'fast') {
+      ex.mode = 'fast';
+      ex.fastAt = clock;
+      // Camera tweens killed and seated at rest, in one call.
+      if (sceneRefs.cameraJump) {
+        const p = seatPos(camDist, SEAT.rest);
+        sceneRefs.cameraJump(p[0], p[1], p[2]);
+      }
+      sceneRefs.handover.speed = REST_ROTATE_SPEED;
+      ex.glide = null; // nothing left to arm; the pulse is cancelled with it
+      settleExit();
+    }
+
+    if (ex.mode === 'fast') {
+      if (clock - ex.fastAt >= TM_EXIT_FAST / 1000) { ex.landed = true; ex.done = true; }
+      return;
+    }
+
+    const t = clock - ex.t0;
+    const reduced = ex.mode === 'reduced';
+
+    // ── Isolation release: dim 0.4 -> 1 and glowSuppress 0.55 -> 0, both on
+    // the same 480 ms sine.inOut (300 ms straight dissolve under reduced
+    // motion). HighlightSystem can only dim instance colors, so the halos need
+    // the second channel or 152 diseases keep burning around the one that
+    // never surged.
+    const isoDur = (reduced ? TM_EXIT_REDUCED : TM_EXIT.isolation.dur) / 1000;
+    if (!ex.landed && s.tmIsoIdx >= 0) {
+      const p = t <= 0 ? 0 : t >= isoDur ? 1 : t / isoDur;
+      const e = reduced ? p : easeSineInOut(p);
+      if (p >= 1) {
+        s.setTmIso(-1, 1);
+        sceneRefs.fx.glowSuppress = 0;
+        glowRef.current = 0;
+      } else {
+        // Quantized so a 480 ms ramp costs about thirty repaints of the
+        // instance colors rather than one per frame at whatever the display
+        // runs at.
+        const dim = Math.round((0.4 + 0.6 * e) * 50) / 50;
+        if (dim !== s.tmIsoDim) s.setTmIso(s.tmIsoIdx, dim);
+        sceneRefs.fx.glowSuppress = ex.glow0 * (1 - e);
+        glowRef.current = sceneRefs.fx.glowSuppress;
+      }
+    }
+
+    // ── Camera: the release glide, again ──
+    if (!reduced && !ex.landed && !ex.fired.has('camera') && t >= TM_EXIT.camera.at / 1000) {
+      ex.fired.add('camera');
+      const cam = sceneRefs.camera;
+      const dur = TM_EXIT.camera.dur / 1000;
+      const from = cam
+        ? [cam.position.x, cam.position.y, cam.position.z]
+        : seatPos(camDist, SEAT.rest);
+      ex.glide = { t0: t, t1: t + dur, fromPos: from, to: SEAT.rest, ease: easeGlide };
+      s.setFlyTarget({
+        position: [0, 0, 0],
+        cameraPos: seatPos(camDist, SEAT.rest),
+        duration: dur,
+        ease: easeGlide,
+      });
+    }
+
+    // ── Velocity-matched handover, the film's own arming logic ──
+    // The last 300 ms of the glide hand the orbit controls the glide's terminal
+    // angular velocity; it then eases to the resting drift over 1 s. "The piece
+    // hands control over twice and both times the frame the user touches is
+    // already moving."
+    const g = ex.glide;
+    if (sceneRefs.handover.cancelled) {
+      // The viewer took the orbit controls. CameraRig's onStart has already
+      // reset the rate and killed the handover for good; nothing here may
+      // write over that.
+      ex.handoverDone = true;
+    } else if (g) {
+      const armAt = g.t1 - HANDOVER_LEAD;
+      if (t >= armAt && t <= g.t1 + HANDOVER_DECAY) {
+        if (!ex.handoverArmed) {
+          ex.handoverArmed = true;
+          ex.handoverBase = handoverSpeed(g, g.t1, camDist);
+        }
+        const base = ex.handoverBase;
+        sceneRefs.handover.speed =
+          t <= g.t1
+            ? base
+            : REST_ROTATE_SPEED + (base - REST_ROTATE_SPEED) * (1 - sramp(t, g.t1, g.t1 + HANDOVER_DECAY));
+      } else if (ex.handoverArmed && t > g.t1 + HANDOVER_DECAY) {
+        // Held at the resting drift, exactly as the film holds it: CameraRig's
+        // idle rule would otherwise never re-arm autoRotate on its own, and the
+        // home screen the exit lands on is a turning galaxy.
+        sceneRefs.handover.speed = REST_ROTATE_SPEED;
+        ex.handoverDone = true;
+      }
+    } else if (reduced || ex.fired.has('camera')) {
+      // No glide will ever exist on this path (reduced motion has none, and a
+      // dispatched camera channel that produced none cannot produce one
+      // later): the resting drift is simply asserted. Note the guard — before
+      // t = 0.15 the glide has merely not been dispatched yet, and treating
+      // that as "no glide" ended the handover before it began.
+      if (!ex.fired.has('rest')) {
+        ex.fired.add('rest');
+        sceneRefs.handover.speed = REST_ROTATE_SPEED;
+      }
+      ex.handoverDone = true;
+    }
+
+    if (ex.landed) {
+      if (ex.handoverDone) ex.done = true;
+      return;
+    }
+
+    // ── Staged state channels ──
+    const fire = (key, atMs, fn) => {
+      if (ex.fired.has(key)) return;
+      if (t < (reduced ? 0 : atMs) / 1000) return;
+      ex.fired.add(key);
+      fn();
+    };
+    // The standing ember scar on the overlooked decile, re-asserted.
+    fire('grade', TM_EXIT.grade.at, () => { sceneRefs.fx.ember = 1; });
+    fire('chrome', TM_EXIT.chrome.at, () => s.tmExitChrome());
+    fire('hints', TM_EXIT.hints.at, () => s.hintDismiss('timeMachine'));
+
+    if (t >= TM_EXIT.total / 1000) {
+      ex.landed = true;
+      settleExit();
+      if (ex.handoverDone) ex.done = true;
+    }
+  };
+
   useFrame((state, delta) => {
     const tm = tmRef.current;
     const dt = delta > 0.05 ? 0.05 : delta; // clamp so a stalled tab doesn't fling the spring
@@ -699,11 +988,23 @@ export default function TimeMachine() {
       flashMeshRef.current.visible = false;
     }
 
+    // The exit choreography, run before anything else this frame: it owns the
+    // glow channel and the radius blend's schedule while it lasts.
+    const exiting = exitRef.current && !exitRef.current.landed;
+    if (exitRef.current) stepExit(state.clock.getElapsedTime());
+
+    // The entry blend: 0 -> 1 over 650 ms on a manual open, so the instrument
+    // arrives rather than cutting in.
+    if (tm.enter < 1) {
+      tm.enter += dt / ENTER_DUR;
+      if (tm.enter > 1) tm.enter = 1;
+    }
+
     // Halo suppression follows the finale's focus, and only ever writes the
     // shared grade channel when it has something to say (the film owns it
-    // while it plays).
+    // while it plays, and the exit owns it while it runs).
     const glowTarget = store.tmFocusIdx >= 0 ? FINALE_GLOW : 0;
-    if (!store.overtureActive && (glowTarget > 0 || glowRef.current > 0.001)) {
+    if (!exiting && !store.overtureActive && (glowTarget > 0 || glowRef.current > 0.001)) {
       if (reducedRef.current) {
         // Reduced motion: the finale's halo suppression snaps straight to its
         // target instead of ramping over GLOW_RAMP (Task 17 follow-up review,
@@ -722,22 +1023,11 @@ export default function TimeMachine() {
       tm.active = true;
       tm.exit = 0;
       if (r.tl) { r.tl = null; r.paused = null; r.pendingSeek = null; }
-      // The finale's own handover (review gate F6). A tour that ends naturally
-      // used to leave the closing shot up with nothing telling the viewer the
-      // rail was now theirs — only an interrupt ever printed "Scrub the
-      // decades." After FINALE_HANDOVER seconds on the held frame, the same
-      // chip the interrupt path sets goes up here too. The isolation itself
-      // stays: the closing shot is the point, and TimeRail's first scrub
-      // releases it exactly as before.
-      if (r.handoverAt != null && state.clock.getElapsedTime() >= r.handoverAt) {
-        r.handoverAt = null;
-        // Only if the finale is still the frame. Any input in the meantime has
-        // already run the window-level handover, which clears the focus and
-        // sets this same chip; re-setting it here would restart its 2.6 s life.
-        if (store.tmFocusIdx >= 0 && store.tmCaption && !store.tmCaption.handover) {
-          store.setTmCaption(r.caps ? r.caps.handover : { lines: ['Scrub the decades.'], handover: true });
-        }
-      }
+      // The 2.5 s "Scrub the decades." chip that used to appear here is gone
+      // from the automatic path (ADDENDUM 1 section 1). A tour that reaches its
+      // own end now exits to the home screen instead of parking, and the chip
+      // survives only where it was always right: the interrupted tour, set by
+      // the window-level handover above.
       const target = tm.targetYear < 0 ? 0 : (tm.targetYear > maxY ? maxY : tm.targetYear);
       const [ny, nv] = springStep(tm.yearFloat, velRef.current, target, dt, TAU);
       velRef.current = nv;
@@ -758,7 +1048,13 @@ export default function TimeMachine() {
         r.t0 = clock;
         r.fired = new Set();
         r.paused = null;
-        r.handoverAt = null;
+        // The exit's own cue, computed off the flatline rather than off the
+        // tour's end: the addendum starts the exit clock "when the finale's
+        // closing shot has held FINALE_HOLD after the flatline cue". Capped at
+        // the timeline's end so a shorter (decade-only) data file, whose finale
+        // hold may be under FINALE_SPLIT + FINALE_HOLD, still exits rather than
+        // running past its last frame.
+        r.exitAt = finaleExitAt(r.tl);
       }
 
       // Harness seek: reposition the clock, replay the state cues up to it, and
@@ -806,25 +1102,41 @@ export default function TimeMachine() {
         }
       }
 
-      if (t >= r.tl.end) {
-        // The closing shot stays on screen: the flatline caption and its
-        // isolation hold until the viewer touches the rail. All the handover
-        // does is give them the scrubber, at the year they are looking at —
-        // and, FINALE_HANDOVER seconds later, say so (the scrub branch above).
+      // The film ends at home. The closing shot holds FINALE_HOLD seconds past
+      // the flatline, then the 2.60 s exit takes the viewer to the home screen
+      // with the instrument in the header. Only reachable from an untouched
+      // tour: any input before this moment has already run the window-level
+      // handover, which drops r.exitAt and leaves the rail with the viewer.
+      if (r.exitAt != null && t >= r.exitAt) {
         tm.targetYear = Math.round(tm.yearFloat);
-        r.handoverAt = clock + FINALE_HANDOVER;
-        useStore.getState().setTmPhase('scrub');
+        beginExit(clock);
       }
     } else if (tm.active) {
-      // idle, but still blending out: ramp the 400ms exit mix, then hand
-      // radius fully back to DiseaseNodes' own morph.
+      // idle, but still blending out: ramp the exit mix, then hand radius fully
+      // back to DiseaseNodes' own morph. 1.10 s on every close, automatic or
+      // manual ("closing again runs the same 1.10 s radius blend home").
       velRef.current = 0;
       if (r.tl) { r.tl = null; r.paused = null; r.pendingSeek = null; }
-      r.handoverAt = null; // the machine is closing; nothing left to hand over
-      tm.exit += dt / EXIT_DUR;
-      if (tm.exit >= 1) {
-        tm.exit = 0;
-        tm.active = false;
+      r.exitAt = null; // the machine is closing; nothing left to hand over
+      const ex = exitRef.current;
+      let dur = EXIT_DUR;
+      let hold = 0;
+      if (ex && !ex.landed) {
+        // Inside the automatic choreography the blend is a staged channel: it
+        // waits out the rail's 100 ms head start, and a skip or reduced motion
+        // compresses it to their own single durations.
+        if (ex.mode === 'fast') dur = TM_EXIT_FAST / 1000;
+        else if (ex.mode === 'reduced') dur = TM_EXIT_REDUCED / 1000;
+        else hold = TM_EXIT.radius.at / 1000;
+      }
+      if (!ex || ex.landed || state.clock.getElapsedTime() - ex.t0 >= hold) {
+        tm.exit += dt / dur;
+        if (tm.exit >= 1) {
+          tm.exit = 0;
+          tm.enter = 1;
+          tm.stagger = true;
+          tm.active = false;
+        }
       }
     }
   });

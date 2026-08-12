@@ -99,3 +99,100 @@ export function staggeredEase(t, L) {
   const offset = LAG_LEAD * (1 - li);
   return smoothstep01((t - offset) / li);
 }
+
+// ── A1: the world spring's analytic form (ADDENDUM 1 section 0) ──────────────
+// "The world family is a critically damped spring. A node flying along a curved
+// path cannot be integrated as a spring per axis without leaving the path, so
+// the same curve is now also available in closed form."
+//
+//   arrival(x) = (1 - e^(-5x) * (1 + 5x)) / (1 - 6 * e^(-5))
+//
+// The critically damped step response with time constant d/5, normalized to
+// land. It is not a new easing, it is the sanctioned one written down, and the
+// addendum limits it to exactly three call sites: the assembly fly-in and the
+// Time Machine's entry and exit blends.
+//
+// Both endpoints are exact, not approximate, and that is load-bearing rather
+// than decorative — the entry and exit blends lerp between the per-year radius
+// and the normal papers/mortality radius, so an arrival that returned 0.999 at
+// x=1 would hand DiseaseNodes a radius a hair off the settled mapping on the
+// frame the blend ends. At x=1 the numerator is `1 - Math.exp(-5) * 6` and the
+// denominator `1 - 6 * Math.exp(-5)`; IEEE-754 multiplication is commutative,
+// so those are bit-identical and the ratio is exactly 1.
+const ARRIVAL_K = 5;
+const ARRIVAL_NORM = 1 - (ARRIVAL_K + 1) * Math.exp(-ARRIVAL_K);
+
+export function arrival(x) {
+  // Clamped, so the blends stay inside their two endpoints even on a frame
+  // where the driving progress overshoots 1 (delta-list item 8: "no frame
+  // during the blend shows a radius outside the two endpoints").
+  const c = x < 0 ? 0 : x > 1 ? 1 : x;
+  return (1 - Math.exp(-ARRIVAL_K * c) * (1 + ARRIVAL_K * c)) / ARRIVAL_NORM;
+}
+
+/**
+ * arrival() under the same mass-weighted stagger staggeredEase applies to the
+ * morph: a global 0..1 progress becomes this node's own eased 0..1 progress
+ * from its lag factor L, so giants land last. The addendum's exit table asks
+ * for "per node staggered by the existing lag factors" and its entry blend for
+ * "per-node staggered by the same lag factors, using arrival()" — this is the
+ * one function that satisfies both, with the same endpoint guarantee
+ * staggeredEase carries (exactly 0 at global 0 and exactly 1 at global 1, for
+ * every L, since (1 - LAG_LEAD*(1-L))/L >= 1 whenever L <= 1).
+ */
+export function staggeredArrival(t, L) {
+  const li = L == null ? 1 : Math.min(1, Math.max(LAG_FLOOR, L));
+  const offset = LAG_LEAD * (1 - li);
+  return arrival((t - offset) / li);
+}
+
+// ── The exit choreography, as data (ADDENDUM 1 section 1) ────────────────────
+// The opening sequence ends at the home screen: every automatic path
+// terminates in tmPhase 'idle', papers sizing, the rest camera seat, no
+// isolation, no tour caption, full chrome, the galaxy turning. This table is
+// the addendum's own, in milliseconds from the moment the exit begins, kept
+// here rather than inside any one component because five separate files read
+// it (the engine, the rail, the hint row, the header, the tests).
+export const TM_EXIT = {
+  total: 2600,
+  caption: { at: 0, dur: 200 },    // flatline card exits on a fade, no rise
+  isolation: { at: 0, dur: 480 },  // dim release + glowSuppress 0.55 -> 0
+  sound: { at: 0 },                // moment 3 pad, reused at -4 dB
+  rail: { at: 100, dur: 240 },     // rail slides down and out, expo.out
+  radius: { at: 150, dur: 1100 },  // tm.exit 0 -> 1, staggered by lag factors
+  camera: { at: 150, dur: 1600 },  // glide to SEAT.rest on easeGlide
+  grade: { at: 1250 },             // fx.ember confirmed at 1
+  chrome: { at: 1300 },            // story chip row returns
+  hints: { at: 1600 },             // orbit/select return, timeMachine dismissed
+  header: { at: 1750, dur: 1400, line: 2600, lineOut: 200 },
+};
+
+// Skip during the exit: any input fast-forwards to the landed state over
+// 240 ms. Reduced motion replaces the whole thing with three 300 ms dissolves.
+export const TM_EXIT_FAST = 240;
+export const TM_EXIT_REDUCED = 300;
+
+// The mirror of the exit blend: the header re-entry's tm.enter channel, so the
+// instrument opens with a blend instead of the hard radius swap that was "the
+// one ugly cut left in the piece".
+export const TM_ENTER_DUR = 650;
+
+/**
+ * How long from *now* until the exit channel scheduled at `atMs` should fire,
+ * given the exit began at `t0`. Returns 0 once the moment has passed, which is
+ * what lets a component re-render mid-exit (a hint dismissed, a caption
+ * cleared) without restarting an animation whose delay has already elapsed:
+ * the delay is recomputed against the live clock every render rather than
+ * baked in once.
+ * @param {number} t0 performance.now() when the exit began, 0 if none is running
+ * @param {number} atMs the channel's offset from the exit table above
+ * @param {number} [now] injectable clock, for tests
+ */
+export function exitDelay(t0, atMs, now) {
+  if (!t0) return 0;
+  const clock = now == null
+    ? (typeof performance !== 'undefined' ? performance.now() : Date.now())
+    : now;
+  const remaining = atMs - (clock - t0);
+  return remaining > 0 ? remaining : 0;
+}

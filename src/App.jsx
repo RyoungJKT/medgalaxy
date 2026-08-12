@@ -184,7 +184,7 @@ export default function App() {
         )}
 
         <Suspense fallback={null}>
-          <TimeMachine />
+          <TimeMachine camDist={camDist} />
           <DiseaseNodes />
           <EdgeNetwork />
           <GlowSprites />

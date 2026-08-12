@@ -3,6 +3,7 @@ import useStore from '../../store';
 import { isMob } from '../../utils/helpers';
 import SearchDropdown from './SearchDropdown';
 import audioEngine from '../../audio/engine';
+import { TM_EXIT, exitDelay } from '../../utils/motion';
 
 function SizeToggle() {
   const sizeMode = useStore(s => s.sizeMode);
@@ -78,6 +79,35 @@ function ShaderToggle() {
   );
 }
 
+// The exit's micro-line: 9px #64748b under the Time Machine button, up 2.6 s
+// then a 200 ms fade (ADDENDUM 1 section 1, exit table t = 1.75).
+function ExitMicroLine({ delay, mob }) {
+  return (
+    <div
+      style={{
+        position: 'absolute', top: '100%',
+        // Centred under the button on desktop; on mobile the button it hangs
+        // from is the Menu, hard against the right edge, so a centred line runs
+        // off the viewport (measured: "the decades live he|"). Right-anchored
+        // there, it extends inward instead.
+        ...(mob
+          ? { right: 0, left: 'auto', transform: 'none' }
+          : { left: '50%', transform: 'translateX(-50%)' }),
+        // Cleared past the filter bar, which sits directly under the control
+        // row and paints over anything the header tries to put in that gap.
+        // Still unmistakably the button's own line: same column, nothing else
+        // in the band, and it arrives on the same frame as the pulse.
+        marginTop: 34, fontSize: 9, color: '#64748b', whiteSpace: 'nowrap',
+        background: 'rgba(6,8,13,0.92)', padding: '2px 6px', borderRadius: 4,
+        zIndex: 60, pointerEvents: 'none', opacity: 0,
+        animation: `tmHdrLine ${TM_EXIT.header.line + TM_EXIT.header.lineOut}ms linear ${delay}ms both`,
+      }}
+    >
+      the decades live here
+    </div>
+  );
+}
+
 const btnStyle = {
   padding: '6px 12px', fontSize: 11, fontFamily: 'inherit',
   border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6,
@@ -125,6 +155,32 @@ export default function Header() {
     audioEngine.setEnabled(next);
     setSoundOn(next);
   };
+
+  // ── The exit's header channel (ADDENDUM 1 section 1, t = 1.75) ──
+  // One-shot Time Machine button pulse, 1.4 s: two cycles of scale 1.000 to
+  // 1.060 and border opacity 0.35 to 0.90. Under it a 9px micro-line, "the
+  // decades live here", up 2.6 s then a 200 ms fade. This is the whole of what
+  // tells a viewer, on the home screen the film just landed them on, where the
+  // instrument they watched went. Reduced motion gets a static ring instead.
+  const tmExitAt = useStore(s => s.tmExitAt);
+  const tmExitMode = useStore(s => s.tmExitMode);
+  const [exitCue, setExitCue] = useState(0);
+  useEffect(() => {
+    if (!tmExitAt || tmExitMode === 'fast') { setExitCue(0); return undefined; }
+    setExitCue(tmExitAt);
+    const life = exitDelay(tmExitAt, TM_EXIT.header.at) + TM_EXIT.header.line + TM_EXIT.header.lineOut;
+    const timer = setTimeout(() => setExitCue(0), life);
+    return () => clearTimeout(timer);
+  }, [tmExitAt, tmExitMode]);
+  const cueDelay = exitCue ? exitDelay(exitCue, TM_EXIT.header.at) : 0;
+  const cueReduced = tmExitMode === 'reduced';
+  const pulseStyle = !exitCue ? null : cueReduced
+    // No pulse under reduced motion: a static ring, held for the same 2.6 s.
+    // `forwards`, never `both`: a backwards fill would apply the pulse's 0%
+    // keyframe through the whole 1.75 s delay, lighting the button up before
+    // its moment.
+    ? { animation: `tmBtnRing ${TM_EXIT.header.line}ms step-end ${cueDelay}ms forwards` }
+    : { animation: `tmBtnPulse ${TM_EXIT.header.dur}ms ease ${cueDelay}ms forwards` };
 
   const mob = isMob();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -198,10 +254,15 @@ export default function Header() {
           <div ref={menuRef} style={{ position: 'relative', pointerEvents: 'auto' }}>
             <button
               onClick={() => { setMenuOpen(!menuOpen); setSearchOpen(false); }}
-              style={{ background: 'none', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, padding: '8px 14px', color: '#e2e8f0', fontSize: 16, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 500 }}
+              style={{ background: 'none', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, padding: '8px 14px', color: '#e2e8f0', fontSize: 16, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 500, ...pulseStyle }}
             >
               Menu
             </button>
+            {/* Mobile collapses the control row into this menu, so the Time
+                Machine button the exit means to point at is two taps deep. The
+                pulse and its micro-line ride the Menu button instead: the cue
+                is "the instrument lives up here", and up here is where it is. */}
+            {exitCue > 0 && !menuOpen && <ExitMicroLine delay={cueDelay} mob />}
             {menuOpen && (
               <div style={{
                 position: 'absolute', top: '100%', right: 0, marginTop: 4,
@@ -277,9 +338,17 @@ export default function Header() {
           <button onClick={() => setActiveMode('explode')} style={btnStyle}>Research Gap</button>
           <button onClick={() => { useStore.getState().setConnFocusIdx(-1); setActiveMode('connections'); }} style={btnStyle}>Connections</button>
           <button onClick={() => setActiveMode('velocity')} style={btnStyle}>Trends</button>
-          <button onClick={toggleTimeMachine}
-            style={{ ...btnStyle, background: tmActive ? 'rgba(255,255,255,0.12)' : 'transparent', color: tmActive ? '#f59e0b' : '#e2e8f0' }}
-          >{tmActive ? '✕ Time Machine' : 'Time Machine'}</button>
+          <div style={{ position: 'relative', pointerEvents: 'auto' }}>
+            <button onClick={toggleTimeMachine}
+              style={{
+                ...btnStyle,
+                background: tmActive ? 'rgba(255,255,255,0.12)' : 'transparent',
+                color: tmActive ? '#f59e0b' : '#e2e8f0',
+                ...pulseStyle,
+              }}
+            >{tmActive ? '✕ Time Machine' : 'Time Machine'}</button>
+            {exitCue > 0 && <ExitMicroLine delay={cueDelay} />}
+          </div>
           <button onClick={() => setSpotlightActive(!spotlightActive)}
             style={{ ...btnStyle, background: spotlightActive ? 'rgba(255,255,255,0.12)' : 'transparent', color: spotlightActive ? '#f59e0b' : '#e2e8f0' }}
           >{spotlightActive ? '✕ Spotlight' : 'Spotlight'}</button>
@@ -306,6 +375,25 @@ export default function Header() {
       <style>{`
         @media (max-width: 1839px) { .mg-hdr-tagline { display: none; } }
         @media (max-width: 1539px) { .mg-hdr-counts  { display: none; } }
+        /* Two cycles across 1.4 s, ending on the button's own resting border so
+           the animation can be removed without a second state change. */
+        @keyframes tmBtnPulse {
+          0%   { transform: scale(1);    border-color: rgba(255,255,255,0.35); }
+          25%  { transform: scale(1.06); border-color: rgba(255,255,255,0.90); }
+          50%  { transform: scale(1);    border-color: rgba(255,255,255,0.35); }
+          75%  { transform: scale(1.06); border-color: rgba(255,255,255,0.90); }
+          100% { transform: scale(1);    border-color: rgba(255,255,255,0.08); }
+        }
+        @keyframes tmBtnRing {
+          0%   { border-color: rgba(255,255,255,0.90); }
+          100% { border-color: rgba(255,255,255,0.08); }
+        }
+        @keyframes tmHdrLine {
+          0%      { opacity: 0; }
+          7.14%   { opacity: 1; }
+          92.86%  { opacity: 1; }
+          100%    { opacity: 0; }
+        }
       `}</style>
     </div>
   );

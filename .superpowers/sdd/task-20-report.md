@@ -1125,3 +1125,313 @@ changes to render this cleanly.
    that's what every other yearless row in the dataset already does and
    `nonDefaultMortalitySources`'s field-type check expects — `null` would
    have been a new, inconsistent representation of the same "no year" fact.
+
+## Round 6: user feedback — the Time Machine's per-year size mapping
+
+**Report:** "During the Time Machine's HIV story (the 1996 tour pause and
+manual scrubbing through the 90s-2000s), the HIV sphere grows too subtly as
+the slider moves forward. It should grow obviously."
+
+### Root cause, and why the obvious fix is the wrong one
+
+`nRY(c, maxYearly)` in `src/utils/timeMachineData.js` was
+`0.25 + (c / maxYearly)^0.5 * (18 - 0.25)`, normalized against the single
+global maximum: COVID-19's 141,958 papers in 2021. HIV/AIDS climbs 2,659
+papers a year in 1990 to 7,534 at its 2014 peak — a 2.83x rise, the entire
+subject of the tour's two HIV pauses — and that landed as radius 2.68 to
+4.34. A 1.62x change across twenty-four years of slider travel reads as "the
+same node."
+
+The brief's first candidate (drop the exponent to ~0.32-0.38) makes it
+**worse**, and measurably so. A power curve is scale-invariant: the radius
+ratio between any two counts is exactly `(c2/c1)^exponent` regardless of what
+ceiling it is normalized against, so the ceiling cannot affect it at all and
+a *smaller* exponent shrinks it. Measured over HIV's own 1990 -> 2014 span:
+
+| exponent | HIV 1990 -> 2014 radius | ratio |
+|---|---|---|
+| 0.32 | 5.22 -> 7.19 | **1.38x** |
+| 0.38 | 4.17 -> 6.07 | **1.46x** |
+| 0.5 (shipped) | 2.68 -> 4.34 | **1.62x** |
+| 0.7 | 1.35 -> 2.52 | 1.87x |
+| 0.85 | 0.99 -> 1.94 | 1.97x |
+
+A 2x radius change out of a 2.83x count change needs an exponent of at least
+`ln(2)/ln(2.83) = 0.67`. So the exponent has to go **up**. But at exponent
+0.85 against the 141,958 ceiling HIV is a 1-2 radius speck — which is where
+the second candidate, the percentile ceiling, earns its place: it is what
+gives the absolute size back. Both moves are needed, and they are the two the
+brief listed, just not in the directions the brief expected.
+
+### The mapping that shipped
+
+A **90th-percentile knee with a linear tail**, computed from the data:
+
+```
+knee = 90th percentile of all 5,355 (disease, year) yearly counts = 7,238
+c <= knee : f = 0.38 * (c / knee)^0.85
+c >  knee : f = 0.38 + 0.62 * (c - knee) / (maxYearly - knee)
+radius    = 0.25 + f * (18 - 0.25)          zero -> 0.05 floor, unchanged
+```
+
+90 percent of all yearly counts now share 38 percent of the radius range;
+they shared 22.6 percent before. `maxYearly` still reaches exactly 18, so the
+Time Machine's biggest node is unchanged and still far below the
+cumulative-view giants (`helpers.js` `MX` is 55).
+
+**The tail is linear, not clamped, on purpose.** A clamp at the knee would
+tie COVID-19's 94,633 papers in 2020 with pneumonia's 77,289 at the same
+radius, breaking the honesty invariant that a bigger count is always a bigger
+node. Linear is also the least compressive bounded tail available, which is
+why it *preserves* the detonation's top-end separation instead of blunting
+it. Three alternatives were computed and rejected on measured numbers: a
+Hill/saturating shoulder (COVID's 2020 lead over pneumonia collapses to
+3.4 percent), a power-law tail with a matched exponent (6.0 percent), and a
+pure log curve (median node shrinks 1.82 -> 1.04, and HIV never gets its
+absolute size back). Linear holds 11.1 percent.
+
+The knee is derived from the table at build time, not transcribed, so the
+weekly PubMed refresh moves it with the distribution it describes.
+
+### Measured results
+
+**HIV growth, real rendered pixels.** Both frames captured at the tour's own
+1996 HIV pause camera (`__tour.seek(1)` after a `camera-home` snap, so the
+pause's 0.80 push-in multiplies the designed overview seat and not whatever
+the intro left behind), camera then frozen while only the scrub year changes.
+Diameter measured off the screenshots themselves: luminance walk out from
+HIV's projected centre to the half-way point between core and local
+background.
+
+| | 1990 | 2014 (HIV's peak) | ratio |
+|---|---|---|---|
+| before (`hivfix-1990-before`, `hivfix-2014-before`) | **5.0 px** | **8.0 px** | **1.60x** |
+| after (`hivfix-1990-after`, `hivfix-2014-after`) | **6.0 px** | **13.5 px** | **2.25x** |
+
+Model radius 3.13 -> 7.02 and the analytic projection (2.25x) agree with the
+pixel walk to within 0.01x, so the measurement is not a thresholding
+artifact. Acceptance criterion 1 (~2x) met at 2.25x.
+
+**COVID's detonation stays the biggest beat** (`hivfix-2020-covid`). Top three
+radii in 2020: **covid-19 14.13 | pneumonia 12.72 | heart-disease 12.34**.
+COVID leads the field by 11.1 percent, slightly *more* than the 10.5 percent
+it led by before — the knee did not blunt it. Its 2019 -> 2020 jump goes from
+0.69 to 14.13, a **20.6x** single-year change against **14.0x** before, and it
+remains the single largest year-over-year change in the whole 153 x 35 table
+by both ratio and absolute delta (asserted in the suite, not just observed).
+Worth flagging honestly: pneumonia's own 2020 spike *is* COVID pneumonia, so
+"a wide margin" over every other 2020 node was never true of this data under
+any monotone mapping — it was 10.5 percent before this change and is 11.1
+percent after, and the detonation reads as the biggest beat because of the
+*change*, the push-in, the shockwave and the flash, not a solo silhouette.
+
+**RHD's flatline is intact** (`hivfix-rhd-finale`). Its radius across all 35
+years now spans 0.47 to 1.03 (span 0.56); it spanned 0.68 to 1.37 (span 0.69)
+before, so the finale's flat line is if anything flatter. Focus isolation,
+in-world sparkline and caption all render as before.
+
+**Natural tour run** (`hivfix-tour-growth-a/b`), tour started at pause 0 and
+resumed, frames grabbed by polling the live tour year: 1994.02 -> 1996.00,
+HIV radius 4.18 -> 4.96 (4.7 px -> 5.3 px at the overview camera the leg
+travels at, 1.14x over two tour-years). Across the whole 1990 -> 1996 leg the
+pause is built on, radius goes 3.13 -> 4.96, **1.59x**, against 1.30x before.
+
+### Consumers checked
+
+- **`TourSparkline`** reads `data.maxYearly` as the finale's sparkline
+  ceiling. `maxYearly` is still the true global maximum — only the radius
+  curve's *knee* is new, and it is returned as a separate `data.knee` — so the
+  sparkline ceiling and the radius ceiling stay decoupled and the finale's
+  flat line is unchanged. `timeMachineTour.test.js`'s two ceiling assertions
+  pass untouched.
+- **Methodology panel, "Size mapping" section:** describes only the main
+  papers/mortality curve and cites `src/utils/helpers.js` and
+  `src/utils/constants.js` explicitly. It never described the Time Machine's
+  per-year curve, so it stays truthful with no edit. Verified by reading the
+  section and grepping the panel for any Time Machine reference (none).
+
+### Tests
+
+`tests/timeMachine.test.js`: the two `nRY` pins now pass `data.knee`; every
+semantic assertion was kept and passes unchanged (covid 2020 > 10x covid
+2019, RHD max radius small, the 2020 movers ranking). Four tests added:
+
+1. HIV 1990 -> peak radius ratio >= 2, plus absolute-size floors so a future
+   change cannot satisfy the ratio by shrinking both ends into invisibility.
+2. COVID is 2020's biggest node, leads #2 by > 1.10x, and its 2019 -> 2020
+   jump is the largest year-over-year change in the table by both delta and
+   ratio.
+3. `nRY` strictly monotone over ~420 sampled counts spanning 0..maxYearly,
+   including the three cells straddling the knee.
+4. The same invariant against the built table: every (disease, year) cell
+   sorted by count, radius never falls, equal counts give equal radii.
+
+Plus a knee test pinning it to `kneeYearly` of the same cells, `< maxYearly/10`,
+and the knee landing at 38 percent of the range.
+
+### Verification
+
+- `npx vitest run`: **171 tests, 14 files, green** (166 before, 5 added).
+- `npx vite build`: green.
+- Shots in `docs/verify/`: `hivfix-1990-before`, `hivfix-2014-before`,
+  `hivfix-1990-after`, `hivfix-2014-after`, `hivfix-2020-covid`,
+  `hivfix-rhd-finale`, `hivfix-tour-growth-a`, `hivfix-tour-growth-b`.
+
+### Judgement calls worth flagging
+
+1. **The exponent went up, not down.** The brief's cheapest candidate
+   (0.5 -> ~0.32-0.38) is directionally wrong for this acceptance criterion,
+   for the scale-invariance reason above; the measured table is in this
+   report so the reasoning is checkable rather than asserted.
+2. **The percentile ceiling is a knee, not a clamp.** The brief described
+   "counts above the ceiling clamping to max radius"; that would have broken
+   the monotonicity requirement stated three lines later in the same brief
+   (COVID and pneumonia would tie in 2020). The linear tail keeps both.
+3. **The knee sits at the 90th percentile, not the 97th-99th.** Higher knees
+   were computed and are worse on the criterion that matters most after
+   HIV: at p95 COVID's 2020 lead drops to 7.6 percent and at p97 to 6.4
+   percent, below the 10.5 percent it had before. p90 is the highest-contrast
+   choice that leaves the detonation stronger than it shipped.
+4. **The mid-range of the galaxy is visibly bigger in the Time Machine now**
+   (the 75th-97th percentile of yearly counts grows 35-50 percent; counts
+   below the median shrink). That is the dynamic range being handed back, and
+   it is bounded: the largest node is still exactly 18, and the normal view's
+   own ceiling is 55, so the Time Machine still never looks bigger than the
+   galaxy it sits inside.
+
+---
+
+# Round 7, wave 1: the ending restage (addendum 1, section 1)
+
+Implements `docs/direction/2026-08-13-addendum-1.md` section 1 (ending
+restage) plus amendments A1 and A3, closing delta-list items 1, 5 and 8.
+Sections 2, 3 and 4 belong to later waves and are untouched:
+`timeMachineData.js` curve constants, the tour's timeline legs, and
+`IntroSequence`/the assembly are all exactly as they were.
+
+## What changed
+
+**The film ends at home.** The shipped sequence was film, then tour, then a
+permanent park: the tour set `tmPhase` to `'scrub'`, held the finale's
+isolation and caption, and 2.5 s later printed "Scrub the decades." Nothing
+ever released it. `FINALE_HANDOVER = 2.5` and that chip are gone from the
+automatic path. In their place, `FINALE_HOLD = 2.6` seconds after the
+flatline cue, a 2.60 s exit choreography runs and lands the viewer on the
+home screen with the Time Machine in the header.
+
+The choreography table lives in `src/utils/motion.js` as `TM_EXIT`, not
+inside any one component, because five files read it: the engine, the rail,
+the hint row, the header and the tests. Every channel is the addendum's own
+offset. `exitDelay(t0, atMs)` recomputes each staged delay against the live
+clock on every render, so a component that re-renders mid-exit (a hint
+dismissed, a caption cleared) does not restart a delay that has already
+elapsed.
+
+**The interrupted-tour exception is intact and now explicit in the code.**
+Any input mid-tour still hands the scrubber over at the year on screen and
+drops the exit cue, so the rail stays with the viewer until they close it.
+The exit only ever runs from a tour that reached its own end untouched.
+
+**Amendment A1, `arrival(x)`.** The addendum's closed form of the world
+spring, in `motion.js`, with both endpoints exact rather than approximate.
+That is load-bearing: the two blends lerp between the per-year radius and the
+settled papers/mortality radius, so an arrival returning 0.999 at x=1 would
+leave every node a hair off the mapping on the frame the blend ends. At x=1
+the numerator is `1 - Math.exp(-5) * 6` and the denominator
+`1 - 6 * Math.exp(-5)`; IEEE-754 multiplication is commutative, so those are
+bit-identical and the ratio is exactly 1. `arrival` clamps to [0,1], which is
+what makes delta-8's "no radius outside the two endpoints" true by
+construction instead of by sampling.
+
+`staggeredArrival(t, L)` applies the morph's existing mass-weighted lag to
+that curve. The addendum's exit table names `staggeredEase` while amendment
+A1 and the entry blend name `arrival()`; this one function satisfies both
+readings, with the same endpoint guarantee (offset/L normalization means
+`(1 - LAG_LEAD*(1-L))/L >= 1` for every `L <= 1`).
+
+**Re-entry is an instrument, not a rerun.** The camera does not move; a new
+`tm.enter` channel blends radii 0 to 1 over 650 ms under the same lag
+factors, replacing the hard swap that was the one ugly cut left in the piece;
+the rail comes in on its existing 240 ms expo.out with the playhead parked on
+the last year; one runtime-derived chip reads "drag the rail. 1990 to 2024."
+with both years off `data.yearStart` and `data.nYears`; and a 9px `#64748b`
+"replay the decade story" button at the rail's left end calls
+`startTimeMachine(true)`. Closing again runs the same 1.10 s blend home with
+no glide and no pulse.
+
+**The second handover is the first.** `easeGlide`, `SEAT`, `handoverSpeed`,
+`sramp`, `HANDOVER_LEAD`, `HANDOVER_DECAY` and `REST_ROTATE_SPEED` are now
+exported from `OvertureSequence.jsx` and imported by the exit rather than
+restated. Additive `export` keywords only; no behavior in the film changed.
+
+**Sound.** `play('release', { gainDb: -4 })` — `synthRelease` gained an
+optional `gainDb` trim rather than a second voice.
+
+## Two defects found by the harness, and fixed
+
+1. **The handover decay was truncated.** The driver stopped at the exit's
+   2.60 s landing, but the glide ends at 1.75 s and its decay runs a full
+   second past that, to 2.75 s. The galaxy was left turning at 0.3203
+   instead of `REST_ROTATE_SPEED` 0.3 — a delta-5 failure. The driver now
+   separates `landed` (end of the choreography) from `done` (end of the
+   driver) and keeps stepping the handover alone through 2.75 s.
+2. **The handover ended before it began.** The "no glide to hand over from"
+   fallback fired on every frame before the camera channel dispatches at
+   t = 0.15, marking the handover finished 1.6 s early. It is now gated on
+   `reduced || ex.fired.has('camera')`: before 0.15 s the glide has merely
+   not been dispatched yet, which is not the same thing as never existing.
+
+Both were only visible by sampling `controls.autoRotateSpeed` in the browser.
+Neither would have been caught by the unit tests, and the second one silently
+disabled the entire feature delta-5 exists to protect.
+
+## Two disclosed deviations
+
+- **Story chip stagger.** The table asks for the chrome row to fade in over
+  240 ms with a 40 ms per-chip stagger. `StoryChips.jsx` shows and hides the
+  whole row with one 400 ms container transition and is outside this wave's
+  file set, so the exit stages *when* the row returns (t = 1.30) and leaves
+  its existing fade alone. The stagger is a `StoryChips` change, not a
+  Time Machine one.
+- **`HighlightSystem` dim release.** Implemented, but through a new
+  `tmIsoIdx`/`tmIsoDim` pair rather than by ramping `tmFocusIdx` itself:
+  `tmFocusIdx` still clears on the exit's first frame exactly as the table
+  says (everything else keys off it, including the rail's reticle, which
+  should leave with the rail), and the isolation's 480 ms sine.inOut ramp
+  outlives it on the new pair. `tmIsoDim` is quantized to 1/50 so the ramp
+  costs about thirty instance-color repaints rather than one per frame.
+
+## Verification
+
+`npx vitest run`: **200 passed** (15 files), up from 171. New:
+`tests/timeMachineExit.test.js` (20) and 9 added to `tests/motion.test.js`.
+`npx vite build`: green.
+
+Unit coverage worth naming: `arrival` is checked against the addendum's
+formula transcribed independently in the test, at 201 points; both endpoints
+are asserted with `toBe`, not `toBeCloseTo`; the blend endpoint invariant is
+asserted for all 153 diseases in both directions; and `finaleExitAt` is
+asserted against the flatline cue the built timeline actually carries, plus a
+decade-only fallback file.
+
+Browser (`tools/verify.mjs` against :5280, headless Chrome 1440x900):
+
+| check | result |
+|---|---|
+| **delta 1** — fresh load, `setIntroStarted`, 60 s untouched | **PASS**. `tmPhase 'idle'`, `tmFocusIdx -1`, `tmCaption null`, `sizeMode 'papers'`, `uiRevealed`+`hintsShown` true, `storyVisible` true, `autoRotate` true, `autoRotateSpeed` exactly 0.3, `tm.active` false, `tm.exit` 0, `glowSuppress` 0, `ember` 1. Timeline: tour at 22.1 s, exit at 55.3 s, landed 57.9 s — inside the 60 s window with the *shipped* 33.35 s tour, and wave 2's staircase only widens that margin. |
+| **delta 5** — `autoRotateSpeed` after the glide | **PASS**. 0.6003 held from arming (1.45 s) through the end of the glide (1.75 s), then monotone 0.5988 → 0.5919 → 0.5534 → 0.4502 → 0.3470 → **0.3000 at exactly 1.0 s later**. |
+| **delta 8** — header re-entry from a custom camera | **PASS**. Camera delta over 1.0 s: **0.000000 absolute, 0.0000% of radius**. `tmPhase 'scrub'`, `tmFocusIdx -1`, chip `drag the rail. 1990 to 2024.`, `tmCaption null` after 2.6 s. Entry blend measured 690 ms against 650 ms specified. Replay button 9px `rgb(100,116,139)`, left edge 460 against the rail track's 460. |
+| **interrupted tour** | **PASS**. Input at the finale (`tmFocusIdx 49`) → `'scrub'` + "Scrub the decades." within 60 ms; over the next 10 s (past where the exit cue would have fallen) `tmExitAt` stayed 0, phase never left `'scrub'`, rail still up. |
+| **skip during exit** | **PASS**. Input at 0.5 s (`tm.exit` 0.309): mode → `'fast'`, chrome up on the same frame, landed in 253 ms, terminal state byte-identical to a watched exit (camera radius 1120 both ways, `autoRotateSpeed` 0.3, pulse cancelled). |
+| **reduced motion** (`--reduced`) | **PASS**. No glide dispatched, camera jumped to the rest seat, three 300 ms dissolves (at 120 ms: `tm.exit` 0.405, `glowSuppress` 0.304; all landed by 520 ms), static ring instead of the pulse. |
+
+Shots in `docs/verify/`: `w1-home-after-60s` (a cold home screen, differing
+only by the dismissed Time Machine hint, exactly as the acceptance predicts),
+`w1-exit-mid` (rail leaving, `tm.exit` 0.042, `glowSuppress` 0.173 mid-release),
+`w1-reentry`, `w1-replay`, `w1-exit-header`, `w1-exit-header-mobile`,
+`w1-exit-skipped`, `w1-exit-reduced`, `w1-interrupted-tour`.
+
+Two layout fixes came out of looking at the shots rather than the numbers:
+the header micro-line was landing on the filter bar row (moved clear of it,
+with a backdrop), and on mobile it hung centred under the Menu button at the
+right edge and ran off the viewport (right-anchored there instead).

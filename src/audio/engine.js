@@ -110,12 +110,17 @@ const synthIgnition = (e, t0) => synthIgnitionCore(e, t0, 1, 2400, 0.3);
 
 // ── Moment 3: release exhale. A warm, consonant pad swell resolving the
 // ignition's tension: a resting triad, gently detuned.
-function synthRelease(e, t0) {
+// `opts.gainDb` trims the whole pad without a second voice: the Time Machine's
+// exit reuses this same exhale at -4 dB against the film's own (ADDENDUM 1
+// section 1), because the piece hands control over twice and the second time is
+// quieter.
+function synthRelease(e, t0, opts) {
   const ctx = e.ctx;
+  const trim = opts && Number.isFinite(opts.gainDb) ? dbToGain(opts.gainDb) : 1;
   const lp = ctx.createBiquadFilter();
   lp.type = 'lowpass';
   lp.frequency.value = 1200;
-  lp.connect(envGain(ctx, e.master, 0.8, 0.6, 1.2, 0.22, t0));
+  lp.connect(envGain(ctx, e.master, 0.8, 0.6, 1.2, 0.22 * trim, t0));
   [220, 330, 440].forEach((f, i) => {
     const osc = ctx.createOscillator();
     osc.type = 'triangle';

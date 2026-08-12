@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import useStore from '../../store';
 import { isMob } from '../../utils/helpers';
 import { sceneRefs } from '../../sceneRefs';
+import { TM_EXIT, exitDelay } from '../../utils/motion';
 
 const HINTS = [
   { key: 'orbit', label: 'Drag to orbit' },
@@ -21,6 +22,11 @@ export default function HintChips() {
   // The Time Machine owns bottom center while it is up; the chips that are
   // still standing step aside for it and come back when it closes.
   const tmPhase = useStore((s) => s.tmPhase ?? 'idle');
+  // The exit's hint channel (ADDENDUM 1 section 1, t = 1.60): orbit and select
+  // return if undismissed. `timeMachine` is force-dismissed by the engine — the
+  // viewer just watched it — so it is simply gone from `visibleHints` here.
+  const tmExitAt = useStore((s) => s.tmExitAt ?? 0);
+  const tmExitMode = useStore((s) => s.tmExitMode ?? null);
 
   // "Drag to orbit" — first controls interaction. The controls instance is
   // published by CameraRig, which may mount after this component.
@@ -72,6 +78,11 @@ export default function HintChips() {
   if (!hintsShown || visibleHints.length === 0 || tmPhase !== 'idle') return null;
 
   const mob = isMob();
+  // Recomputed against the live clock on every render rather than baked in
+  // once: a re-render mid-exit (a chip dismissed, a hint fired) must not
+  // restart a delay that has already elapsed and make the row disappear again.
+  // A skipped exit re-seats tmExitAt into the past, so this collapses to 0.
+  const exitStage = tmExitMode === 'reduced' ? 0 : exitDelay(tmExitAt, TM_EXIT.hints.at);
 
   return (
     <div
@@ -111,7 +122,7 @@ export default function HintChips() {
             // is the contrast floor the review set for the mobile chip text.
             color: mob ? '#cbd5e1' : '#94a3b8', fontSize: mob ? 11 : 10,
             pointerEvents: 'auto', cursor: 'pointer',
-            opacity: 0, animation: `hintChipIn 300ms ease ${i * 300}ms forwards`,
+            opacity: 0, animation: `hintChipIn 300ms ease ${exitStage + i * 300}ms forwards`,
           }}
         >
           {h.label}

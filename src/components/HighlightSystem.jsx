@@ -61,6 +61,8 @@ export default function HighlightSystem() {
   const supernovaRevealedLinks = useStore(s => s.supernovaRevealedLinks);
   const supernovaNeighborBatches = useStore(s => s.supernovaNeighborBatches);
   const tmFocusIdx = useStore(s => s.tmFocusIdx);
+  const tmIsoIdx = useStore(s => s.tmIsoIdx);
+  const tmIsoDim = useStore(s => s.tmIsoDim);
   const overtureActive = useStore(s => s.overtureActive);
   const diseases = useStore(s => s.diseases);
 
@@ -165,6 +167,13 @@ export default function HighlightSystem() {
           // shot (DIRECTION section 3), so the isolation outranks hover, search
           // and category dimming while it is up.
           if (i !== tmFocusIdx) _color.multiplyScalar(0.4);
+        } else if (tmIsoIdx >= 0) {
+          // The same isolation, on its way out. The exit clears tmFocusIdx on
+          // its first frame but hands the dim to this pair for 480 ms
+          // (ADDENDUM 1 section 1, exit table t = 0.00), so the 152 dimmed
+          // diseases ramp back to full colour instead of popping — the exact
+          // kind of cut the ending restage exists to remove.
+          if (i !== tmIsoIdx) _color.multiplyScalar(tmIsoDim);
         } else if (!neg && !catVis) {
           _color.multiplyScalar(0.05);
         } else if (connMode && connFocusIdx >= 0) {
@@ -289,6 +298,8 @@ export default function HighlightSystem() {
     supernovaRevealedLinks,
     supernovaNeighborBatches,
     tmFocusIdx,
+    tmIsoIdx,
+    tmIsoDim,
     // Fires once at overture start (a harmless normal-color repaint, hover is
     // guarded off during the film anyway) and once at release — the release
     // firing is what restores every node's real color after the LOW-tier

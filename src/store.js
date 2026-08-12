@@ -6,6 +6,9 @@ import { processData, nR, isMob, matchesSearch } from './utils/helpers';
 import { computeLayouts } from './utils/layout';
 import { CATS } from './utils/constants';
 import { sceneRefs } from './sceneRefs';
+import { TM_EXIT } from './utils/motion';
+
+const TM_EXIT_TOTAL = TM_EXIT.total;
 
 // ─── Module-level data processing ────────────────────────────────────────────
 const processed = processData(diseasesData, connectionsData);
@@ -111,6 +114,24 @@ const useStore = create(
     // viewer the decade story or just the scrubber (review gate F1c).
     tmTourSeen: false,
     _tmSnapshot: null, // pre-Time-Machine state for a clean restore
+
+    // ── The exit choreography (ADDENDUM 1 section 1) ──
+    // The opening sequence ends at the home screen, so the tour's finale is
+    // followed by a 2.6 s exit rather than a permanent park. `tmExitAt` is the
+    // performance.now() the exit began at; every staged channel (rail out,
+    // chrome back, hint row, header pulse) reads its own delay off it through
+    // motion.js's exitDelay, which is why it is a timestamp and not a flag.
+    // Set at most once per session — only the automatic path runs the
+    // choreography; a manual close is just stopTimeMachine.
+    tmExitAt: 0,
+    tmExitMode: null, // null | 'normal' | 'fast' | 'reduced'
+    // The finale's isolation outlives tmFocusIdx by 480 ms so the 152 dimmed
+    // diseases ramp back to full color instead of popping on the frame the
+    // exit begins. tmFocusIdx still clears at t=0 (everything else keys off
+    // it, including the rail's reticle, which leaves with the rail); these two
+    // carry the release alone.
+    tmIsoIdx: -1,
+    tmIsoDim: 1, // 0.4 at the start of the release, 1 when it lands
 
     // ── Actions ──
     selectDisease: (idx) => {
@@ -390,12 +411,29 @@ const useStore = create(
       if (s.roulettePhase !== 'idle') return;
       if (s.supernovaPhase !== 'idle' && s.supernovaPhase !== 'complete') return;
       const tm = sceneRefs.tm;
+      // The one runtime-derived chip re-entry gets: "drag the rail. 1990 to
+      // 2024." with both years read off the built table, never transcribed
+      // (ADDENDUM 1 section 1, header re-entry). `handover: true` is what
+      // gives it the rail's existing 2.6 s self-clearing life.
+      let chip = null;
       if (tm) {
         const lastYear = tm.data.nYears - 1;
         tm.active = true;
         tm.exit = 0;
+        // The entry blend (ADDENDUM 1 section 1): 0 -> 1 over 650 ms on
+        // arrival(), staggered by the same lag factors, so the instrument
+        // opens with a blend rather than the hard radius swap that was the one
+        // ugly cut left in the piece. The narrated tour keeps the instant
+        // seat: it opens on a rewind that owns the radii outright, and the
+        // harness's __tour.seek must land a deterministic frame.
+        tm.enter = auto ? 1 : 0;
         tm.yearFloat = lastYear;
         tm.targetYear = lastYear;
+        if (!auto) {
+          const first = tm.data.yearStart;
+          const last = tm.data.yearStart + tm.data.nYears - 1;
+          chip = { lines: [`drag the rail. ${first} to ${last}.`], handover: true };
+        }
       }
       // The rail owns bottom center for as long as it is up, so the story chips
       // stand down (same snapshot/restore shape roulette uses for its takeover),
@@ -403,8 +441,10 @@ const useStore = create(
       // with them.
       set({
         tmPhase: auto ? 'tour' : 'scrub',
-        tmCaption: null,
+        tmCaption: chip,
         tmFocusIdx: -1,
+        tmIsoIdx: -1,
+        tmIsoDim: 1,
         tmTourSeen: s.tmTourSeen || !!auto,
         _tmSnapshot: s._tmSnapshot || { storyVisible: s.storyVisible },
         storyVisible: false,
@@ -430,9 +470,56 @@ const useStore = create(
         tmPhase: 'idle',
         tmCaption: null,
         tmFocusIdx: -1,
+        tmIsoIdx: -1,
+        tmIsoDim: 1,
         _tmSnapshot: null,
         storyVisible: snap ? snap.storyVisible : true,
       });
+    },
+
+    // ── The exit choreography's store half (ADDENDUM 1 section 1) ──
+    // t = 0.00: everything stopTimeMachine does, with two differences. The
+    // finale's isolation moves to tmIsoIdx/tmIsoDim so it can ramp out over
+    // 480 ms instead of popping, and storyVisible is held back to the exit's
+    // 1.30 s chrome mark rather than restored on this frame. The 2.6 s script
+    // itself is driven by TimeMachine.jsx; this is only its opening beat.
+    beginTmExit: (mode) => {
+      const s = get();
+      if (s.tmPhase === 'idle') return;
+      set({
+        tmPhase: 'idle',
+        tmCaption: null,
+        tmFocusIdx: -1,
+        tmIsoIdx: s.tmFocusIdx,
+        tmIsoDim: 0.4, // HighlightSystem's own isolation multiplier
+        // _tmSnapshot deliberately survives: it is what tmExitChrome restores
+        // storyVisible from at 1.30, and leaving it in place also means a
+        // viewer who re-opens the Time Machine mid-exit still has their true
+        // pre-Time-Machine chrome state to come back to.
+        storyVisible: false,
+        tmExitAt: typeof performance !== 'undefined' ? performance.now() : Date.now(),
+        tmExitMode: mode || 'normal',
+      });
+    },
+
+    setTmIso: (idx, dim) => set({ tmIsoIdx: idx, tmIsoDim: dim }),
+
+    // Skip during the exit: any input fast-forwards to the landed state over
+    // 240 ms. Re-seating tmExitAt in the past is what collapses every staged
+    // delay exitDelay() computes to zero, so the chrome comes up immediately
+    // and the header pulse is cancelled rather than merely hurried.
+    tmExitSkip: () => {
+      const s = get();
+      if (!s.tmExitAt || s.tmExitMode !== 'normal') return;
+      const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+      set({ tmExitMode: 'fast', tmExitAt: now - TM_EXIT_TOTAL });
+    },
+
+    // t = 1.30: the story chip row returns. Header, filter bar and legend are
+    // already up from the film's release and do not re-animate.
+    tmExitChrome: () => {
+      const snap = get()._tmSnapshot;
+      set({ storyVisible: snap ? snap.storyVisible : true, _tmSnapshot: null });
     },
 
     connFocusSelect: (diseaseId) => {

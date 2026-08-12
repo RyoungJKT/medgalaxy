@@ -19,7 +19,7 @@ import { fmtWord } from '../utils/captions';
 const clamp01 = (x) => (x < 0 ? 0 : x > 1 ? 1 : x);
 const ramp = (t, a, b) => clamp01((t - a) / (b - a));
 const smooth = (x) => x * x * (3 - 2 * x);
-const sramp = (t, a, b) => smooth(ramp(t, a, b));
+export const sramp = (t, a, b) => smooth(ramp(t, a, b));
 
 // Camera easings are plain functions so the identical curve drives both the
 // gsap tween inside CameraRig and the analytic seek used by the harness.
@@ -30,7 +30,7 @@ const easeExpoOut = (p) => (p >= 1 ? 1 : 1 - Math.pow(2, -10 * p));
 // the velocity handed to the orbit controls, so the film does not stop before
 // the instrument starts. See the handover block below.
 const RESIDUAL = 0.22;
-const easeGlide = (p) => 1 - Math.pow(1 - p, 3) * (1 - RESIDUAL) - (1 - p) * RESIDUAL;
+export const easeGlide = (p) => 1 - Math.pow(1 - p, 3) * (1 - RESIDUAL) - (1 - p) * RESIDUAL;
 
 // ── Beat clock (seconds from the end of assembly) ──
 const T_B1 = 0.0;          // beat 1, attention        5.0 s
@@ -48,9 +48,9 @@ const R_EMBER_0 = 0.5, R_EMBER_1 = 2.0;
 const R_MORPH_HOLD = 2.0;  // deaths sizing held, then it teaches the toggle
 const R_MORPH_END = 3.2;
 const R_GLIDE = 2.6;       // camera glide duration
-const HANDOVER_LEAD = 0.3; // last 300 ms of the glide arm the orbit controls
-const HANDOVER_DECAY = 1.0;
-const REST_ROTATE_SPEED = 0.3; // OrbitControls autoRotateSpeed at rest
+export const HANDOVER_LEAD = 0.3; // last 300 ms of the glide arm the orbit controls
+export const HANDOVER_DECAY = 1.0;
+export const REST_ROTATE_SPEED = 0.3; // OrbitControls autoRotateSpeed at rest
 
 // Compressed (skip) path, relative to the moment of the skip.
 const C_SUPPRESS = 0.35;
@@ -80,7 +80,7 @@ const contrastAt = (p) => 1 + (HERO_CONTRAST - 1) * p;
 const playSound = (name) => { if (typeof window !== 'undefined') window.__mgAudio?.play?.(name); };
 
 // ── Camera seats, as multiples of R0 (camDist) ──
-const SEAT = {
+export const SEAT = {
   assembly: { m: 2.2, az: 0, el: 12 },
   attention0: { m: 1.5, az: 0, el: 12 },
   attention1: { m: 1.15, az: 4, el: 10 },
@@ -135,7 +135,7 @@ function camAt(segments, t, camDist) {
 // Angular rate about the orbit axis at time t, in OrbitControls speed units.
 // autoRotate decreases theta, so a camera whose azimuth is falling hands over a
 // positive speed; anything else hands over the resting drift instead.
-function handoverSpeed(seg, t, camDist) {
+export function handoverSpeed(seg, t, camDist) {
   const dt = 0.05;
   const a = segPos(seg, t - dt, camDist);
   const b = segPos(seg, t, camDist);
