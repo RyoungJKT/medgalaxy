@@ -2089,3 +2089,185 @@ tour, which is the documented exception — an interrupted tour is not a park),
    but the operational rule is simpler: do not touch the tree while it runs.
 5. **`docs/verify` now holds 13 more `w4-*`/`w4m-*` shots.** That directory is
    gitignored, as in waves 1-3; `tools/verify-wave4.mjs` regenerates any of them.
+
+---
+
+**Direction-conflict fix: camera breathing resumes at idle.** Wave 4's camera
+breathing (`src/components/CameraRig.jsx`) read `OrbitControls.onStart` too
+literally, killing the ambient offset on the viewer's first drag and never
+clearing the `killed` flag, so one drag anywhere in the session silenced
+breathing for good, contradicting ADDENDUM 1 section 4 item 1's own list of
+eleven holds that must never sit perfectly still, which names "scrub at rest,
+idle" — a state that only exists after an interaction ends. Fixed by clearing
+`killed` on the exact frame `idleFrames` crosses the same 300-frame threshold
+that already flips `autoRotate` back on (the identical counter, reused so the
+two always return together), then ramping the offset back in over a new,
+slower ~2s curve (`breatheResumeGain`, a pure function in `src/utils/motion.js`)
+rather than the block's usual ~0.5s snap-back; the three absolute suppressions
+(ignition hold, detonation push-in, any active fly) are untouched. `npx
+vitest run`: 305 tests, 17 files, all pass (+4 new, pinning the ramp's shape).
+Verified live with a headless-Chrome harness in the `tools/verify-wave4.mjs`
+family (not committed): a real `'start'` event dispatched on
+`window.__scene.controls` at the true rest/idle state kills `autoRotate`
+immediately and it resumes on its own with no further input; two
+camera-position samples 1.5s apart afterward (rest-state autoRotate spin
+zeroed first, to isolate breathing the same way `verify-wave4.mjs`'s own
+`breathe()` task does) differ by 0.335% of R0, inside the required (0.2%,
+1.0%) band. One commit, `fix(motion): camera breathing resumes at idle like
+autoRotate`.
+
+---
+
+# Round 8: the round-5 gate's ranked fix list (items 1-8)
+
+Round 5 certified 9.16/10 and returned one major and eleven minors as a ranked,
+finite change list. This is that list executed, on `next/showcase`, in one commit.
+Every claim below is a number this session measured, not an intention.
+
+## The finding under the finding (items 1 and 3)
+
+Three of the eight items turned out to be one defect wearing three hats, and
+finding that is what made the fix small. The tour's pause framings were
+*relative*: `camera-node` computed a radius as `cam.position.length() * factor`,
+i.e. it used the camera's distance from the ORIGIN as its distance from the NODE,
+and then compounded that across pauses. By 1996 the camera sat 502 units out
+inside a layout of radius 803; by 2020 it sat at 133, deep in the core, with
+hypertension 70 units off the lens rendering 128 px against the ringed, captioned
+COVID-19 node's 50. The 2021 peak was clean only because it had already been
+patched with a factor-less recenter, and its comment says exactly why: "a
+relative pull from wherever the camera happens to be would inherit the tour's
+compounded push-ins instead of the designed overview distance."
+
+So the fix is one rule, applied to all three: **a pause frames its subject from
+outside the layout, on the subject's own ray.** A new `seat` field on the
+`camera-node` cue seats the camera at `seat` LAYOUT RADII from the origin in the
+node's direction. Nothing can then sit between the lens and the node to collect a
+perspective boost the data never earned; the subject is the nearest body in
+frame; and its size on screen is its size in the table. The seats are
+`HIV_SURGE_SEAT 1.20`, `HIV_FADE_SEAT 1.08` (still "deeper for the fade", now
+deeper toward the node rather than further into the crowd) and `DETONATION_SEAT
+1.18` (still a push-in: nearer than the overview, and the move still rides the
+year-step, so the eruption and the framing stay one gesture).
+
+The unit is load-bearing. The first attempt expressed the seats as fractions of
+`camDist`, which passed on desktop and failed on a phone: `camDist` is 2.0x the
+layout on desktop and 2.4x in portrait, so the same number framed mobile 70
+percent further out and handed the 1996 pause straight back to heart disease
+(HIV 4.8 px against 5.3). In layout radii one number means one framing on any
+viewport, and "outside the galaxy" becomes what it always should have been: a
+value greater than 1, which is now a unit test rather than a tuned clearance.
+
+Measured on the played tour (`tools/verify-r6fix.mjs`, event-triggered off the
+app's own tour clock, never off wall-clock arithmetic):
+
+| frame | round 5 | now |
+|---|---|---|
+| 2020 hold, subject | COVID 50 px, rank 5 of 153 | COVID 29 px, **rank 1 for all 4.0 s**, lead 1.62-1.64x |
+| 2020 hold, bystander | hypertension 152 px | arrhythmia 17.8 px |
+| 1996 hold, subject | HIV 8.5 px, rank 12 | HIV 15 px, **rank 1**, lead 1.47-1.49x |
+| 2021 peak (regression guard) | COVID 27.8 vs 14 | COVID 28.5 vs 16.2, lead 1.77x |
+| mobile 2020 hold | clean | COVID rank 1 all 4.0 s, lead 1.66-1.70x |
+
+The 2020 hold is also now a genuinely still frame (camera 954-956 across the
+whole hold) rather than a recovery from a move, which is what a four-second
+directed climax should be.
+
+## The rest of the list
+
+**2. Assembly's dark opening.** `ASM.brightMin` 0.35 -> 0.50, pinned in
+`tests/assembly.test.js`. Monochrome and the beat-1 colour reward are untouched;
+this is the flight's own brightness ramp. Re-shot at 0.0/1.6/3.2/5.0 on both
+viewports. At the 1.6 s mark, desktop mean 0.227 -> 0.243/255 and comet peak
+147 -> 162; mobile mean 0.483/255. **Reported honestly:** the whole-frame mean
+moves only 7 percent, and it cannot move much more from this knob. At that mark
+153 sub-pixel-to-few-pixel nodes and their tails cover under one percent of a
+1440x900 frame, so the mean the round-5 lens measured is mostly star field and
+aurora. The harness therefore reports the mean (for continuity) alongside comet
+peak and lit-pixel fraction, which are what a viewer in a bright room actually
+sees change. Moving the mean substantially would require the boarded composition
+constants (`rStart` 0.55, `camSeat0` 2.9), which this list did not authorize; A/B
+runs against the pre-fix build are in the harness output.
+
+**4. The 21-year stale caption.** `buildTourTimeline` now clears the caption at
+the start of any leg long enough to sweep. The rule is the leg's own shape, not a
+named year: a leg that sweeps is a leg whose opening card has stopped describing
+the frame. On this board that is exactly the 1996-2019 leg; every short leg keeps
+its caption all the way across, which is what makes the detonation's two
+single-year steps read as one sentence. Verified live: caption `null` at year
+1999.8 mid-leg.
+
+**5. Mobile ending affordance.** The exit pulsed a Time Machine button that lives
+two taps deep in the Menu drawer, so the piece's last sentence pointed at
+nothing. Phones now get `ExitTmChip`: a real, tappable Time Machine control
+below the header, on the same 1.4 s pulse channel, carrying the same micro-line,
+which opens the instrument on tap and leaves with the cue. The Menu button keeps
+its pulse underneath. Verified on 375x812: chip on screen, 240x47, animating
+`tmHdrLine, tmBtnPulse`. Desktop unchanged.
+
+**6. Micro-label redundancy.** `captionNames` (moved to `src/utils/captions.js`,
+pure, unit-tested) suppresses accent 5 wherever the card on screen already names
+its node. Checked **live**, not once, and that is the whole subtlety: the year
+crosses its detent partway through the back.out step, so the label is armed and
+spent while the PREVIOUS pause's card is still up, and the card it would
+duplicate arrives ~150 ms later. A one-shot check at arming time passes and the
+label then sits under the detonation card for the rest of its life. The engine
+also calls `syncMoverLabel` on the same frame it sets a caption, which closes the
+last frame of overlap. Measured across a full tour: **0 frames** carry both the
+label and a caption naming the same node, and the accent still fires twice, so
+suppression did not become deletion.
+
+**7. Ghost shell legibility.** New `ghostAlphaFor(annulusPx)` in `motion.js`:
+below `legiblePx` (4) the lit alpha rises in inverse proportion to the shell's
+on-screen annulus, capped at `maxAlpha` 0.78. The compensation is **weight only**:
+the sphere is still composed once at exactly the radius the node had in the
+year just left and still never scales, so the remembered radius is untouched and
+an at-rest frame is unchanged. Verified at the 1990-1996 overview: a 0.31 px
+annulus is now lit at 0.78 instead of 0.30 (mobile 0.29 px, same lift), with
+monotonicity and the cap unit-tested.
+
+**8. Prose.** (a) The methodology's GHE sentence now reconciles its own two
+counts in-line, both still derived: "23 sit on WHO's Global Health Estimates 2021
+(17 on the estimate itself, which is why the line under this paragraph counts 17;
+the other 6 cite a specific GHE cause line and are listed by name in the table
+below)". (b) A sickle cell caveat paragraph now sits beside the sepsis one it
+parallels, naming the total-burden construct (underlying plus contributing) and
+the order-of-magnitude difference from underlying-cause-only estimates. (c) The
+Time Machine subsection reads "radius is a 0.25 floor plus a term proportional to
+the count", with the floor read from `MIN_RY` rather than written, and a test that
+fails if the old wording returns. (d) `docs/direction/2026-08-13-addendum-1-notes.md`
+records the two letter-level deviations the craft lens asked for: delta-8's
+re-entry stillness (unsatisfiable against delta-4's breathing mandate and the
+exit's own turning galaxy; the build chose the right reading, and the acceptance
+that should have been written is stated) and A4's 1 percent cap against item 5's
+own 0.06-0.13 shimmer band (resolved as a question of A4's scope, not its number).
+
+## Verification
+
+- `npx vitest run`: **316 passed, 17 files** (from 305; +11 new pinning the seats,
+  the layout-radius helper, the caption hand-back, `captionNames`, the ghost alpha
+  curve, the brightness floor and the disclosed floor).
+- `npx vite build`: green, 2.5 s.
+- `tools/verify-r6fix.mjs` (new, committed): all checks green on desktop AND
+  `--mobile`, covering r6fix-2020-hold, r6fix-hiv-pause, r6fix-caption-leg,
+  r6fix-assembly-16, r6fix-ghosts-wide, r6fix-mobile-pulse, the micro-label pair
+  and a 2021-peak regression guard.
+- Determinism pair: two untouched runs agree on every tour beat to **18 ms**
+  desktop, **16 ms** mobile.
+- `node tools/verify-fuzz.mjs --points 14 --conc 2` (the documented quick mode,
+  14 of the full 40 points): **14/14 green**, 14/14 structural, 14/14 narrative.
+- Mobile LOW spot: exactly 1-2 live ghost slots (one per crossing, two only where
+  480 ms fades overlap a 360 ms stair), chip affordance on screen, all pause
+  framings rank 1.
+
+## Notes for whoever picks this up
+
+1. **`PUSH_IN` is gone, and deliberately.** No relative camera factor survives on
+   the tour board; a test asserts `tl.cues.filter(c => c.factor != null).length
+   === 0`. If a future pause wants a push-in, give it a `seat`.
+2. **Seats are in layout radii, never camDist.** The mobile failure above is the
+   reason, and it is silent on a desktop.
+3. **`docs/verify` is gitignored**, as in every prior wave. `tools/verify-r6fix.mjs`
+   regenerates every shot and JSON it names.
+4. The assembly mean-luminance instrument averages four frames a beat apart; a
+   single screenshot cannot distinguish a 7 percent change from the star field's
+   own swing.

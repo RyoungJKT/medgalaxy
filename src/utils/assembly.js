@@ -43,7 +43,16 @@ export const ASM = {
   stretchMax: 1.8,     // s_long = 1 + min(1.8, v_i / v_ref)
   stretchFade0: 0.80,  // ...decaying to exactly 1.000 by p = 0.92
   stretchFade1: 0.92,
-  brightMin: 0.35,     // brightness 0.35 at launch to 1.00 at landing
+  // Brightness at launch, climbing to 1.00 at landing. 0.35 -> 0.50 (round-5
+  // gate, convergent first30 + craft finding): at 0.35 the first ~1.8 s read as
+  // a near-black screen in a bright room (mean frame luminance 0.23/255 at the
+  // 1.6 s mark), so the piece opened on two quiet seconds that a demo audience
+  // spends wondering whether anything is loading. The monochrome-to-color
+  // reward is untouched — beat 0 is still desaturated and color still arrives
+  // only at beat 1 — and so is first-frame integrity: this is the flight's own
+  // brightness ramp, so a node at its spawn is brighter but still visibly
+  // unlanded, and the landing pip still takes it past 1.
+  brightMin: 0.50,
   pipMs: 180,          // plus a 180 ms 1.30x pip on the landing frame
   pipAmp: 0.30,
   tail: 0.12,          // filament: back along the bezier by 0.12 of the remaining path

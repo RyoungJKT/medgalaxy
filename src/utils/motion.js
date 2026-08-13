@@ -218,7 +218,37 @@ export const TM_STAIR = {
 // as a node falling inside it. It renders the year-over-year delta as a visible
 // geometric difference rather than asking the eye to remember a frame from
 // 360 ms ago, which is the actual perceptual problem. The ghost never scales.
-export const TM_GHOST = { dur: 480, alpha: 0.30, slots: 8, reduced: 300 };
+// `legiblePx` and `maxAlpha` are the round-5 gate's shell-legibility answer.
+// The shell reads as the difference between two silhouettes — the old radius
+// against the new one — and at the tour's widest early-year framings that
+// difference is 1 to 2 screen pixels, so the hero accent was true mechanically
+// and invisible optically on the 1990-1996 staircase. The compensation is
+// weight, never geometry: the sphere is still composed once at exactly the
+// radius the node had in the year just left, and still never scales, so the
+// remembered radius is untouched and an at-rest frame is unchanged. What moves
+// is how hard that thin annulus is drawn.
+export const TM_GHOST = { dur: 480, alpha: 0.30, slots: 8, reduced: 300, legiblePx: 4, maxAlpha: 0.78 };
+
+/**
+ * The opacity a shell is lit at, given how many screen pixels separate its
+ * silhouette from the node's. At or above `legiblePx` the shell is already a
+ * readable band and gets exactly the boarded 0.30; below it the alpha rises in
+ * inverse proportion, capped at `maxAlpha` so a shell can never read as a solid
+ * body. Monotone non-increasing in `annulusPx` by construction, so a closer
+ * framing is never drawn harder than a wider one.
+ *
+ * Deliberately a function of the on-screen annulus rather than of raw camera
+ * distance: two nodes at the same distance with different year-over-year
+ * deltas are different legibility problems, and it is the delta the accent
+ * exists to show.
+ * @param {number} annulusPx |oldRadius - newRadius| in screen pixels
+ */
+export function ghostAlphaFor(annulusPx) {
+  if (!(annulusPx > 0)) return TM_GHOST.maxAlpha;
+  if (annulusPx >= TM_GHOST.legiblePx) return TM_GHOST.alpha;
+  const lifted = TM_GHOST.alpha * (TM_GHOST.legiblePx / annulusPx);
+  return lifted > TM_GHOST.maxAlpha ? TM_GHOST.maxAlpha : lifted;
+}
 // Tertiary ink: the shrinkage color for the mover ring. Never #ff4d1a, which
 // belongs to the detonation and the overlooked-decile scar.
 export const TM_SHRINK_INK = '#64748b';

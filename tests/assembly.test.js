@@ -357,7 +357,14 @@ describe('assembly: the comet stretch', () => {
 describe('assembly: brightness and the landing pip', () => {
   const f = makeFlight();
 
-  it('runs 0.35 at launch to 1.00 at landing', () => {
+  // Round-5 gate (convergent first30 + craft): 0.35 left beat 0's first ~1.8 s
+  // reading as a near-black screen (mean frame luminance 0.23/255 at the 1.6 s
+  // mark). The launch floor is the one honest knob, and it is pinned here so the
+  // fix cannot be quietly undone. Colour still arrives only at beat 1: this is
+  // the flight's own brightness ramp, not the palette.
+  it('launches at the lifted floor and still climbs to exactly 1.00', () => {
+    expect(ASM.brightMin).toBe(0.50);
+    expect(ASM.brightMin).toBeLessThan(1);
     const i = 70;
     flightAt(plan, i, plan.t0[i], f);
     expect(f.bright).toBeCloseTo(ASM.brightMin, 9);

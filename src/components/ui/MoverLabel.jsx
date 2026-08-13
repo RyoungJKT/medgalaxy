@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import useStore from '../../store';
 import { sceneRefs } from '../../sceneRefs';
-import { fmtFull } from '../../utils/captions';
+import { fmtFull, captionNames } from '../../utils/captions';
 import { TM_MICRO } from '../../utils/motion';
 
 // ─── Accent 5: the mover micro-label (ADDENDUM 1 section 2.3) ────────────────
@@ -23,6 +23,7 @@ const pv = new THREE.Vector3();
 
 let labelShow = null;
 let labelHide = null;
+let labelSync = null;
 
 /**
  * Shows the micro-label beside one node.
@@ -36,6 +37,17 @@ export function showMoverLabel(index, delta) {
 /** Drops the label immediately (the Time Machine closing, a skip, a new step). */
 export function hideMoverLabel() {
   if (labelHide) labelHide();
+}
+
+/**
+ * Drops the label if `caption` names the node it is about. Called by the engine
+ * on the same frame it sets a caption, so the loudest pauses in the piece never
+ * render even one frame carrying both numerals. The rAF loop below runs the same
+ * rule continuously, for every other way a caption can change; this is the exact
+ * one, for the moment that matters.
+ */
+export function syncMoverLabel(caption) {
+  if (labelSync) labelSync(caption);
 }
 
 export default function MoverLabel() {
@@ -61,11 +73,20 @@ export default function MoverLabel() {
       const el = elRef.current;
       if (el) { el.style.opacity = '0'; el.style.display = 'none'; }
     };
+    const sync = (caption) => {
+      const st = stateRef.current;
+      if (st.idx < 0) return;
+      const { diseases } = useStore.getState();
+      const d = diseases && diseases[st.idx];
+      if (captionNames(caption, d && d.label)) hide();
+    };
     labelShow = show;
     labelHide = hide;
+    labelSync = sync;
     return () => {
       if (labelShow === show) labelShow = null;
       if (labelHide === hide) labelHide = null;
+      if (labelSync === sync) labelSync = null;
     };
   }, []);
 
@@ -90,6 +111,19 @@ export default function MoverLabel() {
           const camera = sceneRefs.camera;
           const canvas = sceneRefs.canvasElement;
           const store = useStore.getState();
+          // Round-5 gate: the moment the card on screen names this node, the
+          // label has nothing left to add and stands down. Live, because the
+          // caption that duplicates it usually arrives after the label does —
+          // see captionNames. Dropped outright rather than faded: the redundancy
+          // is the defect, and a 240 ms exit would just prolong it.
+          const d = store.diseases && store.diseases[st.idx];
+          if (captionNames(store.tmCaption, d && d.label)) {
+            stateRef.current = { idx: -1, t0: 0, total: 0 };
+            el.style.opacity = '0';
+            el.style.display = 'none';
+            requestAnimationFrame(update);
+            return;
+          }
           const pos = store.curPos && store.curPos[st.idx];
           const tm = sceneRefs.tm;
           if (camera && canvas && pos) {

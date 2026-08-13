@@ -10,12 +10,15 @@ import {
   scrubRate,
   buildTourCaptions,
   midSentence,
-  HIV_SURGE_IN,
-  HIV_FADE_IN,
+  HIV_SURGE_SEAT,
+  HIV_FADE_SEAT,
+  DETONATION_SEAT,
+  layoutRadius,
   tourPreempted,
   tourGate,
 } from '../src/components/TimeMachine';
 import { ACCENT_MAX_RATE } from '../src/utils/timeMachineData';
+import { captionNames } from '../src/utils/captions';
 
 const idMap = Object.fromEntries(diseases.map((d, i) => [d.id, i]));
 const data = buildTimeMachineData(diseases);
@@ -121,7 +124,12 @@ describe('buildTourTimeline', () => {
     const kinds = tl.cues.map((c) => c.kind);
     expect(kinds.filter((k) => k === 'shockwave')).toHaveLength(1);
     expect(kinds.filter((k) => k === 'focus').length).toBe(1);
-    expect(kinds.filter((k) => k === 'caption').length).toBe(tl.pauses.length + 1); // + the flatline
+    const captions = tl.cues.filter((c) => c.kind === 'caption');
+    const clears = captions.filter((c) => c.caption == null);
+    // One card per pause, plus the finale's flatline swap, plus one hand-back
+    // for each leg long enough to sweep (round-5 gate: the 1996 card used to
+    // ride the whole 23-year run to 2019 while the numeral rolled under it).
+    expect(captions.length - clears.length).toBe(tl.pauses.length + 1);
     for (let i = 1; i < tl.cues.length; i++) {
       expect(tl.cues[i].t).toBeGreaterThanOrEqual(tl.cues[i - 1].t);
     }
@@ -316,24 +324,100 @@ describe('leg choreography (addendum 1 section 4 item 3)', () => {
   });
 });
 
-describe('the HIV pause framing (carried note, waves 2 and 3)', () => {
-  it('deepens the surge and softens the fade by exactly the same factor', () => {
-    // The shipped pair was 0.80 then 0.62. The surge is the pause whose caption
-    // claims growth, so it takes the deeper push; the product is preserved, so
-    // the 2019 close-up is framed exactly where it always was.
-    expect(HIV_SURGE_IN).toBe(0.62);
-    expect(HIV_FADE_IN).toBe(0.80);
-    expect(HIV_SURGE_IN * HIV_FADE_IN).toBeCloseTo(0.80 * 0.62, 12);
-    expect(HIV_SURGE_IN).toBeLessThan(HIV_FADE_IN);
+describe('the subject pauses frame their subject (round-5 gate)', () => {
+  // The rule the three re-seated pauses share: a pause frames its subject from
+  // OUTSIDE the layout, on the subject's own ray. That is not taste, it is the
+  // only geometry in which nothing can sit between the lens and the node and
+  // collect a perspective boost the data never earned. The seats are fractions
+  // of the designed camDist, so none of them can inherit another's drift.
+  it('drifts onto the surge, then deeper for the fade', () => {
+    expect(HIV_FADE_SEAT).toBeLessThan(HIV_SURGE_SEAT);
+    // ...and the detonation is a push-in: nearer than the overview the peak
+    // returns to, which is camDist, itself 2.0 layout radii on a desktop.
+    expect(DETONATION_SEAT).toBeLessThan(2.0);
   });
 
-  it('still puts both HIV pauses on the HIV node, and nothing else', () => {
+  it('keeps every seat outside the layout, which is the whole mechanism', () => {
+    // The unit is the layout's own radius, so this is not a tuned clearance —
+    // it is what the unit means. A seat below 1 puts the camera inside the
+    // galaxy, where the nearest bystander collects a perspective boost the data
+    // never earned, which is the defect all three of these were re-seated for.
+    for (const seat of [HIV_SURGE_SEAT, HIV_FADE_SEAT, DETONATION_SEAT]) {
+      expect(seat).toBeGreaterThan(1);
+    }
+  });
+
+  it('measures the layout radius off the live positions, robustly', () => {
+    expect(layoutRadius([[3, 4, 0], [1, 0, 0]])).toBeCloseTo(5, 9);
+    expect(layoutRadius([[0, 0, 0]])).toBe(1);   // degenerate: never divide by it
+    expect(layoutRadius([])).toBe(1);
+    expect(layoutRadius(null)).toBe(1);
+    expect(layoutRadius([null, [0, 0, 2]])).toBeCloseTo(2, 9);
+  });
+
+  it('puts both HIV pauses on the HIV node as designed seats, and nothing else', () => {
     const tl = buildTourTimeline(data, data.nYears - 1);
     const hivCues = tl.cues.filter((c) => c.kind === 'camera-node' && c.node === 'hiv-aids');
     expect(hivCues.length).toBe(2);
-    expect(hivCues.map((c) => c.factor)).toEqual([HIV_SURGE_IN, HIV_FADE_IN]);
+    expect(hivCues.map((c) => c.seat)).toEqual([HIV_SURGE_SEAT, HIV_FADE_SEAT]);
+    expect(hivCues.every((c) => c.factor === undefined)).toBe(true);
     expect(hivCues[0].t).toBeCloseTo(tl.pauseAt[1], 9);
     expect(hivCues[1].t).toBeCloseTo(tl.pauseAt[2], 9);
+  });
+
+  it('gives the detonation a designed seat that rides the year-step', () => {
+    const tl = buildTourTimeline(data, data.nYears - 1);
+    const det = tl.cues.find((c) => c.kind === 'camera-node' && c.node === 'covid-19' && c.seat != null);
+    expect(det.seat).toBe(DETONATION_SEAT);
+    expect(det.node).toBe('covid-19');
+    // Fired at the leg start, not the arrival: the move and the eruption are
+    // one gesture, and the hold it lands on is a still frame.
+    expect(det.t).toBeCloseTo(tl.pauseAt[3] - 0.65, 6);
+    expect(det.dur).toBeCloseTo(0.65, 6);
+    // No relative push-in survives anywhere on the board: that is the defect.
+    expect(tl.cues.filter((c) => c.factor != null).length).toBe(0);
+  });
+});
+
+describe('the long leg hands its caption back (round-5 gate)', () => {
+  const tl = buildTourTimeline(data, data.nYears - 1);
+
+  it('clears the caption at the start of the 1996-2019 leg and nowhere else', () => {
+    const clears = tl.cues.filter((c) => c.kind === 'caption' && c.caption == null);
+    expect(clears.length).toBe(1);
+    // The leg's own start: the 1996 pause arrival plus its hold.
+    expect(clears[0].t).toBeCloseTo(tl.pauseAt[1] + tl.pauses[1].hold, 6);
+    // And it is the leg that sweeps, not a named year.
+    expect(Math.abs(tl.pauses[2].yearIdx - tl.pauses[1].yearIdx)).toBeGreaterThan(8);
+  });
+
+  it('leaves every short leg its caption all the way across', () => {
+    // The detonation's two single-year steps must read as one sentence.
+    const clears = tl.cues.filter((c) => c.kind === 'caption' && c.caption == null);
+    for (const c of clears) expect(c.t).toBeLessThan(tl.pauseAt[3]);
+  });
+});
+
+describe('captionNames (round-5 gate: micro-label redundancy)', () => {
+  it('sees the node the pause caption is already about', () => {
+    expect(captionNames(caps.detonation, 'COVID-19')).toBe(true);
+    expect(captionNames(caps.peak, 'COVID-19')).toBe(true);
+    expect(captionNames(caps.hivSurge, 'HIV/AIDS')).toBe(true);
+  });
+
+  it('lets the label speak where the caption does not name it', () => {
+    expect(captionNames(caps.rules, 'COVID-19')).toBe(false);
+    expect(captionNames(caps.detonation, 'Influenza')).toBe(false);
+    expect(captionNames(null, 'COVID-19')).toBe(false);
+    expect(captionNames(caps.detonation, '')).toBe(false);
+    // A cleared caption (the long leg) suppresses nothing, which is what gives
+    // the accent its room back on the quiet staircase years.
+    expect(captionNames(undefined, 'HIV/AIDS')).toBe(false);
+  });
+
+  it('reads the caption`s data line and its kicker, not just its headline', () => {
+    expect(captionNames({ lines: ['nothing'], data: 'COVID-19: 289 papers' }, 'COVID-19')).toBe(true);
+    expect(captionNames({ lines: ['nothing'], micro: 'COVID-19 drew more' }, 'COVID-19')).toBe(true);
   });
 });
 
@@ -408,16 +492,25 @@ describe('buildTourTimeline reduced motion', () => {
     expect(shock).toBeTruthy();
     expect(shock.t).toBeCloseTo(rtl.pauseAt[3], 6);
     // The push-in specifically (the peak pause also flies to covid-19, but as
-    // a recenter with no factor and no duration of its own).
+    // a recenter with no seat and no duration of its own).
     const detCam = rtl.cues.find(
-      (c) => c.kind === 'camera-node' && c.node === 'covid-19' && c.factor != null
+      (c) => c.kind === 'camera-node' && c.node === 'covid-19' && c.seat != null
     );
     expect(detCam.dur).toBe(0);
   });
 
   it('keeps one caption per pause plus the flatline, same as the normal tour', () => {
-    const captionCount = rtl.cues.filter((c) => c.kind === 'caption').length;
-    expect(captionCount).toBe(rtl.pauses.length + 1);
+    const captions = rtl.cues.filter((c) => c.kind === 'caption');
+    const clears = captions.filter((c) => c.caption == null);
+    expect(captions.length - clears.length).toBe(rtl.pauses.length + 1);
+    // A zero-duration leg still hands its caption back, and the pause card that
+    // follows on the same instant still wins: the clear is pushed first, and
+    // the cue sort is stable.
+    for (const c of clears) {
+      const later = rtl.cues.filter((x) => x.kind === 'caption' && x.t === c.t && x.caption != null);
+      expect(later.length).toBe(1);
+      expect(rtl.cues.indexOf(later[0])).toBeGreaterThan(rtl.cues.indexOf(c));
+    }
   });
 });
 

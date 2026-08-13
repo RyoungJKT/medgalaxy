@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   DUR, EASE, springStep, lagFactor, staggeredEase,
-  arrival, staggeredArrival, settleScale, TM_SETTLE, TM_STAIR, TM_GHOST, TM_MICRO,
+  arrival, staggeredArrival, settleScale, TM_SETTLE, TM_STAIR, TM_GHOST, ghostAlphaFor, TM_MICRO,
 } from '../src/utils/motion';
 
 describe('motion tokens', () => {
@@ -245,13 +245,36 @@ describe('the staircase, ghost and micro-label constants', () => {
   });
 
   it('fades the ghost shell 0.30 to 0 over 480 ms from a pool of 8', () => {
-    expect(TM_GHOST).toEqual({ dur: 480, alpha: 0.30, slots: 8, reduced: 300 });
+    expect(TM_GHOST).toEqual({ dur: 480, alpha: 0.30, slots: 8, reduced: 300, legiblePx: 4, maxAlpha: 0.78 });
     expect(TM_GHOST.dur).toBe(DUR.slow);
     // Eight slots against three per crossing: an eviction only ever takes a
     // shell two generations and 720 ms old, which is past its own fade.
     expect(TM_GHOST.slots).toBeGreaterThan(2 * 3);
     expect(TM_GHOST.dur).toBeGreaterThan(TM_STAIR.year);
     expect(TM_GHOST.dur).toBeLessThan(2 * TM_STAIR.year);
+  });
+
+  // Round-5 gate: the hero accent was a 1-2 px annulus at 24 percent alpha on
+  // the tour's widest early-year framings, i.e. true and invisible. The
+  // compensation is weight only — nothing here can move a shell's radius.
+  it('lifts a thin shell toward legibility, and never past its cap', () => {
+    expect(ghostAlphaFor(TM_GHOST.legiblePx)).toBe(TM_GHOST.alpha);
+    expect(ghostAlphaFor(40)).toBe(TM_GHOST.alpha);        // a close framing is untouched
+    expect(ghostAlphaFor(Infinity)).toBe(TM_GHOST.alpha);  // an unmeasurable one too
+    expect(ghostAlphaFor(2)).toBeCloseTo(0.60, 10);        // the round-5 wide framing
+    expect(ghostAlphaFor(0.01)).toBe(TM_GHOST.maxAlpha);   // capped: never a solid body
+    expect(ghostAlphaFor(0)).toBe(TM_GHOST.maxAlpha);
+    expect(TM_GHOST.maxAlpha).toBeLessThan(1);
+  });
+
+  it('is monotone: a wider framing is never drawn softer than a closer one', () => {
+    let prev = ghostAlphaFor(0.05);
+    for (let px = 0.1; px <= 12; px += 0.05) {
+      const a = ghostAlphaFor(px);
+      expect(a).toBeLessThanOrEqual(prev + 1e-12);
+      expect(a).toBeGreaterThanOrEqual(TM_GHOST.alpha - 1e-12);
+      prev = a;
+    }
   });
 
   it('runs the micro-label in 180, holds 650, out 240, on a 360 ms dwell gate', () => {

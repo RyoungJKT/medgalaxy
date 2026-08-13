@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import useStore from '../store';
-import { TM_GHOST } from '../utils/motion';
+import { sceneRefs } from '../sceneRefs';
+import { TM_GHOST, ghostAlphaFor } from '../utils/motion';
 
 // ─── Accent 1: the ghost shell (ADDENDUM 1 section 2.3) ──────────────────────
 // The hero accent. On each accented node, a sphere at the node's centre held at
@@ -62,9 +63,12 @@ export default function GhostShells() {
   // recently used" a comparison rather than a scan of timestamps that can tie
   // inside one frame.
   const slotsRef = useRef(
-    Array.from({ length: TM_GHOST.slots }, () => ({ live: false, t0: 0, dur: TM_GHOST.dur, seq: -1 }))
+    Array.from({ length: TM_GHOST.slots }, () => ({ live: false, t0: 0, dur: TM_GHOST.dur, seq: -1, a0: TM_GHOST.alpha }))
   );
   const seqRef = useRef(0);
+  // The last shell's legibility reading, for the r6fix-ghosts-wide harness:
+  // how wide its annulus was on screen and what alpha that bought it.
+  const lastPxRef = useRef(null);
 
   const geo = useMemo(() => new THREE.SphereGeometry(1, SEG, SEG), []);
 
@@ -132,6 +136,12 @@ export default function GhostShells() {
       const slots = slotsRef.current;
       const now = performance.now();
       const dur = reduced ? TM_GHOST.reduced : TM_GHOST.dur;
+      // Screen pixels per world unit at a given depth, off the live camera:
+      // the same projection NodeLabels and the mover label already use.
+      const cam = sceneRefs.camera;
+      const canvas = sceneRefs.canvasElement;
+      const vh = canvas ? canvas.getBoundingClientRect().height : 0;
+      const tanHalf = cam ? Math.tan(((cam.fov || 60) * Math.PI) / 360) : 0;
       let lit = 0;
       for (const p of picks) {
         const pos = curPos && curPos[p.index];
@@ -144,10 +154,26 @@ export default function GhostShells() {
           if (!slots[s].live) { slot = s; break; }
           if (slot < 0 || slots[s].seq < slots[slot].seq) slot = s;
         }
+        // How wide this shell will read, in screen pixels: the gap between the
+        // remembered silhouette and the one the node is wearing now. When the
+        // pick carries no new radius (a caller outside the accent engine) the
+        // shell simply takes the boarded alpha.
+        let annulusPx = Infinity;
+        if (cam && vh > 0 && tanHalf > 0 && Number.isFinite(p.to)) {
+          const dist = Math.hypot(pos[0] - cam.position.x, pos[1] - cam.position.y, pos[2] - cam.position.z);
+          if (dist > 1e-6) annulusPx = (Math.abs(p.radius - p.to) * vh) / (2 * dist * tanHalf);
+        }
+        const a0 = ghostAlphaFor(annulusPx);
+        lastPxRef.current = {
+          index: p.index,
+          annulusPx: Number.isFinite(annulusPx) ? +annulusPx.toFixed(2) : null,
+          alpha: +a0.toFixed(3),
+        };
         const rec = slots[slot];
         rec.live = true;
         rec.t0 = now;
         rec.dur = dur;
+        rec.a0 = a0;
         rec.seq = seqRef.current++;
         _v3.set(pos[0], pos[1], pos[2]);
         // The shell is placed once and never touched again: it holds the old
@@ -157,7 +183,7 @@ export default function GhostShells() {
         mesh.setMatrixAt(slot, _m4);
         _c.set(p.color || '#94a3b8');
         mesh.setColorAt(slot, _c);
-        alphaAttr.array[slot] = TM_GHOST.alpha;
+        alphaAttr.array[slot] = a0;
         lit++;
       }
       if (lit) {
@@ -188,13 +214,16 @@ export default function GhostShells() {
         slot: i,
         live: s.live,
         alpha: alphaAttr.array[i],
+        a0: s.a0,
         age: s.live ? performance.now() - s.t0 : null,
       })).filter((s) => s.live);
+      // r6fix-ghosts-wide: the annulus width a screenshot cannot measure.
+      window.__ghostPx = () => lastPxRef.current;
     }
     return () => {
       if (ghostTrigger === trigger) ghostTrigger = null;
       if (ghostClear === clear) ghostClear = null;
-      if (typeof window !== 'undefined') delete window.__ghosts;
+      if (typeof window !== 'undefined') { delete window.__ghosts; delete window.__ghostPx; }
     };
   }, [alphaAttr]);
 
@@ -218,7 +247,9 @@ export default function GhostShells() {
       anyLive = true;
       // Linear, per the addendum. An eased fade would put the shell's most
       // visible moment somewhere other than the frame the change happened on.
-      alphaAttr.array[s] = TM_GHOST.alpha * (1 - p);
+      // `a0` is the lit alpha (the boarded 0.30, or the distance-compensated
+      // lift a thin annulus earned); the fade still lands on exactly 0.
+      alphaAttr.array[s] = rec.a0 * (1 - p);
       dirty = true;
     }
     if (dirty) alphaAttr.needsUpdate = true;

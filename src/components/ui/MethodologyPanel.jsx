@@ -6,7 +6,7 @@ import { fmtFull } from '../../utils/captions';
 import { MAX_PAPERS, MAX_MORT, MX } from '../../utils/constants';
 import { isNoGlobalEstimate } from '../../utils/mortalityLabel';
 import {
-  buildTimeMachineData, KNEE_PCT, KNEE_SHARE, BULK_EXP, MXY,
+  buildTimeMachineData, KNEE_PCT, KNEE_SHARE, BULK_EXP, MXY, MIN_RY,
 } from '../../utils/timeMachineData';
 import meta from '../../../data/meta.json';
 
@@ -41,6 +41,12 @@ export function timeMachineMapping(data) {
     file: 'src/utils/timeMachineData.js',
     kneePct: KNEE_PCT,
     knee: data.knee,
+    // Round-5 gate, depth: the subsection said "proportional" where the mapping
+    // is affine (MIN_RY + f * (MXY - MIN_RY)), and the omitted floor is not
+    // cosmetic — it compresses small-count growth ratios, so leaving it out
+    // erred anti-drama in prose while the curve erred anti-drama in fact. Read
+    // from the module rather than written, like every other figure here.
+    floor: MIN_RY,
     sharePct: Math.round(KNEE_SHARE * 100),
     exponent: BULK_EXP,
     ceiling: MXY,
@@ -50,8 +56,8 @@ export function timeMachineMapping(data) {
       `The Time Machine sizes each node by that one year's paper count instead, on its own curve `
       + `(${'src/utils/timeMachineData.js'}). The knee is the ${KNEE_PCT}th percentile of every `
       + `disease-year count in the table, ${fmtFull(data.knee)} papers, computed when the table is `
-      + `built rather than written in. Below it radius is proportional to the count, exponent `
-      + `${BULK_EXP.toFixed(2)}, and that segment owns ${Math.round(KNEE_SHARE * 100)} percent of the `
+      + `built rather than written in. Below it radius is a ${MIN_RY} floor plus a term proportional to `
+      + `the count, exponent ${BULK_EXP.toFixed(2)}, and that segment owns ${Math.round(KNEE_SHARE * 100)} percent of the `
       + `size range; above it the curve runs straight to the single biggest year on record, `
       + `${fmtFull(data.maxYearly)} papers, at the ceiling of ${MXY} units. That ceiling is under half `
       + `the ${MX} the cumulative curve above reaches, so one year is never bigger than the whole record.`,
@@ -170,7 +176,7 @@ export default function MethodologyPanel() {
               The all-time total and the year-by-year series are different queries, so they are not required to agree. For six diseases the series sums slightly above the all-time total, because PubMed counts a record in every year its publication dates name, and a record carrying both an electronic and a print date names two. The sidebar prints a note under the sparkline on exactly those diseases rather than leaving the arithmetic to be discovered.
             </div>
             <div style={SP}>
-              Deaths do not come from PubMed at all. They are entered by hand, and every one of the {stats.diseaseCount} figures has been checked against the document it cites, one row at a time. {stats.gheCount} sit on WHO's Global Health Estimates 2021, {stats.globocanCount} cancers on IARC GLOBOCAN 2022, {stats.gbdCount} on IHME's Global Burden of Disease where WHO's cause list carries no line for them, {stats.diseaseCount - stats.gheCount - stats.globocanCount - stats.gbdCount - stats.noEstimateCount} on a programme report, fact sheet or single modelling study, and {stats.noEstimateCount} on no global estimate at all, for the reason given below. Every count in this paragraph is computed from the data file when this panel opens, not written in by hand, so it cannot drift away from the table below it. The vintages are deliberately mixed, not uniform: malaria, tuberculosis, HIV/AIDS, measles and hepatitis use their own most current annual reports, and WHO Global Health Estimates 2021 is still the latest GHE vintage as of this edition. The sidebar repeats the source in short form next to every deaths figure, so the attribution travels with the number.
+              Deaths do not come from PubMed at all. They are entered by hand, and every one of the {stats.diseaseCount} figures has been checked against the document it cites, one row at a time. {stats.gheCount} sit on WHO's Global Health Estimates 2021 ({stats.defaultCount} on the estimate itself, which is why the line under this paragraph counts {stats.defaultCount}; the other {stats.gheCount - stats.defaultCount} cite a specific GHE cause line and are listed by name in the table below), {stats.globocanCount} cancers on IARC GLOBOCAN 2022, {stats.gbdCount} on IHME's Global Burden of Disease where WHO's cause list carries no line for them, {stats.diseaseCount - stats.gheCount - stats.globocanCount - stats.gbdCount - stats.noEstimateCount} on a programme report, fact sheet or single modelling study, and {stats.noEstimateCount} on no global estimate at all, for the reason given below. Every count in this paragraph is computed from the data file when this panel opens, not written in by hand, so it cannot drift away from the table below it. The vintages are deliberately mixed, not uniform: malaria, tuberculosis, HIV/AIDS, measles and hepatitis use their own most current annual reports, and WHO Global Health Estimates 2021 is still the latest GHE vintage as of this edition. The sidebar repeats the source in short form next to every deaths figure, so the attribution travels with the number.
             </div>
             <div style={SP}>
               For {stats.noEstimateCount} of the {stats.diseaseCount} diseases no authority publishes a global death estimate at all: WHO's cause list and IHME's cause hierarchy have no line for them, because their deaths are coded to an underlying disease or an external cause. Those rows display the modeling boundary and say so, in the source column below and on the sidebar tile itself, rather than borrowing a citation that would imply a figure nobody has published.
@@ -208,6 +214,9 @@ export default function MethodologyPanel() {
             <div style={SH}>Known caveats, stated plainly</div>
             <div style={SP}>
               Sepsis's mortality figure counts sepsis-associated deaths: deaths where sepsis contributed alongside an underlying cause such as pneumonia, cancer, or ischaemic heart disease. It is not an independent cause on top of the others; adding mortality rows together into a single total would double-count it.
+            </div>
+            <div style={SP}>
+              Sickle cell disease's figure is the same kind of count, and for the same reason it needs saying: it is IHME's total sickle cell mortality burden, deaths where sickle cell disease was the underlying cause plus deaths where it contributed to another one (Lancet Haematology 2023). Estimates that count only underlying-cause deaths land roughly an order of magnitude lower. Like sepsis, it is not an independent cause to be added on top of the rows around it.
             </div>
             <div style={SP}>
               Pneumonia uses IHME's lower respiratory infections category, which also includes influenza, RSV, and bronchiolitis deaths, not narrowly bacterial pneumonia, and which excludes COVID-19 deaths by construction. Rotavirus and norovirus are both subsets of overall diarrhoeal disease deaths, not separate causes; neither should be summed with the other or treated as the full diarrhoeal burden.

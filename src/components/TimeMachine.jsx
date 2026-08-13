@@ -6,7 +6,7 @@ import { sceneRefs } from '../sceneRefs';
 import {
   buildTimeMachineData, accentPicks, ACCENT_BUDGET, ACCENT_MAX_RATE,
 } from '../utils/timeMachineData';
-import { fmtFull, fmtWord } from '../utils/captions';
+import { fmtFull, fmtWord, captionNames } from '../utils/captions';
 import { fireRipple } from './SelectionRipple';
 import {
   DUR, springStep, staggeredArrival, settleScale,
@@ -16,7 +16,7 @@ import {
 import { TIER } from '../utils/tiers';
 import { CC } from '../utils/constants';
 import { fireGhosts, clearGhosts } from './GhostShells';
-import { showMoverLabel, hideMoverLabel } from './ui/MoverLabel';
+import { showMoverLabel, hideMoverLabel, syncMoverLabel } from './ui/MoverLabel';
 import { morphRadiusAt, computeLagFactors } from './DiseaseNodes';
 // The exit's camera glide is the film's release glide, literally: same seat,
 // same easeGlide, same residual, same arming window and decay. "The second
@@ -84,13 +84,60 @@ const REWIND = TM_STAIR.rewind / 1000;        // 1.30
 export const FINALE_SPLIT = 1.9;
 // The 2020 camera move: a micro push-in onto the node that detonates, 15
 // percent closer, so the shockwave leaves frame center rather than a corner.
-const PUSH_IN = 0.85;
-// The two HIV pauses' push-ins. Exported so the tour test can assert the one
-// invariant that matters about the pair: their product is unchanged from the
-// shipped 0.80 x 0.62, so deepening the surge did not quietly re-frame the
-// fade. See the cue site in buildTourTimeline for why they swapped.
-export const HIV_SURGE_IN = 0.62;
-export const HIV_FADE_IN = 0.80;
+// ── The 2020 camera move (round-5 gate, the round's only major) ─────────────
+// A micro push-in onto the node that detonates, so the shockwave leaves frame
+// centre rather than a corner. It used to be relative — 15 percent of the
+// camera's own distance from the origin, applied as a distance from COVID-19 —
+// and by 2020 it had inherited both HIV push-ins, so "15 percent closer"
+// compounded into a seat 133 units from the origin: INSIDE a layout of radius
+// 803, with hypertension 70 units off the lens rendering at 128 px against the
+// ringed, captioned COVID-19 node's 50. The subject was out-silhouetted 2.6 to 1
+// for the whole four-second climax, which is exactly the perspective-upstaging
+// the client flagged once and the 2021 peak already fixes.
+//
+// It is now the same designed seat the HIV pauses take: a multiple of the
+// layout's own radius on COVID-19's own ray, outside the layout, so the
+// detonating node is the nearest body in frame and the hold is a still frame
+// rather than a recovery. Still a push-in — 1.18 layout radii is nearer than the
+// overview the peak returns to (camDist, 2.0 to 2.4 layout radii) — and the move
+// still rides the year-step, so the eruption and the framing are one gesture.
+// Measured by tools/verify-r6fix.mjs (r6fix-2020-hold): COVID-19 goes from 50 px
+// behind hypertension's 152 to 30 px ahead of the field, for the whole hold.
+export const DETONATION_SEAT = 1.18;
+// ── The two HIV pauses' seats (round-5 gate, clarity) ───────────────────────
+// These used to be relative push-ins (0.62 then 0.80 of the camera's own
+// distance from the origin, applied as a distance from the node) and they had
+// the detonation's disease in miniature: at 1996 the compounded pull left the
+// camera 502 units out, i.e. INSIDE a layout whose own radius is 803, with
+// leukemia 302 units off the lens at 25 px against the captioned HIV/AIDS node's
+// 8.5. The caption's whole claim is that this node grew, and it was the
+// twelfth-largest thing on screen.
+//
+// The fix is one rule, and it is geometric rather than aesthetic: a pause frames
+// its subject from OUTSIDE the layout, on the subject's own ray. Then nothing
+// can sit between the lens and the node to collect a perspective boost the data
+// never earned, the subject is the nearest body in frame, and its size on screen
+// is its size in the table. Both seats are fractions of the designed camDist,
+// measured from the origin along the node's own direction, so neither can
+// inherit the other's drift and the pair reproduces from any approach.
+//
+// The direction's shape is unchanged: the camera still leaves the overview for
+// these two pauses only, still drifts onto the node the caption is about, and
+// still goes deeper for the fade (1.08 is nearer than 1.20). What changed is
+// that "deeper" now means deeper toward the node rather than further into the
+// crowd. Measured by tools/verify-r6fix.mjs (r6fix-hiv-pause): HIV/AIDS goes
+// from 8.5 px and twelfth to 15 px and first, leading by 1.5x.
+//
+// The unit is the LAYOUT's own radius, not camDist, and that is load-bearing
+// rather than a detail. camDist is 2.0x the layout on desktop and 2.4x in
+// portrait — a wider seat, because a narrow viewport needs one to fit the same
+// galaxy — so a camDist-relative seat silently framed mobile 70 percent further
+// out and handed the pause straight back to heart disease (measured: HIV 4.8 px
+// against heart disease 5.3 px). In layout radii the same number means the same
+// framing on any viewport, and "outside the layout" becomes what it should have
+// been all along: a value greater than 1.
+export const HIV_SURGE_SEAT = 1.20;
+export const HIV_FADE_SEAT = 1.08;
 const COVID_EMBER = '#ff4d1a';
 // The finale's isolation reaches the halos too: HighlightSystem can only dim
 // instance colors, and an undimmed additive glow would keep 152 diseases
@@ -129,6 +176,27 @@ export function finaleExitAt(tl) {
 export const EXIT_PAD_DB = -4;
 
 const clamp01 = (x) => (x < 0 ? 0 : x > 1 ? 1 : x);
+
+/**
+ * The layout's own radius: how far the furthest node sits from the origin. The
+ * unit the pause seats are expressed in, so "outside the galaxy" is a number
+ * greater than 1 on any viewport and after any data refresh, rather than a
+ * fraction of a camDist that is itself 2.0x this on a desktop and 2.4x in
+ * portrait. Recomputed per cue (a handful of times per tour) rather than cached,
+ * because the positions are the live ones and a layout toggle moves them.
+ * @param {Array<ArrayLike<number>>} curPos the store's live position array
+ */
+export function layoutRadius(curPos) {
+  let m = 0;
+  if (!curPos) return 1;
+  for (let i = 0; i < curPos.length; i++) {
+    const p = curPos[i];
+    if (!p) continue;
+    const L = Math.hypot(p[0], p[1], p[2]);
+    if (L > m) m = L;
+  }
+  return m > 1e-6 ? m : 1;
+}
 const easeExpoOut = (p) => (p >= 1 ? 1 : 1 - Math.pow(2, -10 * p));
 const easeSineInOut = (p) => -(Math.cos(Math.PI * p) - 1) / 2;
 // back.out(1.2): the tour's single sanctioned overshoot, reserved for the
@@ -300,7 +368,23 @@ export function buildTourTimeline(data, startYearIdx, reduced = false) {
       const detonation = p.kind === 'detonation';
       // The push-in rides the year-step itself, so the move and the eruption
       // are one gesture rather than two.
-      if (detonation) cues.push({ t, kind: 'camera-node', node: 'covid-19', factor: PUSH_IN, dur: reduced ? 0 : STEP, effect: true });
+      if (detonation) cues.push({ t, kind: 'camera-node', node: 'covid-19', seat: DETONATION_SEAT, dur: reduced ? 0 : STEP, effect: true });
+      // ── The long leg hands its caption back (round-5 gate, clarity) ──
+      // Captions used to be set only at pause arrivals, so the 1996 card ("HIV
+      // research climbed with the epidemic... 4,747 in 1996") stayed on screen
+      // for the entire 23-year run to 2019 while the numeral rolled 1997 through
+      // 2018 above it. Film grammar, but a careful stranger reads a mismatch
+      // between a frozen sentence and a moving year, and this piece has spent
+      // five rounds refusing to let a numeral be stale.
+      //
+      // The rule is the leg's own shape rather than a named year: a leg long
+      // enough to sweep is a leg long enough that its opening caption stops
+      // describing the frame. Short legs (every other one on this board) keep
+      // their caption all the way across, which is what makes the detonation's
+      // two single-year steps read as one continuous sentence.
+      if (Math.abs(p.yearIdx - from) > TM_STAIR.stairCap) {
+        cues.push({ t, kind: 'caption', caption: null });
+      }
       // Reduced motion keeps its held frame: no leg choreography, same as every
       // other camera move on that path.
       t = pushLeg(segs, t, from, p.yearIdx, reduced, detonation, reduced ? null : cues);
@@ -319,19 +403,13 @@ export function buildTourTimeline(data, startYearIdx, reduced = false) {
       cues.push({ t: t + FINALE_SPLIT, kind: 'camera-node', node: 'rheumatic-heart-disease', effect: true });
     } else {
       cues.push({ t, kind: 'caption', caption: p.kind });
-      // The two HIV pauses are the one place the camera leaves the overview:
-      // it drifts onto the node the caption is about, then deeper for the fade.
-      //
-      // The two factors are swapped from the shipped pair (0.80 then 0.62), and
-      // this is the wave-2/3 carried note answered: the tour framed HIV at
-      // 12.7px at the 1996 pause, on a caption whose whole claim is that the
-      // node grew. The curve delivers the growth (1.74x across this leg, 2.63x
-      // to its peak); the camera has to let it be seen. Deepening the *surge*
-      // to 0.62 lifts that pause to ~17px, and handing the fade the shallower
-      // 0.80 keeps the product exactly what it was (0.62 x 0.80 = 0.80 x 0.62),
-      // so the 2019 close-up — which was never the defect — is unmoved.
-      if (p.kind === 'hivSurge') cues.push({ t, kind: 'camera-node', node: 'hiv-aids', factor: HIV_SURGE_IN, effect: true });
-      if (p.kind === 'hivFade') cues.push({ t, kind: 'camera-node', node: 'hiv-aids', factor: HIV_FADE_IN, effect: true });
+      // The two HIV pauses are the one place the camera leaves the overview: it
+      // drifts onto the node the caption is about, then deeper for the fade.
+      // Both are designed seats on HIV's own ray rather than relative pulls —
+      // see HIV_SURGE_SEAT for why that is the difference between a subject and
+      // a bystander.
+      if (p.kind === 'hivSurge') cues.push({ t, kind: 'camera-node', node: 'hiv-aids', seat: HIV_SURGE_SEAT, effect: true });
+      if (p.kind === 'hivFade') cues.push({ t, kind: 'camera-node', node: 'hiv-aids', seat: HIV_FADE_SEAT, effect: true });
       if (p.kind === 'detonation') cues.push({ t, kind: 'shockwave', effect: true });
       // The peak's own recenter (review gate round 2, P2 #7). By 2021 the
       // camera has inherited three compounded push-ins (HIV 0.80, HIV again
@@ -437,6 +515,7 @@ export function midSentence(label) {
 }
 
 const cap1 = (s) => (s ? s[0].toUpperCase() + s.slice(1) : s);
+
 const valueAt = (d, year) => {
   const start = Number.isFinite(d.yearStart) ? d.yearStart : 2015;
   const v = Array.isArray(d.yearlyPapers) ? d.yearlyPapers[year - start] : 0;
@@ -876,9 +955,15 @@ export default function TimeMachine({ camDist = 900 }) {
   const runCue = (cue, caps, reduced) => {
     const s = useStore.getState();
     switch (cue.kind) {
-      case 'caption':
-        s.setTmCaption(caps[cue.caption] || null);
+      case 'caption': {
+        const next = caps[cue.caption] || null;
+        s.setTmCaption(next);
+        // A card that names the mover retires its micro-label on the same frame
+        // it arrives, so the detonation and the peak never render a frame
+        // carrying both numerals for one disease.
+        syncMoverLabel(next);
         break;
+      }
       case 'focus': {
         const idx = s.idMap[cue.focus];
         if (idx !== undefined) s.setTmFocusIdx(idx);
@@ -946,6 +1031,26 @@ export default function TimeMachine({ camDist = 900 }) {
         const cam = sceneRefs.camera;
         if (idx !== undefined && cam && s.curPos[idx]) {
           const p = s.curPos[idx];
+          const duration = reduced ? 0 : (cue.dur || REWIND);
+          if (cue.seat != null) {
+            // A designed seat on the node's OWN ray: the camera stands `seat`
+            // layout radii from the origin, in the node's direction, so the node
+            // is the nearest body in frame and nothing can sit between it and
+            // the lens. Absolute by construction, which is the whole point — a
+            // relative pull inherits every earlier push-in and ends up inside
+            // the layout with a bystander filling the frame — and measured in
+            // the layout's own units, so one number frames the same shot on a
+            // desktop and in portrait.
+            const L = Math.hypot(p[0], p[1], p[2]) || 1;
+            const k = (layoutRadius(s.curPos) * cue.seat) / L;
+            s.setFlyTarget({
+              position: [p[0], p[1], p[2]],
+              cameraPos: [p[0] * k, p[1] * k, p[2] * k],
+              duration,
+              ease: 'sine.inOut',
+            });
+            break;
+          }
           // Distance measured off wherever the viewer already is, so the drift
           // is proportional to the current framing rather than a fixed seat —
           // except when the cue omits `factor` (the finale's recenter), which
@@ -954,7 +1059,7 @@ export default function TimeMachine({ camDist = 900 }) {
           s.setFlyTarget({
             position: [p[0], p[1], p[2]],
             radius,
-            duration: reduced ? 0 : (cue.dur || REWIND),
+            duration,
             ease: 'sine.inOut',
           });
         }
@@ -1004,7 +1109,13 @@ export default function TimeMachine({ camDist = 900 }) {
       if (Math.round(tm.yearFloat) !== pending.detent) acc.pendingLabel = null;
       else if (nowMs - pending.t0 >= TM_MICRO.dwell) {
         acc.pendingLabel = null;
-        showMoverLabel(pending.index, pending.delta);
+        // Checked here rather than at the crossing, and that is the whole
+        // subtlety: the crossing happens mid-step, while the *previous* pause's
+        // caption is still up. The caption this label would duplicate is the one
+        // standing when the dwell is served, which is now.
+        const s = useStore.getState();
+        const d = s.diseases[pending.index];
+        if (!captionNames(s.tmCaption, d && d.label)) showMoverLabel(pending.index, pending.delta);
       }
     }
 
@@ -1039,6 +1150,11 @@ export default function TimeMachine({ camDist = 900 }) {
       picks.map((p) => ({
         index: p.index,
         radius: p.from,
+        // The radius the node is landing on. Not a second shell — the shell is
+        // still placed at `from` and never scales — but the pool needs it to
+        // know how many screen pixels of annulus this accent actually buys, and
+        // how hard to draw it so the hero accent survives a wide framing.
+        to: p.to,
         color: CC[store.diseases[p.index].category],
       })),
       reduced

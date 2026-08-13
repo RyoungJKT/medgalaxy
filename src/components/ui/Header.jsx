@@ -81,18 +81,14 @@ function ShaderToggle() {
 
 // The exit's micro-line: 9px #64748b under the Time Machine button, up 2.6 s
 // then a 200 ms fade (ADDENDUM 1 section 1, exit table t = 1.75).
-function ExitMicroLine({ delay, mob }) {
+function ExitMicroLine({ delay }) {
   return (
     <div
       style={{
         position: 'absolute', top: '100%',
-        // Centred under the button on desktop; on mobile the button it hangs
-        // from is the Menu, hard against the right edge, so a centred line runs
-        // off the viewport (measured: "the decades live he|"). Right-anchored
-        // there, it extends inward instead.
-        ...(mob
-          ? { right: 0, left: 'auto', transform: 'none' }
-          : { left: '50%', transform: 'translateX(-50%)' }),
+        // Centred under the button. The phone has no button in the row to
+        // centre under, so it gets ExitTmChip below instead of this line.
+        left: '50%', transform: 'translateX(-50%)',
         // Cleared past the filter bar, which sits directly under the control
         // row and paints over anything the header tries to put in that gap.
         // Still unmistakably the button's own line: same column, nothing else
@@ -105,6 +101,42 @@ function ExitMicroLine({ delay, mob }) {
     >
       the decades live here
     </div>
+  );
+}
+
+// The phone's version of the same cue (round-5 gate, clarity). On desktop the
+// exit pulses the Time Machine button itself and hangs "the decades live here"
+// under it, and the sentence points at something. On a phone the control row is
+// collapsed into the Menu drawer, so the pulse had nothing visible to land on
+// and the micro-line floated under a button that says Menu: the piece's last
+// sentence pointed at nothing, which is the one thing the ending restage was
+// for. So the phone gets the instrument itself, once, as a real control — a
+// tappable chip that pulses on the same 1.4 s channel, carries the same
+// micro-line, opens the Time Machine on tap, and leaves with the cue. The Menu
+// button keeps its pulse underneath: two hints at one moment, one of which can
+// be acted on without hunting.
+function ExitTmChip({ delay, reduced, onOpen }) {
+  const life = TM_EXIT.header.line + TM_EXIT.header.lineOut;
+  const cue = reduced
+    ? `tmBtnRing ${TM_EXIT.header.line}ms step-end ${delay}ms forwards`
+    : `tmBtnPulse ${TM_EXIT.header.dur}ms ease ${delay}ms forwards`;
+  return (
+    <button
+      data-mg-tm-chip
+      onClick={onOpen}
+      style={{
+        position: 'absolute', top: '100%', right: 0, marginTop: 30,
+        display: 'flex', alignItems: 'center', gap: 8, minHeight: 44,
+        padding: '8px 12px', background: 'rgba(6,8,13,0.94)',
+        border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8,
+        color: '#e2e8f0', fontSize: 11, fontFamily: 'inherit', whiteSpace: 'nowrap',
+        cursor: 'pointer', pointerEvents: 'auto', zIndex: 60, opacity: 0,
+        animation: `tmHdrLine ${life}ms linear ${delay}ms both, ${cue}`,
+      }}
+    >
+      Time Machine
+      <span style={{ color: '#64748b', fontSize: 9 }}>the decades live here</span>
+    </button>
   );
 }
 
@@ -260,9 +292,16 @@ export default function Header() {
             </button>
             {/* Mobile collapses the control row into this menu, so the Time
                 Machine button the exit means to point at is two taps deep. The
-                pulse and its micro-line ride the Menu button instead: the cue
-                is "the instrument lives up here", and up here is where it is. */}
-            {exitCue > 0 && !menuOpen && <ExitMicroLine delay={cueDelay} mob />}
+                Menu button keeps the pulse (the instrument lives up here) and
+                the chip below carries the instrument itself, so the cue points
+                at a control the viewer can actually see and press. */}
+            {exitCue > 0 && !menuOpen && (
+              <ExitTmChip
+                delay={cueDelay}
+                reduced={cueReduced}
+                onOpen={() => { setMenuOpen(false); toggleTimeMachine(); }}
+              />
+            )}
             {menuOpen && (
               <div style={{
                 position: 'absolute', top: '100%', right: 0, marginTop: 4,

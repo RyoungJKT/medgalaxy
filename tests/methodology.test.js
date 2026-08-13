@@ -4,7 +4,7 @@ import meta from '../data/meta.json';
 import searchOverrides from '../data/search-overrides.json';
 import { nonDefaultMortalitySources, timeMachineMapping } from '../src/components/ui/MethodologyPanel';
 import {
-  buildTimeMachineData, KNEE_PCT, KNEE_SHARE, BULK_EXP, MXY,
+  buildTimeMachineData, KNEE_PCT, KNEE_SHARE, BULK_EXP, MXY, MIN_RY, nRY,
 } from '../src/utils/timeMachineData';
 import { isNoGlobalEstimate } from '../src/utils/mortalityLabel';
 import { pubmedTermFor } from '../src/utils/pubmedTerms';
@@ -122,6 +122,19 @@ describe('methodology "Time Machine size mapping" subsection', () => {
     expect(map.text).toContain(`${Math.round(KNEE_SHARE * 100)} percent`);
     expect(map.text).toContain(BULK_EXP.toFixed(2));
     expect(map.text).toContain(`ceiling of ${MXY} units`);
+  });
+
+  // Round-5 gate, depth: the sub-knee sentence used to read "radius is
+  // proportional to the count" where the mapping is affine. The floor is small
+  // and it errs anti-drama, which is exactly why omitting it was the wrong kind
+  // of shortcut for a panel whose whole job is to be checkable.
+  it('discloses the visibility floor the sub-knee segment sits on', () => {
+    expect(map.floor).toBe(MIN_RY);
+    expect(map.text).toContain(`${MIN_RY} floor plus a term proportional to the count`);
+    expect(map.text).not.toContain('radius is proportional to the count');
+    // The disclosed floor is the one the curve actually uses at its bottom end.
+    expect(nRY(0, data.maxYearly, data.knee)).toBeLessThan(MIN_RY);
+    expect(nRY(1e-9, data.maxYearly, data.knee)).toBeGreaterThanOrEqual(MIN_RY - 1e-9);
   });
 
   it('reads every numeral from the built table rather than transcribing one', () => {

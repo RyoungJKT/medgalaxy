@@ -46,3 +46,36 @@ export function trendLabel(t) {
   if (t < 0) return `research down ${Math.abs(t)}%`;
   return 'research steady';
 }
+
+/**
+ * True when the caption currently on screen already names this disease
+ * (round-5 gate, craft): accent 5's micro-label is a 9px line reading
+ * `COVID-19 +94,344 papers`, and on the 2020 and 2021 pauses it lands beside a
+ * card that already carries 94,633 and 141,958 for the same node. Three
+ * numerals about one disease on the loudest frames in the piece is redundancy,
+ * not emphasis, so the label stands down wherever the sentence has already said
+ * it. Everywhere else (the quiet staircase years, the whole manual scrub) the
+ * label is the only thing naming the mover, and it still fires.
+ *
+ * Checked live rather than once, by MoverLabel's own loop, because the two
+ * clocks do not line up: the year crosses its detent partway through the
+ * back.out step, so the label is armed and even spent while the PREVIOUS pause's
+ * card is still on screen, and the caption it would duplicate arrives a few
+ * hundred milliseconds later. A one-shot check at arming time passes and the
+ * label then sits under the detonation card for the rest of its life.
+ *
+ * Pure and exported: the rule is a unit test, and it reads the caption's own
+ * rendered strings rather than a parallel list of "loud" pauses that a future
+ * board change could silently invalidate.
+ * @param {object|null} caption a tmCaption record
+ * @param {string} label the disease label as the data file spells it
+ */
+export function captionNames(caption, label) {
+  if (!caption || !label) return false;
+  const parts = [];
+  if (Array.isArray(caption.lines)) parts.push(...caption.lines);
+  if (caption.data) parts.push(caption.data);
+  if (caption.micro) parts.push(caption.micro);
+  const hay = parts.join(' ').toLowerCase();
+  return hay.includes(label.toLowerCase());
+}
