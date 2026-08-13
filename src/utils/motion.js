@@ -309,10 +309,16 @@ export function exitDelay(t0, atMs, now) {
 
 // ── Ambient micro-motion (ADDENDUM 1 section 4, amendment A4) ────────────────
 // Four continuous oscillators, exempt from the duration table because they are
-// not transitions. They are governed by amplitude and frequency, and by one
-// rule: no ambient channel exceeds 1.0 percent of the quantity it modulates,
-// and every one of them stops the instant a directed stillness is called
-// (beat 2's ignition hold, the detonation push-in, any active fly).
+// not transitions. They are governed by amplitude and frequency, and by two
+// rules: every one of them stops the instant a directed stillness is called
+// (beat 2's ignition hold, the detonation push-in, any active fly), and A4's
+// 1.0 percent cap governs every channel that modulates POSITION OR SCALE
+// (camera, stars, leg, node below). Item 5's edge opacity is deliberately
+// outside that cap's scope — an opacity channel is governed by its own stated
+// band (0.06 to 0.13) instead, since 1 percent of a 0.06 baseline would delete
+// the channel rather than govern it. This is a recorded, on-purpose deviation
+// from A4's letter, not an oversight: see docs/direction/2026-08-13-addendum-1-notes.md
+// note 2 for the conflicting clause and the measurement that settles it.
 //
 // The frequencies inside each channel are deliberately incommensurate, so the
 // sum never visibly repeats: 0.055 / 0.083 / 0.037 Hz have a common period

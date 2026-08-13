@@ -117,9 +117,9 @@ export const DETONATION_SEAT = 1.18;
 // its subject from OUTSIDE the layout, on the subject's own ray. Then nothing
 // can sit between the lens and the node to collect a perspective boost the data
 // never earned, the subject is the nearest body in frame, and its size on screen
-// is its size in the table. Both seats are fractions of the designed camDist,
-// measured from the origin along the node's own direction, so neither can
-// inherit the other's drift and the pair reproduces from any approach.
+// is its size in the table. Both seats are fractions of the layout's own
+// radius, measured from the origin along the node's own direction, so neither
+// can inherit the other's drift and the pair reproduces from any approach.
 //
 // The direction's shape is unchanged: the camera still leaves the overview for
 // these two pauses only, still drifts onto the node the caption is about, and
@@ -412,13 +412,16 @@ export function buildTourTimeline(data, startYearIdx, reduced = false) {
       if (p.kind === 'hivFade') cues.push({ t, kind: 'camera-node', node: 'hiv-aids', seat: HIV_FADE_SEAT, effect: true });
       if (p.kind === 'detonation') cues.push({ t, kind: 'shockwave', effect: true });
       // The peak's own recenter (review gate round 2, P2 #7). By 2021 the
-      // camera has inherited three compounded push-ins (HIV 0.80, HIV again
-      // 0.62, the detonation 0.85), and what they leave on screen is heart
-      // disease about two and a half times the size of COVID-19, directly
-      // under a caption whose whole claim is that attention moved to COVID.
-      // No `factor`, the finale's pattern: recenter on the node the sentence
-      // is about, at the designed overview distance, so the true 2021 number
-      // one (141,958 papers) is also the biggest thing in the frame.
+      // camera is arriving from the tour's other designed seats
+      // (HIV_SURGE_SEAT, HIV_FADE_SEAT, DETONATION_SEAT, none of them the
+      // overview) rather than from wherever a relative pull would have left
+      // it, and riding that framing straight into the peak unrecentred still
+      // leaves heart disease about two and a half times the size of
+      // COVID-19, directly under a caption whose whole claim is that
+      // attention moved to COVID. No `seat` and no `factor`, the finale's
+      // pattern: recenter on the node the sentence is about, at the designed
+      // overview distance, so the true 2021 number one (141,958 papers) is
+      // also the biggest thing in the frame.
       if (p.kind === 'peak') cues.push({ t, kind: 'camera-node', node: 'covid-19', effect: true });
     }
     t += p.hold;
@@ -842,13 +845,26 @@ export default function TimeMachine({ camDist = 900 }) {
   // Escape, or the close button released them — a plain click on another node
   // left the dim/isolation locked on indefinitely (Task 13 review finding 1).
   useEffect(() => {
-    const handover = () => {
+    const handover = (e) => {
       const s = useStore.getState();
       // The methodology panel owns Escape (and, while it's up, every other
       // keydown that would otherwise hand the tour over or release the
       // finale) — the panel wins; closing it is the only effect while open
       // (fix-14 review finding 4).
       if (s.methodologyOpen) return;
+      // The mobile ending chip owns its own tap (round-6 gate finding: the tap
+      // dead zone). This capture listener sits on window, so it always runs
+      // ahead of the chip's own click handler no matter how the chip's local
+      // listeners are configured — the only way to keep a tap on the chip from
+      // being read as "any input" is to recognise the chip here and step
+      // aside, the same way the methodology panel steps aside above. Letting
+      // this fall through to tmExitSkip() would fast-forward the exit and
+      // (Header.jsx's exitCue effect clears on tmExitMode 'fast') unmount the
+      // chip out from under the finger before its own click ever fires — the
+      // chip would vanish and the Time Machine would never open. A tap here
+      // is always meant to open the instrument, so it is excluded from the
+      // fast-forward outright and left for the chip's own onClick.
+      if (e && e.target && e.target.closest && e.target.closest('[data-mg-tm-chip]')) return;
       // Skip during the exit (ADDENDUM 1 section 1): any input fast-forwards
       // to the landed state over 240 ms. Checked before the tour branch
       // because by now tmPhase is already 'idle'.

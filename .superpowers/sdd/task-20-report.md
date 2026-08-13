@@ -2271,3 +2271,132 @@ own 0.06-0.13 shimmer band (resolved as a question of A4's scope, not its number
 4. The assembly mean-luminance instrument averages four frames a beat apart; a
    single screenshot cannot distinguish a 7 percent change from the star field's
    own swing.
+
+# Round 9: round-6 gate freeze — mobile tap dead zone + comment-truth sweep
+
+Round 6 certified 9.26/10 and named exactly two remaining items: one major to
+fix before the demo regardless of score, and a one-hour comment-truth sweep
+with zero regression risk. This is both, in one commit. Certification stays
+frozen at 9.26; this wave does not reopen it.
+
+## The major: the mobile ending chip's tap dead zone
+
+A tap on the fully visible, pulsing `ExitTmChip` during the exit's un-landed
+window (~exit+1.95s to 2.6s: after the chip becomes opaque, before the 2.6 s
+choreography lands) was consumed by the exit's any-input fast-forward before
+its own click ever fired. The chain: the window-level capture listener
+(`handover`, `TimeMachine.jsx`) sees the same `pointerdown`/`touchstart` the
+tap generates, calls `tmExitSkip()`, which sets `tmExitMode: 'fast'`;
+`Header.jsx`'s `exitCue` effect clears to 0 on that transition, which
+unmounts the conditionally-rendered chip (`exitCue > 0 && !menuOpen`) before
+the browser's later `click` event can land on it. The chip vanished under the
+finger and the Time Machine never opened — a broken promise on the piece's
+last sentence, on the exact surface round 5's fix 5 added.
+
+The desktop header button never had this problem because it is never
+conditionally mounted at all: it is always in the DOM, so the skip fires on
+`pointerdown` and the click still finds a real button to land on a few
+milliseconds later, reopening the Time Machine and overriding the exit via
+the existing "the instrument wins" re-entry check in `stepExit`
+(`s.tmPhase !== 'idle'` → `ex.landed = true`).
+
+**The fix** (`TimeMachine.jsx`'s `handover`, ~845): a tap whose target is
+inside `[data-mg-tm-chip]` is excluded from the fast-forward outright and
+left for the chip's own `onClick` — the same event-ordering reality the
+desktop button already survives, applied at the one place the mobile chip
+needs it. No `factor`/`seat`-style state machine, no change to
+`Header.jsx`'s exit-cue timing, no change to how a tap *elsewhere* during the
+exit behaves (still skips, exactly as documented). `tmExitMode` never even
+reaches `'fast'` when the tap is on the chip — verified live (`exitMode:
+"normal"` in every trial below).
+
+Verified with a REAL CDP touch tap (`ElementHandle.tap()`, not a mouse
+click — the defect is specifically about `touchstart` racing the window
+capture, which a mouse click's `pointerdown`/`click` pair does not
+reproduce), fresh page per trial, on a 375x812 mobile viewport:
+
+| offset | result |
+|---|---|
+| exit+2.0s | `{tmPhase:"scrub", exitMode:"normal", chipStill:true, replayAffordance:true}` |
+| exit+2.3s | `{tmPhase:"scrub", exitMode:"normal", chipStill:true, replayAffordance:true}` |
+| exit+3.2s | `{tmPhase:"scrub", exitMode:"normal", chipStill:true, replayAffordance:true}` |
+
+All three land in `scrub` (not `tour` — `tmTourSeen` is already true by the
+finale, matching the round-6 gate's own acceptance language) with the rail's
+"replay the decade story" affordance present. `exit+3.2s` was already known
+to work (past `landed`); it is re-verified here as the regression guard.
+New harness task `chiptap` in `tools/verify-r6fix.mjs`, screenshot
+`docs/verify/r7-chip-tap.png` (gitignored, as in every prior wave).
+
+No vitest regression test: `handover` is a closure inside a `useEffect` in a
+React component, and this codebase's unit-test layer is deliberately
+pure-function-only (`buildTourTimeline`, `motion.js`'s exports, etc.) — there
+is no component-render harness (no jsdom + Testing Library) anywhere in
+`tests/`, and adding one for a single DOM-event-target check would be a much
+larger and riskier change than the fix itself. The live-browser harness
+above is the load-bearing check, exactly as the round-5 gate's own mobile
+pulse-presence check already was.
+
+## Comment-truth sweep (zero behavior change)
+
+Four comment blemishes the round-6 craft lens named, all in files this same
+wave touched, none in code paths:
+
+1. **Seat-unit self-contradiction** (`TimeMachine.jsx` ~120). The block said
+   "Both seats are fractions of the designed camDist" one paragraph above the
+   same block's own "The unit is the LAYOUT's own radius, not camDist, and
+   that is load-bearing" — a leftover from the failed first attempt the
+   round-8 report describes, contradicting the very confusion the comment
+   exists to prevent. Now reads "fractions of the layout's own radius",
+   matching the executor (`layoutRadius(s.curPos) * cue.seat`).
+2. **Stale brightness comment** (`assembly.js:265`). `makeFlight`'s
+   scratch-record field still read `// 0.35 -> 1.00` after round 8 moved
+   `brightMin` to 0.50 (the constant's own comment block, line 46-55, was
+   already correct). Now reads `0.50 -> 1.00`.
+3. **Deleted push-ins narrated as present** (`TimeMachine.jsx` 414-422). The
+   peak-cue comment described "three compounded push-ins (HIV 0.80, HIV
+   again 0.62, the detonation 0.85)" as the reason the 2021 recenter is
+   needed — those relative factors were deleted in round 8's seat rework (a
+   test asserts zero `factor` cues survive). Rewritten to name what the
+   camera is actually arriving from now: the tour's other designed seats
+   (`HIV_SURGE_SEAT`, `HIV_FADE_SEAT`, `DETONATION_SEAT`), none of them the
+   overview — the recenter's reason is unchanged, only the mechanism it was
+   blamed on was history presented as present.
+4. **A4 scope uncorrected at the code site** (`motion.js` ~310-316). The
+   comment stated A4's blanket "no ambient channel exceeds 1.0 percent" rule
+   directly above `AMBIENT.edge` (0.06-0.13, a ~70 percent swing of its own
+   baseline) — the exact contradiction `docs/direction/2026-08-13-addendum-1-notes.md`
+   note 2 already resolved (A4's cap governs position/scale channels;
+   opacity channels are governed by their own stated band) but only in the
+   notes doc, not where the next reader of the code would meet the
+   contradiction. The comment now states the scope split inline and points
+   at note 2 for the full reasoning.
+
+All four are comment-only diffs; `git diff` confirms no executable line
+changed in `assembly.js` or `motion.js` for this sweep, and both `TimeMachine.jsx`
+edits for it land entirely inside comment blocks — no code line moved.
+
+## Verification
+
+- `npx vitest run`: **316 passed, 17 files** (unchanged from round 8 — this
+  wave adds no new pure-logic surface to pin).
+- `npx vite build`: green.
+- `node tools/verify-r6fix.mjs` (desktop, all tasks): all checks green,
+  numbers in line with round 8 (COVID 2020 hold lead 1.67-1.68x, HIV 1996
+  lead 1.4x, assembly 1.6s mean 0.243/255 peak 161, ghost annulus 0.31px at
+  alpha 0.78, determinism worst delta 0.020s).
+- `node tools/verify-r6fix.mjs hold hiv caption mobile micro --mobile`: all
+  green (COVID lead 1.74-1.76x, HIV lead 1.47-1.48x, chip on screen 240x47
+  animating `tmHdrLine, tmBtnPulse`).
+- `node tools/verify-r6fix.mjs chiptap --shots`: **3/3 green** — see table
+  above.
+- `node tools/verify-fuzz.mjs --points 14 --conc 2`: **14/14 green**, 14/14
+  structural, 14/14 narrative (matches round 8's own numbers).
+
+## Notes for whoever picks this up
+
+1. **The chip-tap fix is a single exclusion, not a new state machine.** If a
+   future ending affordance needs the same protection, the pattern is
+   "recognise it in `handover` by a `data-mg-*` selector and return before
+   `tmExitSkip()`", not touching `Header.jsx`'s exit-cue timing.
+2. **`docs/verify` is gitignored**, as in every prior wave.

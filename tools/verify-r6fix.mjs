@@ -12,6 +12,12 @@
 //   ghosts    r6fix-ghosts-wide  shell legibility at the 1990-1996 overview
 //   mobile    r6fix-mobile-pulse the ending's affordance is visible on a phone
 //   micro     mover micro-label suppression on the captioned node
+//   chiptap   r7-chip-tap        (round-6 gate, major) a REAL tap on the mobile
+//                                ending chip during the exit's un-landed window
+//                                opens the Time Machine instead of being eaten
+//                                by the any-input fast-forward. Always runs
+//                                --mobile regardless of the flag, since the
+//                                defect and the fix are both mobile-only.
 //   deter     the two-run determinism pair (tour beats to the millisecond)
 //
 // Every pause measurement is EVENT-TRIGGERED off the app's own tour clock (year
@@ -368,6 +374,63 @@ if (want('mobile')) {
     aff.pulsing.length > 0 && (!mobile || (aff.chip && aff.chip.onScreen && /tm/i.test(aff.chip.anim))),
     JSON.stringify(aff.pulsing));
   await page.close();
+}
+
+// ── r7-chip-tap ─────────────────────────────────────────────────────────────
+// Round-6 gate major: a tap on the fully visible, pulsing ExitTmChip during the
+// exit's un-landed window (~1.95-2.6s, after it becomes opaque but before the
+// choreography lands) was consumed by the exit's any-input fast-forward
+// (window-level pointerdown/touchstart capture, TimeMachine.jsx), which set
+// tmExitMode 'fast' and, via Header.jsx's exitCue effect, unmounted the chip
+// before its own click ever fired. Fixed by excluding a tap that targets the
+// chip from the fast-forward outright (TimeMachine.jsx's `handover`), so the
+// tap is left for the chip's own onClick, exactly as a tap on the always-
+// mounted desktop header button already survives it.
+//
+// This uses a REAL CDP touch tap (`ElementHandle.tap()`), not a mouse click,
+// because the defect is specifically about touchstart racing the window
+// capture listener — a mouse click's pointerdown/click pair does not
+// reproduce it. Always runs on a mobile viewport regardless of --mobile: the
+// defect and the fix are both mobile-only (the desktop header button is never
+// conditionally mounted, so it never had a dead zone).
+if (want('chiptap')) {
+  console.log("\nr7-chip-tap: a real tap on the mobile ending chip during the exit's un-landed window");
+  for (const off of [2.0, 2.3, 3.2]) {
+    const page = await browser.newPage();
+    await page.setViewport({ width: 375, height: 812, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
+    page.on('pageerror', (e) => { console.log(`    PAGEERROR ${String(e).slice(0, 140)}`); failures++; });
+    await open(page);
+    await page.waitForFunction('window.__tour !== undefined', { timeout: 20000 });
+    // Land on the exit the way the piece does: seek the finale, then let it run.
+    await page.evaluate(() => window.__tour.seek(5.9));
+    await page.evaluate(() => window.__tour.resume());
+    await page.waitForFunction(() => window._store.getState().tmExitAt > 0, { timeout: 40000, polling: 50 });
+    const arrival = Date.now();
+    const due = off * 1000 - (Date.now() - arrival);
+    if (due > 0) await wait(due);
+    const chip = await page.$('[data-mg-tm-chip]');
+    if (!chip) {
+      check(`r7-chip-tap: chip present in the DOM at exit+${off}s`, false, 'no [data-mg-tm-chip]');
+      await page.close();
+      continue;
+    }
+    await chip.tap();
+    await wait(200); // the browser's own touch-to-click synthesis, plus a settle frame
+    const after = await page.evaluate(() => {
+      const replay = [...document.querySelectorAll('button')].some((b) => b.textContent.trim() === 'replay the decade story');
+      return {
+        tmPhase: window._store.getState().tmPhase,
+        exitMode: window._store.getState().tmExitMode,
+        chipStill: !!document.querySelector('[data-mg-tm-chip]'),
+        replayAffordance: replay,
+      };
+    });
+    if (off === 2.3) await page.screenshot({ path: `${OUT}/r7-chip-tap.png` });
+    console.log(`    tap at exit+${off}s -> ${JSON.stringify(after)}`);
+    check(`r7-chip-tap: tap at exit+${off}s opens the Time Machine in scrub with the replay affordance`,
+      after.tmPhase === 'scrub' && after.replayAffordance, JSON.stringify(after));
+    await page.close();
+  }
 }
 
 // ── the two-run determinism pair ────────────────────────────────────────────

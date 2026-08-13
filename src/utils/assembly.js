@@ -262,7 +262,7 @@ export function makeFlight() {
     p: 0, q: 0,              // eased path fraction, linear time fraction
     radius: ASM.rStart,      // 0.55 -> 1.00 scale multiplier
     stretch: 1,              // s_long, exactly 1.000 by p = 0.92
-    bright: ASM.brightMin,   // 0.35 -> 1.00, plus the landing pip
+    bright: ASM.brightMin,   // 0.50 -> 1.00, plus the landing pip
     alpha: 0,                // filament opacity
     flying: false,           // strictly between launch and landing
     landed: false,
