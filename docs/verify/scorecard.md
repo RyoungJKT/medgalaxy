@@ -1,5 +1,11 @@
 # MedGalaxy Next Showcase: Review Gate Scorecard
 
+**Verdict: CERTIFIED at 9.26 / 10** (ship bar: 9.0; client target: 10). Round 6 final, 2026-08-13, branch `next/showcase`. First 30 seconds 9.4, story clarity 9.4, expert data depth 9.3, visual + motion craft 9.2, performance 9.0. Arc: shipped round 4 at 9.06; direction addendum 1 ("From 9 to 10") answered the client's four notes with the comet-stream assembly fly-in, the cinematic Time Machine staircase tour (year-scaling, ghost shells, designed pauses at the 1996 HIV surge, 2019 fade, 2020 detonation, 2021 peak, and the rheumatic-heart-disease finale), an ending that returns all the way home with a velocity-matched exit and a real handover affordance on both form factors, and the ambient motion layer (camera breathing, star parallax shells, edge shimmer), growing the suite from 166 to 316 tests plus a structural fuzz harness. Two further gate rounds hardened it 9.06 to 9.16 to 9.26. The round-6 errata (mobile ending chip tap dead zone) and the scrubber drag-selection bug were both fixed and verified post-certification (commits 33c47d9, 36b01e4). Everything else remaining is taste-level; certification is frozen at 9.26 and further gate rounds are declared diminishing returns.
+
+---
+
+## Round 4 record (superseded)
+
 **Verdict: SHIP at 9.06 / 10** (ship bar: 9.0). Round 4 final, 2026-08-12, branch `next/showcase`.
 
 | Dimension | Score | Basis |
