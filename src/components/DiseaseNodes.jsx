@@ -150,6 +150,47 @@ export default function DiseaseNodes() {
     [],
   );
 
+  // ── The one true "how big is node i" (round 10) ──────────────────────────
+  // The instancing pass below is the only place that knows a node's live
+  // radius: it owns the smoothed morph position AND the lag table, and it
+  // defers to the Time Machine when that owns radius instead. Everything else
+  // that needs a node's size (the supernova's camera framing, its tremble
+  // amplitude, the burst ring's start radius) used to re-derive it as
+  // `nR(papers)`, which is only correct while the size toggle sits on Papers.
+  // In Mortality mode that estimate is wrong by up to 13x (cystic-fibrosis
+  // reads 11.19 by papers against a live 0.82), which is how the burst ring
+  // ended up detached from small nodes and born *inside* big ones.
+  //
+  // Two answers, because there are two honest questions:
+  //   resting=false: what the sphere measures THIS FRAME, transient owners and
+  //     all. What the burst ring wants: it has to be born on the surface that
+  //     is actually on screen, whether that is the papers sphere, a half-done
+  //     morph, or the Time Machine's sphere for that year.
+  //   resting=true : the radius this node RETURNS to once every transient
+  //     owner lets go: the papers/mortality morph's endpoint, full stop. What
+  //     anything sizing a lasting decision wants. The supernova picks its
+  //     camera distance once, at prefocus, and then holds it for 2.2 s, so it
+  //     must not be picked off a value that is still moving. Both movers are
+  //     real and both were measured: mid-morph, Heart Disease reads 12.28
+  //     against a resting 54.74; and because a supernova triggered during the
+  //     Time Machine tears it down on the way in (triggerSupernova calls
+  //     stopTimeMachine), a prefocus that read the tour's year-radius framed
+  //     the reveal's own hero node four times too close.
+  useEffect(() => {
+    sceneRefs.nodeRadius = (i, resting) => {
+      if (i == null || i < 0 || i >= diseases.length) return 0;
+      const L = lag ? lag[i] : 1;
+      if (resting) {
+        const target = useStore.getState().sizeMode === 'mortality' ? 1 : 0;
+        return morphRadiusAt(diseases[i], target, L);
+      }
+      const tm = sceneRefs.tm;
+      if (tm && tm.active && tm.radiusAt) return tm.radiusAt(i);
+      return morphRadiusAt(diseases[i], morphRef.current, L);
+    };
+    return () => { sceneRefs.nodeRadius = null; };
+  }, [diseases, lag]);
+
   // ADDENDUM 1 section 4 item 4: the resting galaxy micro-breathe rides the
   // same aPhase the shaders do, so the geometry's own attribute is built here
   // and kept, rather than generated inside the memo and thrown away. `bFreq` is

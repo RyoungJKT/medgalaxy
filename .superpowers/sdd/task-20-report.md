@@ -2400,3 +2400,184 @@ edits for it land entirely inside comment blocks — no code line moved.
    "recognise it in `handover` by a `data-mg-*` selector and return before
    `tmExitSkip()`", not touching `Header.jsx`'s exit-cue timing.
 2. **`docs/verify` is gitignored**, as in every prior wave.
+
+---
+
+# Round 10: the story-mode burst ring, sized to its subject
+
+**User report:** "Fix and improve the animations of the exploding ring that
+plays after the nodes vibrate in the story modes." Read as both broken and
+unimpressive, across all six chips.
+
+## What was actually wrong
+
+Diagnosed before touching anything, with a new harness (`tools/verify-ring.mjs`)
+that reports every ring dimension in world units AND as a fraction of the
+viewport half-height (`vh`), because pixels are what the complaint is about.
+
+**1. The ring was sized in absolute world units against a subject-proportional
+frame.** `SelectionRipple`'s supernova variant ran `startRadius + 220`, width
+`10`, for every disease. But the reveal's prefocus seats the camera at **8x the
+subject's own radius**, and honest normalization has spread node radii from
+1.47 to 54.74. So the ring was a different animation for every disease.
+Measured on the pre-fix build:
+
+| subject | node radius | camera | peak expansion |
+|---|---|---|---|
+| Heart Disease (giant) | 54.74 | 437 | **1.08 vh** |
+| Cystic Fibrosis (mid) | 11.19 | 90 | **4.59 vh** |
+| Rheumatic Heart Disease (small) | 6.08 | 50 | **6.96 vh** |
+
+A **6.4x spread**. Only the single biggest node in the set read at all. On
+every other subject the ring was already 2.9-5.0 vh at the first sampled frame
+after burst, off screen before a viewer perceives it. The captured before-frame
+for Rheumatic Heart Disease shows the literal user experience: **no ring, just
+two faint diagonal streaks in the corners** as the front crosses the frame.
+That is the "broken".
+
+**2. Width was a constant 10 world units**: 8.9 px on Heart Disease, 125 px on
+Rheumatic Heart Disease. A hairline on one subject and a slab covering a quarter
+of the screen on another.
+
+**3. The start radius was `nR(papers)`, unconditionally.** The node's live
+radius is `morphRadiusAt(disease, morphT, lag)`. In Mortality size mode the two
+are different spheres, and the ring was drawn on the one that is not on screen:
+Cystic Fibrosis reads 11.19 by papers against a live 0.82 (a detached hoop 13x
+too big), Stroke reads 30.5 against a live 44.9 (a ring born *inside* the
+sphere, swallowed). The reveal's camera framing and tremble amplitude had the
+same bug.
+
+**4. In story mode the ring fired 250 ms late.** Nothing ever fired the ring
+deliberately. It arrived as a side effect of whichever `selectDisease` happened
+to run, and in story mode that is the one at the *end* of the burst. Measured:
+**250 ms** after the burst frame in story mode. The viewer got the tremble, a
+beat of nothing, then a ring with no detonation left to belong to.
+
+**5. A rapid re-trigger ratcheted the camera fov** (found while hammering the
+new impulse; a story fires three or four bursts back to back).
+
+## The fix
+
+`supernovaRing(nodeRadius, p, reduced)` in `SelectionRipple.jsx` carries the whole
+sizing law as a pure function, so it is pinned by unit tests rather than by
+screenshots. Every dimension is a multiple of the subject's live radius:
+
+- **born at the surface**, `1.02x` the node radius. Strictly outside the
+  silhouette, so the ring can never be swallowed (it only grows from there) and
+  can never z-fight the sphere (it never overlaps its projected disc). The
+  billboard math was already correct and is unchanged.
+- **reach `5.0x`** the node radius (top of the sanctioned 3.5-5x band), with a
+  single tiny-node clamp `R_FLOOR = 1.8` that governs reach, width and echo
+  together so the shape stays coherent.
+- **width `0.16x`** the node radius, thinning as the front runs.
+- **duration `DUR.world` (650 ms)**, replacing the unsanctioned 0.7 s.
+- **easeOutCubic kept.** `back.out(1.2)` was tried for the expansion kick per
+  the improvement license and rejected: an overshoot means a shock front that
+  expands past its ceiling and then *retracts*, which reads as a glitch. The
+  constitution independently preserves easeOutCubic for exactly this mechanism
+  (section 4, "their internal physics ... are already good and stay").
+
+Cinematic additions, all inside the license:
+
+- **A trailing echo ring**, launched 120 ms later, shallower (3.6x) and fainter
+  (0.45x). It is what keeps something moving through the frame in the ring's
+  second half, where a single decelerating front has already become a static
+  hoop. That, not the sizing, is the "unimpressive" half of the report.
+- **A rim-ignition flash**: a short (180 ms, `DUR.fast`) annulus whose inner
+  edge is the silhouette *exactly*, with a shader profile that is zero there and
+  rises outward. It therefore adds light only to the empty space just outside
+  the node, never on top of the node's own disc, the one region that could
+  plausibly already sit near 1.0. Measured peak 0.27-0.34, against the
+  pre-round-10 ring's own 0.7: **the flash cannot newly cross the bloom
+  threshold, because it is quieter than what was already there.**
+- **A camera impulse as a 0.35% fov recoil over 240 ms.** fov is the one camera
+  channel nothing else in the app writes, so it cannot fight CameraRig's
+  position tweens or OrbitControls the way an additive position offset would.
+  0.35% of fov is the angular equivalent of shoving the camera 0.35% of its
+  distance to the subject: 1.5 world units on Heart Disease, well inside the
+  constitution's 0.5%-of-R0 ceiling, and quieter on every smaller node.
+- **The ring is now fired deliberately**, by `SupernovaReveal` on the burst
+  frame (`fireRipple(idx, undefined, true)`), with the selection subscription
+  guarded so the reveal's own `selectDisease` cannot fire a second one.
+
+`sceneRefs.nodeRadius(i, resting)`, published by `DiseaseNodes` (the only
+component holding both the smoothed morph and the lag table), answers the two
+honest questions: what the sphere measures *this frame* (what the ring needs,
+since it must be born on the surface actually on screen) and what it *returns
+to* once every transient owner lets go (what the reveal needs, since it picks
+its camera seat once and holds it for 2.2 s). Both movers were real and both
+were measured: mid-morph Heart Disease reads 12.28 against a resting 54.74, and
+a supernova triggered during the Time Machine (which it tears down on the way
+in) framed the hero node four times too close.
+
+**Deliberately out of scope:** the plain selection ripple and the Time Machine's
+shockwave keep their certified constants (140 / 6 / 480 ms). Only their *start*
+radius changes, from the papers estimate to the live radius, a correctness fix
+in Mortality mode and a no-op in Papers mode.
+
+**One deviation from the brief, stated:** reduced motion is a **320 ms**
+(`DUR.mid`) pulse rather than the brief's 300 ms, because 300 is not a
+sanctioned time constant and the constitution is named as law elsewhere in the
+same brief. Everything else about it is as specified: fixed radius at the
+surface, no expansion, no echo, no flash, no impulse.
+
+## Verification
+
+- `npx vitest run`: **332 passed, 18 files** (316 before + 16 new in
+  `tests/supernovaRing.test.js`, which pins the sizing law, the alpha/echo/flash
+  envelopes, the reduced-motion pulse, and reproduces the old absolute law's
+  6x failure so the regression is stated rather than remembered).
+- `npx vite build`: green.
+- `node tools/verify-ring.mjs` (desktop 1440x900): **ALL GREEN**.
+
+| subject | seat | starts at surface | reach | frame coverage |
+|---|---|---|---|---|
+| heart-disease (giant) | 7.99x | 54.74 vs 54.74, 0.0% off | 5.00x | 1.08 |
+| rheumatic-heart-disease (small) | 8.22x | 6.08 vs 6.08, 0.0% off | 5.00x | 1.08 |
+| cystic-fibrosis (mid) | 8.07x | 11.19 vs 11.19, 0.0% off | 5.00x | 1.08 |
+
+  Reach spread across the three: **1.08x** (was 6.4x). Ring width 8-15 px on
+  every subject (was 9 px to 125 px). Echo lit on 3-4 sampled marks, flash peak
+  0.27-0.34, fov punch 0.26-0.31%.
+- **Visual verdicts** (read, not assumed): *heart-disease*: was one thin static
+  hoop already at 76% of its travel by 140 ms; now a bright leading front plus a
+  fainter trailing echo, both centred on the node. *rheumatic-heart-disease*:
+  was two faint diagonal streaks and nothing else; now identical in framing to
+  heart-disease, a proper double-ring blast. *cystic-fibrosis*: same, front and
+  echo cleanly separated. Not swallowed, no z-fighting, category colour intact,
+  no bloom halo around the flash.
+- **Ring latency**: plain 18 ms, story 18 ms after the burst frame (story was
+  250 ms).
+- **Story pacing unchanged**: `killers` played end to end, prefocus
+  1251-1264 ms, charge 1042-1058 ms, burst 267-272 ms against the 1200 / 1000 /
+  250 the code sets. All three steps fired.
+- **Reduced motion** (`--reduced`): ALL GREEN. Radius fixed at 11.4 across every
+  sample (spread 1.000x), alpha pulses 0.54 -> 0.04, gone by 430 ms, sits at
+  0.22 vh (on the surface, not out in the frame).
+- **Mobile LOW** (`--mobile`, 390x844): ALL GREEN, reach spread **1.04x**. The
+  ripple is not desktop-gated. `SelectionRipple` mounts unconditionally in
+  `App.jsx`, unlike `PostFX`, which returns null on LOW. So on LOW the ring
+  renders with no bloom at all, which is the correct read.
+- **FPS**: 120.1 across charge + burst (cap-limited; the floor asked for was 55).
+
+## Notes for whoever picks this up
+
+1. **`tools/verify-ring.mjs` measures in `vh`, and that is the point.** World
+   units hid this defect for four rounds, because the ring's numbers looked
+   reasonable in isolation. They were only wrong *relative to a camera that
+   scales with the subject*.
+2. **The harness must settle two things before it measures.** `finishOverture()`
+   drops you into the Time Machine tour, not the resting galaxy, and the film's
+   release tween keeps the camera moving for ~5 s after. Both poison every pixel
+   number; `boot()` now waits out both. Neither is a live defect.
+3. **Headless screenshots of this canvas are unreliable and always were.**
+   `preserveDrawingBuffer` is off, and a capture can land on a cleared buffer,
+   reproduced at 8 blank frames out of 8 on a completely idle galaxy with no
+   supernova involved. Judge frames by looking at them, never by file size, and
+   retry rather than concluding the scene is broken.
+4. **The framed-coverage number is derived, not measured.** reach/(seat *
+   tan(fov/2)) is fixed by the reach and seat checks, so the harness logs it and
+   asserts the exact pair instead. The camera keeps moving through the ring's
+   tail once the burst's own `selectDisease` dispatches the selection framing,
+   which drags a directly-measured vh around by ~15% depending on which sample
+   you read.

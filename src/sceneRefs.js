@@ -44,6 +44,15 @@ export const sceneRefs = {
   // Kills the 5.2 s beat-0 camera drift tween, so a harness seek can seat the
   // camera analytically without the tween walking away from it.
   killAssemblyDrift: null,
+  // nodeRadius(i): node i's radius as it stands on screen this frame, owned +
+  // assigned by DiseaseNodes (the only component that holds both the smoothed
+  // papers/mortality morph position and the per-node lag table, and that knows
+  // when the Time Machine has taken radius over). null until that component
+  // mounts; callers fall back to nR(papers). Read by the supernova reveal
+  // (camera framing, tremble amplitude) and the burst ring (start radius), all
+  // of which used to re-derive nR(papers) and so were wrong by up to 13x
+  // whenever the size toggle sat on Mortality.
+  nodeRadius: null,
 };
 
 // Dev hooks: let the verify harness and console drive the grade directly and

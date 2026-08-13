@@ -4,6 +4,25 @@ import useStore from '../store';
 import { nR } from '../utils/helpers';
 import { TIER } from '../utils/tiers';
 import { igniteWeights } from '../utils/igniteWeights';
+import { sceneRefs } from '../sceneRefs';
+import { fireRipple } from './SelectionRipple';
+
+// The node's RESTING radius: the size its sphere returns to once every
+// transient owner lets go, not whatever a half-finished size-toggle morph or a
+// Time Machine this reveal is about to tear down has it at this frame.
+// Everything the reveal scales to its subject (camera distance, tremble
+// amplitude) reads this: the seat is chosen once at prefocus and then held for
+// 2.2 s, so it cannot be picked off a moving value, and a session sitting on
+// the Mortality toggle must be framed by the sphere the viewer can actually
+// see (nR(papers) can be 13x wrong there).
+function restingRadius(diseases, idx) {
+  const fn = sceneRefs.nodeRadius;
+  if (fn) {
+    const r = fn(idx, true);
+    if (r > 0) return r;
+  }
+  return nR(diseases[idx].papers);
+}
 
 // ── Phase durations (ms) ──
 const PREFOCUS_MS  = 1200;
@@ -52,7 +71,7 @@ export default function SupernovaReveal() {
 
         // Camera: cinematic approach from elevated angle to avoid node occlusion
         const pos = catPos[idx];
-        const nodeRadius = nR(diseases[idx].papers);
+        const nodeRadius = restingRadius(diseases, idx);
         const zoomDist = nodeRadius * 8.0;
 
         // Compute a camera position elevated ~30° above the XY plane,
@@ -84,6 +103,12 @@ export default function SupernovaReveal() {
       }
 
       if (supernovaPhase === 'burst') {
+        // The burst ring, fired on the burst frame itself. It used to arrive as
+        // a side effect of whichever selectDisease happened to run, which in
+        // story mode is the one at the END of the burst, 250 ms late, long
+        // after the tremble it is supposed to answer. Firing it here makes the
+        // ring simultaneous with the burst in every path, story or not.
+        fireRipple(idx, undefined, true);
         // Select the disease now (opens sidebar during linkwave)
         // Skip during story mode — story shortcut handles selection in burst end
         if (!s.storyActive) s.selectDisease(idx);
@@ -128,7 +153,7 @@ export default function SupernovaReveal() {
 
       // Tremble: layered sin with amplitude scaled to node size
       if (basePosRef.current) {
-        const nodeRadius = nR(diseases[idx].papers);
+        const nodeRadius = restingRadius(diseases, idx);
         const amp = nodeRadius * TREMBLE_FRACTION * uEase;
         const freq = 1 + uEase * 2; // frequency increases with charge
         const ox = amp * (
