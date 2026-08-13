@@ -18,6 +18,10 @@
 //                                by the any-input fast-forward. Always runs
 //                                --mobile regardless of the flag, since the
 //                                defect and the fix are both mobile-only.
+//   scrubdrag r7-scrubber-drag  (user report) a click-drag across the rail no
+//                                longer text-selects the page, and the
+//                                selection guard clears on a real release AND
+//                                on a forced mid-drag teardown.
 //   deter     the two-run determinism pair (tour beats to the millisecond)
 //
 // Every pause measurement is EVENT-TRIGGERED off the app's own tour clock (year
@@ -431,6 +435,98 @@ if (want('chiptap')) {
       after.tmPhase === 'scrub' && after.replayAffordance, JSON.stringify(after));
     await page.close();
   }
+}
+
+// ── r7-scrubber-drag ────────────────────────────────────────────────────────
+// User report: click-dragging the year scrubber sometimes text-selected the
+// whole page. A drag that leaves the track's narrow 44px hit box mid-gesture
+// (fast, or slightly diagonal) used to fall through to the browser's own
+// mousedown+mousemove text-selection drag over whatever was underneath.
+// Fixed in TimeRail.jsx's onPointerDown/onPointerUp: preventDefault + pointer
+// capture on grab, and a body-level `userSelect: none` guard that is cleared
+// both on a real release and on the mid-drag teardown effect (Time Machine
+// closing while a drag is still active). Uses REAL mouse events (not a
+// synthetic click), tracing a path that leaves the track and crosses the
+// header text above it, since that is exactly the gesture the report
+// describes.
+if (want('scrubdrag')) {
+  console.log('\nr7-scrubber-drag: a click-drag across the rail does not text-select the page');
+  const page = await makePage(browser);
+  await open(page);
+  await page.waitForFunction('window.__tour !== undefined', { timeout: 20000 });
+  // Straight into scrub, no tour narration needed for this check.
+  await page.evaluate(() => window.__tour.seek(0));
+  await page.waitForFunction(() => document.querySelector('[data-mg-rail-track]') !== null, { timeout: 20000 });
+
+  // ── Scenario A: a real drag, released normally ──
+  const track = await page.$('[data-mg-rail-track]');
+  const box = await track.boundingBox();
+  const midY = box.y + box.height / 2;
+  await page.mouse.move(box.x + box.width * 0.25, midY);
+  await page.mouse.down();
+  // Leave the track's own bounds on purpose: up over the header text, then
+  // back down across the rail, then further right — the diagonal, fast path
+  // that used to hand the gesture to native selection.
+  await page.mouse.move(box.x + box.width * 0.45, midY - 60, { steps: 4 });
+  await page.mouse.move(box.x + box.width * 0.65, midY + 5, { steps: 4 });
+  await page.mouse.move(box.x + box.width * 0.85, midY - 40, { steps: 4 });
+  await wait(60);
+  const midDrag = await page.evaluate(() => ({
+    selection: window.getSelection().toString(),
+    bodyUserSelect: document.body.style.userSelect,
+  }));
+  await page.screenshot({ path: `${OUT}/r7-scrubber-drag.png` });
+  await page.mouse.up();
+  await wait(80);
+  const afterUp = await page.evaluate(() => ({
+    selection: window.getSelection().toString(),
+    bodyUserSelect: document.body.style.userSelect,
+    tmPhase: window._store.getState().tmPhase,
+  }));
+  console.log(`    mid-drag: ${JSON.stringify(midDrag)}`);
+  console.log(`    after release: ${JSON.stringify(afterUp)}`);
+  check('r7-scrubber-drag: no page text is selected mid-drag',
+    midDrag.selection === '', `selection "${midDrag.selection}"`);
+  check('r7-scrubber-drag: the body selection guard is on mid-drag',
+    midDrag.bodyUserSelect === 'none', `userSelect "${midDrag.bodyUserSelect}"`);
+  check('r7-scrubber-drag: no selection survives a normal release, and the guard clears',
+    afterUp.selection === '' && afterUp.bodyUserSelect === '',
+    `selection "${afterUp.selection}" userSelect "${afterUp.bodyUserSelect}"`);
+
+  // ── Scenario B: a forced mid-drag teardown (the Time Machine closes while
+  // the pointer is still down — an Escape press, say) must not leak the guard.
+  const box2 = await (await page.$('[data-mg-rail-track]')).boundingBox();
+  await page.mouse.move(box2.x + box2.width * 0.3, box2.y + box2.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box2.x + box2.width * 0.5, box2.y + box2.height / 2 - 30, { steps: 3 });
+  await wait(40);
+  const duringB = await page.evaluate(() => document.body.style.userSelect);
+  await page.evaluate(() => window._store.getState().stopTimeMachine());
+  await wait(120);
+  const afterTeardown = await page.evaluate(() => ({
+    bodyUserSelect: document.body.style.userSelect,
+    tmPhase: window._store.getState().tmPhase,
+  }));
+  await page.mouse.up(); // release the real OS button; the app already tore the drag down
+  console.log(`    forced teardown: guard was "${duringB}" mid-drag, ${JSON.stringify(afterTeardown)} after stopTimeMachine()`);
+  check('r7-scrubber-drag: a forced mid-drag teardown (Time Machine closing) restores the guard',
+    afterTeardown.bodyUserSelect === '' && afterTeardown.tmPhase === 'idle',
+    JSON.stringify(afterTeardown));
+
+  // Regressions named in the brief: keyboard scrub and the search input's
+  // arrow-key guard must be untouched by any of the above.
+  await page.evaluate(() => window.__tour.seek(0));
+  // The rail's own key handler only acts in 'scrub' (a tour owns the keys in
+  // 'tour'); force the handover the way a real grab would, without spending
+  // another real drag on it.
+  await page.evaluate(() => window._store.getState().setTmPhase('scrub'));
+  const y0 = await page.evaluate(() => Math.round(window.__tm.targetYear));
+  await page.keyboard.press('ArrowRight');
+  await wait(250);
+  const y1 = await page.evaluate(() => Math.round(window.__tm.targetYear));
+  check('r7-scrubber-drag: keyboard scrub still steps a year (unaffected regression check)',
+    y1 === y0 + 1, `${y0} -> ${y1}`);
+  await page.close();
 }
 
 // ── the two-run determinism pair ────────────────────────────────────────────

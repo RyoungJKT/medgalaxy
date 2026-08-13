@@ -39,6 +39,19 @@ const REPLAY_ROW = 22;
 export const railBandHeight = (mob) => (mob ? 52 + 26 + 6 : 40 + 38 + 10) + HIT_H + REPLAY_ROW;
 const easeExpoOut = (p) => (p >= 1 ? 1 : 1 - Math.pow(2, -10 * p));
 
+// Drag-vs-select guard (round-9 gate, user report): a click-drag on the track
+// was reaching the browser's native text-selection gesture and highlighting
+// the whole page underneath the rail. Scoped to the document body, toggled
+// for the lifetime of a drag only — set on grab, cleared on release AND on
+// the mid-drag teardown (the Time Machine closing under an active drag), so
+// the style never leaks past the gesture that set it.
+const setDragSelectGuard = (on) => {
+  if (typeof document === 'undefined') return;
+  const v = on ? 'none' : '';
+  document.body.style.userSelect = v;
+  document.body.style.webkitUserSelect = v;
+};
+
 // Digit column, same technique as the odometer (a 0-9 strip translated behind a
 // one-character window) at the year numeral's own 120 ms.
 function DigitColumn({ digit }) {
@@ -148,7 +161,7 @@ export default function TimeRail() {
   const fillRef = useRef(null);
   const numeralRef = useRef(null);
   const reticleRef = useRef(null);
-  const dragRef = useRef({ active: false, v: 0, lastY: 0 });
+  const dragRef = useRef({ active: false, v: 0, lastY: 0, el: null, pointerId: null });
   const inertiaRef = useRef(null);
   const snapRef = useRef(null);
 
@@ -298,6 +311,16 @@ export default function TimeRail() {
     window.removeEventListener('pointermove', onPointerMove);
     window.removeEventListener('pointerup', onPointerUp);
     window.removeEventListener('pointercancel', onPointerUp);
+    // Hand the pointer stream and text selection back to the page. This runs
+    // on a real release AND on the mid-drag teardown below (the Time Machine
+    // closing under an active drag calls this directly), so the capture and
+    // the selection guard never survive past the gesture that set them.
+    if (d.el && d.pointerId != null) {
+      try { d.el.releasePointerCapture(d.pointerId); } catch { /* already released */ }
+    }
+    d.el = null;
+    d.pointerId = null;
+    setDragSelectGuard(false);
     if (!t) return;
     if (Math.abs(d.v) > FLICK_MIN) flick(d.v);
     else snapTo(Math.round(t.targetYear));
@@ -311,8 +334,23 @@ export default function TimeRail() {
     clearFinale();
     cancelInertia();
     cancelSnap();
+    // The drag owns the pointer stream from here (round-9 gate, user report):
+    // without this, a fast or slightly diagonal drag can leave the track's own
+    // hit box, and the browser reads the rest of the gesture as a native
+    // text-selection drag over whatever's underneath rather than a scrub.
+    // preventDefault stops that at the source; setPointerCapture keeps every
+    // subsequent move/up targeted at the track even once the pointer wanders
+    // off it; the body-level userSelect guard below is the belt on top of
+    // both, for the one path neither covers on its own — a drag that started
+    // inside the track but glances a selectable text node on its very first
+    // move, before the browser has committed to who owns the gesture.
+    e.preventDefault();
+    const el = e.currentTarget;
+    let captured = false;
+    try { el.setPointerCapture(e.pointerId); captured = true; } catch { /* unsupported here; the guard below still holds */ }
+    setDragSelectGuard(true);
     const y = yearFromClientX(e.clientX);
-    dragRef.current = { active: true, v: 0, lastY: y };
+    dragRef.current = { active: true, v: 0, lastY: y, el: captured ? el : null, pointerId: captured ? e.pointerId : null };
     t.targetYear = y;
     window.addEventListener('pointermove', onPointerMove);
     window.addEventListener('pointerup', onPointerUp);
@@ -372,6 +410,11 @@ export default function TimeRail() {
     window.removeEventListener('pointermove', onPointerMove);
     window.removeEventListener('pointerup', onPointerUp);
     window.removeEventListener('pointercancel', onPointerUp);
+    // Belt-and-braces for a true unmount mid-drag (TimeRail itself is never
+    // conditionally mounted on tmPhase, so the tmPhase-idle teardown above is
+    // the normal path — this only matters for an app-level teardown, e.g. HMR
+    // or a test harness tearing down the tree with the pointer still down).
+    if (dragRef.current.active) setDragSelectGuard(false);
   }, [onPointerMove, onPointerUp]);
 
   // One pulse as the tour hands the rail over.
@@ -574,12 +617,14 @@ export default function TimeRail() {
 
           <div
             key={pulse}
+            data-mg-rail-track
             onPointerDown={onPointerDown}
             onPointerMove={(e) => { if (!mob && !dragRef.current.active) setHoverIdx(Math.round(yearFromClientX(e.clientX))); }}
             onPointerLeave={() => setHoverIdx(-1)}
             style={{
               position: 'relative', height: HIT_H, display: 'flex', alignItems: 'center',
               pointerEvents: 'auto', cursor: 'ew-resize', touchAction: 'none',
+              userSelect: 'none', WebkitUserSelect: 'none',
               animation: pulse ? `tmRailPulse ${PULSE_MS}ms ease` : 'none',
             }}
           >
