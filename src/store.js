@@ -114,6 +114,13 @@ const useStore = create(
     // viewer the decade story or just the scrubber (review gate F1c).
     tmTourSeen: false,
     _tmSnapshot: null, // pre-Time-Machine state for a clean restore
+    // The skip pill's one-frame request to leave the tour for the home screen.
+    // TimeMachine's frame loop consumes it (same exit choreography an
+    // untouched tour earns, fast-forwarded). Every action that enters or
+    // leaves the instrument (startTimeMachine, stopTimeMachine, beginTmExit)
+    // clears it, and the request itself is only accepted mid-tour, so a stale
+    // request can never end a later tour.
+    tmSkipRequested: false,
 
     // ── The exit choreography (ADDENDUM 1 section 1) ──
     // The opening sequence ends at the home screen, so the tour's finale is
@@ -445,6 +452,7 @@ const useStore = create(
         tmFocusIdx: -1,
         tmIsoIdx: -1,
         tmIsoDim: 1,
+        tmSkipRequested: false,
         tmTourSeen: s.tmTourSeen || !!auto,
         _tmSnapshot: s._tmSnapshot || { storyVisible: s.storyVisible },
         storyVisible: false,
@@ -472,6 +480,7 @@ const useStore = create(
         tmFocusIdx: -1,
         tmIsoIdx: -1,
         tmIsoDim: 1,
+        tmSkipRequested: false,
         _tmSnapshot: null,
         storyVisible: snap ? snap.storyVisible : true,
       });
@@ -497,12 +506,20 @@ const useStore = create(
         // viewer who re-opens the Time Machine mid-exit still has their true
         // pre-Time-Machine chrome state to come back to.
         storyVisible: false,
+        tmSkipRequested: false,
         tmExitAt: typeof performance !== 'undefined' ? performance.now() : Date.now(),
         tmExitMode: mode || 'normal',
       });
     },
 
     setTmIso: (idx, dim) => set({ tmIsoIdx: idx, tmIsoDim: dim }),
+
+    // The tour skip pill's request: only meaningful while the narrated tour
+    // is playing, so any other phase refuses it outright.
+    requestTmTourSkip: () => {
+      if (get().tmPhase !== 'tour') return;
+      set({ tmSkipRequested: true });
+    },
 
     // Skip during the exit: any input fast-forwards to the landed state over
     // 240 ms. Re-seating tmExitAt in the past is what collapses every staged

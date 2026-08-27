@@ -865,6 +865,18 @@ export default function TimeMachine({ camDist = 900 }) {
       // is always meant to open the instrument, so it is excluded from the
       // fast-forward outright and left for the chip's own onClick.
       if (e && e.target && e.target.closest && e.target.closest('[data-mg-tm-chip]')) return;
+      // The skip pill steps aside the same way: its press means "end the
+      // opening, take me home", so it must reach the pill's own handler (which
+      // requests the exit) rather than be read as "any input" and hand the
+      // rail over at the year on screen.
+      if (e && e.target && e.target.closest && e.target.closest('[data-mg-skip]')) return;
+      // Focus navigation is not intent: Tab (and a bare modifier press) must
+      // be able to carry keyboard focus to the skip pill without being read
+      // as "any input" and handing the tour over before focus can land on
+      // the button. Once the pill is focused, its Enter/Space keydown targets
+      // the button itself and the data-mg-skip carve-out above applies.
+      if (e && e.type === 'keydown' &&
+          (e.key === 'Tab' || e.key === 'Shift' || e.key === 'Control' || e.key === 'Alt' || e.key === 'Meta')) return;
       // Skip during the exit (ADDENDUM 1 section 1): any input fast-forwards
       // to the landed state over 240 ms. Checked before the tour branch
       // because by now tmPhase is already 'idle'.
@@ -1584,6 +1596,20 @@ export default function TimeMachine({ camDist = 900 }) {
       if (y > maxY) y = maxY;
       tm.yearFloat = y;
       tm.targetYear = y;
+
+      // The skip pill (bottom right) asks to leave the tour for the home
+      // screen now: the same exit choreography an untouched tour earns,
+      // fast-forwarded exactly as any input during the exit would be. Under
+      // reduced motion tmExitSkip refuses ('reduced' is already the short
+      // form) and the reduced exit plays as itself. Consumed ahead of the cue
+      // loop, so no same-frame story cue (a shockwave, a focus) fires into
+      // the exit it just requested.
+      if (store.tmSkipRequested) {
+        tm.targetYear = Math.round(tm.yearFloat);
+        beginExit(clock);
+        useStore.getState().tmExitSkip();
+        return;
+      }
 
       if (r.paused != null) { tm.rate = 0; return; }
 
