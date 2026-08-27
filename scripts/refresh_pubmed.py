@@ -16,6 +16,7 @@ import urllib.error
 DATA_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'diseases.json')
 META_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'meta.json')
 SEARCH_OVERRIDES_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'search-overrides.json')
+CONNECTIONS_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'connections.json')
 
 # Override search terms for diseases whose labels don't work as-is. Loaded
 # from data/search-overrides.json — the single source of truth shared with
@@ -43,7 +44,7 @@ def pubmed_count(term, min_date=None, max_date=None):
             with urllib.request.urlopen(req, timeout=15) as resp:
                 data = json.loads(resp.read())
                 return int(data['esearchresult']['count'])
-        except (urllib.error.URLError, TimeoutError, KeyError) as e:
+        except (urllib.error.URLError, TimeoutError, KeyError, ValueError) as e:
             if attempt < 2:
                 time.sleep(2)
                 continue
@@ -98,6 +99,103 @@ def refresh_disease(disease):
     return True
 
 
+def reconcile_connections(diseases):
+    """
+    Keep connections.json consistent with the totals this refresh just wrote.
+
+    A co-occurrence count and its two endpoint totals only satisfy
+    sharedPapers <= min(endpoint papers) when they describe the same PubMed
+    snapshot. Totals move on every weekly refresh while pair counts were
+    measured once (scripts/regenerate_connections.py), so a pair measured
+    after a total was can exceed it by a few papers. Rather than clamping
+    (which would falsify the stored count's stated query), re-run the same
+    "(termA) AND (termB)" all-time query for every violating pair, so the
+    pair count and the fresh totals describe the same snapshot again. If a
+    re-queried pair still exceeds an endpoint's total (that endpoint's own
+    refresh failed this run, or its total predates this reconciliation), the
+    endpoints themselves are re-fetched. tests/dataInvariants.test.js holds
+    the shipped data to the invariant.
+
+    Returns the number of problems left (0 on success): violations that
+    survived the re-query, pairs whose re-query failed or returned zero, and
+    endpoint re-refreshes that failed.
+    """
+    with open(CONNECTIONS_PATH, 'r') as f:
+        connections = json.load(f)
+    by_id = {d['id']: d for d in diseases}
+
+    def violates(c):
+        a, b = by_id.get(c['source']), by_id.get(c['target'])
+        if a is None or b is None:
+            return False
+        return c['sharedPapers'] > min(a['papers'], b['papers'])
+
+    stale = [c for c in connections if violates(c)]
+    if not stale:
+        print('Connections already consistent with the refreshed totals.')
+        return 0
+
+    print(f'Re-querying {len(stale)} connection(s) whose sharedPapers exceed an endpoint total...')
+    changed = False
+    problems = 0
+    requeried = {}
+    for c in stale:
+        a, b = by_id[c['source']], by_id[c['target']]
+        query = f'({get_search_term(a)}) AND ({get_search_term(b)})'
+        count = pubmed_count(query)
+        time.sleep(RATE_LIMIT_DELAY)
+        if count is None:
+            print(f'  {c["source"]}|{c["target"]}: FAILED, keeping existing value', file=sys.stderr)
+            problems += 1
+            continue
+        if count == 0:
+            # A pair that held tens of thousands of shared papers does not
+            # honestly drop to zero between snapshots; that is a PubMed
+            # anomaly or a term problem, and writing 0 would silently delete
+            # the connection's weight. Keep the old value and flag the run.
+            print(f'  WARNING: {c["source"]}|{c["target"]} re-queried as 0 (was {c["sharedPapers"]}); '
+                  'keeping existing value, investigate the term', file=sys.stderr)
+            problems += 1
+            continue
+        old = c['sharedPapers']
+        c['sharedPapers'] = count
+        requeried[f'{c["source"]}|{c["target"]}'] = count
+        changed = True
+        print(f'  {c["source"]}|{c["target"]}: {old} -> {count}')
+        if violates(c):
+            # The pair count is now fresher than a total: bring both endpoints
+            # to the same snapshot.
+            for d in (a, b):
+                print(f'  re-refreshing endpoint {d["id"]} to the same snapshot...')
+                if not refresh_disease(d):
+                    print(f'  WARNING: endpoint {d["id"]} re-refresh failed; its total may still '
+                          'describe the older snapshot', file=sys.stderr)
+                    problems += 1
+                time.sleep(RATE_LIMIT_DELAY)
+
+    still = [c for c in connections if violates(c)]
+    if changed:
+        with open(CONNECTIONS_PATH, 'w') as f:
+            json.dump(connections, f, indent=2)
+        with open(DATA_PATH, 'w') as f:
+            json.dump(diseases, f, indent=2)
+        # regenerate_connections.py resumes from its progress cache when one
+        # exists, and a cached pre-reconciliation count would silently revert
+        # what was just re-queried. Keep any existing cache entry in step.
+        progress_path = os.path.join(os.path.dirname(__file__), '.connections_progress.json')
+        if requeried and os.path.exists(progress_path):
+            with open(progress_path, 'r') as f:
+                progress = json.load(f)
+            progress.update(requeried)
+            with open(progress_path, 'w') as f:
+                json.dump(progress, f, indent=0)
+            print(f'Updated {len(requeried)} entr(ies) in {os.path.basename(progress_path)}.')
+    for c in still:
+        print(f'  WARNING: {c["source"]}|{c["target"]} still exceeds an endpoint total after re-query',
+              file=sys.stderr)
+    return len(still) + problems
+
+
 def main():
     with open(DATA_PATH, 'r') as f:
         diseases = json.load(f)
@@ -135,6 +233,10 @@ def main():
     with open(DATA_PATH, 'w') as f:
         json.dump(diseases, f, indent=2)
 
+    # Now that every total describes today's snapshot, bring any connection
+    # measured against an older snapshot along with it.
+    leftover = reconcile_connections(diseases)
+
     # Update meta.json's lastRefresh date alongside diseases.json
     if os.path.exists(META_PATH):
         with open(META_PATH, 'r') as f:
@@ -148,9 +250,16 @@ def main():
     print()
     print(f'Done. Updated: {updated}, Failed: {failed}, Total: {total}')
 
-    if failed > 0:
+    if failed > 0 or leftover > 0:
         sys.exit(1)
 
 
 if __name__ == '__main__':
+    # --reconcile-only: run just the connections reconciliation against the
+    # totals already on disk (the weekly run does it automatically after the
+    # totals refresh). For fixing a snapshot skew without a full refresh.
+    if '--reconcile-only' in sys.argv:
+        with open(DATA_PATH, 'r') as f:
+            _diseases = json.load(f)
+        sys.exit(1 if reconcile_connections(_diseases) > 0 else 0)
     main()

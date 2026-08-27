@@ -39,6 +39,20 @@ describe('data invariants', () => {
     const roundHundreds = connections.filter(c => c.sharedPapers % 100 === 0);
     expect(roundHundreds.length).toBeLessThan(connections.length * 0.1);
   });
+  it('no connection claims more shared papers than either endpoint has in total', () => {
+    // "(termA) AND (termB)" is a conjunction of the same term sets the totals
+    // are counted from, so at a single PubMed snapshot sharedPapers can never
+    // exceed either endpoint's papers. Totals move on every weekly refresh
+    // while pair counts were measured once, so refresh_pubmed.py re-queries
+    // any pair a fresh total leaves behind (reconcile_connections) rather
+    // than clamping it. The compare card prints both figures exactly; this
+    // gate keeps them from ever contradicting each other on screen.
+    const byId = new Map(diseases.map(d => [d.id, d]));
+    for (const c of connections) {
+      const cap = Math.min(byId.get(c.source).papers, byId.get(c.target).papers);
+      expect(c.sharedPapers, `${c.source}|${c.target}`).toBeLessThanOrEqual(cap);
+    }
+  });
   it('connections carry no authored trend field', () => {
     // The per-pair trend was an authored up/stable/down label rendered beside a
     // measured count. It is gone from the data and from every display.

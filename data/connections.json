@@ -612,7 +612,7 @@
   {
     "source": "heart-disease",
     "target": "rheumatic-heart-disease",
-    "sharedPapers": 19558
+    "sharedPapers": 19582
   },
   {
     "source": "congenital-heart-defects",

@@ -1120,7 +1120,9 @@
   {
     "id": "colon-cancer",
     "label": "Colorectal Cancer",
-    "aliases": ["Colon Cancer"],
+    "aliases": [
+      "Colon Cancer"
+    ],
     "category": "cancer",
     "description": "Cancer of the large intestine, highly treatable when detected early via screening.",
     "papers": 180574,
@@ -1939,7 +1941,7 @@
     "label": "Heart Disease",
     "category": "cardiovascular",
     "description": "Leading global cause of death encompassing coronary and ischemic conditions.",
-    "papers": 1733464,
+    "papers": 1736574,
     "trend": 16,
     "mortality": 9100000,
     "fundingGap": "medium",
@@ -1970,15 +1972,15 @@
       54116,
       56470,
       58708,
-      59169,
+      59170,
       59149,
-      61232,
-      63266,
+      61229,
+      63264,
       72637,
       76040,
       71280,
-      67232,
-      67594
+      67229,
+      67603
     ],
     "region": "EUR",
     "mortalityYear": 2021,
@@ -2498,7 +2500,7 @@
     "label": "Rheumatic Heart Disease",
     "category": "cardiovascular",
     "description": "Heart valve damage from rheumatic fever, prevalent in low-income countries.",
-    "papers": 19556,
+    "papers": 19582,
     "trend": 35,
     "mortality": 373000,
     "fundingGap": "high",
@@ -4329,7 +4331,7 @@
   },
   {
     "id": "sjogrens-syndrome",
-    "label": "Sjögren's Syndrome",
+    "label": "Sj\u00f6gren's Syndrome",
     "category": "autoimmune",
     "description": "Autoimmune disorder attacking moisture-producing glands causing dryness.",
     "papers": 22041,
