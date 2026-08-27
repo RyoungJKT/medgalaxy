@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CompareCards redesign mockups</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #06080d; color: #e2e8f0;
+    font-family: 'IBM Plex Mono', monospace;
+    padding: 48px 40px 80px;
+  }
+  .page-head { max-width: 1080px; margin: 0 auto 12px; }
+  .page-head h1 { font-size: 22px; font-weight: 600; letter-spacing: 0.5px; }
+  .page-head p { font-size: 12px; color: #94a3b8; margin-top: 8px; line-height: 1.6; max-width: 720px; }
+  .rules { font-size: 10px; color: #64748b; margin-top: 10px; }
+  .grid { max-width: 1080px; margin: 32px auto 0; display: grid; gap: 40px; }
+
+  .design { border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden; }
+  .design-head { padding: 14px 20px; display: flex; align-items: baseline; gap: 14px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .design-head .num { font-size: 11px; color: #64748b; }
+  .design-head .name { font-size: 14px; font-weight: 600; }
+  .design-head .why { font-size: 11px; color: #94a3b8; margin-left: auto; text-align: right; max-width: 55%; line-height: 1.5; }
+
+  .stage {
+    position: relative; height: 320px; overflow: hidden;
+    background: radial-gradient(ellipse at 78% 45%, #0b1020 0%, #06080d 55%);
+  }
+  .node {
+    position: absolute; right: 12%; top: 50%; transform: translateY(-50%);
+    width: 150px; height: 150px; border-radius: 50%;
+    background: radial-gradient(circle at 38% 35%, #ff6b6b 0%, #ff3333 45%, #7a1414 85%, #3d0a0a 100%);
+    box-shadow: 0 0 60px 12px rgba(255, 51, 51, 0.18);
+  }
+  .node-label { position: absolute; right: 12%; top: 20%; font-size: 12px; color: #ff8a8a; letter-spacing: 0.5px; }
+  .cards { position: absolute; left: 6%; top: 50%; transform: translateY(-50%); }
+
+  .kicker { font-size: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; color: #64748b; }
+  .dname { font-size: 15px; font-weight: 600; color: #e2e8f0; }
+  .dval { font-size: 12px; color: #94a3b8; }
+  .dsrc { font-size: 9px; color: #64748b; }
+  .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 8px; vertical-align: 1px; }
+
+  /* 1 LEDGER */
+  .ledger {
+    width: 300px; background: rgba(10,16,30,0.94); border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 10px; backdrop-filter: blur(16px); box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  }
+  .ledger .row { padding: 13px 16px; cursor: pointer; transition: background 160ms; }
+  .ledger .row:hover { background: rgba(255,255,255,0.04); }
+  .ledger .row + .row { border-top: 1px solid rgba(255,255,255,0.07); }
+  .ledger .row .top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px; }
+  .ledger .dname { font-size: 14px; }
+  .ledger .dval { color: #e2e8f0; font-size: 12px; }
+  .ledger .dsrc { margin-top: 3px; }
+
+  /* 2 CALLOUT */
+  .callout .entry { position: relative; padding: 0 0 6px 0; margin-bottom: 26px; cursor: pointer; }
+  .callout .rule { height: 1px; background: rgba(255,255,255,0.22); width: 210px; margin: 7px 0 7px; position: relative; }
+  .callout .rule::after {
+    content: ''; position: absolute; right: -74px; top: 0; width: 74px; height: 1px;
+    background: rgba(255,255,255,0.10); transform: rotate(9deg); transform-origin: left top;
+  }
+  .callout .entry:hover .rule { background: rgba(255,255,255,0.45); }
+  .callout .head-line { display: flex; gap: 10px; align-items: baseline; }
+  .callout .dval { color: #cbd5e1; }
+  .callout .kicker { margin-bottom: 4px; display: block; }
+
+  /* 3 TELEMETRY */
+  .telemetry {
+    width: 316px; background: rgba(8,12,22,0.96); border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 8px; padding: 14px 16px 11px; box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  }
+  .telemetry .trow { display: grid; grid-template-columns: 118px 1fr; gap: 4px 14px; padding: 8px 0; cursor: pointer; }
+  .telemetry .trow + .trow { border-top: 1px solid rgba(255,255,255,0.06); }
+  .telemetry .trow:hover .dname { color: #ffffff; }
+  .telemetry .tlabel { font-size: 9px; text-transform: lowercase; letter-spacing: 0.5px; color: #64748b; padding-top: 3px; }
+  .telemetry .dname { font-size: 13px; }
+  .telemetry .dval { font-size: 11px; margin-top: 2px; }
+  .telemetry .tfoot { border-top: 1px solid rgba(255,255,255,0.06); margin-top: 4px; padding-top: 7px; font-size: 8.5px; color: #475569; display: flex; justify-content: space-between; }
+
+  /* 4 CHIPS */
+  .chips .chip {
+    display: flex; align-items: center; gap: 11px; width: max-content;
+    background: rgba(10,16,30,0.92); border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 999px; padding: 9px 18px 9px 14px; margin-bottom: 12px;
+    cursor: pointer; transition: border-color 160ms;
+  }
+  .chips .chip:hover { border-color: rgba(255,255,255,0.28); }
+  .chips .ktag { font-size: 8px; text-transform: uppercase; letter-spacing: 1.6px; color: #64748b; margin-right: 2px; }
+  .chips .dname { font-size: 13px; }
+  .chips .dval { font-size: 11px; }
+
+  /* 5 SCALE */
+  .scale {
+    width: 320px; background: rgba(10,16,30,0.94); border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 10px; padding: 16px 18px; box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  }
+  .scale .block { cursor: pointer; }
+  .scale .block + .block { margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.07); }
+  .scale .head-line { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+  .scale .bar-row { display: grid; grid-template-columns: 92px 1fr 84px; gap: 10px; align-items: center; margin-top: 5px; }
+  .scale .who { font-size: 10px; color: #94a3b8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .scale .who.sel { color: #e2e8f0; }
+  .scale .bar { height: 5px; border-radius: 3px; background: rgba(255,255,255,0.06); position: relative; }
+  .scale .bar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; }
+  .scale .num { font-size: 10px; color: #94a3b8; text-align: right; white-space: nowrap; }
+
+  /* 6 RETICLE */
+  .reticle .frame { position: relative; width: 280px; padding: 13px 18px; margin-bottom: 20px; cursor: pointer; }
+  .reticle .frame i { position: absolute; width: 11px; height: 11px; border: 0 solid rgba(255,255,255,0.35); transition: border-color 160ms; }
+  .reticle .frame:hover i { border-color: rgba(255,255,255,0.7); }
+  .reticle .frame .tl { left: 0; top: 0; border-left-width: 1px; border-top-width: 1px; }
+  .reticle .frame .tr { right: 0; top: 0; border-right-width: 1px; border-top-width: 1px; }
+  .reticle .frame .bl { left: 0; bottom: 0; border-left-width: 1px; border-bottom-width: 1px; }
+  .reticle .frame .br { right: 0; bottom: 0; border-right-width: 1px; border-bottom-width: 1px; }
+  .reticle .head-line { display: flex; gap: 10px; align-items: baseline; margin-top: 4px; }
+  .reticle .dval { color: #cbd5e1; }
+
+  .variants { padding: 14px 20px 18px; border-top: 1px solid rgba(255,255,255,0.06); font-size: 10px; color: #64748b; line-height: 1.7; }
+  .variants b { color: #94a3b8; font-weight: 500; }
+  .foot { max-width: 1080px; margin: 40px auto 0; font-size: 10px; color: #475569; line-height: 1.7; }
+</style>
+</head>
+<body>
+
+<div class="page-head">
+  <h1>CompareCards redesign, six directions</h1>
+  <p>The boxes that appear beside a selected node. Same sample content in every design: selected node Cervical Cancer, a higher-mortality comparison (Sepsis) and the strongest research link (Obesity). Both cards stay clickable, jumping to that disease.</p>
+  <div class="rules">House rules honored in all six: no colored edge stripes, hairline borders only, status by dot or tint, solid-color type, IBM Plex Mono, sources one glance away.</div>
+</div>
+
+<div class="grid">
+
+  <!-- ============ 1 LEDGER ============ -->
+  <div class="design">
+    <div class="design-head"><span class="num">01</span><span class="name">Ledger</span>
+      <span class="why">One unified card instead of two floating boxes. Quiet rows, hairline separators, the number carries the weight. Closest to the current layout, minus the stripes.</span></div>
+    <div class="stage">
+      <div class="node"></div><div class="node-label">Cervical Cancer</div>
+      <div class="cards">
+        <div class="ledger">
+          <div class="row">
+            <div class="top"><span class="kicker">Higher mortality</span><span class="dsrc">WHO-cited</span></div>
+            <div><span class="dot" style="background:#00e6b8"></span><span class="dname">Sepsis</span></div>
+            <div class="dval">11,000,000 deaths/yr</div>
+          </div>
+          <div class="row">
+            <div class="top"><span class="kicker">Strongest research link</span><span class="dsrc">live PubMed</span></div>
+            <div><span class="dot" style="background:#ffd500"></span><span class="dname">Obesity</span></div>
+            <div class="dval">46,213 shared papers</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="variants"><b>Overlooked tint:</b> when the compared disease is in the overlooked decile, its dot and value take the ember red used by the Attention Map. <b>No-estimate rows:</b> value line reads "no global estimate" in tertiary ink.</div>
+  </div>
+
+  <!-- ============ 2 CALLOUT ============ -->
+  <div class="design">
+    <div class="design-head"><span class="num">02</span><span class="name">Callout</span>
+      <span class="why">Borderless scientific annotation. A thin rule with an angled leader toward the node, like figure labels in a paper. The galaxy stays visible through it.</span></div>
+    <div class="stage">
+      <div class="node"></div><div class="node-label">Cervical Cancer</div>
+      <div class="cards">
+        <div class="callout">
+          <div class="entry">
+            <span class="kicker">Higher mortality</span>
+            <div class="head-line"><span class="dot" style="background:#00e6b8"></span><span class="dname">Sepsis</span><span class="dval">11,000,000 deaths/yr</span></div>
+            <div class="rule"></div>
+            <div class="dsrc">sepsis-associated, WHO-cited estimate</div>
+          </div>
+          <div class="entry">
+            <span class="kicker">Strongest research link</span>
+            <div class="head-line"><span class="dot" style="background:#ffd500"></span><span class="dname">Obesity</span><span class="dval">46,213 shared papers</span></div>
+            <div class="rule"></div>
+            <div class="dsrc">live PubMed co-occurrence</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="variants"><b>Motion note:</b> the rule draws in from left over 240ms on select; the leader angle updates as the camera orbits so it always points at the node.</div>
+  </div>
+
+  <!-- ============ 3 TELEMETRY ============ -->
+  <div class="design">
+    <div class="design-head"><span class="num">03</span><span class="name">Telemetry</span>
+      <span class="why">Instrument readout: label column, data column, provenance footer. Matches the supernova ANALYZING overlay and the methodology panel's voice. The most credibility-forward option.</span></div>
+    <div class="stage">
+      <div class="node"></div><div class="node-label">Cervical Cancer</div>
+      <div class="cards">
+        <div class="telemetry">
+          <div class="trow">
+            <span class="tlabel">higher mortality</span>
+            <div><div><span class="dot" style="background:#00e6b8"></span><span class="dname">Sepsis</span></div>
+            <div class="dval">11,000,000 deaths/yr</div></div>
+          </div>
+          <div class="trow">
+            <span class="tlabel">strongest link</span>
+            <div><div><span class="dot" style="background:#ffd500"></span><span class="dname">Obesity</span></div>
+            <div class="dval">46,213 shared papers</div></div>
+          </div>
+          <div class="tfoot"><span>sources: WHO-cited · live PubMed</span><span>click to jump</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="variants"><b>Fits the family:</b> reuses the exact kicker and glass tokens of SpotlightCaption and the sidebar, so selection UI reads as one instrument.</div>
+  </div>
+
+  <!-- ============ 4 CHIPS ============ -->
+  <div class="design">
+    <div class="design-head"><span class="num">04</span><span class="name">Chips</span>
+      <span class="why">Smallest footprint: two pills that occlude almost none of the galaxy. Kicker inline, dot for category, compact values. Best when the field matters more than the reading.</span></div>
+    <div class="stage">
+      <div class="node"></div><div class="node-label">Cervical Cancer</div>
+      <div class="cards">
+        <div class="chips">
+          <div class="chip"><span class="ktag">Mortality</span><span class="dot" style="background:#00e6b8;margin-right:0"></span><span class="dname">Sepsis</span><span class="dval">11.0M/yr</span></div>
+          <div class="chip"><span class="ktag">Link</span><span class="dot" style="background:#ffd500;margin-right:0"></span><span class="dname">Obesity</span><span class="dval">46K papers</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="variants"><b>Trade-off:</b> compact K/M numbers instead of the full-number convention; a hover state could expand a chip to the full figure plus source.</div>
+  </div>
+
+  <!-- ============ 5 SCALE ============ -->
+  <div class="design">
+    <div class="design-head"><span class="num">05</span><span class="name">Scale</span>
+      <span class="why">The comparison made visible: two proportional bars per card, selected disease versus the comparator, solid category colors. The only design where the gap itself is drawn.</span></div>
+    <div class="stage">
+      <div class="node"></div><div class="node-label">Cervical Cancer</div>
+      <div class="cards">
+        <div class="scale">
+          <div class="block">
+            <div class="head-line"><span class="kicker">Deaths per year</span><span class="dsrc">WHO-cited</span></div>
+            <div class="bar-row"><span class="who sel">Cervical Cancer</span><div class="bar"><i style="width:3.2%;background:#ff3333"></i></div><span class="num">349,000</span></div>
+            <div class="bar-row"><span class="who">Sepsis</span><div class="bar"><i style="width:100%;background:#00e6b8"></i></div><span class="num">11,000,000</span></div>
+          </div>
+          <div class="block">
+            <div class="head-line"><span class="kicker">Strongest research link</span><span class="dsrc">live PubMed</span></div>
+            <div class="bar-row"><span class="who">Obesity</span><div class="bar"><i style="width:64%;background:#ffd500"></i></div><span class="num">46,213 shared</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="variants"><b>Honesty:</b> bar lengths are linearly proportional within each card and each pair is labeled with its exact figure, so the graphic never claims more precision than the numbers beside it.</div>
+  </div>
+
+  <!-- ============ 6 RETICLE ============ -->
+  <div class="design">
+    <div class="design-head"><span class="num">06</span><span class="name">Reticle</span>
+      <span class="why">HUD corner brackets instead of a filled card. The most cinematic option and the lightest visually, echoing the Time Machine finale's reticle on RHD.</span></div>
+    <div class="stage">
+      <div class="node"></div><div class="node-label">Cervical Cancer</div>
+      <div class="cards">
+        <div class="reticle">
+          <div class="frame"><i class="tl"></i><i class="tr"></i><i class="bl"></i><i class="br"></i>
+            <span class="kicker">Higher mortality</span>
+            <div class="head-line"><span class="dot" style="background:#00e6b8"></span><span class="dname">Sepsis</span><span class="dval">11,000,000 deaths/yr</span></div>
+          </div>
+          <div class="frame"><i class="tl"></i><i class="tr"></i><i class="bl"></i><i class="br"></i>
+            <span class="kicker">Strongest research link</span>
+            <div class="head-line"><span class="dot" style="background:#ffd500"></span><span class="dname">Obesity</span><span class="dval">46,213 shared papers</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="variants"><b>Motion note:</b> brackets snap outward 2px then settle on select (120ms), the same grammar as the rail's detent pip. Needs a subtle backdrop blur inside the frame for legibility over bright regions.</div>
+  </div>
+
+</div>
+
+<div class="foot">
+  Sample values for layout only; the shipped component derives every figure from the live store (mortality with per-disease sources, links from regenerated PubMed co-occurrence). Overlooked-decile comparators tint ember; diseases without a citable global estimate show "no global estimate" in place of a number. All designs desktop-only, matching the current component.
+</div>
+
+</body>
+</html>
