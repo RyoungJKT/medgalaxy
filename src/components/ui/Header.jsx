@@ -394,9 +394,10 @@ export default function Header() {
           <button onClick={toggleSound}
             style={{ ...btnStyle, background: soundOn ? 'rgba(255,255,255,0.12)' : 'transparent', color: soundOn ? '#f59e0b' : '#e2e8f0' }}
           >{soundOn ? '✕ sound' : 'sound'}</button>
-          <button onClick={() => setMethodologyOpen(true)} aria-label="Methodology" title="Methodology"
-            style={{ ...btnStyle, width: 26, height: 26, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', fontWeight: 700, fontSize: 12, flexShrink: 0 }}
-          >?</button>
+          {/* The round "?" methodology button is hidden at the user's request
+              (2026-08-28). The panel itself stays wired: the mobile menu's
+              Methodology row still opens it, as does
+              setMethodologyOpen(true) from the store or the verify harness. */}
           <div style={{ position: 'relative', pointerEvents: 'auto' }}>
             <input
               value={searchQuery}
