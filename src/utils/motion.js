@@ -287,6 +287,13 @@ export const TM_EXIT_REDUCED = 300;
 // one ugly cut left in the piece".
 export const TM_ENTER_DUR = 650;
 
+// Compare-card bar draw-in offsets. The bars themselves move on DUR.slow +
+// EASE.ui; these are only their start times. `base` holds the first bar until
+// the card's own fade begins (the overlay family's established 0.3s fadeIn
+// delay), `step` is the app's 50 ms list-stagger increment (the same family
+// as the overlay list staggers in MedGalaxy.jsx).
+export const CARD_BARS = { base: 300, step: 50 };
+
 /**
  * How long from *now* until the exit channel scheduled at `atMs` should fire,
  * given the exit began at `t0`. Returns 0 once the moment has passed, which is
