@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import useStore from '../../store';
 import { isMob } from '../../utils/helpers';
 import SearchDropdown from './SearchDropdown';
-import audioEngine from '../../audio/engine';
 import { TM_EXIT, exitDelay } from '../../utils/motion';
 
 function SizeToggle() {
@@ -156,8 +155,6 @@ export default function Header() {
   const setNeglectMode = useStore(s => s.setNeglectMode);
   const spotlightActive = useStore(s => s.spotlightActive);
   const setSpotlightActive = useStore(s => s.setSpotlightActive);
-  const soundOn = useStore(s => s.soundOn);
-  const setSoundOn = useStore(s => s.setSoundOn);
   const setActiveMode = useStore(s => s.setActiveMode);
   const sizeMode = useStore(s => s.sizeMode);
   const setSizeMode = useStore(s => s.setSizeMode);
@@ -178,15 +175,6 @@ export default function Header() {
   // still be delivered, so it starts the tour rather than a bare scrubber.
   // Once any tour has been seen, the button is the plain instrument it was.
   const toggleTimeMachine = () => { if (tmActive) stopTimeMachine(); else startTimeMachine(!tmTourSeen); };
-
-  // First activation is the user gesture that primes the AudioContext
-  // (autoplay-safe); init() is idempotent so every toggle just calls it.
-  const toggleSound = () => {
-    const next = !soundOn;
-    audioEngine.init();
-    audioEngine.setEnabled(next);
-    setSoundOn(next);
-  };
 
   // ── The exit's header channel (ADDENDUM 1 section 1, t = 1.75) ──
   // One-shot Time Machine button pulse, 1.4 s: two cycles of scale 1.000 to
@@ -344,9 +332,6 @@ export default function Header() {
                 <button onClick={() => { setSpotlightActive(!spotlightActive); setMenuOpen(false); }}
                   style={{ padding: '6px 10px', fontSize: 10, fontFamily: 'inherit', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, cursor: 'pointer', background: spotlightActive ? 'rgba(255,255,255,0.12)' : 'transparent', color: spotlightActive ? '#f59e0b' : '#e2e8f0', width: '100%', textAlign: 'left' }}
                 >{spotlightActive ? '✕ Spotlight' : 'Spotlight'}</button>
-                <button onClick={() => { toggleSound(); setMenuOpen(false); }}
-                  style={{ padding: '8px 10px', minHeight: 44, fontSize: 10, fontFamily: 'inherit', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, cursor: 'pointer', background: soundOn ? 'rgba(255,255,255,0.12)' : 'transparent', color: soundOn ? '#f59e0b' : '#e2e8f0', width: '100%', textAlign: 'left' }}
-                >{soundOn ? '✕ sound' : 'sound'}</button>
                 <div style={{ color: '#64748b', fontSize: 9, padding: '4px 4px 0' }}>About</div>
                 <button onClick={() => { setMethodologyOpen(true); setMenuOpen(false); }}
                   style={{ padding: '8px 10px', minHeight: 44, fontSize: 10, fontFamily: 'inherit', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, cursor: 'pointer', background: 'transparent', color: '#e2e8f0', width: '100%', textAlign: 'left' }}
@@ -391,9 +376,10 @@ export default function Header() {
           <button onClick={() => setSpotlightActive(!spotlightActive)}
             style={{ ...btnStyle, background: spotlightActive ? 'rgba(255,255,255,0.12)' : 'transparent', color: spotlightActive ? '#f59e0b' : '#e2e8f0' }}
           >{spotlightActive ? '✕ Spotlight' : 'Spotlight'}</button>
-          <button onClick={toggleSound}
-            style={{ ...btnStyle, background: soundOn ? 'rgba(255,255,255,0.12)' : 'transparent', color: soundOn ? '#f59e0b' : '#e2e8f0' }}
-          >{soundOn ? '✕ sound' : 'sound'}</button>
+          {/* The sound pill was removed at the user's request (2026-08-28)
+              along with the store's soundOn flag: nothing can enable the
+              synth engine, so every window.__mgAudio call site is a no-op
+              and the app is silent. */}
           {/* The round "?" methodology button is hidden at the user's request
               (2026-08-28). The panel itself stays wired: the mobile menu's
               Methodology row still opens it, as does
