@@ -17,6 +17,10 @@
 //   5. after a selection is cleared, the DPR buffer is back at rest within a
 //      short, bounded time (fix round: pins that the settle window stays
 //      short on this path, not the 2 s flat value the first pass shipped)
+//   6. a manual Time Machine session opened AFTER the tour has exited reads
+//      cameraOwner 'ambient' at the governed rest DPR, and hands the camera
+//      back on close (final fix wave: the ownership line used to key on the
+//      store's one-shot exit timestamp, which nothing resets)
 // Run with the dev server up:  node tools/verify-dpr.mjs [--headed] [--fps]
 import puppeteer from 'puppeteer-core';
 
@@ -78,7 +82,7 @@ const ownerState = () => page.evaluate(() => {
   return {
     owner: r.cameraOwner,
     tmPhase: s.tmPhase,
-    tmExitAt: s.tmExitAt,
+    tmExitLive: !!r.tmExitLive,
     tmActive: !!(r.tm && r.tm.active),
     overtureActive: s.overtureActive,
     introPhase: s.introPhase,
@@ -98,7 +102,7 @@ const why = (d) => {
   if (d.overtureActive) cine.push('overtureActive');
   if (d.introPhase < 5) cine.push(`introPhase ${d.introPhase}`);
   if (d.tmPhase === 'tour') cine.push('tmPhase tour');
-  if (d.tmExitAt > 0 && d.tmActive) cine.push(`Time Machine exit window (tmExitAt ${d.tmExitAt})`);
+  if (d.tmExitLive) cine.push('Time Machine exit choreography live (sceneRefs.tmExitLive)');
   if (d.handoverSpeed != null && !d.handoverCancelled) cine.push(`handover speed ${d.handoverSpeed}`);
   const head = cine.length
     ? `cinematic: ${cine.join(', ')}`
@@ -221,6 +225,81 @@ const restMs = Date.now() - t1;
 console.log(`DPR back to rest ${restMs} ms after deselect (fly back + settle)`);
 if (!atRest) fail.push('DPR never returned to rest after deselect (4000 ms budget)');
 else if (restMs > 2000) fail.push(`DPR took ${restMs} ms to return to rest after deselect (budget 2000 ms)`);
+
+// 6. A manual Time Machine session, opened after the tour has already exited
+// (final fix wave, 2026-09-11). Camera ownership used to key on the store's
+// one-shot exit timestamp, which nothing resets, so every manual session that
+// followed a tour exit read 'tween' for its whole duration: DPR pinned to 1
+// and no depth of field while the viewer scrubbed at rest. The camera is at
+// rest in a manual session, so it must read 'ambient' at the governed rest
+// DPR, and closing must hand it straight back.
+{
+  // 1.2 s of continuous 'ambient' before the reading counts as rest. A single
+  // not-'tween' sample is not enough on either side of the open: the deselect
+  // above hands the camera a 2 s fly home that has not begun on the frame
+  // after the call, and reading straight through that gap made this block
+  // report a tween the Time Machine never started.
+  const restQuiet = async (budgetMs) => {
+    const t = Date.now();
+    let run = 0;
+    while (Date.now() - t < budgetMs) {
+      const o = await page.evaluate(() => window.__scene.cameraOwner);
+      run = o === 'ambient' ? run + 1 : 0;
+      if (run >= 5) return true; // 5 samples, 300 ms apart
+      await wait(300);
+    }
+    return false;
+  };
+  if (!(await restQuiet(8000))) {
+    const d = await ownerState();
+    fail.push(`the camera never reached 1.2 s of rest before the manual Time Machine step (${why(d)})`);
+  }
+  await page.evaluate(() => window._store.getState().startTimeMachine(false)); // what the header button calls once the tour has been seen
+  if (!(await restQuiet(8000))) {
+    const d = await ownerState();
+    fail.push(`a manual Time Machine session never settled to 1.2 s of rest (${why(d)})`);
+  }
+  const tmRest = await page.evaluate(() => ({
+    owner: window.__scene.cameraOwner,
+    tmPhase: window._store.getState().tmPhase,
+    tmExitLive: window.__scene.tmExitLive,
+    dpr: window.__scene.dprState.current,
+    restDpr: window.__scene.dprState.rest,
+    switches: window.__scene.dprState.switches,
+  }));
+  console.log('manual Time Machine at rest:', JSON.stringify(tmRest));
+  if (tmRest.owner !== 'ambient') {
+    fail.push(
+      `a manual Time Machine session read cameraOwner '${tmRest.owner}', not 'ambient' `
+      + `(tmPhase ${tmRest.tmPhase}, tmExitLive ${tmRest.tmExitLive})`
+    );
+  }
+  if (tmRest.dpr !== tmRest.restDpr) {
+    fail.push(`a manual Time Machine session rendered at DPR ${tmRest.dpr}, not the governed rest ${tmRest.restDpr}`);
+  }
+  // Closing hands the camera straight back: 'ambient' held, not merely touched
+  // once, inside the 2 s budget.
+  await page.evaluate(() => window._store.getState().stopTimeMachine());
+  const tClose = Date.now();
+  const closeTimeline = [];
+  let held = 0;
+  let closeOwner = null;
+  while (Date.now() - tClose < 2000) {
+    closeOwner = await page.evaluate(() => window.__scene.cameraOwner);
+    closeTimeline.push(`${Date.now() - tClose}ms:${closeOwner}`);
+    held = closeOwner === 'ambient' ? held + 1 : 0;
+    if (held >= 4) break; // 4 samples, 300 ms apart
+    await wait(300);
+  }
+  console.log(`ownership after closing the Time Machine: ${closeTimeline.join(' ')}`);
+  if (held < 4) {
+    const d = await ownerState();
+    fail.push(
+      `cameraOwner did not hold 'ambient' within 2 s of closing the Time Machine `
+      + `(${why(d)}) (timeline ${closeTimeline.join(' ')})`
+    );
+  }
+}
 
 if (doFps) {
   const measure = async (label) => {

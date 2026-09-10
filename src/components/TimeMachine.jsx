@@ -864,6 +864,10 @@ export default function TimeMachine({ camDist = 900 }) {
       clearTimeout(tourTimerRef.current);
       tourTimerRef.current = null;
       sceneRefs.tourArmPending = false;
+      // Both published flags are this component's to clear on unmount: with
+      // no frame loop left to refresh it, a stale tmExitLive would hold the
+      // camera in 'tween' forever.
+      sceneRefs.tmExitLive = false;
       unsubDone();
       unsubSeen();
       unsubFree();
@@ -974,6 +978,7 @@ export default function TimeMachine({ camDist = 900 }) {
         tourRef.current.tl = null;
         tourRef.current.exitAt = null;
         exitRef.current = null;
+        sceneRefs.tmExitLive = false; // the seek drops any live exit with it
         useStore.getState().setTmFocusIdx(-1);
         useStore.getState().startTimeMachine(true);
         useStore.getState().setTmPhase('tour');
@@ -1286,6 +1291,12 @@ export default function TimeMachine({ camDist = 900 }) {
       glow0: sceneRefs.fx.glowSuppress,
       fastAt: 0,
     };
+    // Published here rather than waiting for the next frame loop, so it lands
+    // in the same beat as the store's tmPhase 'idle'. A frame's lag between
+    // the two is a frame where the exit has begun but CameraRig still reads
+    // 'ambient', and the harness's "wait for idle at rest" latched onto
+    // exactly that gap.
+    sceneRefs.tmExitLive = true;
     s.beginTmExit(mode);
     // Moment 3's release pad, reused at -4 dB against the film's own: the same
     // exhale, quieter, because this is the second handover and not the first.
@@ -1497,6 +1508,10 @@ export default function TimeMachine({ camDist = 900 }) {
     // The exit choreography, run before anything else this frame: it owns the
     // glow channel and the radius blend's schedule while it lasts.
     const exiting = exitRef.current && !exitRef.current.landed;
+    // Published for CameraRig's ownership line: an exit that is live this
+    // frame, rather than the store's one-shot `tmExitAt` stamp, which nothing
+    // clears (see sceneRefs.tmExitLive).
+    sceneRefs.tmExitLive = !!exiting;
     if (exitRef.current) stepExit(state.clock.getElapsedTime());
 
     // The entry blend: 0 -> 1 over 650 ms on a manual open, so the instrument

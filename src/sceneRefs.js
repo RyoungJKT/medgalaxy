@@ -77,6 +77,15 @@ export const sceneRefs = {
   // holds the rest DPR back for exactly that known gap rather than a long
   // fixed settle window applied to every return to rest.
   tourArmPending: false,
+  // Fix round (2026-09-11, whole-branch review): true only while the Time
+  // Machine's 2.6 s exit choreography is actually running, published by
+  // TimeMachine.jsx from the same `exiting` term its frame loop already
+  // computes. CameraRig used to key camera ownership on the store's
+  // `tmExitAt` instead, which beginTmExit stamps once and nothing ever
+  // resets, so after the first tour exit every later manual session read
+  // 'tween' for its whole duration and lost both the rest DPR and the
+  // selection depth of field.
+  tmExitLive: false,
 };
 
 // Dev hooks: let the verify harness and console drive the grade directly and

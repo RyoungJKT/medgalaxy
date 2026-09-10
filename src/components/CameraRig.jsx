@@ -267,8 +267,15 @@ export default function CameraRig({ camDist }) {
       // speed still short of that terminal value is the decaying glide itself.
       const handoverLive = sceneRefs.handover.speed != null &&
         sceneRefs.handover.speed !== REST_ROTATE_SPEED && !sceneRefs.handover.cancelled;
+      // The Time Machine's exit choreography, while it is actually running.
+      // sceneRefs.tmExitLive is republished every frame by TimeMachine.jsx
+      // from its own `exiting` term and falls back to false the moment the
+      // exit lands. The store's one-shot exit timestamp cannot stand in for
+      // it: beginTmExit stamps that once and nothing ever resets it, so
+      // reading it here held every manual Time Machine session after the
+      // first tour exit in 'tween' for its whole duration.
       const cinematic = overtureActive || introPhase < 5 || s.tmPhase === 'tour' ||
-        (s.tmExitAt > 0 && sceneRefs.tm && sceneRefs.tm.active) ||
+        sceneRefs.tmExitLive ||
         handoverLive;
       sceneRefs.cameraOwner = d.active || d.quiet < 30 ? 'user' : (tweening || cinematic) ? 'tween' : 'ambient';
     }
