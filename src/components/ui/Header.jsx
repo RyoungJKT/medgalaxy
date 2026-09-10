@@ -251,6 +251,13 @@ export default function Header() {
     }
     if (e.key === 'Escape') {
       s.setSearchQuery('');
+      // Round 2 review finding: the mobile input's onBlur handler closes over
+      // searchQuery from its own render, so the blur() call below fires with
+      // the pre-clear (non-empty) searchQuery still in that closure and skips
+      // setSearchOpen(false). Closing the panel directly here does not rely
+      // on that stale closure; harmless on desktop, where searchOpen is
+      // unused.
+      setSearchOpen(false);
       e.currentTarget.blur();
       e.stopPropagation();
     }
