@@ -807,10 +807,18 @@ export default function TimeMachine({ camDist = 900 }) {
       (s) => s.tmPhase,
       (phase) => { if (phase !== 'idle') tourConsumedRef.current = true; }
     );
+    // Fix round (2026-09-10, Task 1 review): the pending window is published
+    // on sceneRefs so AdaptiveDpr can hold the rest DPR back for exactly this
+    // 1.5 s gap, rather than a settle window long enough to cover it applied
+    // to every return to rest. Set the instant the timer is scheduled, and
+    // cleared the instant it fires (whether or not it goes on to arm the
+    // tour) or is torn down.
     const arm = () => {
       if (tourConsumedRef.current || tourTimerRef.current) return;
+      sceneRefs.tourArmPending = true;
       tourTimerRef.current = setTimeout(() => {
         tourTimerRef.current = null;
+        sceneRefs.tourArmPending = false;
         const s = useStore.getState();
         // 'preempted' returns without consuming, so the re-arm below can try
         // again; 'run' is the only branch that spends the slot.
@@ -832,6 +840,7 @@ export default function TimeMachine({ camDist = 900 }) {
     return () => {
       clearTimeout(tourTimerRef.current);
       tourTimerRef.current = null;
+      sceneRefs.tourArmPending = false;
       unsubDone();
       unsubSeen();
       unsubFree();

@@ -67,6 +67,14 @@ export const sceneRefs = {
   dprState: { current: 1, rest: 1, switches: 0 },
   // Read by the harness: the DepthOfField bokehScale PostFX applied this frame.
   postfx: { bokeh: 0 },
+  // Fix round (2026-09-10, Task 1 review): true while TimeMachine's own
+  // auto-tour arming timer (TOUR_ARM_DELAY, 1.5 s after the film hands over
+  // or after a deselect frees the field) is pending, published by
+  // TimeMachine.jsx. The camera reads 'ambient' for that whole pause since
+  // nothing has claimed it yet, but the tour is about to, so AdaptiveDpr
+  // holds the rest DPR back for exactly that known gap rather than a long
+  // fixed settle window applied to every return to rest.
+  tourArmPending: false,
 };
 
 // Dev hooks: let the verify harness and console drive the grade directly and

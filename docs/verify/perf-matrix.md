@@ -303,3 +303,61 @@ the depth of field at once. Gate stays 55 fps for HIGH. All three hold the
 resolution; the at-rest row clears the gate with wide margin, so `REST_DPR`
 stays `Math.min(devicePixelRatio, CFG.dprCap)` as specified, no fallback to
 1.25 needed.
+
+## 1c. Settle-window fix round (Task 1 review, 2026-09-10)
+
+The first pass above shipped `AdaptiveDpr.jsx`'s settle window as a flat 2 s
+(`SETTLE_SEC = 2`), a 12x extension of the brief's own `SETTLE_FRAMES = 10`
+(about 80-170 ms), to also survive the roughly 1.5 s pause between the film
+handing over and the home screen's auto-tour claiming the camera
+(`TimeMachine.jsx`'s `TOUR_ARM_DELAY`). Review found the fix correct for that
+one gap but unmeasured on every other return to rest, including the ordinary
+selection path (select a node, look around, deselect), where the field is
+never busy so the tour never re-arms and the 2 s cost pure latency: after the
+depth of field's own 480 ms rack, the viewer would additionally watch the
+whole image sharpen roughly 1.5 to 1.8 s later.
+
+Fix: the settle window default is back to the brief's short value (`0.2 s`,
+the frame-count settle's time equivalent, frame-rate independent). The one
+real long gap, the auto-tour's arming pause, is bridged separately: `sceneRefs.
+tourArmPending`, published by `TimeMachine.jsx` only while that specific timer
+is pending, holds the DPR buffer low for exactly that known window instead of
+lengthening the default for every path.
+
+`tools/verify-dpr.mjs` gained two assertions this round:
+
+- a real drag (`page.mouse.down`/`move`/`up`) reads `cameraOwner` as `'user'`
+  throughout, including the `drag.quiet<30` tail right after `onEnd`, a
+  branch this task added but no prior run of the harness exercised;
+- after a selection is cleared, the DPR buffer returns to rest within a 2 s
+  budget (the ~1.2 s default fly back to home plus the short settle, with
+  margin), which the flat 2 s value alone would already miss before the fly
+  back even lands.
+
+Measured (`node tools/verify-dpr.mjs`, headless, `:5280` dev server,
+1440x900 @2x):
+
+```
+home rest: {"buffer":[2160,1350],"dpr":1.5,"restDpr":1.5,"switches":1,"owner":"ambient"}
+drag ownership: during=user right-after-onEnd=user
+bokeh 2.63 after 1564 ms
+DPR back to rest 0 ms after deselect (fly back + settle)
+PASS
+```
+
+"0 ms" is not a bug in the harness: by the time the bokeh loop above finishes
+polling (roughly 1.56 s after the selection), the short settle has already
+returned the buffer to rest on its own (the selection's own fly lands at
+about 1.2 s, and 0.2 s of ambient afterward clears it before the DOF even
+finishes racking in), so there is nothing left to wait for by the time
+`deselect()` is called. The 2000 ms budget stayed as a regression gate rather
+than being removed, and it was proven live: temporarily reverting
+`SETTLE_SEC` to `2` and rerunning measured `3282 ms` (fails the gate as
+expected), and temporarily removing the `tourArmPending` clause with
+`SETTLE_SEC` left at `0.2` measured `3` DPR switches across the opening and
+tour (fails the separate `<= 2` gate), which is the exact regression
+deviation 2 originally worked around. Both were reverted immediately after.
+
+Headed, with `--fps` (same viewport and machine as section 1b): all three
+rows held the 120 Hz ceiling again (116-120 fps), unchanged from 1b within
+the sampling resolution.
