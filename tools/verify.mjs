@@ -25,6 +25,11 @@ const get = (f) => { const i = args.indexOf(f); return i >= 0 ? args[i + 1] : nu
 const mobile = args.includes('--mobile');
 const reduced = args.includes('--reduced');
 const headed = args.includes('--headed');
+// --dsf N: emulate a display with this devicePixelRatio (2 for a Retina
+// MacBook). Task 1 of the 2026-09-10 plan: AdaptiveDpr rests at
+// min(devicePixelRatio, tier cap), so at --dsf 1 the rest DPR is 1 and the
+// Retina path is invisible; every DPR/DOF assertion runs at --dsf 2.
+const dsf = Number(get('--dsf') || 1);
 
 const browser = await puppeteer.launch({ executablePath: CHROME, headless: headed ? false : 'new',
   args: [`--window-size=${mobile ? '375,812' : '1440,900'}`, '--use-gl=angle'] });
@@ -33,7 +38,9 @@ if (reduced) {
   await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
 }
 await page.setViewport(
-  mobile ? { width: 375, height: 812, isMobile: true, hasTouch: true } : { width: 1440, height: 900 }
+  mobile
+    ? { width: 375, height: 812, isMobile: true, hasTouch: true, deviceScaleFactor: dsf }
+    : { width: 1440, height: 900, deviceScaleFactor: dsf }
 );
 await page.goto(URL, { waitUntil: 'networkidle2' });
 await page.waitForFunction('window._store !== undefined', { timeout: 15000 });

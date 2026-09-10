@@ -8,6 +8,7 @@ import { sceneRefs } from '../sceneRefs';
 import { TIER } from '../utils/tiers';
 import { ASM, assemblySeat } from '../utils/assembly';
 import { cameraBreathe, breatheResumeGain } from '../utils/motion';
+import { REST_ROTATE_SPEED } from './OvertureSequence';
 
 const PARALLAX_STRENGTH = 3.0;
 
@@ -33,6 +34,10 @@ export default function CameraRig({ camDist }) {
   // instant the camera goes idle (the useFrame block below ties this to the
   // same idleFrames threshold that brings autoRotate back).
   const breathe = useRef({ applied: new THREE.Vector3(), killed: false });
+  // Task 1 (2026-09-10 plan): the controls' own gesture state, so fidelity
+  // decisions can tell a hand on the mouse from ambient motion. `quiet` counts
+  // frames since the gesture ended; the damping tail is over well inside 30.
+  const drag = useRef({ active: false, quiet: 999 });
   // prefers-reduced-motion, read once on mount (the same pattern OvertureSequence
   // and TimeMachine use). The film's reduced path replaces every camera move
   // with stillness; an ambient drift underneath it would be the one motion that
@@ -247,6 +252,27 @@ export default function CameraRig({ camDist }) {
     const { introPhase, roulettePhase, supernovaPhase, overtureActive, overtureBeat } = useStore.getState();
     const handover = sceneRefs.handover;
 
+    // Camera owner for this frame (see sceneRefs.cameraOwner).
+    {
+      const d = drag.current;
+      if (!d.active) d.quiet++;
+      const s = useStore.getState();
+      const tweening = gsap.isTweening(camera.position);
+      // Both handover sources (the overture's own and the Time Machine exit's)
+      // hard-assign exactly REST_ROTATE_SPEED once the 1 s decay finishes, and
+      // hold it there for the rest of the session. The overture nulls the
+      // field back out when it finishes (finishOverture), but the Time
+      // Machine exit does not, so a value that has settled at the resting
+      // speed is the turning-galaxy home screen, not a live handover. Only a
+      // speed still short of that terminal value is the decaying glide itself.
+      const handoverLive = sceneRefs.handover.speed != null &&
+        sceneRefs.handover.speed !== REST_ROTATE_SPEED && !sceneRefs.handover.cancelled;
+      const cinematic = overtureActive || introPhase < 5 || s.tmPhase === 'tour' ||
+        (s.tmExitAt > 0 && sceneRefs.tm && sceneRefs.tm.active) ||
+        handoverLive;
+      sceneRefs.cameraOwner = d.active || d.quiet < 30 ? 'user' : (tweening || cinematic) ? 'tween' : 'ambient';
+    }
+
     if (controlsRef.current) {
       if (handover.speed != null && !handover.cancelled) {
         // Velocity-matched handover: the overture's final glide is still
@@ -364,6 +390,8 @@ export default function CameraRig({ camDist }) {
   // again once idleFrames (reset to 0 right here) crosses the same threshold
   // that brings autoRotate back.
   const onStart = () => {
+    drag.current.active = true;
+    drag.current.quiet = 0;
     idleFrames.current = 0;
     sceneRefs.handover.cancelled = true;
     sceneRefs.handover.speed = null;
@@ -375,6 +403,11 @@ export default function CameraRig({ camDist }) {
     if (controlsRef.current) controlsRef.current.autoRotateSpeed = 0.3;
   };
 
+  const onEnd = () => {
+    drag.current.active = false;
+    drag.current.quiet = 0;
+  };
+
   return (
     <OrbitControls
       ref={controlsRef}
@@ -384,6 +417,7 @@ export default function CameraRig({ camDist }) {
       minDistance={50}
       maxDistance={camDist * 4}
       onStart={onStart}
+      onEnd={onEnd}
       makeDefault
     />
   );

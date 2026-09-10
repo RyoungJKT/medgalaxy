@@ -53,6 +53,20 @@ export const sceneRefs = {
   // of which used to re-derive nR(papers) and so were wrong by up to 13x
   // whenever the size toggle sat on Mortality.
   nodeRadius: null,
+  // Who is moving the camera this frame, published by CameraRig every frame:
+  //   'user'    a hand on the controls, plus the damping tail after it lets go
+  //   'tween'   a gsap tween on camera.position, the film, the tour, the exit
+  //             or the handover's decaying autoRotate
+  //   'ambient' breathing, autoRotate, cursor parallax: the camera is "at rest"
+  //             for every fidelity decision (DPR, depth of field)
+  // Replaces the old per-frame displacement heuristic, which the addendum's
+  // camera breathing tripped on every frame.
+  cameraOwner: 'ambient',
+  // Read by the harness: the DPR AdaptiveDpr last applied, the rest value it
+  // targets on this display, and how many times it has switched this session.
+  dprState: { current: 1, rest: 1, switches: 0 },
+  // Read by the harness: the DepthOfField bokehScale PostFX applied this frame.
+  postfx: { bokeh: 0 },
 };
 
 // Dev hooks: let the verify harness and console drive the grade directly and

@@ -1,50 +1,56 @@
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import { useThree, useFrame } from '@react-three/fiber';
 import useStore from '../store';
 import { CFG } from '../utils/tiers';
+import { sceneRefs } from '../sceneRefs';
 
-const REST_DPR = CFG.dprCap;
+// Rest DPR is the display's own ratio, capped by the tier: a 1x display never
+// pays for 1.5x, and a Retina display gets the cap the tier allows.
+const REST_DPR = Math.min(
+  typeof window !== 'undefined' && window.devicePixelRatio ? window.devicePixelRatio : 1,
+  CFG.dprCap
+);
 const MOTION_DPR = 1;
-const IDLE_THRESHOLD = 30; // frames of no camera movement before restoring DPR
+// Seconds of continuous 'ambient' ownership before DPR returns to rest, so two
+// tweens a beat apart (a fly landing, the next cue starting) do not flap the
+// buffer. Time-based rather than a frame count: the home screen's auto-tour
+// offers itself a fixed 1.5 s after the film hands over (TimeMachine.jsx's
+// own arming delay), and a viewer who does not take the offer sits ambient
+// for that whole pause before the tour claims the camera again. A frame-count
+// settle short enough to matter on a slow machine is nowhere near long enough
+// to survive that pause on a fast one, so the buffer would flap up to rest and
+// straight back down every single time. 2 s clears the 1.5 s pause with
+// margin regardless of frame rate.
+const SETTLE_SEC = 2;
 
+// Task 1 (2026-09-10 plan): the old version compared the camera's position to
+// last frame's and treated any 0.01-unit change as motion. Camera breathing
+// (ADDENDUM 1 section 4 item 1) moves the camera more than that every frame,
+// so every viewer who did not drag first watched a 1x upscale for the whole
+// visit. Ownership, not displacement, is the signal now: a hand on the
+// controls and any tween or cinematic phase render at MOTION_DPR; ambient
+// motion (breathing, autoRotate, parallax) is rest.
 export default function AdaptiveDpr() {
   const gl = useThree(s => s.gl);
-  const prevCamRef = useRef({ x: 0, y: 0, z: 0, qx: 0, qy: 0, qz: 0, qw: 1 });
-  const idleFrames = useRef(0);
-  const currentDpr = useRef(REST_DPR);
+  const settledSec = useRef(0);
+  const currentDpr = useRef(null);
 
-  useFrame(({ camera }) => {
-    const prev = prevCamRef.current;
-    const p = camera.position;
-    const q = camera.quaternion;
+  useEffect(() => {
+    sceneRefs.dprState.rest = REST_DPR;
+  }, []);
 
-    // Detect camera movement (position or rotation change)
-    const moved =
-      Math.abs(p.x - prev.x) > 0.01 ||
-      Math.abs(p.y - prev.y) > 0.01 ||
-      Math.abs(p.z - prev.z) > 0.01 ||
-      Math.abs(q.x - prev.qx) > 0.0001 ||
-      Math.abs(q.y - prev.qy) > 0.0001 ||
-      Math.abs(q.z - prev.qz) > 0.0001;
-
-    prev.x = p.x; prev.y = p.y; prev.z = p.z;
-    prev.qx = q.x; prev.qy = q.y; prev.qz = q.z; prev.qw = q.w;
-
+  useFrame((state, delta) => {
+    const owner = sceneRefs.cameraOwner;
     const spotlightActive = useStore.getState().spotlightActive;
-    const wantLow = moved || spotlightActive;
+    const wantLow = owner !== 'ambient' || spotlightActive;
+    if (wantLow) settledSec.current = 0; else settledSec.current += delta;
 
-    if (wantLow) {
-      idleFrames.current = 0;
-      if (currentDpr.current !== MOTION_DPR) {
-        currentDpr.current = MOTION_DPR;
-        gl.setPixelRatio(MOTION_DPR);
-      }
-    } else {
-      idleFrames.current++;
-      if (idleFrames.current >= IDLE_THRESHOLD && currentDpr.current !== REST_DPR) {
-        currentDpr.current = REST_DPR;
-        gl.setPixelRatio(REST_DPR);
-      }
+    const want = wantLow ? MOTION_DPR : (settledSec.current >= SETTLE_SEC ? REST_DPR : currentDpr.current ?? MOTION_DPR);
+    if (want !== currentDpr.current) {
+      if (currentDpr.current !== null) sceneRefs.dprState.switches++;
+      currentDpr.current = want;
+      gl.setPixelRatio(want);
+      sceneRefs.dprState.current = want;
     }
   });
 

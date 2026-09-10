@@ -281,3 +281,25 @@ touchpoint hits vsync on a real compositor in all three of the film's heaviest
 states, including the Time Machine, which had no headed coverage at all
 before. It is still this machine's GPU, not a phone's; a real-device run
 remains the only way to measure phone-class headroom.
+
+## 1b. Retina rows (Task 1, 2026-09-10)
+
+Harness: `node tools/verify-dpr.mjs --headed --fps` against the `:5280` dev
+server, 1440x900 at `deviceScaleFactor: 2` (the Retina path the rest of this
+file's HIGH-tier rows never exercise, since none of them pass `--dsf`/a scale
+factor above 1). Machine/display: same Apple M2 Max, built-in panel at
+120.00Hz.
+
+| Tier | Viewport | Scenario | FPS | Gate | Result |
+|---|---|---|---|---:|---|
+| HIGH | 1440x900 @2x | At rest, DPR 1.5, breathing + autoRotate | 120 | >=55 | PASS |
+| HIGH | 1440x900 @2x | Beat 2 (the morph), DPR 1 | 120 | >=55 | PASS |
+| HIGH | 1440x900 @2x | Time Machine leg, DPR 1 | 120 | >=55 | PASS |
+
+Measured headed at deviceScaleFactor 2 on the same machine; the at-rest row is
+the first on-display number in this file that includes DPR 1.5, breathing and
+the depth of field at once. Gate stays 55 fps for HIGH. All three hold the
+120Hz ceiling with no dropped-frame margin visible at this sampling
+resolution; the at-rest row clears the gate with wide margin, so `REST_DPR`
+stays `Math.min(devicePixelRatio, CFG.dprCap)` as specified, no fallback to
+1.25 needed.
