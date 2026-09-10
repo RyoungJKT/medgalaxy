@@ -23,7 +23,12 @@ export default function FilterBar() {
         position: 'absolute', top: 50, left: 0, right: 0, zIndex: 40,
         padding: '0 20px', display: 'flex', alignItems: 'center', gap: 10,
         fontFamily: 'IBM Plex Mono,monospace', fontSize: 10, pointerEvents: 'none',
-        opacity: 0, animation: 'fadeIn 0.4s ease forwards',
+        // A still-attached forwards-filling animation keeps owning this
+        // property in the cascade even after it finishes, which otherwise
+        // beats dim's own opacity below once a story starts (Task 3 review
+        // finding). Naming no animation at all while a story is active lets
+        // dim be the sole ongoing opacity authority.
+        opacity: 0, animation: storyActive ? 'none' : 'fadeIn 0.4s ease forwards',
         ...dim,
       }}>
         <span style={{ color: '#ef4444', fontWeight: 600 }}>OVERLOOKED</span>
