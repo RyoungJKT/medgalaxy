@@ -68,7 +68,7 @@ export function buildSpotlightList(idMap, diseases) {
     { id: find('rotavirus'), caption: `Rotavirus · ${fmtFull(d('rotavirus').mortality)} child deaths/yr · ${cap(trendLabel(d('rotavirus').trend))} despite mortality` },
     // Zero mortality, high impact
     { id: find('depression'), caption: `Depression · ${fmtFull(d('depression').papers)} papers · Zero mortality metric, massive burden` },
-    { id: find('obesity'), caption: `Obesity · ${fmtFull(d('obesity').papers)} papers · no global deaths figure; deaths are counted under the diseases it causes` },
+    { id: find('obesity'), caption: `Obesity · ${fmtFull(d('obesity').papers)} papers · No global deaths figure; deaths are counted under the diseases it causes` },
     // Unique story
     { id: find('malaria'), caption: `Malaria · ${fmtWord(d('malaria').mortality)} deaths/yr · ${ratioStr(ppd(d('malaria')))} papers per death` },
   ].filter((s) => s.id !== undefined);

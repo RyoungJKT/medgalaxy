@@ -421,7 +421,12 @@ export default function TimeRail() {
       snapTo(Math.max(0, Math.min(top, Math.round(t.targetYear) + dir)));
     };
     el.addEventListener('wheel', onWheel, { passive: false });
-    return () => el.removeEventListener('wheel', onWheel);
+    return () => {
+      el.removeEventListener('wheel', onWheel);
+      // Half a tick's worth of scroll must not survive the teardown: it would
+      // otherwise bias the first step of the next Time Machine session.
+      wheelAcc.current = 0;
+    };
   }, [tmPhase, clearFinale, snapTo]);
 
   // Stop any momentum the moment the Time Machine closes. If it closed

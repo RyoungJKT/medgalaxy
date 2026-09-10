@@ -16,7 +16,7 @@ describe('honest size normalization', () => {
 
 describe('term-overlap edges (Task 5, 2026-09-10 plan)', () => {
   it('flags a pair whose one label contains the other', () => {
-    const { edges, diseases: ds } = processData(diseases, connections);
+    const { edges } = processData(diseases, connections);
     const e = edges.find((x) => (x.source === 'heart-disease' && x.target === 'rheumatic-heart-disease') || (x.source === 'rheumatic-heart-disease' && x.target === 'heart-disease'));
     expect(e).toBeTruthy();
     expect(e.termOverlap).toBe(true);

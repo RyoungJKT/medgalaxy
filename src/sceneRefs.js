@@ -1,5 +1,7 @@
 // Shared mutable refs for cross-component access (not reactive).
 // These are plain module-level variables — no re-renders on assignment.
+import { STAGE } from './utils/stage';
+
 export const sceneRefs = {
   instancedMesh: null,
   edgeMesh: null,
@@ -23,7 +25,7 @@ export const sceneRefs = {
   //     `ignite > 0`, i.e. inside the film.
   //   ground: the stage color this frame (src/utils/stage.js), read by
   //     StageGround (clear color) and DiseaseNodes (fog color).
-  fx: { morphOverride: null, ignite: 0, desat: 0, ember: 0, glowSuppress: 0, igniteContrast: 1, ground: 0x06080d },
+  fx: { morphOverride: null, ignite: 0, desat: 0, ember: 0, glowSuppress: 0, igniteContrast: 1, ground: STAGE.base },
   // Velocity-matched handover: the overture's final glide writes its terminal
   // angular velocity here and CameraRig feeds it to the orbit controls, so the
   // film's motion continues into the instrument with no dead frame. `cancelled`

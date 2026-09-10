@@ -30,6 +30,10 @@ const headed = args.includes('--headed');
 // min(devicePixelRatio, tier cap), so at --dsf 1 the rest DPR is 1 and the
 // Retina path is invisible; every DPR/DOF assertion runs at --dsf 2.
 const dsf = Number(get('--dsf') || 1);
+if (!Number.isFinite(dsf) || dsf <= 0) {
+  console.error('--dsf expects a positive number');
+  process.exit(1);
+}
 
 const browser = await puppeteer.launch({ executablePath: CHROME, headless: headed ? false : 'new',
   args: [`--window-size=${mobile ? '375,812' : '1440,900'}`, '--use-gl=angle'] });

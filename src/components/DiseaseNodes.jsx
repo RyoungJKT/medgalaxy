@@ -10,6 +10,7 @@ import { useAttentionColors } from './AttentionMap';
 import { igniteWeights } from '../utils/igniteWeights';
 import { lagFactor, staggeredEase, springStepInto, DUR, AMBIENT } from '../utils/motion';
 import { ASM, fogRangeAt } from '../utils/assembly';
+import { STAGE } from '../utils/stage';
 import plasmaVert from '../shaders/plasma.vert.glsl?raw';
 import plasmaFrag from '../shaders/plasma.frag.glsl?raw';
 import pulseVert from '../shaders/pulse.vert.glsl?raw';
@@ -233,7 +234,7 @@ export default function DiseaseNodes() {
   }, [count, mobDevice, diseases, breathe]);
 
   const fogUniforms = useMemo(() => ({
-    fogColor: { value: new THREE.Color(0x06080d) },
+    fogColor: { value: new THREE.Color(STAGE.base) },
     fogNear: { value: 400.0 },
     fogFar: { value: 2000.0 },
   }), []);

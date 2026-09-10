@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { STAGE, groundFor } from '../src/utils/stage';
+import { sceneRefs } from '../src/sceneRefs';
 
 describe('stage ground color (DIRECTION section 1, color script)', () => {
   it('carries the three directed stage colors', () => {
@@ -21,5 +22,10 @@ describe('stage ground color (DIRECTION section 1, color script)', () => {
   });
   it('never exceeds the base: the stage can only get darker', () => {
     for (let d = 0; d <= 1; d += 0.1) expect(groundFor(false, d)).toBeLessThanOrEqual(STAGE.base);
+  });
+  // The shared grade channel starts on the same base the script names, rather
+  // than on a literal transcribed beside it.
+  it('is where the shared ground channel starts', () => {
+    expect(sceneRefs.fx.ground).toBe(STAGE.base);
   });
 });

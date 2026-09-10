@@ -344,7 +344,7 @@ export const AMBIENT = {
     sizes: [2.2, 1.5, 1.0],
     colors: [0x3b4a63, 0x334155, 0x232f42],
     jitter: 0.06,          // +-6% shell thickness, so a shell is not a shrink-wrap
-    twinkle: [0.55, 1.0],  // HIGH only, through the points shader
+    twinkle: [0.55, 1.0],  // HIGH and MEDIUM, through the points shader
     // Task 2 (2026-09-10 plan): legibility. `minPx` is the on-screen floor per
     // shell in CSS px (near, mid, far), because a 1 px point at 6.2x camDist
     // is invisible on any display; `magnitude` is the power-law exponent for

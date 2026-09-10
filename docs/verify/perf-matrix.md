@@ -337,10 +337,10 @@ whole image sharpen roughly 1.5 to 1.8 s later.
 
 Fix: the settle window default is back to the brief's short value (`0.2 s`,
 the frame-count settle's time equivalent, frame-rate independent). The one
-real long gap, the auto-tour's arming pause, is bridged separately: `sceneRefs.
-tourArmPending`, published by `TimeMachine.jsx` only while that specific timer
-is pending, holds the DPR buffer low for exactly that known window instead of
-lengthening the default for every path.
+real long gap, the auto-tour's arming pause, is bridged separately:
+`sceneRefs.tourArmPending`, published by `TimeMachine.jsx` only while that
+specific timer is pending, holds the DPR buffer low for exactly that known
+window instead of lengthening the default for every path.
 
 `tools/verify-dpr.mjs` gained two assertions this round:
 

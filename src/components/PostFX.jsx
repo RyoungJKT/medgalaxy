@@ -29,7 +29,11 @@ export default function PostFX() {
       if ('dithering' in p) p.dithering = true;
       else if (p.fullscreenMaterial) p.fullscreenMaterial.dithering = true;
     }
-  }, []);
+    // No dependency array on purpose: the composer rebuilds its passes when
+    // its children change, and a mount-only effect would leave those fresh
+    // passes undithered. The loop is idempotent, so running it on every render
+    // costs a walk of three passes and always leaves the chain dithered.
+  });
 
   if (TIER === 'LOW') return null;
 
