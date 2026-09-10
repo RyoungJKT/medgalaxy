@@ -388,6 +388,34 @@ export default function TimeRail() {
     return () => window.removeEventListener('keydown', onKey);
   }, [tmPhase, clearFinale, snapTo]);
 
+  // Task 4 (2026-09-10 plan): a wheel over the band steps one year per tick
+  // through the same snap the arrow keys use. Non-passive so the page does
+  // not also zoom the galaxy under it; scoped to the band itself, so a wheel
+  // anywhere else is still OrbitControls' zoom.
+  const railRootRef = useRef(null);
+  const wheelAcc = useRef(0);
+  useEffect(() => {
+    const el = railRootRef.current;
+    if (!el || tmPhase === 'idle') return undefined;
+    const onWheel = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const s = useStore.getState();
+      if (s.tmPhase !== 'scrub') return;
+      const t = sceneRefs.tm;
+      if (!t) return;
+      wheelAcc.current += e.deltaY;
+      if (Math.abs(wheelAcc.current) < 40) return;
+      const dir = wheelAcc.current > 0 ? 1 : -1;
+      wheelAcc.current = 0;
+      clearFinale();
+      const top = t.data.nYears - 1;
+      snapTo(Math.max(0, Math.min(top, Math.round(t.targetYear) + dir)));
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, [tmPhase, clearFinale, snapTo]);
+
   // Stop any momentum the moment the Time Machine closes. If it closed
   // mid-drag, run the same teardown a pointerup would: otherwise the window
   // pointermove/pointerup/pointercancel listeners from onPointerDown outlive
@@ -602,7 +630,7 @@ export default function TimeRail() {
 
       {/* The rail */}
       {/* Mobile clears the legend's two wrapped lines; desktop clears its one. */}
-      <div style={{ position: 'absolute', bottom: mob ? 52 : 40, left: '50%', transform: 'translateX(-50%)', zIndex: 46, fontFamily: "'IBM Plex Mono', monospace" }}>
+      <div ref={railRootRef} style={{ position: 'absolute', bottom: mob ? 52 : 40, left: '50%', transform: 'translateX(-50%)', zIndex: 46, fontFamily: "'IBM Plex Mono', monospace" }}>
         <div
           style={{
             width: railW,

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import useStore from '../../store';
 import { isMob } from '../../utils/helpers';
-import SearchDropdown from './SearchDropdown';
+import SearchDropdown, { searchMatches } from './SearchDropdown';
 import { TM_EXIT, exitDelay, DUR, EASE } from '../../utils/motion';
 
 function SizeToggle() {
@@ -226,6 +226,36 @@ export default function Header() {
     setSearchQuery('');
   };
 
+  // Task 4 (2026-09-10 plan): Enter selects the highlighted match, arrows move
+  // the highlight, Escape clears the query. Blurring on select is what gives
+  // the rail its arrow keys back (TimeRail.jsx's keyboard effect bails while
+  // an input has focus).
+  const onSearchKey = (e) => {
+    const s = useStore.getState();
+    const list = searchMatches(s.diseases, s.searchQuery);
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      if (!list.length) return;
+      e.preventDefault();
+      const n = list.length;
+      const cur = s.searchHighlight;
+      s.setSearchHighlight(e.key === 'ArrowDown' ? (cur + 1) % n : (cur - 1 + n) % n);
+      return;
+    }
+    if (e.key === 'Enter') {
+      if (!list.length) return;
+      e.preventDefault();
+      const pick = list[Math.min(s.searchHighlight, list.length - 1)];
+      handleSearchSelect(pick);
+      e.currentTarget.blur();
+      return;
+    }
+    if (e.key === 'Escape') {
+      s.setSearchQuery('');
+      e.currentTarget.blur();
+      e.stopPropagation();
+    }
+  };
+
   return (
     <div style={{
       position: 'absolute', top: 0, left: 0, right: 0, zIndex: 40,
@@ -261,6 +291,7 @@ export default function Header() {
               <input
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
+                onKeyDown={onSearchKey}
                 placeholder="Search diseases..."
                 autoFocus
                 onBlur={() => { if (!searchQuery) setSearchOpen(false); }}
@@ -393,6 +424,7 @@ export default function Header() {
             <input
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
+              onKeyDown={onSearchKey}
               placeholder="Search diseases..."
               style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, padding: '7px 12px', color: '#e2e8f0', fontSize: 12, fontFamily: 'inherit', width: 200, outline: 'none' }}
             />

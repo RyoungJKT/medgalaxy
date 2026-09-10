@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import useStore from '../../store';
 import { isMob } from '../../utils/helpers';
 
@@ -10,6 +10,11 @@ const chips = [
   { id: 'richpoor', label: 'Rich vs Poor', desc: 'Who gets the research?' },
   { id: 'mismatch', label: 'See the Mismatch', desc: 'The 2,000:1 research gap' },
 ];
+
+// The seven chapters on the number row: the six story chips above, in order,
+// then Galaxy Roulette. Keyed off ids, not JSX, so the Task 4 (2026-09-10
+// plan) keyboard handler below can fire the same chapters the mouse does.
+const CHIPS = [...chips.map(c => c.id), 'roulette'];
 
 const chipBtnStyle = {
   borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)',
@@ -54,6 +59,37 @@ export default function StoryChips() {
   // that ends early still lands the chips. Outside the film it is simply true.
   const bandShown = useStore(s => s.hintsShown);
 
+  // What each chip does, keyed by id: the six chips above set the story,
+  // roulette starts the takeover (reading live state, not a render-scoped
+  // flag, so it stays correct however long after mount it fires).
+  const fireChip = (id) => {
+    if (id === 'roulette') {
+      if (useStore.getState().roulettePhase === 'idle') startRoulette();
+      return;
+    }
+    setStoryActive(id);
+  };
+
+  // Task 4 (2026-09-10 plan): the seven chapters on the number row, when the
+  // chips are up and nothing else owns the keyboard.
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const t = e.target;
+      const tag = t && t.tagName;
+      if (t && (tag === 'INPUT' || tag === 'TEXTAREA' || t.isContentEditable)) return;
+      const n = Number(e.key);
+      if (!(n >= 1 && n <= CHIPS.length)) return;
+      const s = useStore.getState();
+      if (!s.storyVisible || !s.uiRevealed || s.overtureActive || s.tmPhase !== 'idle' ||
+          s.activeMode || s.methodologyOpen || s.roulettePhase !== 'idle' || s.storyActive) return;
+      e.preventDefault();
+      fireChip(CHIPS[n - 1]);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
   if (!storyVisible && uiRevealed) return null;
 
   const mob = isMob();
@@ -79,10 +115,11 @@ export default function StoryChips() {
       // the row to the chips themselves.
       width: mob ? '92vw' : 'max-content',
     }}>
-      {chips.map(c => (
+      {chips.map((c, i) => (
         <button
           key={c.id}
-          onClick={() => setStoryActive(c.id)}
+          onClick={() => fireChip(c.id)}
+          title={`Press ${i + 1}`}
           style={{
             ...chipBtnStyle,
             padding: mob ? '6px 4px' : '8px 16px',
@@ -93,8 +130,9 @@ export default function StoryChips() {
         >{c.label}</button>
       ))}
       <button
-        onClick={() => { if (!isRouletteActive) startRoulette(); }}
+        onClick={() => fireChip('roulette')}
         disabled={isRouletteActive}
+        title={`Press ${chips.length + 1}`}
         style={{
           ...chipBtnStyle,
           padding: mob ? '6px 4px' : '8px 16px',

@@ -3,14 +3,20 @@ import useStore from '../../store';
 import { CC } from '../../utils/constants';
 import { matchesSearch } from '../../utils/helpers';
 
+export function searchMatches(diseases, searchQuery) {
+  if (!searchQuery) return [];
+  const q = searchQuery.toLowerCase();
+  return diseases.filter(d => matchesSearch(d, q)).slice(0, 8);
+}
+
 export default function SearchDropdown({ onSelect }) {
   const searchQuery = useStore(s => s.searchQuery);
   const diseases = useStore(s => s.diseases);
+  const searchHighlight = useStore(s => s.searchHighlight);
 
   if (!searchQuery || searchQuery.length < 1) return null;
 
-  const q = searchQuery.toLowerCase();
-  const matches = diseases.filter(d => matchesSearch(d, q)).slice(0, 8);
+  const matches = searchMatches(diseases, searchQuery);
 
   if (!matches.length) return null;
 
@@ -21,12 +27,12 @@ export default function SearchDropdown({ onSelect }) {
       border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, padding: 4,
       fontFamily: 'IBM Plex Mono,monospace', fontSize: 11, minWidth: 200,
     }}>
-      {matches.map(d => (
+      {matches.map((d, i) => (
         <div
           key={d.id}
           onClick={() => onSelect(d)}
-          style={{ padding: '5px 8px', cursor: 'pointer', borderRadius: 4, color: '#e2e8f0', display: 'flex', alignItems: 'center', gap: 6 }}
-          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
+          style={{ padding: '5px 8px', cursor: 'pointer', borderRadius: 4, color: '#e2e8f0', display: 'flex', alignItems: 'center', gap: 6, background: i === searchHighlight ? 'rgba(255,255,255,0.08)' : 'none' }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; useStore.getState().setSearchHighlight(i); }}
           onMouseLeave={e => { e.currentTarget.style.background = 'none'; }}
         >
           <span style={{ width: 6, height: 6, borderRadius: '50%', background: CC[d.category] }} />

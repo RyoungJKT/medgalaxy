@@ -57,6 +57,7 @@ const useStore = create(
     shaderMode: 'plasma', // 'plasma' | 'pulse'
     activeCats: new Set(CATS),
     searchQuery: '',
+    searchHighlight: 0,
 
     // ── Neglect / spotlight ──
     neglectMode: false,
@@ -174,7 +175,8 @@ const useStore = create(
 
     setSizeMode: (mode) => set({ sizeMode: mode }),
     setShaderMode: (mode) => set({ shaderMode: mode }),
-    setSearchQuery: (q) => set({ searchQuery: q }),
+    setSearchQuery: (q) => set({ searchQuery: q, searchHighlight: 0 }),
+    setSearchHighlight: (v) => set({ searchHighlight: v }),
 
     toggleCat: (cat) => {
       const prev = get().activeCats;
