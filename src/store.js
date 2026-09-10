@@ -7,6 +7,7 @@ import { computeLayouts } from './utils/layout';
 import { CATS } from './utils/constants';
 import { sceneRefs } from './sceneRefs';
 import { TM_EXIT } from './utils/motion';
+import { groundFor } from './utils/stage';
 
 const TM_EXIT_TOTAL = TM_EXIT.total;
 
@@ -255,6 +256,7 @@ const useStore = create(
       sceneRefs.fx.morphOverride = null;
       sceneRefs.fx.ignite = 0;
       sceneRefs.fx.desat = 0;
+      sceneRefs.fx.ground = groundFor(false, 0);
       sceneRefs.fx.ember = 1;
       sceneRefs.fx.glowSuppress = 0;
       sceneRefs.fx.igniteContrast = 1;

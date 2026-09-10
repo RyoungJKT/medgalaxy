@@ -345,6 +345,13 @@ export const AMBIENT = {
     colors: [0x3b4a63, 0x334155, 0x232f42],
     jitter: 0.06,          // +-6% shell thickness, so a shell is not a shrink-wrap
     twinkle: [0.55, 1.0],  // HIGH only, through the points shader
+    // Task 2 (2026-09-10 plan): legibility. `minPx` is the on-screen floor per
+    // shell in CSS px (near, mid, far), because a 1 px point at 6.2x camDist
+    // is invisible on any display; `magnitude` is the power-law exponent for
+    // per-star brightness (u^magnitude with u uniform on 0..1): a few stars
+    // read, most stay faint, the way a sky does.
+    minPx: [2.2, 1.6, 1.1],
+    magnitude: 2.6,
   },
   // Item 3: tour leg choreography. Truck in degrees of azimuth about the
   // current framing, dolly as a fraction of the current distance to it.

@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { EffectComposer, Bloom, DepthOfField, Vignette } from '@react-three/postprocessing';
 import * as THREE from 'three';
@@ -18,6 +18,18 @@ const DOF_RES_SCALE = TIER === 'HIGH' ? 0.667 : 0.5;
 export default function PostFX() {
   const dofRef = useRef();
   const curBokeh = useRef(0);
+  const composerRef = useRef();
+
+  useEffect(() => {
+    const c = composerRef.current;
+    if (!c || !c.passes) return;
+    // Task 2 (2026-09-10 plan): the warm ignite gradient bands in 8-bit; the
+    // post chain's own dithering removes it for free.
+    for (const p of c.passes) {
+      if ('dithering' in p) p.dithering = true;
+      else if (p.fullscreenMaterial) p.fullscreenMaterial.dithering = true;
+    }
+  }, []);
 
   if (TIER === 'LOW') return null;
 
@@ -57,7 +69,7 @@ export default function PostFX() {
   });
 
   return (
-    <EffectComposer resolutionScale={DOF_RES_SCALE}>
+    <EffectComposer ref={composerRef} resolutionScale={DOF_RES_SCALE}>
       <Bloom mipmapBlur intensity={CFG.bloom.intensity} levels={CFG.bloom.levels}
         luminanceThreshold={1.0} luminanceSmoothing={0.05} />
       <DepthOfField ref={dofRef} focusDistance={0} focalLength={0.04}

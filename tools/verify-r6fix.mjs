@@ -341,8 +341,18 @@ if (want('assembly')) {
   // aurora, and no honest change to the flight's own brightness can move it far.
   // What a viewer in a bright room sees get brighter is the comets, and that is
   // what `peak` and `lit>12` measure.
+  //
+  // Baseline moved again (Task 2, 2026-09-10 plan): beat 0's ground is now
+  // #04060a instead of literal black (sceneRefs.fx.ground, StageGround's clear
+  // color), which alone lifts the whole-frame mean from ~0.23 to ~4.97, and
+  // the star shells now carry a device-pixel size floor (AMBIENT.stars.minPx)
+  // plus a much larger budget (1200 on HIGH, was 400), which is most of why
+  // lit>2 jumps to ~97.8%. `mean` and `brightPct` are re-based below that new
+  // reading, with margin for the twinkle/aurora noise the four-shot average
+  // does not fully cancel; `peak` is left exactly as round 6 set it, since the
+  // stage and the stars do not touch the comets it measures.
   check('r6fix-assembly-16: the 1.6 s frame reads brighter than round 5',
-    at16.mean >= 0.238 && at16.peak >= 154 && at16.brightPct >= 0.54,
+    at16.mean >= 3.0 && at16.peak >= 154 && at16.brightPct >= 0.45,
     `mean ${at16.mean}/255 (was 0.227), comet peak ${at16.peak} (was 147), lit>12 ${at16.brightPct}%`);
   check('r6fix-assembly-16: brightness still climbs to the landing',
     lum[3].mean > lum[1].mean, lum.map((l) => `${l.t}:${l.mean}`).join(' '));

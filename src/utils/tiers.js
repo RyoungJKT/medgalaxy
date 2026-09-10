@@ -1,6 +1,6 @@
 export const TC = {
-  HIGH:  { dprCap: 1.5, particles: 400, glowAll: true, pulse: true, bloom: { intensity: 0.9, levels: 7 } },
-  MEDIUM:{ dprCap: 1.5, particles: 150, glowAll: false, pulse: true, bloom: { intensity: 0.7, levels: 5 } },
+  HIGH:  { dprCap: 1.5, particles: 1200, glowAll: true, pulse: true, bloom: { intensity: 0.9, levels: 7 } },
+  MEDIUM:{ dprCap: 1.5, particles: 500, glowAll: false, pulse: true, bloom: { intensity: 0.7, levels: 5 } },
   LOW:   { dprCap: 1, particles: 0, glowAll: false, pulse: false, bloom: null },
 };
 export function detectTier() {

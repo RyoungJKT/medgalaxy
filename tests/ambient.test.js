@@ -190,6 +190,14 @@ describe('the star shells (section 4 item 2)', () => {
     const outer = AMBIENT.stars.radii[2] * (1 + AMBIENT.stars.jitter);
     expect(outer + 2.9).toBeLessThan(9.6);
   });
+
+  it('gives every shell an on-screen size floor and a power-law brightness spread', () => {
+    const { minPx, magnitude } = AMBIENT.stars;
+    expect(minPx).toHaveLength(3);
+    for (let i = 1; i < 3; i++) expect(minPx[i]).toBeLessThan(minPx[i - 1]);
+    expect(minPx[2]).toBeGreaterThanOrEqual(1.0);
+    expect(magnitude).toBeGreaterThan(1);
+  });
 });
 
 describe('breatheResumeGain (the onStart kill releases at idle, not for the session)', () => {

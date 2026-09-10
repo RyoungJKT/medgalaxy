@@ -233,7 +233,7 @@ export default function DiseaseNodes() {
   }, [count, mobDevice, diseases, breathe]);
 
   const fogUniforms = useMemo(() => ({
-    fogColor: { value: new THREE.Color(0x000000) },
+    fogColor: { value: new THREE.Color(0x06080d) },
     fogNear: { value: 400.0 },
     fogFar: { value: 2000.0 },
   }), []);
@@ -358,6 +358,9 @@ export default function DiseaseNodes() {
       // and a session that never plays it must still light nodes on the raw
       // weights rather than pow(w, undefined) = NaN.
       mat.uniforms.igniteContrast.value = fx.igniteContrast ?? 1;
+      // The fog is the stage: far nodes dissolve into the ground color, not
+      // into black (Task 2, 2026-09-10 plan).
+      if (mat.uniforms.fogColor.value.getHex() !== fx.ground) mat.uniforms.fogColor.value.setHex(fx.ground);
     }
 
     // ── Beat 0 fly-in (ADDENDUM 1 section 3) ──────────────────────────────

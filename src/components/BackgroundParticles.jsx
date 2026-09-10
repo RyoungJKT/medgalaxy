@@ -15,20 +15,25 @@ import { AMBIENT } from '../utils/motion';
 // calls of points on HIGH.
 const S = AMBIENT.stars;
 
-// HIGH's twinkle. `pointsMaterial`'s own size attenuation is
+// HIGH and MEDIUM's twinkle. `pointsMaterial`'s own size attenuation is
 // `size * (scale / -mvPosition.z)` with `scale = 0.5 * viewportHeight`, so the
 // shader reproduces it exactly and a tier switch is not a size change.
 const TWINKLE_VERT = `
 attribute float aPhase;
 attribute float aRate;
+attribute float aMag;
 uniform float uSize;
 uniform float uScale;
 uniform float uTime;
+uniform float uMinPx;
 varying float vTw;
+varying float vMag;
 void main() {
   vTw = 0.5 + 0.5 * sin(uTime * aRate + aPhase);
+  vMag = aMag;
   vec4 mv = modelViewMatrix * vec4(position, 1.0);
-  gl_PointSize = uSize * (uScale / -mv.z);
+  // The tier's size attenuation, floored at a legible on-screen size.
+  gl_PointSize = max(uMinPx, uSize * (uScale / -mv.z));
   gl_Position = projectionMatrix * mv;
 }`;
 
@@ -37,13 +42,18 @@ uniform vec3 uColor;
 uniform float uOpacity;
 uniform float uLo;
 varying float vTw;
+varying float vMag;
 void main() {
   vec2 d = gl_PointCoord - vec2(0.5);
-  if (dot(d, d) > 0.25) discard;
-  gl_FragColor = vec4(uColor, uOpacity * mix(uLo, 1.0, vTw));
+  float d2 = dot(d, d);
+  if (d2 > 0.25) discard;
+  // Gaussian falloff instead of a hard disc: a star is a point of light, not
+  // a coin.
+  float a = exp(-d2 * 9.0);
+  gl_FragColor = vec4(uColor, uOpacity * a * vMag * mix(uLo, 1.0, vTw));
 }`;
 
-const BASE_OPACITY = 0.6;
+const BASE_OPACITY = 0.9;
 
 export default function BackgroundParticles({ camDist }) {
   const count = CFG.particles;
@@ -68,6 +78,7 @@ export default function BackgroundParticles({ camDist }) {
       const pos = new Float32Array(n * 3);
       const phase = new Float32Array(n);
       const rate = new Float32Array(n);
+      const mag = new Float32Array(n);
       const r0 = camDist * S.radii[s];
       for (let i = 0; i < n; i++) {
         const th = Math.random() * Math.PI * 2;
@@ -78,16 +89,24 @@ export default function BackgroundParticles({ camDist }) {
         pos[i * 3 + 2] = r * Math.cos(ph);
         phase[i] = Math.random() * Math.PI * 2;
         rate[i] = 0.35 + Math.random() * 0.9;
+        mag[i] = 0.25 + 0.75 * Math.pow(Math.random(), S.magnitude);
       }
-      out.push({ n, pos, phase, rate, size: S.sizes[s], color: S.colors[s], spin: S.rates[s] });
+      out.push({ n, pos, phase, rate, mag, size: S.sizes[s], color: S.colors[s], spin: S.rates[s] });
     }
     return out;
   }, [count, camDist]);
 
-  // HIGH's twinkle materials, one per shell (each owns its color and size).
+  // Rest DPR (AdaptiveDpr's resting value, not the live one): `uMinPx` sizes
+  // in device pixels because gl_PointSize does, so the floor holds its CSS
+  // size on a Retina display. Computed once, not per frame; the buffer's own
+  // DPR dip during a tween is fine (Step 9, 2026-09-10 plan).
+  const dprNow = typeof window !== 'undefined' ? Math.min(window.devicePixelRatio || 1, CFG.dprCap) : 1;
+
+  // HIGH and MEDIUM's twinkle materials, one per shell (each owns its color
+  // and size). LOW has zero particles, so the shader is never built there.
   const mats = useMemo(() => {
-    if (TIER !== 'HIGH') return null;
-    return shells.map((sh) => new THREE.ShaderMaterial({
+    if (TIER === 'LOW') return null;
+    return shells.map((sh, i) => new THREE.ShaderMaterial({
       uniforms: {
         uTime: { value: 0 },
         uSize: { value: sh.size },
@@ -95,6 +114,7 @@ export default function BackgroundParticles({ camDist }) {
         uColor: { value: new THREE.Color(sh.color) },
         uOpacity: { value: BASE_OPACITY },
         uLo: { value: S.twinkle[0] },
+        uMinPx: { value: S.minPx[i] * dprNow },
       },
       vertexShader: TWINKLE_VERT,
       fragmentShader: TWINKLE_FRAG,
@@ -174,6 +194,9 @@ export default function BackgroundParticles({ camDist }) {
               )}
               {mats && (
                 <bufferAttribute attach="attributes-aRate" count={sh.n} array={sh.rate} itemSize={1} />
+              )}
+              {mats && (
+                <bufferAttribute attach="attributes-aMag" count={sh.n} array={sh.mag} itemSize={1} />
               )}
             </bufferGeometry>
             {!mats && (

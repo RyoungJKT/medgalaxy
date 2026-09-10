@@ -21,7 +21,9 @@ export const sceneRefs = {
   //     node's burn down — that is what keeps beat 2 a single flare instead of
   //     two comparable ones (review gate F4). Only meaningful while
   //     `ignite > 0`, i.e. inside the film.
-  fx: { morphOverride: null, ignite: 0, desat: 0, ember: 0, glowSuppress: 0, igniteContrast: 1 },
+  //   ground: the stage color this frame (src/utils/stage.js), read by
+  //     StageGround (clear color) and DiseaseNodes (fog color).
+  fx: { morphOverride: null, ignite: 0, desat: 0, ember: 0, glowSuppress: 0, igniteContrast: 1, ground: 0x06080d },
   // Velocity-matched handover: the overture's final glide writes its terminal
   // angular velocity here and CameraRig feeds it to the orbit controls, so the
   // film's motion continues into the instrument with no dead frame. `cancelled`

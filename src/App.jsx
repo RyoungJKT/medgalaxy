@@ -5,6 +5,7 @@ import { TIER, CFG } from './utils/tiers';
 import { isMob } from './utils/helpers';
 import useStore from './store';
 import DiseaseNodes from './components/DiseaseNodes';
+import StageGround from './components/StageGround';
 import TimeMachine from './components/TimeMachine';
 import EdgeNetwork from './components/EdgeNetwork';
 import GlowSprites from './components/GlowSprites';
@@ -182,7 +183,7 @@ export default function App() {
           toneMapping: THREE.ACESFilmicToneMapping,
           toneMappingExposure: mob ? 1.4 : 1.1,
         }}
-        style={{ background: '#000000' }}
+        style={{ background: '#06080d' }}
         onCreated={({ gl }) => { sceneRefs.canvasElement = gl.domElement; }}
         onPointerMissed={handlePointerMissed}
       >
@@ -202,6 +203,7 @@ export default function App() {
         )}
 
         <Suspense fallback={null}>
+          <StageGround />
           <TimeMachine camDist={camDist} />
           {/* Beat 0's flight driver mounts before DiseaseNodes on purpose: its
               effect publishes sceneRefs.assembly, which DiseaseNodes' own init

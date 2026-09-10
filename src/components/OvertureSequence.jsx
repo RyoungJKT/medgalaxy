@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber';
 import useStore from '../store';
 import { sceneRefs } from '../sceneRefs';
 import { fmtWord } from '../utils/captions';
+import { groundFor } from '../utils/stage';
 
 // ─── The Gap: the cinematic opening ──────────────────────────────────────────
 // Null-rendering FSM. Everything continuous (grade, radius morph, glow) is a
@@ -377,6 +378,7 @@ export default function OvertureSequence({ camDist }) {
       !!window.matchMedia &&
       window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     sceneRefs.fx.desat = 1;
+    sceneRefs.fx.ground = groundFor(true, 1);
     sceneRefs.fx.morphOverride = 0;
     sceneRefs.fx.ignite = 0;
     sceneRefs.fx.ember = 0;
@@ -443,6 +445,7 @@ export default function OvertureSequence({ camDist }) {
     // the monochrome grade and the papers sizing. Skips chain straight through.
     if (store.introPhase < 5) {
       sceneRefs.fx.desat = 1;
+      sceneRefs.fx.ground = groundFor(true, 1);
       sceneRefs.fx.morphOverride = 0;
       if (store._overtureSkip) store.skipIntro();
       else return;
@@ -526,6 +529,7 @@ export default function OvertureSequence({ camDist }) {
     const o = r.fx;
     tl.fx(t, o);
     sceneRefs.fx.desat = o.desat;
+    sceneRefs.fx.ground = groundFor(false, o.desat);
     sceneRefs.fx.ignite = o.ignite;
     sceneRefs.fx.ember = o.ember;
     sceneRefs.fx.glowSuppress = o.glow;
