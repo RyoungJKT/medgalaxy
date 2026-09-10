@@ -17,6 +17,23 @@ Certification is frozen at 9.26. This section exists so the frozen record does n
 
 ---
 
+## Post-certification changes (2026-09-10, hygiene and quick wins)
+
+A seven-task hygiene and quick-wins pass ran on this branch after round 6 and the rigor pass above (plan committed at `bc441ef`). Nothing here is a new film beat, a new tour pause or a new camera seat; the certified opening's bones are untouched. One line per change, with the commit SHA that made it.
+
+- **DPR/DOF unblock.** Home-rest DPR (1.5 on a 2x display) and the click-to-select depth of field are now keyed on camera owner instead of a displacement threshold that the addendum's camera breathing had silently defeated, and `docs/verify/perf-matrix.md` gained a Retina row (1440x900 at `deviceScaleFactor: 2`) beside the existing 1x gates. `000c909`, `cecd758`, `b5e68d4`.
+- **Stage color script and star field.** Beat 0 and the rest state trade literal black for a near-black stage ground (`src/utils/stage.js`, `STAGE.base`), and the star shells carry a device-pixel size floor and a larger HIGH/MEDIUM budget so they read at rest and through the tour; a follow-up re-based the assembly luminance floors against the new ground. `d50840e`, `722ebe2`.
+- **One voice on selection.** The duplicate desktop hover tooltip is retired; a story now owns the frame with one label and its own provenance line, with two follow-ups for the neglect-mode entrance fade racing the story dim. `ecadaa1`, `f956455`, `770e492`.
+- **The keyboard fixes.** Keyboard search, wheel-driven scrubbing on the Time Machine rail, and number keys for the six story chips plus Galaxy Roulette, with a follow-up closing the mobile search panel on Escape. `4a61520`, `5bee734`.
+- **The rigor pass items.** One shared `ratioStr` helper, a sourced spotlight rotation, registry-sourced rows for cystic fibrosis and Duchenne muscular dystrophy, term-overlap link exclusion, the unsourced Funding Gap tile removed, the methodology link gated behind the Time Machine rail, and a fresh 2026-09-11 PubMed snapshot. That snapshot moved COVID-19's all-time total from 518,131 to 520,194, which took it above its own yearly sum and so out of the series-over-total bucket, moving the panel's live `seriesExceedsTotal` count from six rows to five; separately, the colorectal cancer row's move from 180,574 to 351,932 (detailed above) is that row's first PubMed refresh under its current name after the 2026-08-12 rename from Colon Cancer, not a change in what PubMed maps the disease to. `9ec7ba9`, `87dbea7`, `7d23663`, `63e8db8`.
+- **The peak card spine line.** The 2021 peak pause states the piece's research-versus-mortality thesis once, as the card's own third line, with a follow-up balancing the mobile wrap so the line holds three even lines on a phone. `58e542a`, `58f8648`.
+
+Verification for the whole pass (Task 7): the full suite is green at 383 tests across 25 files; the structural fuzz harness is 20/20 on desktop (`node tools/verify-fuzz.mjs --points 20`) and 12/12 on mobile (`--mobile --points 12`), both the structural and narrative invariant sets; `node tools/verify-dpr.mjs` is PASS with one buffer switch across the whole run (gate: at most two). The 9.26 certification above is not re-scored by any of this: it is hygiene and quick wins inside the certified opening, not new craft to score.
+
+`docs/verify/r7-01-landing.png` through `r7-14-home-rest.png` (desktop) and the matching `r7-m-01` through `r7-m-14` set (mobile) are a full natural-run recut cut for this task: landing, both assembly marks, all three film beats, the home handover, five tour pauses, and the home rest, five seconds after the exit lands. `r7-15-story-silentkillers.png` is the one added story frame (Silent Killers, 3 s in): the node still carries exactly one label, matching the same story already checked in `r7-05-story-owns-frame.png`. Every frame was read: the stage color is present at rest and in the tour, the star field reads at every mark, the ignite beat is the only frame with a bloom cluster, the 2021 peak card carries its spine line, and the finale differs from the certified frames only in the ground it now sits on. This set, not the individual per-task r7 frames cut earlier in this pass, is the reference library for the branch going forward.
+
+---
+
 ## Round 4 record (superseded)
 
 **Verdict: SHIP at 9.06 / 10** (ship bar: 9.0). Round 4 final, 2026-08-12, branch `next/showcase`.
