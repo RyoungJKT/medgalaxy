@@ -66,7 +66,10 @@ export const sceneRefs = {
   cameraOwner: 'ambient',
   // Read by the harness: the DPR AdaptiveDpr last applied, the rest value it
   // targets on this display, and how many times it has switched this session.
-  dprState: { current: 1, rest: 1, switches: 0 },
+  // `rest` is the governed value (src/utils/dprGovernor.js), which can step
+  // down within a session but never back up; `governor` is that governor's own
+  // state, so a run can be read as "1.5 with no strikes" rather than guessed at.
+  dprState: { current: 1, rest: 1, switches: 0, governor: { rest: 1, strikes: 0, lastMeanMs: null } },
   // Read by the harness: the DepthOfField bokehScale PostFX applied this frame.
   postfx: { bokeh: 0 },
   // Fix round (2026-09-10, Task 1 review): true while TimeMachine's own

@@ -58,6 +58,10 @@ const rest = await page.evaluate(() => ({
   restDpr: window.__scene.dprState.rest,
   switches: window.__scene.dprState.switches,
   owner: window.__scene.cameraOwner,
+  // The rest governor's own state (src/utils/dprGovernor.js). On a machine
+  // holding the budget at rest this reads 1.5 with zero strikes; a stepped-down
+  // rest here is the guard doing its job, not a harness fault.
+  governor: window.__scene.dprState.governor,
 }));
 console.log('home rest:', JSON.stringify(rest));
 if (rest.dpr !== 1.5 || rest.buffer[0] !== 2160) fail.push(`rest DPR ${rest.dpr}, buffer ${rest.buffer}`);
@@ -266,6 +270,7 @@ else if (restMs > 2000) fail.push(`DPR took ${restMs} ms to return to rest after
     dpr: window.__scene.dprState.current,
     restDpr: window.__scene.dprState.rest,
     switches: window.__scene.dprState.switches,
+    governor: window.__scene.dprState.governor,
   }));
   console.log('manual Time Machine at rest:', JSON.stringify(tmRest));
   if (tmRest.owner !== 'ambient') {

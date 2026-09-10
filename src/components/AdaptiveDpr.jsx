@@ -3,9 +3,14 @@ import { useThree, useFrame } from '@react-three/fiber';
 import useStore from '../store';
 import { CFG } from '../utils/tiers';
 import { sceneRefs } from '../sceneRefs';
+import { createRestGovernor } from '../utils/dprGovernor';
 
 // Rest DPR is the display's own ratio, capped by the tier: a 1x display never
-// pays for 1.5x, and a Retina display gets the cap the tier allows.
+// pays for 1.5x, and a Retina display gets the cap the tier allows. It is the
+// governor's starting point rather than a constant (src/utils/dprGovernor.js):
+// measured frame time at rest can step it down on a machine that cannot hold
+// the budget there, which is the field guard standing in for the second-device
+// measurement nobody has.
 const REST_DPR = Math.min(
   typeof window !== 'undefined' && window.devicePixelRatio ? window.devicePixelRatio : 1,
   CFG.dprCap
@@ -41,12 +46,17 @@ export default function AdaptiveDpr() {
   const gl = useThree(s => s.gl);
   const settledSec = useRef(0);
   const currentDpr = useRef(null);
+  const governorRef = useRef(null);
+  if (governorRef.current === null) governorRef.current = createRestGovernor({ rest: REST_DPR });
 
   useEffect(() => {
-    sceneRefs.dprState.rest = REST_DPR;
+    const g = governorRef.current;
+    sceneRefs.dprState.rest = g.state().rest;
+    publish(g);
   }, []);
 
   useFrame((state, delta) => {
+    const governor = governorRef.current;
     const owner = sceneRefs.cameraOwner;
     const spotlightActive = useStore.getState().spotlightActive;
     // Held low while the auto-tour's arming timer is pending (see
@@ -57,14 +67,36 @@ export default function AdaptiveDpr() {
     const wantLow = owner !== 'ambient' || spotlightActive || sceneRefs.tourArmPending;
     if (wantLow) settledSec.current = 0; else settledSec.current += delta;
 
-    const want = wantLow ? MOTION_DPR : (settledSec.current >= SETTLE_SEC ? REST_DPR : currentDpr.current ?? MOTION_DPR);
+    // What this frame cost, but only when it is evidence about the resting
+    // buffer: nothing wanted the DPR low and the buffer was actually at the
+    // resting value. Every other frame is thrown away by the governor.
+    governor.sample(delta, !wantLow && currentDpr.current === governor.state().rest);
+
+    const restDpr = governor.state().rest;
+    const want = wantLow ? MOTION_DPR : (settledSec.current >= SETTLE_SEC ? restDpr : currentDpr.current ?? MOTION_DPR);
     if (want !== currentDpr.current) {
       if (currentDpr.current !== null) sceneRefs.dprState.switches++;
       currentDpr.current = want;
       gl.setPixelRatio(want);
       sceneRefs.dprState.current = want;
+      // The switch frame is expensive by definition (a buffer reallocation),
+      // so it may not count against the machine that just paid for it.
+      governor.reset();
     }
+    sceneRefs.dprState.rest = restDpr;
+    publish(governor);
   });
 
   return null;
+}
+
+// The governor's own state, mirrored onto the shared refs for the harness
+// (tools/verify-dpr.mjs prints it). Mutated in place rather than reassigned so
+// the frame loop does not hand the collector a fresh object every frame.
+function publish(governor) {
+  const g = governor.state();
+  const out = sceneRefs.dprState.governor;
+  out.rest = g.rest;
+  out.strikes = g.strikes;
+  out.lastMeanMs = g.lastMeanMs;
 }

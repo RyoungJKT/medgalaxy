@@ -304,6 +304,24 @@ resolution; the at-rest row clears the gate with wide margin, so `REST_DPR`
 stays `Math.min(devicePixelRatio, CFG.dprCap)` as specified, no fallback to
 1.25 needed.
 
+That row is one machine. `REST_DPR` 1.5 reaches every Retina viewer in the HIGH
+tier (width >= 1200, and `src/utils/tiers.js` carries no GPU heuristic), while
+the certified build silently rendered everyone at DPR 1 at rest, and no second
+device is available to measure. The field guard that stands in for that second
+reading is the rest DPR governor, `src/utils/dprGovernor.js`, wired into
+`AdaptiveDpr.jsx`: it averages frame time over one-second windows counted only
+while the buffer is actually sitting at the resting value and nothing wants it
+low, ignores any frame longer than 250 ms as a hitch rather than evidence, and
+after three consecutive windows whose mean exceeds the 1000/55 ms budget steps
+the resting value down by 0.25 (1.5 to 1.25 to 1, floor 1). A window inside
+budget clears the strikes; a buffer switch throws the half-built window away,
+since the switch frame is a reallocation and not the resting cost; and the
+value never steps back up within a session, so nobody watches the buffer hunt.
+`sceneRefs.dprState.governor` publishes `{ rest, strikes, lastMeanMs }` and
+`tools/verify-dpr.mjs` prints it: on this machine every run reads rest 1.5 with
+zero strikes, which is the governor confirming the row above rather than
+overriding it.
+
 ## 1c. Settle-window fix round (Task 1 review, 2026-09-10)
 
 The first pass above shipped `AdaptiveDpr.jsx`'s settle window as a flat 2 s
