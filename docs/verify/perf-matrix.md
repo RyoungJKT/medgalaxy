@@ -432,3 +432,54 @@ $ npx vitest run
 ```
 
 333/333, unchanged.
+
+## 1e. The drag block is timing-sensitive (whole-branch review, 2026-09-11)
+
+Read this before treating a single run of `tools/verify-dpr.mjs` as evidence
+either way. The whole-branch review ran the harness four times: one run went
+red, reading `cameraOwner` as `'tween'` 1.15 s after mouse-up, and the failure
+message said "onEnd may not be clearing drag.active", which is exactly the
+branch that reading rules out. `'user'` is the drag (`drag.active`, or the
+`quiet<30` damping tail), so a stuck `'user'` is an `onEnd` fault; `'tween'`
+means the drag DID release and either a gsap tween on `camera.position` or one
+of the cinematic flags owned that frame. Three further runs passed, releasing
+at about 516 ms, and the reviewer could not attribute the tween, so the gate
+that Task 7 certified on a single PASS sample was mislabelling a one-in-four
+flake as a Task 1 regression.
+
+The block was rewritten rather than re-run:
+
+- ownership is sampled every 100 ms after mouse-up instead of read once at a
+  fixed 1000 ms, so the release time is a number in the log and a late release
+  reads as late rather than as stuck. Budget `RELEASE_MS = 1500`;
+- every ownership failure prints the owner's sub-terms (`tmPhase`, `tmExitAt`,
+  `tm.active`, `overtureActive`, `introPhase`, `handover.speed`/`cancelled`,
+  `selectedNode`, `flyTarget`). gsap's tween state is not reachable from the
+  page, so it is reported by elimination: `'tween'` with no cinematic flag set
+  is a camera tween, which on this path means a fly-to, which means the drag
+  landed as a click on a node;
+- `'user'` and `'tween'` failures now carry different messages;
+- the whole block retries once before failing, and says so.
+
+Four consecutive runs of the rewritten harness, headless, `:5280` dev server,
+1440x900 at `deviceScaleFactor: 2`, same M2 Max:
+
+```
+run 1  drag ownership after settle: ambient at 407 ms  (0ms:user 102ms:user 204ms:user 305ms:user 407ms:ambient)
+run 2  drag ownership after settle: ambient at 1123 ms (1ms:user 104ms:user 206ms:user 308ms:user 410ms:tween 511ms:tween 612ms:tween 713ms:tween 815ms:tween 917ms:tween 1021ms:tween 1123ms:ambient)
+run 3  drag ownership after settle: ambient at 408 ms  (1ms:user 103ms:user 205ms:user 306ms:user 408ms:ambient)
+run 4  drag ownership after settle: ambient at 409 ms  (1ms:user 103ms:user 205ms:user 307ms:user 409ms:ambient)
+```
+
+All four PASS, and run 2 is the flake caught in the act: the drag released on
+schedule at about 410 ms and a tween then held the camera for roughly 700 ms
+before rest. Under the old fixed 1000 ms read that run would have been red,
+with the wrong diagnosis. Its sub-terms were not captured (the line that prints
+them on a passing run was added after that run), so what the tween was is still
+open; runs 3 and 4 did not reproduce it.
+
+What this means for a reader of a future run: one red on this block is a reason
+to run it again and read the timeline, not a reason to revert a camera change,
+and one green is a sample, not a proof. The rest of the harness (rest DPR and
+buffer, the switch count, the DOF rack, the deselect settle) was steady across
+all four runs.

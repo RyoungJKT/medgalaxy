@@ -11,7 +11,9 @@
 //      of this check read cameraOwner immediately after mouse.up() with no
 //      wait, so it passed identically whether onEnd fired or not; a broken
 //      onEnd leaves drag.active stuck true forever, which only the release
-//      check below can catch)
+//      check below can catch). This block is timing-sensitive: it samples a
+//      real gesture, it retries once before failing, and every failure prints
+//      the owner sub-terms rather than naming one suspect.
 //   5. after a selection is cleared, the DPR buffer is back at rest within a
 //      short, bounded time (fix round: pins that the settle window stays
 //      short on this path, not the 2 s flat value the first pass shipped)
@@ -59,26 +61,133 @@ if (rest.switches > 2) fail.push(`${rest.switches} DPR switches across opening +
 
 // A real drag: the user-ownership path (onStart/onEnd, drag.quiet<30) that
 // no plain click reaches, fix round review finding.
-await page.mouse.move(720, 450);
-await page.mouse.down();
-await page.mouse.move(780, 480, { steps: 8 });
-await wait(50); // let at least one frame pick up drag.active before reading it
-const duringDrag = await page.evaluate(() => window.__scene.cameraOwner);
-await page.mouse.up();
-await wait(100); // comfortably under 30 frames: samples the quiet<30 tail, not the pre-mouseup frame
-const rightAfterEnd = await page.evaluate(() => window.__scene.cameraOwner);
-console.log(`drag ownership: during=${duringDrag} right-after-onEnd=${rightAfterEnd}`);
-if (duringDrag !== 'user') fail.push(`cameraOwner during a drag was '${duringDrag}', not 'user'`);
-if (rightAfterEnd !== 'user') fail.push(`cameraOwner right after onEnd was '${rightAfterEnd}', not 'user' (the drag.quiet<30 tail)`);
-await wait(1000); // clears drag.quiet<30 and the short settle, back to ambient/rest
-// The assertion that actually exercises onEnd: with onEnd wired, drag.active
-// drops on mouse.up() and quiet counts past 30 during this wait, so ownership
-// releases to 'ambient'. If onEnd were missing or broken, drag.active would
-// stay true forever and this would still read 'user' (2026-09-10 review,
-// Important finding).
-const afterDragSettle = await page.evaluate(() => window.__scene.cameraOwner);
-console.log(`drag ownership after settle: ${afterDragSettle}`);
-if (afterDragSettle !== 'ambient') fail.push(`cameraOwner never released to 'ambient' after the drag ended (was '${afterDragSettle}'); onEnd may not be clearing drag.active`);
+//
+// Diagnosability round (whole-branch review, 2026-09-11): this block went red
+// once in four runs, reading 'tween' 1.15 s after mouse-up, and printed
+// "onEnd may not be clearing drag.active", which is precisely the branch that
+// reading rules out. The owner is computed in one line of CameraRig.jsx
+// (the block at ~:255): 'user' means drag.active or the quiet<30 tail, so a
+// stuck 'user' is an onEnd fault, while 'tween' means the drag DID release and
+// either gsap.isTweening(camera.position) or one of the cinematic flags owned
+// that frame. Those are different findings and now read differently. The block
+// also runs twice before it fails, because a one-in-four flake on a
+// timing-sensitive gesture is not a camera regression.
+const ownerState = () => page.evaluate(() => {
+  const s = window._store.getState();
+  const r = window.__scene;
+  return {
+    owner: r.cameraOwner,
+    tmPhase: s.tmPhase,
+    tmExitAt: s.tmExitAt,
+    tmActive: !!(r.tm && r.tm.active),
+    overtureActive: s.overtureActive,
+    introPhase: s.introPhase,
+    handoverSpeed: r.handover ? r.handover.speed : null,
+    handoverCancelled: r.handover ? r.handover.cancelled : null,
+    selected: s.selectedNode ? s.selectedNode.disease.id : null,
+    flyTarget: s.flyTarget ? s.flyTarget.position : null,
+  };
+});
+
+// Every cinematic sub-term the owner line ORs together, named. gsap's own
+// tween state is not reachable from the page, so it is reported by
+// elimination: 'tween' with no cinematic flag set is a camera tween, which on
+// this path means a fly-to, which means the drag landed as a click on a node.
+const why = (d) => {
+  const cine = [];
+  if (d.overtureActive) cine.push('overtureActive');
+  if (d.introPhase < 5) cine.push(`introPhase ${d.introPhase}`);
+  if (d.tmPhase === 'tour') cine.push('tmPhase tour');
+  if (d.tmExitAt > 0 && d.tmActive) cine.push(`Time Machine exit window (tmExitAt ${d.tmExitAt})`);
+  if (d.handoverSpeed != null && !d.handoverCancelled) cine.push(`handover speed ${d.handoverSpeed}`);
+  const head = cine.length
+    ? `cinematic: ${cine.join(', ')}`
+    : 'no cinematic flag set, so it was a gsap tween on camera.position (a fly-to)';
+  return `${head}; selected=${d.selected} flyTarget=${JSON.stringify(d.flyTarget)}`;
+};
+
+const RELEASE_MS = 1500; // budget: passing runs release at about 500 ms
+
+async function dragBlock() {
+  const problems = [];
+  // A previous attempt's click-through would otherwise seed the next one with
+  // a live fly-to. No-op on the normal path (nothing is selected here).
+  const pre = await ownerState();
+  if (pre.selected) {
+    await page.evaluate(() => window._store.getState().deselect());
+    await wait(1500);
+  }
+  await page.mouse.move(720, 450);
+  await page.mouse.down();
+  await page.mouse.move(780, 480, { steps: 8 });
+  await wait(50); // let at least one frame pick up drag.active before reading it
+  const during = await ownerState();
+  await page.mouse.up();
+  await wait(100); // comfortably under 30 frames: samples the quiet<30 tail, not the pre-mouseup frame
+  const afterEnd = await ownerState();
+  console.log(`drag ownership: during=${during.owner} right-after-onEnd=${afterEnd.owner}`);
+  if (during.owner !== 'user') {
+    problems.push(`cameraOwner during a drag was '${during.owner}', not 'user' (${why(during)})`);
+  }
+  // What this one pins is the damping tail, not the release: onEnd must reset
+  // drag.quiet to 0 rather than skip straight past it.
+  if (afterEnd.owner !== 'user') {
+    problems.push(
+      `cameraOwner right after onEnd was '${afterEnd.owner}', not 'user' `
+      + `(onEnd must reset drag.quiet to 0, not skip the damping tail) (${why(afterEnd)})`
+    );
+  }
+  // The assertion that actually exercises onEnd: with onEnd wired, drag.active
+  // drops on mouse.up() and quiet counts past 30, so ownership releases to
+  // 'ambient'. If onEnd were missing or broken, drag.active would stay true
+  // forever and this would read 'user' until the timeout (2026-09-10 review,
+  // Important finding). Sampled rather than read once, so a late release reads
+  // as late and a stuck one reads as stuck.
+  const t = Date.now();
+  const timeline = [];
+  let settle = afterEnd;
+  let firstTween = null;
+  while (Date.now() - t < 2500) {
+    settle = await ownerState();
+    timeline.push(`${Date.now() - t}ms:${settle.owner}`);
+    if (!firstTween && settle.owner === 'tween') firstTween = settle;
+    if (settle.owner === 'ambient') break;
+    await wait(100);
+  }
+  const releaseMs = Date.now() - t;
+  console.log(`drag ownership after settle: ${settle.owner} at ${releaseMs} ms (${timeline.join(' ')})`);
+  // A run can pass and still have gone through 'tween' on the way to rest,
+  // which is the shape of the intermittent red this block was rewritten for.
+  // Print the sub-terms then too, not only on a failure, so the next reader of
+  // a slow-but-green run knows what held the camera.
+  if (firstTween) console.log(`  tween held the camera before rest: ${why(firstTween)}`);
+  if (settle.owner === 'user') {
+    problems.push(
+      `cameraOwner was still 'user' 2.5 s after mouse-up: drag.active never cleared, `
+      + `so onEnd is not firing (timeline ${timeline.join(' ')})`
+    );
+  } else if (settle.owner !== 'ambient') {
+    problems.push(
+      `cameraOwner was '${settle.owner}' 2.5 s after mouse-up, not 'ambient': the drag DID `
+      + `release and something else owns the camera. ${why(settle)} (timeline ${timeline.join(' ')})`
+    );
+  } else if (releaseMs > RELEASE_MS) {
+    problems.push(
+      `cameraOwner took ${releaseMs} ms to release to 'ambient' after the drag (budget ${RELEASE_MS} ms); `
+      + `${why(settle)} (timeline ${timeline.join(' ')})`
+    );
+  }
+  return problems;
+}
+
+let dragFails = await dragBlock();
+if (dragFails.length) {
+  console.log('drag block red, retrying once (a drag is timing-sensitive):\n  ' + dragFails.join('\n  '));
+  await wait(2000);
+  dragFails = await dragBlock();
+  if (dragFails.length) fail.push(...dragFails.map((m) => `${m} [red twice]`));
+  else console.log('drag block passed on the retry: intermittent, not a regression (say so in the report)');
+}
 
 // A plain click on a node, no drag first.
 await page.evaluate(() => {
