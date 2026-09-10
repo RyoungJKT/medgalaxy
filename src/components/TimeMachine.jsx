@@ -607,7 +607,7 @@ export function buildTourCaptions(diseases, idMap, data) {
     // first year COVID-19 exceeded that value. Omitted if no such year exists.
     if (hiv) {
       const hp = peakOf(hiv);
-      const years = hp.year - first;
+      const years = hp.year - hiv.yearStart;
       const series = Array.isArray(covid.yearlyPapers) ? covid.yearlyPapers : [];
       const idx = series.findIndex((v) => Number.isFinite(v) && v > hp.value);
       if (years > 0 && idx >= 0) {

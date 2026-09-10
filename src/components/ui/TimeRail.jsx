@@ -88,7 +88,7 @@ function YearNumeral({ year, size }) {
 // line, one data line, plus the finale's optional derived micro-line.
 // `leaving` is the exit's t = 0.00 channel: the flatline card exits on the
 // standard 200 ms fade, no rise (ADDENDUM 1 section 1).
-function TimeCaption({ caption, mob, tall, leaving }) {
+export function TimeCaption({ caption, mob, tall, leaving }) {
   if (!caption) return null;
   const { lines = [], data, micro } = caption;
   return (
@@ -123,6 +123,14 @@ function TimeCaption({ caption, mob, tall, leaving }) {
             fontSize: i === 0 ? 'clamp(16px, 2.4vw, 26px)' : 'clamp(13px, 1.7vw, 18px)',
             fontWeight: i === 0 ? 500 : 400, color: i === 0 ? '#e2e8f0' : '#94a3b8',
             lineHeight: 1.3, whiteSpace: mob ? 'normal' : 'nowrap',
+            // The phone is the only place a caption line wraps at all, and the
+            // peak card's spine line (the user's verbatim wording, pinned by
+            // its test) is 79 characters: greedy wrapping filled the first two
+            // lines and left "2020." alone on a third. Balance spreads the
+            // same breaks evenly over the same number of lines, so no line is
+            // left an orphan. Desktop lines are nowrap, so the property would
+            // be inert there and is left off.
+            ...(mob ? { textWrap: 'balance' } : null),
             animation: `tmLineIn 300ms ${EASE.ui} ${i * 90}ms both`,
           }}
         >
