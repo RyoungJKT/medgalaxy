@@ -347,12 +347,26 @@ if (want('assembly')) {
   // color), which alone lifts the whole-frame mean from ~0.23 to ~4.97, and
   // the star shells now carry a device-pixel size floor (AMBIENT.stars.minPx)
   // plus a much larger budget (1200 on HIGH, was 400), which is most of why
-  // lit>2 jumps to ~97.8%. `mean` and `brightPct` are re-based below that new
-  // reading, with margin for the twinkle/aurora noise the four-shot average
-  // does not fully cancel; `peak` is left exactly as round 6 set it, since the
-  // stage and the stars do not touch the comets it measures.
+  // lit>2 jumps to ~97.8%. Re-measured against this same live server, five
+  // runs apiece: mean sits at 4.970 to 4.991, peak at 173 to 177, brightPct
+  // at 0.534 to 0.542, all tight (well under 2 percent spread run to run).
+  //
+  // Root cause of the brightPct question this round's review raised: checked
+  // out the parent commit's src/ into this same running dev server (so the
+  // instrument, the browser and the comet layout's RNG seed were identical,
+  // only the code differed) and re-measured. The parent commit, unmodified by
+  // Task 2, reads brightPct 0.466 to 0.468 here, already below round 6's 0.54
+  // floor. That floor was set against an earlier HEAD; DPR-settle rework
+  // (cecd758, 000c909) and the burst-ring redesign (355cedc) landed on this
+  // branch since and moved the reading down before Task 2 touched anything.
+  // So Task 2 is not the regression: it lifts brightPct from that ~0.467
+  // pre-existing baseline up to ~0.538, same direction as mean and lit>2.
+  // `mean` and `brightPct` are re-based just under the measured floor here,
+  // round 6's own margin style (a hair below the reading, not the old
+  // reference); `peak` is left exactly as round 6 set it, since the stage and
+  // the stars do not touch the comets it measures.
   check('r6fix-assembly-16: the 1.6 s frame reads brighter than round 5',
-    at16.mean >= 3.0 && at16.peak >= 154 && at16.brightPct >= 0.45,
+    at16.mean >= 4.5 && at16.peak >= 154 && at16.brightPct >= 0.52,
     `mean ${at16.mean}/255 (was 0.227), comet peak ${at16.peak} (was 147), lit>12 ${at16.brightPct}%`);
   check('r6fix-assembly-16: brightness still climbs to the landing',
     lum[3].mean > lum[1].mean, lum.map((l) => `${l.t}:${l.mean}`).join(' '));
