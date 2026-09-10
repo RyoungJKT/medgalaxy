@@ -33,14 +33,23 @@ YEARS = list(range(2015, 2025))  # 10 years of data
 RATE_LIMIT_DELAY = 0.35  # seconds between requests
 
 # A week of new indexing moves a disease's all-time total by a fraction of a
-# percent. A move this large is the fingerprint of something else: PubMed
-# changing the automatic term mapping behind that search term, which makes the
-# new total the answer to a different question from the old one. Colorectal
-# Cancer went from 180,574 to 351,932 between the 2026-08-10 and 2026-09-11
-# snapshots that way. The pair counts stored beside such a total were measured
-# against the old mapping, and the sharedPapers <= min(papers) invariant below
-# can never catch that, because a total that GREW only makes the invariant
-# easier to satisfy. So a jump re-queries that disease's pairs on its own.
+# percent. A move this large is the fingerprint of something else: the search
+# term behind that total is no longer the term the old total answered, which
+# makes the new number the answer to a different question. That happens two
+# ways, and this detector does not care which. Either PubMed changes its own
+# automatic mapping for the phrase, or the term itself changes here, because
+# get_search_term falls back to the disease's label whenever
+# data/search-overrides.json has no entry for it. Colorectal Cancer went from
+# 180,574 to 351,932 between the 2026-08-10 and 2026-09-11 snapshots the second
+# way: the row was labelled "Colon Cancer" for the 2026-08-10 run and was
+# renamed "Colorectal Cancer" afterwards, so 2026-09-11 was simply its first
+# refresh under the new term. A rename must therefore be followed by a
+# re-backfill of that row's frozen years under the new term, which is what was
+# run for this one; otherwise its older years keep answering the old term.
+# The pair counts stored beside such a total were measured against the old
+# term, and the sharedPapers <= min(papers) invariant below can never catch
+# that, because a total that GREW only makes the invariant easier to satisfy.
+# So a jump re-queries that disease's pairs on its own.
 MAPPING_JUMP = 0.25    # fractional move of the total in a single weekly run
 MAPPING_JUMP_MIN = 200  # papers, so a tiny row's ordinary churn is not a jump
 
@@ -135,12 +144,14 @@ def reconcile_connections(diseases, jumped=None):
        on every weekly refresh while pair counts were measured once
        (scripts/regenerate_connections.py), so a pair measured after a total
        was can exceed it by a few papers.
-    2. An endpoint's total jumped (see MAPPING_JUMP): PubMed changed the term
-       mapping behind that search term, so the stored pair counts answer the
-       old mapping's query. Nothing about the invariant in 1 can see this when
-       the total grew, which is exactly how colorectal cancer's 13 pairs were
-       left behind by the 2026-09-11 refresh while the run reported the
-       connections consistent. `jumped` carries the ids main() measured.
+    2. An endpoint's total jumped (see MAPPING_JUMP): its search term is no
+       longer the term the old total answered, either because the row was
+       renamed here or because PubMed remapped the phrase, so the stored pair
+       counts answer the old term's query. Nothing about the invariant in 1
+       can see this when the total grew, which is exactly how colorectal
+       cancer's 13 pairs were left behind by the 2026-09-11 refresh while the
+       run reported the connections consistent. `jumped` carries the ids
+       main() measured.
 
     Rather than clamping (which would falsify the stored count's stated query),
     re-run the same "(termA) AND (termB)" all-time query for every pair either
@@ -307,7 +318,7 @@ if __name__ == '__main__':
     # totals refresh). For fixing a snapshot skew without a full refresh.
     #
     # --jumped id[,id...]: name diseases whose totals are known to have moved
-    # under a changed term mapping, so their pairs are re-queried even though
+    # under a changed search term, so their pairs are re-queried even though
     # they break no invariant. A full run measures this for itself; this flag
     # is how a skew found after the run is repaired through the same code path
     # instead of by hand.

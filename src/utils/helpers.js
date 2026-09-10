@@ -16,6 +16,18 @@ export function matchesSearch(d, sq){
   return!!d.aliases&&d.aliases.some(a=>a.toLowerCase().includes(sq));
 }
 
+// The all-time total and the year-by-year series are separate PubMed queries,
+// so a handful of rows sum slightly above their headline total (a record
+// carrying both an electronic and a print date is counted in each year it
+// names). Two surfaces say so: the sidebar prints a note under that row's
+// sparkline, and the methodology panel counts how many rows there are. One
+// predicate for both, so the panel can never claim a count the sidebar's note
+// then contradicts on screen.
+export function seriesExceedsTotal(d){
+  if(!d||!d.yearlyPapers)return false;
+  return d.yearlyPapers.reduce((a,b)=>a+b,0)>d.papers;
+}
+
 export function decadeGrowth(yearlyPapers){
   // Always window onto the most recent 10 entries, regardless of how far
   // back yearlyPapers starts (yearStart) — keeps "last decade" meaning the

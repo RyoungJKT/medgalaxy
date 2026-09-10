@@ -1,7 +1,7 @@
 import React, { useRef, useState, useCallback } from 'react';
 import useStore from '../../store';
 import { CC, CL } from '../../utils/constants';
-import { fmt, isMob } from '../../utils/helpers';
+import { fmt, isMob, seriesExceedsTotal } from '../../utils/helpers';
 import Sparkline from './Sparkline';
 import insights from '../../../data/disease-insights.json';
 import { pubmedTermFor } from '../../utils/pubmedTerms';
@@ -119,8 +119,10 @@ export default function Sidebar() {
   // The 1990-2024 series and the all-time total are separate PubMed queries,
   // so for a handful of diseases the windowed series sums slightly above the
   // headline total. Say so where it happens rather than let a reader find it.
+  // The predicate lives in helpers because the methodology panel counts these
+  // rows in prose, and the two must not be able to disagree.
   const windowSum = disease.yearlyPapers.reduce((a, b) => a + b, 0);
-  const windowExceedsTotal = windowSum > disease.papers;
+  const windowExceedsTotal = seriesExceedsTotal(disease);
 
 
 

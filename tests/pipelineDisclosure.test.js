@@ -1,8 +1,12 @@
-import { describe, it, expect } from 'vitest';
+import React from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { describe, it, expect, vi } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import connections from '../data/connections.json';
+import diseases from '../data/diseases.json';
+import { processData, seriesExceedsTotal } from '../src/utils/helpers';
 
 // ─── The pipeline paragraph may not promise more than the pipeline does ──────
 // The methodology panel used to tell the reader that the weekly job "re-queries
@@ -23,6 +27,23 @@ import connections from '../data/connections.json';
 const HERE = fileURLToPath(import.meta.url);
 const REPO = path.join(path.dirname(HERE), '..');
 const read = (...parts) => fs.readFileSync(path.join(REPO, ...parts), 'utf8');
+
+// The panel is rendered rather than only grepped for the count assertions
+// below, so what is pinned is the sentence a reader sees, not a variable name.
+let mockState;
+vi.mock('../src/store', () => ({ default: (selector) => selector(mockState) }));
+const { default: MethodologyPanel } = await import('../src/components/ui/MethodologyPanel.jsx');
+
+function renderPanel() {
+  const processed = processData(diseases, connections);
+  mockState = {
+    methodologyOpen: true,
+    setMethodologyOpen: () => {},
+    diseases: processed.diseases,
+    displayEdges: processed.displayEdges,
+  };
+  return renderToStaticMarkup(React.createElement(MethodologyPanel));
+}
 
 describe('methodology pipeline paragraph vs scripts/refresh_pubmed.py', () => {
   const panel = read('src', 'components', 'ui', 'MethodologyPanel.jsx');
@@ -59,10 +80,56 @@ describe('methodology pipeline paragraph vs scripts/refresh_pubmed.py', () => {
     expect(panel).not.toMatch(/\b13 (connection|pair)/);
   });
 
+  it('describes the search term itself changing, not PubMed remapping it', () => {
+    // Colorectal cancer's total went 180,574 to 351,932 because the row's own
+    // label, and so its search term (get_search_term falls back to the label),
+    // was changed from Colon Cancer to Colorectal Cancer on this branch after
+    // the 2026-08-10 snapshot, so 2026-09-11 was the first run under the new
+    // term. Attributing it to PubMed's automatic mapping is a claim about an
+    // outside service that the git history does not support.
+    expect(panel).not.toContain('PubMed changed its automatic term mapping');
+    expect(script).not.toContain('changing the automatic term mapping behind that search term');
+    expect(panel).toContain('search term');
+  });
+
   it('keeps the house copy rules in the section it pins', () => {
     const pipeline = panel.slice(panel.indexOf('A GitHub Action re-runs'), panel.indexOf('5. Size mapping'));
     expect(pipeline.length).toBeGreaterThan(500);
     expect(pipeline).not.toContain('—'); // em dash
     expect(pipeline).not.toContain('§'); // section sign
+  });
+});
+
+// ─── One predicate for "the series sums above the total" ─────────────────────
+// The panel used to spell the count into its prose ("For six diseases the
+// series sums slightly above the all-time total"), while the sidebar's note
+// under the sparkline was derived. The 2026-09-11 refresh moved COVID-19's
+// total above its own series sum, so the app said five on one screen and six
+// one click away. Both surfaces now share seriesExceedsTotal, and the count in
+// the sentence is counted from the same rows the note fires on.
+describe('the series-over-total count is counted, not written in', () => {
+  const panel = read('src', 'components', 'ui', 'MethodologyPanel.jsx');
+  const sidebar = read('src', 'components', 'ui', 'Sidebar.jsx');
+  const rows = diseases.filter(seriesExceedsTotal);
+
+  it('names a real, non-trivial subset of the file', () => {
+    expect(rows.length).toBeGreaterThan(0);
+    expect(rows.length).toBeLessThan(diseases.length);
+  });
+
+  it('the sidebar note and the panel count run the same predicate', () => {
+    expect(sidebar).toContain('seriesExceedsTotal(disease)');
+    expect(panel).toContain('diseases.filter(seriesExceedsTotal)');
+  });
+
+  it('leaves no number word or literal standing in the sentence', () => {
+    expect(panel).not.toMatch(
+      /For (?:\d+|one|two|three|four|five|six|seven|eight|nine|ten) diseases the series sums/
+    );
+  });
+
+  it('renders the count the sidebar note actually fires on', () => {
+    const html = renderPanel();
+    expect(html).toContain(`For ${rows.length} diseases the series sums slightly above the all-time total`);
   });
 });

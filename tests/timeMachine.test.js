@@ -207,7 +207,7 @@ describe('cinematic year-scaling (addendum 1 section 2.4)', () => {
     // The measured table, for the record: 4.15 -> 11.08, 2.67x, travel 6.93.
     // Re-measured twice on 2026-09-11: after the weekly refresh (4.22 -> 4.18)
     // and again after colorectal cancer's 1990-2014 window was re-queried under
-    // PubMed's current term mapping (4.18 -> 4.15). HIV's own series is frozen
+    // that row's current search term (4.18 -> 4.15). HIV's own series is frozen
     // at both endpoints, so the shift is the shared radius curve moving under
     // it, not HIV moving. See the mover-ring test below.
     expect(r0).toBeCloseTo(4.15, 2);
@@ -330,14 +330,16 @@ describe('cinematic year-scaling (addendum 1 section 2.4)', () => {
     //    predicted this year all along and was 0.002 radius units short.
     //  - 2014 (Ebola, 1.502 -> 1.474) fell just under, and is pinned below.
     // A third year, 2015, entered the list on the refresh and has since left it
-    // again. It was never a year, it was a query: PubMed's automatic term
-    // mapping for "Colorectal Cancer" changed between the 2026-08-10 and the
-    // 2026-09-11 snapshots (the all-time count went 180,574 to 351,932), so a
-    // 1990-2014 window measured under the old mapping sat beside a 2015-2024
-    // window measured under the new one and the seam read as a doubling. That
-    // disease's 1990-2014 window was re-queried under the current mapping on
-    // 2026-09-11, so its whole series now describes one mapping, 2015 tops out
-    // at 1.386 on Ebola, and the false spike is gone.
+    // again. It was never a year, it was a query: the colon row was renamed
+    // "Colorectal Cancer" between the 2026-08-10 and the 2026-09-11 snapshots,
+    // and a disease's search term is its label unless search-overrides.json
+    // names one, so 2026-09-11 was the first refresh under the wider term (the
+    // all-time count went 180,574 to 351,932). A 1990-2014 window measured
+    // under the old term sat beside a 2015-2024 window measured under the new
+    // one and the seam read as a doubling. That disease's 1990-2014 window was
+    // re-queried under the current term on 2026-09-11, so its whole series now
+    // describes one query, 2015 tops out at 1.386 on Ebola, and the false
+    // spike is gone.
     // Every one of those steps also moved the shared 90th-percentile knee
     // (7,238 to 7,309 to 7,374) and so the radius curve under every other node,
     // which is why the measured figures above shifted with them.
@@ -348,11 +350,11 @@ describe('cinematic year-scaling (addendum 1 section 2.4)', () => {
     expect(y2014.top).toBeGreaterThan(1.47);
     expect(y2014.top).toBeLessThan(ACCENT_RING_DELTA);
     // And 2015 is pinned back under the gate on Ebola's own aftermath, so a
-    // future term-mapping shift that reopens the 2014/2015 seam shows up here.
+    // future search-term change that reopens the 2014/2015 seam shows up here.
     const y2015 = perStep.find((s) => s.year === 2015);
     expect(y2015.top).toBeLessThan(ACCENT_RING_DELTA);
     const colorectal = diseases[idMap['colon-cancer']];
-    // One mapping across the seam: the 2014 to 2015 step is a normal year of
+    // One query across the seam: the 2014 to 2015 step is a normal year of
     // publishing (1.059x), not a doubling. The largest step anywhere in the
     // series is 1.131x at 2010, so 1.15 is the ceiling the seam must respect.
     expect(colorectal.yearlyPapers[25] / colorectal.yearlyPapers[24]).toBeLessThan(1.15);

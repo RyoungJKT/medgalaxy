@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo } from 'react';
 import useStore from '../../store';
 import { sceneRefs } from '../../sceneRefs';
-import { isMob, fmt } from '../../utils/helpers';
+import { isMob, fmt, seriesExceedsTotal } from '../../utils/helpers';
 import { fmtFull } from '../../utils/captions';
 import { MAX_PAPERS, MAX_MORT, MX } from '../../utils/constants';
 import { isNoGlobalEstimate, isRegistryFigure } from '../../utils/mortalityLabel';
@@ -10,9 +10,12 @@ import {
 } from '../../utils/timeMachineData';
 import meta from '../../../data/meta.json';
 
-// The one disease whose PubMed term mapping changed under this edition, named
-// once so the pipeline section's pair count is counted from the live edges
-// rather than written into the sentence.
+// The one disease whose search term changed under this edition: the colon row
+// was renamed colorectal cancer to match the figure it carries, and a disease's
+// search term is its label unless data/search-overrides.json names one, so the
+// rename changed the query as well. Named once here so the pipeline section's
+// pair count is counted from the live edges rather than written into the
+// sentence.
 const REMAPPED_ID = 'colon-cancer';
 
 const SH = { fontSize: 11, color: '#3399ff', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 6 };
@@ -117,6 +120,12 @@ export default function MethodologyPanel() {
       // Their own bucket: a registry count is a real figure, so it belongs
       // neither with the global estimates nor with the rows nobody publishes.
       registryCount: diseases.filter(d => isRegistryFigure(d.mortalitySource)).length,
+      // How many rows the sidebar's under-sparkline note fires on. The
+      // sentence below used to spell this out ("For six diseases..."), and the
+      // 2026-09-11 refresh moved COVID-19's total above its own series sum, so
+      // the panel said six while the sidebar's derived note rendered on five.
+      // Same predicate as that note now, counted when the panel opens.
+      seriesOverCount: diseases.filter(seriesExceedsTotal).length,
       // How many pairs were re-queried alongside the one re-backfilled series
       // (the pipeline paragraph names this). Counted from the edges on screen,
       // so the sentence cannot outlive the connection file it describes.
@@ -187,7 +196,7 @@ export default function MethodologyPanel() {
               Papers is PubMed's own all-time result count for the disease's search term: a single E-utilities esearch query with no date filter, which is everything PubMed has indexed under that term, not a sum over a window. The sparkline beneath it in the sidebar is a separate series, one dated query per year (datetype=pdat, per-year mindate and maxdate) across the {stats.yearSpan} years {stats.yearStart} to {stats.yearEnd}. The search term is each disease's name; a handful of diseases use a more precise override for accurate matching, documented in data/search-overrides.json (COPD queries the full phrase "chronic obstructive pulmonary disease", NAFLD adds an alternate spelling, and several acronyms expand the same way). Every disease's sidebar carries a live "View on PubMed" link, so any total shown here can be checked directly against PubMed's own search; the 11 diseases queried under an expanded clinical name use that same expansion in their sidebar link, not the shorter display label, so the link always reproduces the total shown.
             </div>
             <div style={SP}>
-              The all-time total and the year-by-year series are different queries, so they are not required to agree. For six diseases the series sums slightly above the all-time total, because PubMed counts a record in every year its publication dates name, and a record carrying both an electronic and a print date names two. The sidebar prints a note under the sparkline on exactly those diseases rather than leaving the arithmetic to be discovered.
+              The all-time total and the year-by-year series are different queries, so they are not required to agree. For {stats.seriesOverCount} diseases the series sums slightly above the all-time total, because PubMed counts a record in every year its publication dates name, and a record carrying both an electronic and a print date names two. The sidebar prints a note under the sparkline on exactly those diseases rather than leaving the arithmetic to be discovered, and the count in this sentence is those same rows, counted when this panel opens.
             </div>
             <div style={SP}>
               Deaths do not come from PubMed at all. They are entered by hand, and every one of the {stats.diseaseCount} figures has been checked against the document it cites, one row at a time. {stats.gheCount} sit on WHO's Global Health Estimates 2021 ({stats.defaultCount} on the estimate itself, which is why the line under this paragraph counts {stats.defaultCount}; the other {stats.gheCount - stats.defaultCount} cite a specific GHE cause line and are listed by name in the table below), {stats.globocanCount} cancers on IARC GLOBOCAN 2022, {stats.gbdCount} on IHME's Global Burden of Disease where WHO's cause list carries no line for them, {stats.diseaseCount - stats.gheCount - stats.globocanCount - stats.gbdCount - stats.noEstimateCount - stats.registryCount} on a programme report, fact sheet or single modelling study, {stats.registryCount} on national patient registries, which are a real count rather than a global estimate, and {stats.noEstimateCount} on no global estimate at all, for the reason given below. Every count in this paragraph is computed from the data file when this panel opens, not written in by hand, so it cannot drift away from the table below it. The vintages are deliberately mixed, not uniform: malaria, tuberculosis, HIV/AIDS, measles and hepatitis use their own most current annual reports, and WHO Global Health Estimates 2021 is still the latest GHE vintage as of this edition. The sidebar repeats the source in short form next to every deaths figure, so the attribution travels with the number.
@@ -264,13 +273,13 @@ export default function MethodologyPanel() {
           <div style={{ marginBottom: 20 }}>
             <div style={SH}>The pipeline</div>
             <div style={SP}>
-              A GitHub Action re-runs the PubMed query above every Monday at 06:00 UTC (.github/workflows/refresh-pubmed.yml, calling scripts/refresh_pubmed.py). It rewrites exactly three fields per disease: total papers, the year-by-year counts, and the trend percentage. It never touches mortality, description, or category; those stay fixed until someone updates them by hand from the sources named above. The data file also carries an authored funding-gap label per disease, which is no longer displayed anywhere in the visualization because it names no source. The connection weights are refreshed by their own script (scripts/regenerate_connections.py), run on demand rather than weekly, because it is one query per pair. The weekly job re-queries two kinds of pair a fresh total leaves behind: any pair whose count no longer fits inside its endpoints' totals, and any pair whose endpoint total moved by more than a quarter in one week, which is the fingerprint of a changed search-term mapping rather than a week of new indexing. A pair count measured in an earlier week still trails the totals beside it by that week's indexing; what those two checks catch is a pair count left describing a different query from the totals it sits between.
+              A GitHub Action re-runs the PubMed query above every Monday at 06:00 UTC (.github/workflows/refresh-pubmed.yml, calling scripts/refresh_pubmed.py). It rewrites exactly three fields per disease: total papers, the year-by-year counts, and the trend percentage. It never touches mortality, description, or category; those stay fixed until someone updates them by hand from the sources named above. The data file also carries an authored funding-gap label per disease, which is no longer displayed anywhere in the visualization because it names no source. The connection weights are refreshed by their own script (scripts/regenerate_connections.py), run on demand rather than weekly, because it is one query per pair. The weekly job re-queries two kinds of pair a fresh total leaves behind: any pair whose count no longer fits inside its endpoints' totals, and any pair whose endpoint total moved by more than a quarter in one week, which is the fingerprint of a changed search term, whether the row was renamed here or PubMed remapped the phrase, rather than a week of new indexing. A pair count measured in an earlier week still trails the totals beside it by that week's indexing; what those two checks catch is a pair count left describing a different query from the totals it sits between.
             </div>
             <div style={SP}>
               The {stats.yearSpan}-year publication history was backfilled once, extending each disease's record back to {stats.yearStart}. The weekly refresh rewrites a fixed 2015-2024 window, not a rolling one: earlier years are frozen history, and the window itself advances only when the pipeline is updated.
             </div>
             <div style={SP}>
-              One series has been re-backfilled since, and it is on the record here rather than left to be discovered in the sparkline. PubMed changed its automatic term mapping for Colorectal Cancer between the snapshot of 2026-08-10 and the one of {meta.pubmedLastRefresh}, which left that disease's frozen 1990-2014 years answering a narrower query than its freshly refreshed 2015-2024 years, so the seam between the two windows read as a research surge that never happened. Its 1990-2014 years were re-queried under the current mapping on {meta.pubmedLastRefresh}, and so were the {stats.remappedPairCount} connection pairs it appears in, whose shared-paper counts had been measured against the narrower term: its total, its year-by-year series and its pair counts now all describe one mapping. No other series has been rewritten, and a re-backfill is only ever run to repair that kind of split, never to reshape a trend.
+              One series has been re-backfilled since, and it is on the record here rather than left to be discovered in the sparkline. A disease's search term is its label unless data/search-overrides.json names one, so renaming the colon row colorectal cancer (the caveat above) changed its query too. That rename landed between the snapshot of 2026-08-10 and the one of {meta.pubmedLastRefresh}, which made the later refresh the first run under the wider term and left that disease's frozen 1990-2014 years answering the narrower one its 2015-2024 years no longer did, so the seam between the two windows read as a research surge that never happened. Its 1990-2014 years were re-queried under the current term on {meta.pubmedLastRefresh}, and so were the {stats.remappedPairCount} connection pairs it appears in, whose shared-paper counts had been measured against the narrower term: its total, its year-by-year series and its pair counts now all describe one query. No other series has been rewritten, and a re-backfill is only ever run to repair that kind of split, never to reshape a trend.
             </div>
           </div>
 
