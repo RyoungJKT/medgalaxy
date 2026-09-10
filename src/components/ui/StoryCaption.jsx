@@ -13,6 +13,7 @@ function endStory() {
 
 export default function StoryCaption() {
   const storyCaption = useStore(s => s.storyCaption);
+  const storyProvenance = useStore(s => s.storyProvenance);
   const setStoryStep = useStore(s => s.setStoryStep);
   const storyStep = useStore(s => s.storyStep);
   const supernovaPhase = useStore(s => s.supernovaPhase);
@@ -35,8 +36,14 @@ export default function StoryCaption() {
   }, [storyCaption]);
 
   useEffect(() => {
+    // Task 4 hardening, landed here with Task 3: the listener used to fire on
+    // every Escape in the session, flying the camera home and drawing the
+    // story chips 1.8 s later, over the Time Machine's rail if it had opened
+    // in between. It only means anything while a story is up.
     const onKey = (e) => {
-      if (e.key === 'Escape') endStory();
+      if (e.key !== 'Escape') return;
+      if (!useStore.getState().storyActive) return;
+      endStory();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -83,6 +90,9 @@ export default function StoryCaption() {
           {line}
         </div>
       ))}
+      {storyProvenance && (
+        <div style={{ color: '#64748b', fontSize: 9, marginTop: 8, letterSpacing: '0.02em' }}>{storyProvenance}</div>
+      )}
       <div style={{ color: '#cbd5e1', fontSize: mob ? 13 : 15, marginTop: 10, letterSpacing: '0.03em' }}>
         {supernovaBusy ? 'revealing connections\u2026' : `${mob ? 'tap' : 'click'} to continue \u00b7 esc to exit`}
       </div>

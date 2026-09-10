@@ -39,6 +39,7 @@ export default function Sidebar() {
   const connCounts = useStore(s => s.connCounts);
   const deselect = useStore(s => s.deselect);
   const selectDisease = useStore(s => s.selectDisease);
+  const storyActive = useStore(s => s.storyActive);
 
   const mob = isMob();
   const panelRef = useRef(null);
@@ -91,6 +92,7 @@ export default function Sidebar() {
 
   if (!selectedNode) return null;
   if (mob) return null;
+  if (storyActive) return null;
 
   const disease = selectedNode.disease;
   const idx = selectedNode.index;

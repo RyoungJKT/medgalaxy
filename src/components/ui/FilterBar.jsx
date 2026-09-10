@@ -2,14 +2,20 @@ import React from 'react';
 import useStore from '../../store';
 import { CC, CL, CATS } from '../../utils/constants';
 import { isMob } from '../../utils/helpers';
+import { DUR, EASE } from '../../utils/motion';
 
 export default function FilterBar() {
   const activeCats = useStore(s => s.activeCats);
   const toggleCat = useStore(s => s.toggleCat);
   const neglectMode = useStore(s => s.neglectMode);
   const uiRevealed = useStore(s => s.uiRevealed);
+  const storyActive = useStore(s => s.storyActive);
 
   if (isMob()) return null;
+
+  // A story owns the frame while it runs (Task 3, 2026-09-10 plan): the bar
+  // dims rather than hides, matching the header's own controls.
+  const dim = { opacity: storyActive ? 0.3 : 1, transition: `opacity ${DUR.ui}ms ${EASE.ui}` };
 
   if (neglectMode) {
     return (
@@ -18,6 +24,7 @@ export default function FilterBar() {
         padding: '0 20px', display: 'flex', alignItems: 'center', gap: 10,
         fontFamily: 'IBM Plex Mono,monospace', fontSize: 10, pointerEvents: 'none',
         opacity: 0, animation: 'fadeIn 0.4s ease forwards',
+        ...dim,
       }}>
         <span style={{ color: '#ef4444', fontWeight: 600 }}>OVERLOOKED</span>
         <div style={{ width: 180, height: 8, borderRadius: 4, background: 'linear-gradient(90deg,#ef4444,#f59e0b,#eab308,#22c55e)' }} />
@@ -36,6 +43,7 @@ export default function FilterBar() {
       padding: '0 20px', display: 'flex', flexWrap: 'wrap', gap: 5,
       fontFamily: 'IBM Plex Mono,monospace', fontSize: 11, pointerEvents: 'none',
       transform: 'translateY(-120px)', animation: uiRevealed ? 'slideDown 0.5s ease 0.15s forwards' : 'none',
+      ...dim,
     }}>
       <button
         onClick={() => toggleCat('ALL')}

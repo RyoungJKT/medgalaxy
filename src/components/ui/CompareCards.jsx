@@ -23,6 +23,7 @@ export default function CompareCards() {
   const diseases = useStore(s => s.diseases);
   const displayEdges = useStore(s => s.displayEdges);
   const selectDisease = useStore(s => s.selectDisease);
+  const storyActive = useStore(s => s.storyActive);
   const [pos, setPos] = useState({ x: 0, y: 0, visible: false });
   const [grown, setGrown] = useState(false);
   const [interactive, setInteractive] = useState(false);
@@ -179,7 +180,7 @@ export default function CompareCards() {
     return out;
   }, [selectedNode, diseases, displayEdges]);
 
-  if (isMob() || !selectedNode || !pos.visible || blocks.length === 0) return null;
+  if (isMob() || storyActive || !selectedNode || !pos.visible || blocks.length === 0) return null;
 
   // Keep the card fully on screen: never past the left edge, and — measured
   // against its real rendered height, since it runs one to three blocks —

@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import useStore from '../../store';
 import { isMob } from '../../utils/helpers';
 import SearchDropdown from './SearchDropdown';
-import { TM_EXIT, exitDelay } from '../../utils/motion';
+import { TM_EXIT, exitDelay, DUR, EASE } from '../../utils/motion';
 
 function SizeToggle() {
   const sizeMode = useStore(s => s.sizeMode);
@@ -54,11 +54,11 @@ function SizeToggle() {
   );
 }
 
-function ShaderToggle() {
+function ShaderToggle({ dim }) {
   const shaderMode = useStore(s => s.shaderMode);
   const setShaderMode = useStore(s => s.setShaderMode);
   return (
-    <div style={{ position: 'relative', pointerEvents: 'auto' }}>
+    <div style={{ position: 'relative', pointerEvents: 'auto', ...dim }}>
       <div style={{ display: 'flex', borderRadius: 6, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)' }}>
         {['plasma', 'pulse'].map(m => (
           <button
@@ -169,6 +169,10 @@ export default function Header() {
   const setMethodologyOpen = useStore(s => s.setMethodologyOpen);
   const tmTourSeen = useStore(s => s.tmTourSeen);
   const tmActive = tmPhase !== 'idle';
+  const storyActive = useStore(s => s.storyActive);
+  // A story owns the frame while it runs (Task 3, 2026-09-10 plan): the chrome
+  // dims rather than hides, so the viewer still sees where every control went.
+  const dim = { opacity: storyActive ? 0.3 : 1, transition: `opacity ${DUR.ui}ms ${EASE.ui}` };
   // First press owes the viewer the story (review gate F1c): if no narrated
   // tour has run yet in this session — the film's auto-tour preempted, the
   // hint chip never taken — this button is the only way the decade story can
@@ -239,11 +243,11 @@ export default function Header() {
                 1500px it would otherwise push the controls into a second line,
                 which lands on top of the filter bar. The counts follow at
                 1360px, and the wordmark alone survives anything narrower. */}
-            <span className="mg-hdr-tagline" style={{ color: '#94a3b8', fontSize: 11, whiteSpace: 'nowrap' }}>
+            <span className="mg-hdr-tagline" style={{ color: '#94a3b8', fontSize: 11, whiteSpace: 'nowrap', ...dim }}>
               3D visualization of global disease research
             </span>
-            <span className="mg-hdr-tagline" style={{ color: '#94a3b8', fontSize: 11 }}>&middot;</span>
-            <span className="mg-hdr-counts" style={{ color: '#94a3b8', fontSize: 11, whiteSpace: 'nowrap' }}>
+            <span className="mg-hdr-tagline" style={{ color: '#94a3b8', fontSize: 11, ...dim }}>&middot;</span>
+            <span className="mg-hdr-counts" style={{ color: '#94a3b8', fontSize: 11, whiteSpace: 'nowrap', ...dim }}>
               {diseases.length} diseases &middot; {displayEdges.length} connections
             </span>
           </>
@@ -274,7 +278,7 @@ export default function Header() {
           <div ref={menuRef} style={{ position: 'relative', pointerEvents: 'auto' }}>
             <button
               onClick={() => { setMenuOpen(!menuOpen); setSearchOpen(false); }}
-              style={{ background: 'none', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, padding: '8px 14px', color: '#e2e8f0', fontSize: 16, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 500, ...pulseStyle }}
+              style={{ background: 'none', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, padding: '8px 14px', color: '#e2e8f0', fontSize: 16, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 500, ...pulseStyle, ...dim }}
             >
               Menu
             </button>
@@ -344,7 +348,7 @@ export default function Header() {
         <>
           <div style={{ position: 'relative', pointerEvents: 'auto' }}>
             <button onClick={() => setNeglectMode(!neglectMode)}
-              style={{ ...btnStyle, background: neglectMode ? 'rgba(255,255,255,0.12)' : 'transparent', color: neglectMode ? '#ef4444' : '#e2e8f0' }}
+              style={{ ...btnStyle, background: neglectMode ? 'rgba(255,255,255,0.12)' : 'transparent', color: neglectMode ? '#ef4444' : '#e2e8f0', ...dim }}
             >{neglectMode ? '✕ Attention Map' : 'Attention Map'}</button>
             {neglectMode && (
               <div style={{
@@ -358,10 +362,10 @@ export default function Header() {
             )}
           </div>
           <SizeToggle />
-          <ShaderToggle />
-          <button onClick={() => setActiveMode('explode')} style={btnStyle}>Research Gap</button>
-          <button onClick={() => { useStore.getState().setConnFocusIdx(-1); setActiveMode('connections'); }} style={btnStyle}>Connections</button>
-          <button onClick={() => setActiveMode('velocity')} style={btnStyle}>Trends</button>
+          <ShaderToggle dim={dim} />
+          <button onClick={() => setActiveMode('explode')} style={{ ...btnStyle, ...dim }}>Research Gap</button>
+          <button onClick={() => { useStore.getState().setConnFocusIdx(-1); setActiveMode('connections'); }} style={{ ...btnStyle, ...dim }}>Connections</button>
+          <button onClick={() => setActiveMode('velocity')} style={{ ...btnStyle, ...dim }}>Trends</button>
           <div style={{ position: 'relative', pointerEvents: 'auto' }}>
             <button onClick={toggleTimeMachine}
               style={{
@@ -369,12 +373,13 @@ export default function Header() {
                 background: tmActive ? 'rgba(255,255,255,0.12)' : 'transparent',
                 color: tmActive ? '#f59e0b' : '#e2e8f0',
                 ...pulseStyle,
+                ...dim,
               }}
             >{tmActive ? '✕ Time Machine' : 'Time Machine'}</button>
             {exitCue > 0 && <ExitMicroLine delay={cueDelay} />}
           </div>
           <button onClick={() => setSpotlightActive(!spotlightActive)}
-            style={{ ...btnStyle, background: spotlightActive ? 'rgba(255,255,255,0.12)' : 'transparent', color: spotlightActive ? '#f59e0b' : '#e2e8f0' }}
+            style={{ ...btnStyle, background: spotlightActive ? 'rgba(255,255,255,0.12)' : 'transparent', color: spotlightActive ? '#f59e0b' : '#e2e8f0', ...dim }}
           >{spotlightActive ? '✕ Spotlight' : 'Spotlight'}</button>
           {/* The sound pill was removed at the user's request (2026-08-28)
               along with the store's soundOn flag: nothing can enable the
@@ -384,7 +389,7 @@ export default function Header() {
               (2026-08-28). The panel itself stays wired: the mobile menu's
               Methodology row still opens it, as does
               setMethodologyOpen(true) from the store or the verify harness. */}
-          <div style={{ position: 'relative', pointerEvents: 'auto' }}>
+          <div style={{ position: 'relative', pointerEvents: 'auto', ...dim }}>
             <input
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}

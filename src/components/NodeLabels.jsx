@@ -166,6 +166,11 @@ export default function NodeLabels() {
         // Hide labels for nodes not yet revealed during intro
         if (introScales && introScales[i] < 0.1) continue;
 
+        // A story owns the frame: only its subject keeps a name (Task 3,
+        // 2026-09-10 plan). Seventy other labels under a supernova reveal read
+        // as a debugger, not a film.
+        if (storeState.storyActive && i !== selIdx) continue;
+
         // Hide all labels during spin (motion too fast for labels to read)
         // Hide non-ring-node labels during other roulette phases
         if (rPhase === 'spinup') continue;

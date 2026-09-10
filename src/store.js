@@ -46,6 +46,7 @@ const useStore = create(
     storyActive: null,
     storyStep: 0,
     storyCaption: '',
+    storyProvenance: '',
     storyVisible: true,
 
     // ── Connection focus ──
@@ -195,6 +196,7 @@ const useStore = create(
     setNeglectMode: (v) => set({ neglectMode: v }),
     setStoryVisible: (v) => set({ storyVisible: v }),
     setStoryCaption: (v) => set({ storyCaption: v }),
+    setStoryProvenance: (v) => set({ storyProvenance: v }),
     setConnFocusIdx: (v) => set({ connFocusIdx: v }),
     setSpotlightActive: (v) => set({ spotlightActive: v }),
     setSpotlightCaption: (v) => set({ spotlightCaption: v }),
@@ -239,7 +241,7 @@ const useStore = create(
         spotlightCaption: '',
         selectedNode: null,
       });
-      if (s.storyActive) set({ storyActive: null, storyCaption: '', storyStep: 0 });
+      if (s.storyActive) set({ storyActive: null, storyCaption: '', storyProvenance: '', storyStep: 0 });
     },
 
     // A request, not a teardown: the FSM reads this and plays the compressed
@@ -304,7 +306,7 @@ const useStore = create(
         storyVisible: false,
       });
       if (storyActive) {
-        set({ storyActive: null, storyCaption: '', storyStep: 0 });
+        set({ storyActive: null, storyCaption: '', storyProvenance: '', storyStep: 0 });
       }
     },
 
@@ -336,7 +338,7 @@ const useStore = create(
         set({ spotlightActive: false, spotlightCaption: '' });
       }
       if (s.storyActive && !keepStory) {
-        set({ storyActive: null, storyCaption: '', storyStep: 0 });
+        set({ storyActive: null, storyCaption: '', storyProvenance: '', storyStep: 0 });
       }
       if (s.roulettePhase !== 'idle') {
         s.stopRoulette();
@@ -463,7 +465,7 @@ const useStore = create(
         // overlay stands down rather than running underneath it.
         activeMode: null,
       });
-      if (s.storyActive) set({ storyActive: null, storyCaption: '', storyStep: 0 });
+      if (s.storyActive) set({ storyActive: null, storyCaption: '', storyProvenance: '', storyStep: 0 });
     },
 
     // Hands radius back to the normal morph. `sceneRefs.tm.active` stays true

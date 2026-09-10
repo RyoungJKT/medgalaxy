@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import useStore from '../store';
 import { fmtFull, fmtWord, ppd, trendLabel } from '../utils/captions';
+import { storyProvenance } from '../utils/storyProvenance';
 
 // Papers-per-death display rule: 2 decimals below 1, whole numbers at/above 1.
 function ppdStr(val) {
@@ -17,41 +18,41 @@ function buildSequences(idMap, diseases) {
   const d = (id) => diseases[idMap[id]];
   return {
     researched: [
-      { id: find('breast-cancer'), supernova: true, caption: `Breast Cancer\n${fmtFull(d('breast-cancer').papers)} published papers` },
-      { id: find('lung-cancer'), supernova: true, caption: `Lung Cancer\n${fmtFull(d('lung-cancer').papers)} published papers` },
-      { id: find('type-2-diabetes'), supernova: true, caption: `Type 2 Diabetes\n${fmtFull(d('type-2-diabetes').papers)} published papers` },
-      { caption: 'Science is paying attention here.' },
+      { id: find('breast-cancer'), supernova: true, kind: 'papers', caption: `Breast Cancer\n${fmtFull(d('breast-cancer').papers)} published papers` },
+      { id: find('lung-cancer'), supernova: true, kind: 'papers', caption: `Lung Cancer\n${fmtFull(d('lung-cancer').papers)} published papers` },
+      { id: find('type-2-diabetes'), supernova: true, kind: 'papers', caption: `Type 2 Diabetes\n${fmtFull(d('type-2-diabetes').papers)} published papers` },
+      { kind: 'none', caption: 'Science is paying attention here.' },
     ],
     killers: [
-      { id: find('heart-disease'), supernova: true, caption: `Heart Disease\n${fmtWord(d('heart-disease').mortality)} deaths every year` },
-      { id: find('stroke'), supernova: true, caption: `Stroke\n${fmtWord(d('stroke').mortality)} deaths every year` },
-      { id: find('copd'), supernova: true, caption: `COPD\n${fmtWord(d('copd').mortality)} deaths every year` },
-      { caption: 'Each of these alone outranks entire categories of disease.' },
+      { id: find('heart-disease'), supernova: true, kind: 'deaths', caption: `Heart Disease\n${fmtWord(d('heart-disease').mortality)} deaths every year` },
+      { id: find('stroke'), supernova: true, kind: 'deaths', caption: `Stroke\n${fmtWord(d('stroke').mortality)} deaths every year` },
+      { id: find('copd'), supernova: true, kind: 'deaths', caption: `COPD\n${fmtWord(d('copd').mortality)} deaths every year` },
+      { kind: 'none', caption: 'Each of these alone outranks entire categories of disease.' },
     ],
     forgotten: [
-      { id: find('rotavirus'), supernova: true, caption: `Rotavirus\n${fmtFull(d('rotavirus').mortality)} children die yearly, ${trendLabel(d('rotavirus').trend)}` },
-      { id: find('tetanus'), supernova: true, caption: `Tetanus\n${fmtFull(d('tetanus').mortality)} deaths yearly, ${trendLabel(d('tetanus').trend)}` },
-      { id: find('hepatitis-c'), supernova: true, caption: `Hepatitis C\n${fmtFull(d('hepatitis-c').mortality)} deaths yearly, ${trendLabel(d('hepatitis-c').trend)}` },
-      { caption: 'And the world is looking away.' },
+      { id: find('rotavirus'), supernova: true, kind: 'deaths', caption: `Rotavirus\n${fmtFull(d('rotavirus').mortality)} children die yearly, ${trendLabel(d('rotavirus').trend)}` },
+      { id: find('tetanus'), supernova: true, kind: 'deaths', caption: `Tetanus\n${fmtFull(d('tetanus').mortality)} deaths yearly, ${trendLabel(d('tetanus').trend)}` },
+      { id: find('hepatitis-c'), supernova: true, kind: 'deaths', caption: `Hepatitis C\n${fmtFull(d('hepatitis-c').mortality)} deaths yearly, ${trendLabel(d('hepatitis-c').trend)}` },
+      { kind: 'none', caption: 'And the world is looking away.' },
     ],
     silent: [
-      { id: find('rheumatic-heart-disease'), supernova: true, caption: `Rheumatic Heart Disease\n${fmtFull(d('rheumatic-heart-disease').mortality)} deaths, only ${fmtFull(d('rheumatic-heart-disease').papers)} papers` },
-      { id: find('norovirus'), supernova: true, caption: `Norovirus\n${fmtFull(d('norovirus').mortality)} deaths, only ${fmtFull(d('norovirus').papers)} papers` },
-      { id: find('pertussis'), supernova: true, caption: `Pertussis\n${fmtFull(d('pertussis').mortality)} deaths, only ${fmtFull(d('pertussis').papers)} papers` },
-      { id: find('rotavirus'), supernova: true, caption: `Rotavirus\n${fmtFull(d('rotavirus').mortality)} child deaths, ${trendLabel(d('rotavirus').trend)}` },
-      { caption: 'Almost no one is studying why.' },
+      { id: find('rheumatic-heart-disease'), supernova: true, kind: 'deaths', caption: `Rheumatic Heart Disease\n${fmtFull(d('rheumatic-heart-disease').mortality)} deaths, only ${fmtFull(d('rheumatic-heart-disease').papers)} papers` },
+      { id: find('norovirus'), supernova: true, kind: 'deaths', caption: `Norovirus\n${fmtFull(d('norovirus').mortality)} deaths, only ${fmtFull(d('norovirus').papers)} papers` },
+      { id: find('pertussis'), supernova: true, kind: 'deaths', caption: `Pertussis\n${fmtFull(d('pertussis').mortality)} deaths, only ${fmtFull(d('pertussis').papers)} papers` },
+      { id: find('rotavirus'), supernova: true, kind: 'deaths', caption: `Rotavirus\n${fmtFull(d('rotavirus').mortality)} child deaths, ${trendLabel(d('rotavirus').trend)}` },
+      { kind: 'none', caption: 'Almost no one is studying why.' },
     ],
     richpoor: [
-      { id: find('cystic-fibrosis'), supernova: true, caption: `Cystic Fibrosis\n${ppdStr(ppd(d('cystic-fibrosis')))} papers per death, wealthy nations` },
-      { id: find('multiple-sclerosis'), supernova: true, caption: `Multiple Sclerosis\n${ppdStr(ppd(d('multiple-sclerosis')))} papers per death, wealthy nations` },
-      { id: find('tuberculosis'), supernova: true, caption: `Tuberculosis\n${ppdStr(ppd(d('tuberculosis')))} papers per death, ${fmtWord(d('tuberculosis').mortality)} die yearly` },
-      { id: find('malaria'), supernova: true, caption: `Malaria\n${ppdStr(ppd(d('malaria')))} papers per death, ${fmtWord(d('malaria').mortality)} die yearly` },
-      { caption: 'Where you are born decides\nhow much science fights for your life.' },
+      { id: find('cystic-fibrosis'), supernova: true, kind: 'ratio', caption: `Cystic Fibrosis\n${ppdStr(ppd(d('cystic-fibrosis')))} papers per death, wealthy nations` },
+      { id: find('multiple-sclerosis'), supernova: true, kind: 'ratio', caption: `Multiple Sclerosis\n${ppdStr(ppd(d('multiple-sclerosis')))} papers per death, wealthy nations` },
+      { id: find('tuberculosis'), supernova: true, kind: 'ratio', caption: `Tuberculosis\n${ppdStr(ppd(d('tuberculosis')))} papers per death, ${fmtWord(d('tuberculosis').mortality)} die yearly` },
+      { id: find('malaria'), supernova: true, kind: 'ratio', caption: `Malaria\n${ppdStr(ppd(d('malaria')))} papers per death, ${fmtWord(d('malaria').mortality)} die yearly` },
+      { kind: 'none', caption: 'Where you are born decides\nhow much science fights for your life.' },
     ],
     mismatch: [
-      { id: find('cystic-fibrosis'), supernova: true, caption: `Cystic Fibrosis\n${fmtFull(d('cystic-fibrosis').papers)} papers for ${fmtFull(d('cystic-fibrosis').mortality)} deaths` },
-      { id: find('rheumatic-heart-disease'), supernova: true, caption: `Rheumatic Heart Disease\n${fmtFull(d('rheumatic-heart-disease').papers)} papers for ${fmtFull(d('rheumatic-heart-disease').mortality)} deaths` },
-      { caption: `A ${fmtFull(Math.round(ppd(d('cystic-fibrosis')) / ppd(d('rheumatic-heart-disease'))))}x research gap.\nNow toggle Mortality at the top of the page.` },
+      { id: find('cystic-fibrosis'), supernova: true, kind: 'ratio', caption: `Cystic Fibrosis\n${fmtFull(d('cystic-fibrosis').papers)} papers for ${fmtFull(d('cystic-fibrosis').mortality)} deaths` },
+      { id: find('rheumatic-heart-disease'), supernova: true, kind: 'ratio', caption: `Rheumatic Heart Disease\n${fmtFull(d('rheumatic-heart-disease').papers)} papers for ${fmtFull(d('rheumatic-heart-disease').mortality)} deaths` },
+      { kind: 'none', caption: `A ${fmtFull(Math.round(ppd(d('cystic-fibrosis')) / ppd(d('rheumatic-heart-disease'))))}x research gap.\nNow toggle Mortality at the top of the page.` },
     ],
   };
 }
@@ -61,6 +62,7 @@ function showStep(sr) {
   if (!seq || sr.step >= seq.length) {
     // Done: cinematic exit — clear caption and pull back immediately
     useStore.getState().setStoryCaption('');
+    useStore.getState().setStoryProvenance('');
     sr.seq = null;
     sr.step = 0;
 
@@ -81,6 +83,9 @@ function showStep(sr) {
 
   const s = seq[sr.step];
   useStore.getState().setStoryCaption(s.caption || '');
+
+  const dz = s.id !== undefined ? useStore.getState().diseases[s.id] : null;
+  useStore.getState().setStoryProvenance(storyProvenance(s.kind || 'none', dz));
 
   if (s.id !== undefined) {
     if (s.supernova) {
@@ -109,6 +114,7 @@ export default function StoryEngine() {
 
         // Reset caption
         useStore.getState().setStoryCaption('');
+        useStore.getState().setStoryProvenance('');
 
         if (!chipId) {
           sr.seq = null;

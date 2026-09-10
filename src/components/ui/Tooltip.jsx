@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import useStore from '../../store';
 import { CC, CL } from '../../utils/constants';
-import { fmt, nR } from '../../utils/helpers';
+import { fmt, nR, isMob } from '../../utils/helpers';
 import { sceneRefs } from '../../sceneRefs';
 
 const pv = new THREE.Vector3();
@@ -45,9 +45,10 @@ export default function Tooltip() {
     return () => window.removeEventListener('mousemove', onMove);
   }, []);
 
-  // Track selected node screen position for persistent tooltip
+  // Track selected node screen position for persistent tooltip. Desktop skips
+  // the per-frame setAnchorPos: the persistent box only ever renders on mobile.
   useEffect(() => {
-    if (!selectedNode) {
+    if (!selectedNode || !isMob()) {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       return;
     }
@@ -90,8 +91,12 @@ export default function Tooltip() {
     fontFamily: 'IBM Plex Mono,monospace', fontSize: 11, color: '#e2e8f0',
   };
 
+  // Task 3 (2026-09-10 plan): on desktop the sidebar and the compare card
+  // already say everything this box repeated an inch away (and it covered the
+  // sidebar's Deaths value on a 1280 px laptop). The phone keeps it: there the
+  // sidebar does not render, so this is the tap's only readout.
   // Persistent tooltip anchored to selected node
-  if (selectedNode) {
+  if (selectedNode && isMob()) {
     const selDisease = selectedNode.disease;
     const selConnCount = connCounts.get(selectedNode.index) || 0;
 
