@@ -6,6 +6,10 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import connections from '../data/connections.json';
 import diseases from '../data/diseases.json';
+// Bound as metaData, never as `meta`: this module uses import.meta.url below,
+// and vite's SSR transform collides a local `meta` binding with it (the same
+// reason tests/methodology.test.js could not host these cases).
+import metaData from '../data/meta.json';
 import { processData, seriesExceedsTotal } from '../src/utils/helpers';
 
 // ─── The pipeline paragraph may not promise more than the pipeline does ──────
@@ -97,6 +101,51 @@ describe('methodology pipeline paragraph vs scripts/refresh_pubmed.py', () => {
     expect(pipeline.length).toBeGreaterThan(500);
     expect(pipeline).not.toContain('—'); // em dash
     expect(pipeline).not.toContain('§'); // section sign
+  });
+});
+
+// ─── A fixed historical date may not be printed through a live stamp ─────────
+// The re-backfill paragraph printed meta.pubmedLastRefresh twice: once for the
+// refresh that first ran under the wider term, once for the day the frozen
+// 1990-2014 years were re-queried. Both readings were true only while that
+// stamp said 2026-09-11. The weekly GitHub Action rewrites the stamp every
+// Monday (.github/workflows/refresh-pubmed.yml), so the first cron after a
+// merge would have had the panel tell the reader on screen that the re-query
+// ran that morning and that that morning's refresh was the first run under the
+// wider term, neither of which happened. It is the branch's own rule inverted:
+// a derived value standing in for a fixed fact. The date is now recorded as
+// data (data/meta.json's colorectalRebackfill), which nothing rewrites.
+describe('the re-backfill date is recorded, not read off the freshness stamp', () => {
+  const panel = read('src', 'components', 'ui', 'MethodologyPanel.jsx');
+  const script = read('scripts', 'refresh_pubmed.py');
+  const paragraph = panel.slice(
+    panel.indexOf('One series has been re-backfilled'),
+    panel.indexOf('5. Size mapping')
+  );
+
+  it('isolates the paragraph it pins', () => {
+    expect(paragraph.length).toBeGreaterThan(500);
+    expect(paragraph).toContain('re-queried under the current term on');
+  });
+
+  it('never reaches for the live refresh stamp inside it', () => {
+    expect(paragraph).not.toContain('pubmedLastRefresh');
+  });
+
+  it('records the date in data/meta.json and prints that', () => {
+    expect(metaData.colorectalRebackfill).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(panel).toContain('const REBACKFILL_DATE = meta.colorectalRebackfill');
+    const html = renderPanel();
+    expect(html).toContain(
+      `re-queried under the current term on ${metaData.colorectalRebackfill}`
+    );
+    expect(html).toContain(`the one of ${metaData.colorectalRebackfill}`);
+  });
+
+  it('leaves the recorded date alone in the weekly job', () => {
+    // The cron rewrites exactly one key in meta.json, and it is not this one.
+    expect(script).toContain("meta['pubmedLastRefresh'] = datetime.date.today().isoformat()");
+    expect(script).not.toContain('colorectalRebackfill');
   });
 });
 

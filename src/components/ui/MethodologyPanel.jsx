@@ -18,6 +18,17 @@ import meta from '../../../data/meta.json';
 // sentence.
 const REMAPPED_ID = 'colon-cancer';
 
+// The day that rename's repair ran, as a fixed record rather than as pipeline
+// state. It happened to fall on the same refresh as this edition's snapshot,
+// which is exactly the trap: printing meta.pubmedLastRefresh in its place read
+// correctly on the day and would have been rewritten by the next Monday's
+// GitHub Action, leaving the panel claiming on screen that the re-query ran
+// that morning and that that morning's refresh was the first run under the
+// wider term. The stamp says when the counts were last refreshed; this says
+// when a settled repair happened, and only a person editing data/meta.json
+// changes it.
+const REBACKFILL_DATE = meta.colorectalRebackfill;
+
 const SH = { fontSize: 11, color: '#3399ff', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 6 };
 const SP = { color: '#94a3b8', fontSize: 13, lineHeight: 1.6, marginBottom: 10 };
 
@@ -279,7 +290,7 @@ export default function MethodologyPanel() {
               The {stats.yearSpan}-year publication history was backfilled once, extending each disease's record back to {stats.yearStart}. The weekly refresh rewrites a fixed 2015-2024 window, not a rolling one: earlier years are frozen history, and the window itself advances only when the pipeline is updated.
             </div>
             <div style={SP}>
-              One series has been re-backfilled since, and it is on the record here rather than left to be discovered in the sparkline. A disease's search term is its label unless data/search-overrides.json names one, so renaming the colon row colorectal cancer (the caveat above) changed its query too. That rename landed between the snapshot of 2026-08-10 and the one of {meta.pubmedLastRefresh}, which made the later refresh the first run under the wider term and left that disease's frozen 1990-2014 years answering the narrower one its 2015-2024 years no longer did, so the seam between the two windows read as a research surge that never happened. Its 1990-2014 years were re-queried under the current term on {meta.pubmedLastRefresh}, and so were the {stats.remappedPairCount} connection pairs it appears in, whose shared-paper counts had been measured against the narrower term: its total, its year-by-year series and its pair counts now all describe one query. No other series has been rewritten, and a re-backfill is only ever run to repair that kind of split, never to reshape a trend.
+              One series has been re-backfilled since, and it is on the record here rather than left to be discovered in the sparkline. A disease's search term is its label unless data/search-overrides.json names one, so renaming the colon row colorectal cancer (the caveat above) changed its query too. That rename landed between the snapshot of 2026-08-10 and the one of {REBACKFILL_DATE}, which made the later refresh the first run under the wider term and left that disease's frozen 1990-2014 years answering the narrower one its 2015-2024 years no longer did, so the seam between the two windows read as a research surge that never happened. Its 1990-2014 years were re-queried under the current term on {REBACKFILL_DATE}, and so were the {stats.remappedPairCount} connection pairs it appears in, whose shared-paper counts had been measured against the narrower term: its total, its year-by-year series and its pair counts now all describe one query. No other series has been rewritten, and a re-backfill is only ever run to repair that kind of split, never to reshape a trend.
             </div>
           </div>
 
