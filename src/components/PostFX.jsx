@@ -37,7 +37,7 @@ export default function PostFX() {
     const effect = dofRef.current;
     if (!effect) return;
 
-    const { selectedNode, curPos, spotlightActive } = useStore.getState();
+    const { selectedNode, curPos, spotlightActive, storyActive } = useStore.getState();
     const cam = sceneRefs.camera;
 
     // Task 1 (2026-09-10 plan): the DOF used to be suppressed whenever the
@@ -46,8 +46,11 @@ export default function PostFX() {
     // Camera breathing tripped the first test every frame, so the rack never
     // happened on a plain click. Ownership is the test now: a hand on the
     // controls or a live tween suppresses it; ambient motion does not.
+    // A running story owns the frame: its supernova has just revealed the
+    // subject's neighbors and link arcs, and racking the bokeh in on the
+    // subject alone would blur the very thing the step is making visible.
     const tweening = cam ? gsap.isTweening(cam.position) : false;
-    const suppress = sceneRefs.cameraOwner === 'user' || tweening || spotlightActive;
+    const suppress = sceneRefs.cameraOwner === 'user' || tweening || spotlightActive || !!storyActive;
 
     // Critically damped approach with a 160 ms time constant: 95 percent of the
     // rack lands inside DUR.slow (480 ms), the sanctioned instrument duration.
