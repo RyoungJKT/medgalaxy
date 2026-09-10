@@ -601,6 +601,22 @@ export function buildTourCaptions(diseases, idMap, data) {
       lines: ['Attention can move this fast.'],
       data: `${fmtFull(pk.value)} ${covid.label} papers in ${pk.year} alone.`,
     };
+    // The spine, said once (Task 6, 2026-09-10 plan): the two HIV pauses and
+    // the detonation only imply it by adjacency. Every numeral is scanned
+    // from the file: the years HIV took to reach its own best year, and the
+    // first year COVID-19 exceeded that value. Omitted if no such year exists.
+    if (hiv) {
+      const hp = peakOf(hiv);
+      const years = hp.year - first;
+      const series = Array.isArray(covid.yearlyPapers) ? covid.yearlyPapers : [];
+      const idx = series.findIndex((v) => Number.isFinite(v) && v > hp.value);
+      if (years > 0 && idx >= 0) {
+        const passYear = (covid.yearStart ?? first) + idx;
+        caps.peak.lines.push(
+          `${hiv.label} took ${years} years to reach ${fmtFull(hp.value)} papers a year. ${covid.label} passed that in ${passYear}.`
+        );
+      }
+    }
     caps.cooling = {
       lines: [`The surge cools: ${fmtFull(valueAt(covid, last))} papers in ${last}.`],
     };

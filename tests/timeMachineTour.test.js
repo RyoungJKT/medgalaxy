@@ -569,6 +569,21 @@ describe('buildTourCaptions', () => {
     expect(caps.peak.data).toBe('141,953 COVID-19 papers in 2021 alone.');
   });
 
+  it('says the spine once on the peak card, in the file own numbers', () => {
+    const pk = Math.max(...hiv.yearlyPapers);
+    const pkYear = hiv.yearStart + hiv.yearlyPapers.indexOf(pk);
+    const years = pkYear - hiv.yearStart;
+    const passYear = covid.yearStart + covid.yearlyPapers.findIndex((v) => v > pk);
+    expect(years).toBe(24);
+    expect(passYear).toBe(2020);
+    expect(caps.peak.lines[1]).toBe(`HIV/AIDS took ${years} years to reach ${pk.toLocaleString('en-US')} papers a year. COVID-19 passed that in ${passYear}.`);
+  });
+  it('drops the spine line when no year of covid exceeds the HIV peak', () => {
+    const noCovid = diseases.map((d) => d.id === 'covid-19' ? { ...d, yearlyPapers: d.yearlyPapers.map(() => 1) } : d);
+    const c2 = buildTourCaptions(noCovid, idMap, buildTimeMachineData(noCovid));
+    expect(c2.peak.lines).toHaveLength(1);
+  });
+
   it('derives the cooling line from the last year in the file', () => {
     expect(caps.cooling.lines[0]).toBe('The surge cools: 59,650 papers in 2024.');
   });
