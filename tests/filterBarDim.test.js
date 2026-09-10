@@ -38,6 +38,20 @@ describe('FilterBar neglect-mode dim (Task 3 finding: animation outranks dim opa
     expect(html).toContain('fadeIn');
   });
 
+  it('starts at opacity 0 outside a story, so fadeIn has something to animate', () => {
+    // Round 2 review finding: `...dim` used to be spread unconditionally
+    // after the literal `opacity: 0`, so the rendered inline opacity was
+    // always `dim.opacity` (1 outside a story) and never the mount-time 0.
+    // The fadeIn keyframe only defines `to{opacity:1}`; with no explicit
+    // `from`, its implicit 0% keyframe takes the non-animated cascaded
+    // opacity as its underlying value, which was already 1, so the entrance
+    // animation had nothing to animate. The literal opacity:0 must survive
+    // to the rendered markup when no story is active.
+    const html = renderWith({ storyActive: false });
+    expect(html).toMatch(/opacity:0[^.]/);
+    expect(html).not.toMatch(/opacity:1/);
+  });
+
   it('does not leave a still-attached opacity-owning animation once a story is active', () => {
     const html = renderWith({ storyActive: true });
     // The fadeIn keyframe only ever sets `to { opacity: 1 }`. As long as

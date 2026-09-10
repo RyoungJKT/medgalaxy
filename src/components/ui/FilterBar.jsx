@@ -29,7 +29,13 @@ export default function FilterBar() {
         // finding). Naming no animation at all while a story is active lets
         // dim be the sole ongoing opacity authority.
         opacity: 0, animation: storyActive ? 'none' : 'fadeIn 0.4s ease forwards',
-        ...dim,
+        // dim is only spread in while a story is active. Spreading it
+        // unconditionally used to overwrite the literal opacity:0 above with
+        // dim.opacity (1 outside a story), leaving the fadeIn keyframe
+        // (`to{opacity:1}`) nothing to animate from, since its implicit 0%
+        // keyframe takes the element's own non-animated cascaded opacity as
+        // its underlying value (Task 3 round 2 review finding).
+        ...(storyActive ? { opacity: 0.3, transition: dim.transition } : {}),
       }}>
         <span style={{ color: '#ef4444', fontWeight: 600 }}>OVERLOOKED</span>
         <div style={{ width: 180, height: 8, borderRadius: 4, background: 'linear-gradient(90deg,#ef4444,#f59e0b,#eab308,#22c55e)' }} />
