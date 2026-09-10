@@ -48,6 +48,9 @@ export default function AdaptiveDpr() {
   const currentDpr = useRef(null);
   const governorRef = useRef(null);
   if (governorRef.current === null) governorRef.current = createRestGovernor({ rest: REST_DPR });
+  // The governed resting value as of last frame; the governor hands back a new
+  // one on the single frame it steps down.
+  const restRef = useRef(REST_DPR);
 
   useEffect(() => {
     const g = governorRef.current;
@@ -69,10 +72,11 @@ export default function AdaptiveDpr() {
 
     // What this frame cost, but only when it is evidence about the resting
     // buffer: nothing wanted the DPR low and the buffer was actually at the
-    // resting value. Every other frame is thrown away by the governor.
-    governor.sample(delta, !wantLow && currentDpr.current === governor.state().rest);
-
-    const restDpr = governor.state().rest;
+    // resting value. Every other frame is thrown away by the governor, and the
+    // frame reads the governor's state once, in publish below.
+    const stepped = governor.sample(delta, !wantLow && currentDpr.current === restRef.current);
+    if (stepped !== null) restRef.current = stepped;
+    const restDpr = restRef.current;
     const want = wantLow ? MOTION_DPR : (settledSec.current >= SETTLE_SEC ? restDpr : currentDpr.current ?? MOTION_DPR);
     if (want !== currentDpr.current) {
       if (currentDpr.current !== null) sceneRefs.dprState.switches++;
@@ -91,8 +95,9 @@ export default function AdaptiveDpr() {
 }
 
 // The governor's own state, mirrored onto the shared refs for the harness
-// (tools/verify-dpr.mjs prints it). Mutated in place rather than reassigned so
-// the frame loop does not hand the collector a fresh object every frame.
+// (tools/verify-dpr.mjs prints it). The published record is mutated in place
+// so the harness holds one stable object, and this is the frame's only read
+// of the governor's state.
 function publish(governor) {
   const g = governor.state();
   const out = sceneRefs.dprState.governor;

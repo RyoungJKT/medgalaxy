@@ -314,8 +314,9 @@ while the buffer is actually sitting at the resting value and nothing wants it
 low, ignores any frame longer than 250 ms as a hitch rather than evidence, and
 after three consecutive windows whose mean exceeds the 1000/55 ms budget steps
 the resting value down by 0.25 (1.5 to 1.25 to 1, floor 1). A window inside
-budget clears the strikes; a buffer switch throws the half-built window away,
-since the switch frame is a reallocation and not the resting cost; and the
+budget clears the strikes; a buffer switch throws the half-built window and the
+strikes away, since the switch frame is a reallocation and not the resting cost
+and the machine starts its case again at the new size; and the
 value never steps back up within a session, so nobody watches the buffer hunt.
 `sceneRefs.dprState.governor` publishes `{ rest, strikes, lastMeanMs }` and
 `tools/verify-dpr.mjs` prints it: on this machine every run reads rest 1.5 with
