@@ -258,6 +258,9 @@ export default function MethodologyPanel() {
             <div style={SP}>
               The {stats.yearSpan}-year publication history was backfilled once, extending each disease's record back to {stats.yearStart}. The weekly refresh rewrites a fixed 2015-2024 window, not a rolling one: earlier years are frozen history, and the window itself advances only when the pipeline is updated.
             </div>
+            <div style={SP}>
+              One series has been re-backfilled since, and it is on the record here rather than left to be discovered in the sparkline. PubMed changed its automatic term mapping for Colorectal Cancer between the snapshot of 2026-08-10 and the one of {meta.pubmedLastRefresh}, which left that disease's frozen 1990-2014 years answering a narrower query than its freshly refreshed 2015-2024 years, so the seam between the two windows read as a research surge that never happened. Its 1990-2014 years were re-queried under the current mapping on {meta.pubmedLastRefresh} and its whole record now describes one query again. No other series has been rewritten, and a re-backfill is only ever run to repair that kind of split, never to reshape a trend.
+            </div>
           </div>
 
           {/* 5. Size mapping */}

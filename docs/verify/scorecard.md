@@ -4,6 +4,19 @@
 
 ---
 
+## Post-certification data and copy record
+
+Certification is frozen at 9.26. This section exists so the frozen record does not go quietly stale: it lists what has moved in the data and the sourcing copy since round 6, in date order. Every count here is reproducible from `data/*.json` and is pinned by a test.
+
+**2026-09-11, rigor and copy pass (Task 5 of the 2026-09-10 plan).**
+
+- **Freshness.** The weekly PubMed job had only ever run on `main`, so this branch's footer stamp was a month stale. The job was run here: `pubmedLastRefresh` moved 2026-08-10 to 2026-09-11 and 152 of 153 rows moved on `papers`, `yearlyPapers` and `trend`. Mortality was not touched, and the audit manifest still matches every row.
+- **One series re-backfilled.** PubMed changed its automatic term mapping for Colorectal Cancer between the two snapshots, which left that disease's frozen 1990-2014 years answering a narrower query than its refreshed 2015-2024 years and made the seam between them read as a research surge that never happened. Its 1990-2014 years were re-queried under the current mapping the same day, so the whole series describes one query. It is the only series that has been rewritten, and the methodology panel's pipeline section says so on screen.
+- **The audit-flagged rows.** The round-4 line below reads "all 30 'no global estimate' rows render honestly". Those 30 rows are now 28 that render as "no global estimate" plus 2 (cystic fibrosis, Duchenne muscular dystrophy) that render as "registries, not a global estimate", because their source is a real count assembled from national patient registries rather than an absence of one. The methodology panel counts that bucket separately and its six source buckets still sum to 153.
+- **Claims removed or guarded.** The Funding Gap tile is gone from the sidebar (the label named no source; the field stays in the data and the panel says why it is no longer shown). The unsourced spotlight factoids are replaced by derived figures. The two ranking claims in the spotlight rotation, "#1 killer globally" and the most-researched superlative on cystic fibrosis, are now printed only while the data file itself ranks that disease first, which on the shipped data neither does. Pairs whose search terms contain one another are marked "term overlap" and are never ranked as a strongest link.
+
+---
+
 ## Round 4 record (superseded)
 
 **Verdict: SHIP at 9.06 / 10** (ship bar: 9.0). Round 4 final, 2026-08-12, branch `next/showcase`.

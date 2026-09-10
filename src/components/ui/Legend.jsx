@@ -1,7 +1,14 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import useStore from '../../store';
 import { isMob } from '../../utils/helpers';
+import { TM_EXIT } from '../../utils/motion';
 import meta from '../../../data/meta.json';
+
+// How long after the exit begins the rail is off the frame, taken from the
+// rail's own line in the exit script rather than restated: 100ms delay plus a
+// 240ms slide. It also covers the fast (240ms) and reduced (300ms) exits, both
+// of which run with no delay.
+const RAIL_GONE_MS = TM_EXIT.rail.at + TM_EXIT.rail.dur;
 
 export default function Legend() {
   const sizeMode = useStore(s => s.sizeMode);
@@ -9,7 +16,21 @@ export default function Legend() {
   const diseases = useStore(s => s.diseases);
   const displayEdges = useStore(s => s.displayEdges);
   const setMethodologyOpen = useStore(s => s.setMethodologyOpen);
+  const tmPhase = useStore(s => s.tmPhase);
+  const tmExitAt = useStore(s => s.tmExitAt);
   const mob = isMob();
+
+  // tmPhase goes idle on the exit's first frame while the rail is still
+  // sliding out, so the link waits out the rail's own leg of the script rather
+  // than popping back in underneath it.
+  const [railLeaving, setRailLeaving] = useState(false);
+  useEffect(() => {
+    if (!tmExitAt) return undefined;
+    setRailLeaving(true);
+    const t = setTimeout(() => setRailLeaving(false), RAIL_GONE_MS);
+    return () => clearTimeout(t);
+  }, [tmExitAt]);
+  const railUp = tmPhase !== 'idle' || railLeaving;
 
   return (
     <div style={{
@@ -40,8 +61,18 @@ export default function Legend() {
       {/* The Methodology panel is otherwise reachable only from the header's
           own button; desktop readers who scroll to the credit line for the
           sourcing get a route straight into it from here. The legend root is
-          pointerEvents: none, so the span re-enables it for itself. */}
-      {!mob && (
+          pointerEvents: none, so the span re-enables it for itself.
+          Gated on the rail being down for the same reason the counts span is
+          scoped out of mobile: this row does not wrap, so an eleventh item plus
+          its 16px gap makes the credit span wrap its own text earlier and takes
+          the row 43px to 57px at 768-820px, 8px into the gutter the TimeRail's
+          bottom offset is tuned against. While the rail owns the bottom of the
+          frame the legend stays the height the rail was tuned against; the
+          panel is still one click away in the header the whole time. The rail's
+          store phase is the gate rather than a width read because this
+          component has no resize listener, so a width would be stale the moment
+          the window changed. */}
+      {!mob && !railUp && (
         <span
           onClick={() => setMethodologyOpen(true)}
           style={{ pointerEvents: 'auto', cursor: 'pointer', color: '#94a3b8', textDecoration: 'underline', textUnderlineOffset: 2 }}

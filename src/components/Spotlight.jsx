@@ -12,17 +12,31 @@ function cap(s) {
 // Every numeral is derived at render time from live disease data (papers,
 // mortality, trend) so a weekly PubMed refresh can never leave a stale
 // figure baked into a caption string.
-function buildSpotlightList(idMap, diseases) {
+export function buildSpotlightList(idMap, diseases) {
   const find = (id) => idMap[id];
   const d = (id) => diseases[idMap[id]];
-  // "#1 killer globally" is a ranking claim, so it is only printed while the
-  // file itself ranks heart disease first. On the shipped data the largest
-  // mortality figure belongs to another row, so the clause stands down and a
-  // derived count takes its place.
+  // Two clauses in this list are ranking claims rather than descriptions, so
+  // each is printed only while the file itself ranks that disease first, and a
+  // derived count stands in when it does not.
+  // "#1 killer globally": on the shipped data the largest mortality figure
+  // belongs to another row, so the clause stands down.
   const topKiller = diseases.reduce((a, b) => (b.mortality > a.mortality ? b : a));
   const heartClause = topKiller.id === 'heart-disease'
     ? '#1 killer globally'
     : `${fmtFull(d('heart-disease').papers)} papers`;
+  // Cystic fibrosis used to close with "Most researched per capita", a
+  // superlative with no per-capita column behind it and the wrong answer to the
+  // ranking it was nearest to: the same file puts leprosy, anorexia nervosa and
+  // West Nile virus above it on papers per death, and the Explode overlay's
+  // "Most papers per death" column ranks leprosy first two clicks away. Checked
+  // against the file the same way the killer clause is, over the rows that have
+  // a deaths figure to divide by.
+  const topPpd = diseases
+    .filter((x) => x.mortality > 0)
+    .reduce((a, b) => (ppd(b) > ppd(a) ? b : a));
+  const cfClause = topPpd.id === 'cystic-fibrosis'
+    ? 'Most papers per death of any disease here'
+    : `${fmtFull(d('cystic-fibrosis').papers)} papers`;
   const list = [
     // Most researched
     { id: find('breast-cancer'), caption: `Breast Cancer · ${fmtFull(d('breast-cancer').papers)} papers · Most researched cancer` },
@@ -42,7 +56,7 @@ function buildSpotlightList(idMap, diseases) {
     { id: find('sickle-cell-disease'), caption: `Sickle Cell · ${fmtWord(d('sickle-cell-disease').mortality)} deaths/yr · Most common genetic disease in Africa` },
     { id: find('hepatitis-b'), caption: `Hepatitis B · ${fmtWord(d('hepatitis-b').mortality)} deaths/yr · ${ratioStr(deathsPerPaper(d('hepatitis-b')))} deaths for every paper` },
     // Most researched per death
-    { id: find('cystic-fibrosis'), caption: `Cystic Fibrosis · ${ratioStr(ppd(d('cystic-fibrosis')))} papers per death · Most researched per capita` },
+    { id: find('cystic-fibrosis'), caption: `Cystic Fibrosis · ${ratioStr(ppd(d('cystic-fibrosis')))} papers per death · ${cfClause}` },
     { id: find('ebola'), caption: `Ebola · ${ratioStr(ppd(d('ebola')))} papers per death · ${fmtFull(d('ebola').papers)} papers` },
     { id: find('west-nile-virus'), caption: `West Nile Virus · ${ratioStr(ppd(d('west-nile-virus')))} papers per death · Heavily studied, rarely fatal` },
     // Trending
