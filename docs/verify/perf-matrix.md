@@ -361,3 +361,74 @@ deviation 2 originally worked around. Both were reverted immediately after.
 Headed, with `--fps` (same viewport and machine as section 1b): all three
 rows held the 120 Hz ceiling again (116-120 fps), unchanged from 1b within
 the sampling resolution.
+
+## 1d. Drag/onEnd assertion fix round (Task 1 review, 2026-09-10)
+
+Review found the drag assertion added in 1c could not fail for the reason it
+claimed. It read `cameraOwner` immediately after `page.mouse.up()` with no
+wait and asserted `'user'`, but that reads `'user'` whether `onEnd` fires or
+not: with `onEnd` wired, `drag.quiet` is `0` (inside the `<30` tail); with
+`onEnd` missing, `drag.active` never clears, so it also reads `'user'`. The
+branch the assertion named in its own log line, the `quiet<30` tail, was
+never the thing distinguishing pass from fail.
+
+Fix, entirely inside `tools/verify-dpr.mjs`: added a wait comfortably under
+30 frames (100 ms) before the `rightAfterEnd` read, so it samples the tail
+rather than the pre-mouseup frame, and added a new read after the existing
+1000 ms wait (which already existed in 1c but asserted nothing) that fails
+unless `cameraOwner` has released to `'ambient'`. A broken or missing `onEnd`
+leaves `drag.active` stuck `true` forever, so `cameraOwner` never releases
+and only this read catches it.
+
+RED, confirming the new assertion actually catches a broken `onEnd` (the
+prior assertion could not): temporarily removed `onEnd={onEnd}` from
+`CameraRig.jsx`'s `<OrbitControls>` and reran.
+
+```
+$ node tools/verify-dpr.mjs
+home rest: {"buffer":[2160,1350],"dpr":1.5,"restDpr":1.5,"switches":1,"owner":"ambient"}
+drag ownership: during=user right-after-onEnd=user
+drag ownership after settle: user
+bokeh 0.00 after 2546 ms
+DPR back to rest 4012 ms after deselect (fly back + settle)
+FAIL
+  cameraOwner never released to 'ambient' after the drag ended (was 'user'); onEnd may not be clearing drag.active
+  DOF never racked in (bokeh 0.00)
+  DPR never returned to rest after deselect (4000 ms budget)
+```
+
+(The DOF and deselect-settle failures above are downstream of the same
+missing `onEnd`: with `drag.active` stuck `true`, `cameraOwner` never leaves
+`'user'`, so the depth of field stays suppressed and the DPR buffer never
+settles. That is expected collateral of the injected fault, not a separate
+bug.)
+
+`CameraRig.jsx` was reverted immediately after (`git diff --stat` confirmed
+no net change to that file). GREEN, the shipped state:
+
+```
+$ node tools/verify-dpr.mjs
+home rest: {"buffer":[2160,1350],"dpr":1.5,"restDpr":1.5,"switches":1,"owner":"ambient"}
+drag ownership: during=user right-after-onEnd=user
+drag ownership after settle: ambient
+bokeh 2.59 after 1544 ms
+DPR back to rest 0 ms after deselect (fly back + settle)
+PASS
+```
+
+```
+$ node tools/verify-dpr.mjs --headed --fps
+...
+| HIGH | 1440x900 @2x | At rest, DPR 1.5, breathing + autoRotate | 120 |
+| HIGH | 1440x900 @2x | Beat 2 (the morph), DPR 1 | 120 |
+| HIGH | 1440x900 @2x | Time Machine leg, DPR 1 | 120 |
+PASS
+```
+
+```
+$ npx vitest run
+ Test Files  18 passed (18)
+      Tests  333 passed (333)
+```
+
+333/333, unchanged.

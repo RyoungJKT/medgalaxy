@@ -6,8 +6,12 @@
 //      within 1 s
 //   3. the buffer switches DPR at most twice across the whole opening + tour
 //   4. a real drag reads cameraOwner 'user' throughout, including the
-//      drag.quiet<30 tail right after onEnd (fix round, 2026-09-10 review:
-//      the onEnd/user-ownership branch this task adds was never exercised)
+//      drag.quiet<30 tail right after onEnd, AND releases back to 'ambient'
+//      once the tail clears (fix round, 2026-09-10 review: the prior version
+//      of this check read cameraOwner immediately after mouse.up() with no
+//      wait, so it passed identically whether onEnd fired or not; a broken
+//      onEnd leaves drag.active stuck true forever, which only the release
+//      check below can catch)
 //   5. after a selection is cleared, the DPR buffer is back at rest within a
 //      short, bounded time (fix round: pins that the settle window stays
 //      short on this path, not the 2 s flat value the first pass shipped)
@@ -61,11 +65,20 @@ await page.mouse.move(780, 480, { steps: 8 });
 await wait(50); // let at least one frame pick up drag.active before reading it
 const duringDrag = await page.evaluate(() => window.__scene.cameraOwner);
 await page.mouse.up();
+await wait(100); // comfortably under 30 frames: samples the quiet<30 tail, not the pre-mouseup frame
 const rightAfterEnd = await page.evaluate(() => window.__scene.cameraOwner);
 console.log(`drag ownership: during=${duringDrag} right-after-onEnd=${rightAfterEnd}`);
 if (duringDrag !== 'user') fail.push(`cameraOwner during a drag was '${duringDrag}', not 'user'`);
 if (rightAfterEnd !== 'user') fail.push(`cameraOwner right after onEnd was '${rightAfterEnd}', not 'user' (the drag.quiet<30 tail)`);
 await wait(1000); // clears drag.quiet<30 and the short settle, back to ambient/rest
+// The assertion that actually exercises onEnd: with onEnd wired, drag.active
+// drops on mouse.up() and quiet counts past 30 during this wait, so ownership
+// releases to 'ambient'. If onEnd were missing or broken, drag.active would
+// stay true forever and this would still read 'user' (2026-09-10 review,
+// Important finding).
+const afterDragSettle = await page.evaluate(() => window.__scene.cameraOwner);
+console.log(`drag ownership after settle: ${afterDragSettle}`);
+if (afterDragSettle !== 'ambient') fail.push(`cameraOwner never released to 'ambient' after the drag ended (was '${afterDragSettle}'); onEnd may not be clearing drag.active`);
 
 // A plain click on a node, no drag first.
 await page.evaluate(() => {
