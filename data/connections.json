@@ -12,7 +12,7 @@
   {
     "source": "breast-cancer",
     "target": "colon-cancer",
-    "sharedPapers": 19931
+    "sharedPapers": 28584
   },
   {
     "source": "breast-cancer",
@@ -82,7 +82,7 @@
   {
     "source": "colon-cancer",
     "target": "lung-cancer",
-    "sharedPapers": 17890
+    "sharedPapers": 26760
   },
   {
     "source": "lung-cancer",
@@ -142,27 +142,27 @@
   {
     "source": "colon-cancer",
     "target": "stomach-cancer",
-    "sharedPapers": 10006
+    "sharedPapers": 11735
   },
   {
     "source": "colon-cancer",
     "target": "liver-cancer",
-    "sharedPapers": 19021
+    "sharedPapers": 39007
   },
   {
     "source": "colon-cancer",
     "target": "pancreatic-cancer",
-    "sharedPapers": 6353
+    "sharedPapers": 11708
   },
   {
     "source": "colon-cancer",
     "target": "esophageal-cancer",
-    "sharedPapers": 3200
+    "sharedPapers": 5280
   },
   {
     "source": "colon-cancer",
     "target": "prostate-cancer",
-    "sharedPapers": 8437
+    "sharedPapers": 12386
   },
   {
     "source": "leukemia",
@@ -212,7 +212,7 @@
   {
     "source": "colon-cancer",
     "target": "ovarian-cancer",
-    "sharedPapers": 5686
+    "sharedPapers": 9077
   },
   {
     "source": "cervical-cancer",
@@ -257,7 +257,7 @@
   {
     "source": "colon-cancer",
     "target": "endometrial-cancer",
-    "sharedPapers": 1692
+    "sharedPapers": 3635
   },
   {
     "source": "kidney-cancer",
@@ -1867,7 +1867,7 @@
   {
     "source": "colon-cancer",
     "target": "obesity",
-    "sharedPapers": 2437
+    "sharedPapers": 4939
   },
   {
     "source": "endometrial-cancer",
@@ -2212,12 +2212,12 @@
   {
     "source": "colon-cancer",
     "target": "crohns-disease",
-    "sharedPapers": 2551
+    "sharedPapers": 3614
   },
   {
     "source": "colon-cancer",
     "target": "ulcerative-colitis",
-    "sharedPapers": 5012
+    "sharedPapers": 6885
   },
   {
     "source": "epilepsy",
@@ -2267,7 +2267,7 @@
   {
     "source": "colon-cancer",
     "target": "type-2-diabetes",
-    "sharedPapers": 656
+    "sharedPapers": 1330
   },
   {
     "source": "breast-cancer",

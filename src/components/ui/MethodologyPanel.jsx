@@ -10,6 +10,11 @@ import {
 } from '../../utils/timeMachineData';
 import meta from '../../../data/meta.json';
 
+// The one disease whose PubMed term mapping changed under this edition, named
+// once so the pipeline section's pair count is counted from the live edges
+// rather than written into the sentence.
+const REMAPPED_ID = 'colon-cancer';
+
 const SH = { fontSize: 11, color: '#3399ff', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 6 };
 const SP = { color: '#94a3b8', fontSize: 13, lineHeight: 1.6, marginBottom: 10 };
 
@@ -112,6 +117,12 @@ export default function MethodologyPanel() {
       // Their own bucket: a registry count is a real figure, so it belongs
       // neither with the global estimates nor with the rows nobody publishes.
       registryCount: diseases.filter(d => isRegistryFigure(d.mortalitySource)).length,
+      // How many pairs were re-queried alongside the one re-backfilled series
+      // (the pipeline paragraph names this). Counted from the edges on screen,
+      // so the sentence cannot outlive the connection file it describes.
+      remappedPairCount: displayEdges.filter(
+        e => e.source === REMAPPED_ID || e.target === REMAPPED_ID
+      ).length,
     };
   }, [diseases, displayEdges]);
 
@@ -253,13 +264,13 @@ export default function MethodologyPanel() {
           <div style={{ marginBottom: 20 }}>
             <div style={SH}>The pipeline</div>
             <div style={SP}>
-              A GitHub Action re-runs the PubMed query above every Monday at 06:00 UTC (.github/workflows/refresh-pubmed.yml, calling scripts/refresh_pubmed.py). It rewrites exactly three fields per disease: total papers, the year-by-year counts, and the trend percentage. It never touches mortality, description, or category; those stay fixed until someone updates them by hand from the sources named above. The data file also carries an authored funding-gap label per disease, which is no longer displayed anywhere in the visualization because it names no source. The connection weights are refreshed by their own script (scripts/regenerate_connections.py), run on demand rather than weekly, because it is one query per pair; the weekly job re-queries just the pairs a fresh total leaves behind, so a shared-paper count always describes the same PubMed snapshot as the totals beside it.
+              A GitHub Action re-runs the PubMed query above every Monday at 06:00 UTC (.github/workflows/refresh-pubmed.yml, calling scripts/refresh_pubmed.py). It rewrites exactly three fields per disease: total papers, the year-by-year counts, and the trend percentage. It never touches mortality, description, or category; those stay fixed until someone updates them by hand from the sources named above. The data file also carries an authored funding-gap label per disease, which is no longer displayed anywhere in the visualization because it names no source. The connection weights are refreshed by their own script (scripts/regenerate_connections.py), run on demand rather than weekly, because it is one query per pair. The weekly job re-queries two kinds of pair a fresh total leaves behind: any pair whose count no longer fits inside its endpoints' totals, and any pair whose endpoint total moved by more than a quarter in one week, which is the fingerprint of a changed search-term mapping rather than a week of new indexing. A pair count measured in an earlier week still trails the totals beside it by that week's indexing; what those two checks catch is a pair count left describing a different query from the totals it sits between.
             </div>
             <div style={SP}>
               The {stats.yearSpan}-year publication history was backfilled once, extending each disease's record back to {stats.yearStart}. The weekly refresh rewrites a fixed 2015-2024 window, not a rolling one: earlier years are frozen history, and the window itself advances only when the pipeline is updated.
             </div>
             <div style={SP}>
-              One series has been re-backfilled since, and it is on the record here rather than left to be discovered in the sparkline. PubMed changed its automatic term mapping for Colorectal Cancer between the snapshot of 2026-08-10 and the one of {meta.pubmedLastRefresh}, which left that disease's frozen 1990-2014 years answering a narrower query than its freshly refreshed 2015-2024 years, so the seam between the two windows read as a research surge that never happened. Its 1990-2014 years were re-queried under the current mapping on {meta.pubmedLastRefresh} and its whole record now describes one query again. No other series has been rewritten, and a re-backfill is only ever run to repair that kind of split, never to reshape a trend.
+              One series has been re-backfilled since, and it is on the record here rather than left to be discovered in the sparkline. PubMed changed its automatic term mapping for Colorectal Cancer between the snapshot of 2026-08-10 and the one of {meta.pubmedLastRefresh}, which left that disease's frozen 1990-2014 years answering a narrower query than its freshly refreshed 2015-2024 years, so the seam between the two windows read as a research surge that never happened. Its 1990-2014 years were re-queried under the current mapping on {meta.pubmedLastRefresh}, and so were the {stats.remappedPairCount} connection pairs it appears in, whose shared-paper counts had been measured against the narrower term: its total, its year-by-year series and its pair counts now all describe one mapping. No other series has been rewritten, and a re-backfill is only ever run to repair that kind of split, never to reshape a trend.
             </div>
           </div>
 

@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 """
 Refresh PubMed publication data for all diseases in diseases.json.
-Updates: papers (total count), yearlyPapers (last 10 years), trend (% change).
-Does NOT touch: mortality, description, category, fundingGap, connections.
+Updates: papers (total count), yearlyPapers (last 10 years), trend (% change),
+and, through reconcile_connections below, any sharedPapers count those fresh
+totals leave describing a different query.
+Does NOT touch: mortality, description, category, fundingGap, the curated pair
+list itself.
 """
 
 import datetime
@@ -28,6 +31,18 @@ with open(SEARCH_OVERRIDES_PATH, 'r') as _f:
 
 YEARS = list(range(2015, 2025))  # 10 years of data
 RATE_LIMIT_DELAY = 0.35  # seconds between requests
+
+# A week of new indexing moves a disease's all-time total by a fraction of a
+# percent. A move this large is the fingerprint of something else: PubMed
+# changing the automatic term mapping behind that search term, which makes the
+# new total the answer to a different question from the old one. Colorectal
+# Cancer went from 180,574 to 351,932 between the 2026-08-10 and 2026-09-11
+# snapshots that way. The pair counts stored beside such a total were measured
+# against the old mapping, and the sharedPapers <= min(papers) invariant below
+# can never catch that, because a total that GREW only makes the invariant
+# easier to satisfy. So a jump re-queries that disease's pairs on its own.
+MAPPING_JUMP = 0.25    # fractional move of the total in a single weekly run
+MAPPING_JUMP_MIN = 200  # papers, so a tiny row's ordinary churn is not a jump
 
 
 def pubmed_count(term, min_date=None, max_date=None):
@@ -99,22 +114,43 @@ def refresh_disease(disease):
     return True
 
 
-def reconcile_connections(diseases):
+def is_mapping_jump(old, new):
+    """True when a total moved further in one run than new indexing explains."""
+    if not old or old <= 0 or new is None:
+        return False
+    delta = abs(new - old)
+    return delta >= MAPPING_JUMP_MIN and delta / old >= MAPPING_JUMP
+
+
+def reconcile_connections(diseases, jumped=None):
     """
     Keep connections.json consistent with the totals this refresh just wrote.
 
-    A co-occurrence count and its two endpoint totals only satisfy
-    sharedPapers <= min(endpoint papers) when they describe the same PubMed
-    snapshot. Totals move on every weekly refresh while pair counts were
-    measured once (scripts/regenerate_connections.py), so a pair measured
-    after a total was can exceed it by a few papers. Rather than clamping
-    (which would falsify the stored count's stated query), re-run the same
-    "(termA) AND (termB)" all-time query for every violating pair, so the
-    pair count and the fresh totals describe the same snapshot again. If a
-    re-queried pair still exceeds an endpoint's total (that endpoint's own
-    refresh failed this run, or its total predates this reconciliation), the
-    endpoints themselves are re-fetched. tests/dataInvariants.test.js holds
-    the shipped data to the invariant.
+    Two things can leave a pair count describing a different PubMed query from
+    the totals printed beside it, and each has its own trigger here.
+
+    1. The count no longer fits inside its endpoints' totals. A co-occurrence
+       count and its two endpoint totals only satisfy sharedPapers <=
+       min(endpoint papers) when they describe the same snapshot. Totals move
+       on every weekly refresh while pair counts were measured once
+       (scripts/regenerate_connections.py), so a pair measured after a total
+       was can exceed it by a few papers.
+    2. An endpoint's total jumped (see MAPPING_JUMP): PubMed changed the term
+       mapping behind that search term, so the stored pair counts answer the
+       old mapping's query. Nothing about the invariant in 1 can see this when
+       the total grew, which is exactly how colorectal cancer's 13 pairs were
+       left behind by the 2026-09-11 refresh while the run reported the
+       connections consistent. `jumped` carries the ids main() measured.
+
+    Rather than clamping (which would falsify the stored count's stated query),
+    re-run the same "(termA) AND (termB)" all-time query for every pair either
+    trigger names, so the pair count and the fresh totals describe the same
+    snapshot again. If a re-queried pair still exceeds an endpoint's total
+    (that endpoint's own refresh failed this run, or its total predates this
+    reconciliation), the endpoints themselves are re-fetched.
+    tests/dataInvariants.test.js holds the shipped data to the invariant and
+    tests/pipelineDisclosure.test.js holds the methodology panel's sentence to
+    what this function does.
 
     Returns the number of problems left (0 on success): violations that
     survived the re-query, pairs whose re-query failed or returned zero, and
@@ -123,6 +159,7 @@ def reconcile_connections(diseases):
     with open(CONNECTIONS_PATH, 'r') as f:
         connections = json.load(f)
     by_id = {d['id']: d for d in diseases}
+    jumped = set(jumped or ())
 
     def violates(c):
         a, b = by_id.get(c['source']), by_id.get(c['target'])
@@ -130,12 +167,17 @@ def reconcile_connections(diseases):
             return False
         return c['sharedPapers'] > min(a['papers'], b['papers'])
 
-    stale = [c for c in connections if violates(c)]
+    def touches_jumped(c):
+        return c['source'] in jumped or c['target'] in jumped
+
+    stale = [c for c in connections if violates(c) or touches_jumped(c)]
     if not stale:
         print('Connections already consistent with the refreshed totals.')
         return 0
 
-    print(f'Re-querying {len(stale)} connection(s) whose sharedPapers exceed an endpoint total...')
+    if jumped:
+        print(f'Totals that moved more than {int(MAPPING_JUMP * 100)}% this run: {", ".join(sorted(jumped))}')
+    print(f'Re-querying {len(stale)} connection(s) left behind by the refreshed totals...')
     changed = False
     problems = 0
     requeried = {}
@@ -203,6 +245,7 @@ def main():
     total = len(diseases)
     updated = 0
     failed = 0
+    jumped = set()
 
     print(f'Refreshing PubMed data for {total} diseases...')
     print(f'Years: {YEARS[0]}-{YEARS[-1]}')
@@ -223,6 +266,10 @@ def main():
             delta_str = f'+{delta}' if delta >= 0 else str(delta)
             print(f'OK — {disease["papers"]:,} papers ({delta_str}), trend={disease["trend"]}% (was {old_trend}%)')
             updated += 1
+            if is_mapping_jump(old_papers, disease['papers']):
+                jumped.add(disease['id'])
+                print(f'  NOTE: total moved {delta_str} in one run, past the {int(MAPPING_JUMP * 100)}% '
+                      'mapping-change threshold; this row\'s pairs will be re-queried')
         else:
             print('FAILED — keeping existing data')
             failed += 1
@@ -235,7 +282,7 @@ def main():
 
     # Now that every total describes today's snapshot, bring any connection
     # measured against an older snapshot along with it.
-    leftover = reconcile_connections(diseases)
+    leftover = reconcile_connections(diseases, jumped)
 
     # Update meta.json's lastRefresh date alongside diseases.json
     if os.path.exists(META_PATH):
@@ -258,8 +305,18 @@ if __name__ == '__main__':
     # --reconcile-only: run just the connections reconciliation against the
     # totals already on disk (the weekly run does it automatically after the
     # totals refresh). For fixing a snapshot skew without a full refresh.
+    #
+    # --jumped id[,id...]: name diseases whose totals are known to have moved
+    # under a changed term mapping, so their pairs are re-queried even though
+    # they break no invariant. A full run measures this for itself; this flag
+    # is how a skew found after the run is repaired through the same code path
+    # instead of by hand.
     if '--reconcile-only' in sys.argv:
+        _jumped = set()
+        for _i, _a in enumerate(sys.argv):
+            if _a == '--jumped' and _i + 1 < len(sys.argv):
+                _jumped = {s for s in sys.argv[_i + 1].split(',') if s}
         with open(DATA_PATH, 'r') as f:
             _diseases = json.load(f)
-        sys.exit(1 if reconcile_connections(_diseases) > 0 else 0)
+        sys.exit(1 if reconcile_connections(_diseases, _jumped) > 0 else 0)
     main()
