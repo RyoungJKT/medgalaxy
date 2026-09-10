@@ -51,7 +51,7 @@ export default function VelocityOverlay() {
         }}>&#x2715; Close</button>
         <div style={{ fontSize: mob ? 14 : 18, fontWeight: 600, color: '#e2e8f0', marginBottom: 4 }}>Research Trends</div>
         <div style={{ fontSize: mob ? 9 : 12, color: '#64748b', marginBottom: mob ? 16 : 24 }}>
-          Publication growth rate over the last decade — which diseases are surging and which are fading
+          Publication growth rate over the last decade: which diseases are surging and which are fading
         </div>
         <div style={{ display: 'flex', flexDirection: mob ? 'column' : 'row', gap: mob ? 20 : 36 }}>
           <div style={{ flex: 1 }}>

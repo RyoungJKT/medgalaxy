@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { fmtFull, fmtWord, ppd, deathsPerPaper, trendLabel } from '../src/utils/captions';
+import { fmtFull, fmtWord, ppd, deathsPerPaper, trendLabel, ratioStr } from '../src/utils/captions';
 
 describe('fmtFull', () => {
   it('comma-separates full numbers', () => {
@@ -65,4 +65,12 @@ describe('trendLabel', () => {
   it('labels zero trend as steady', () => {
     expect(trendLabel(0)).toBe('research steady');
   });
+});
+
+describe('ratioStr (one rounding rule for every surface)', () => {
+  it('shows whole numbers from 10 up', () => { expect(ratioStr(417.4)).toBe('417'); });
+  it('shows one decimal between 1 and 10', () => { expect(ratioStr(6.63)).toBe('6.6'); expect(ratioStr(8.31)).toBe('8.3'); });
+  it('shows two decimals between 0.01 and 1', () => { expect(ratioStr(0.421)).toBe('0.42'); });
+  it('shows three decimals below 0.01', () => { expect(ratioStr(0.0042)).toBe('0.004'); });
+  it('is N/A for null', () => { expect(ratioStr(null)).toBe('N/A'); });
 });

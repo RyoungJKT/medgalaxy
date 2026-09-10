@@ -1,12 +1,6 @@
 import { useEffect, useRef } from 'react';
 import useStore from '../store';
-import { fmtFull, fmtWord, ppd, deathsPerPaper, trendLabel } from '../utils/captions';
-
-// Ratio display rule: 2 decimals below 1, whole numbers at/above 1.
-function ratioStr(val) {
-  if (val == null) return 'N/A';
-  return val < 1 ? val.toFixed(2) : String(Math.round(val));
-}
+import { fmtFull, fmtWord, ppd, deathsPerPaper, trendLabel, ratioStr } from '../utils/captions';
 
 // Capitalize the leading word of a trendLabel() fragment when it opens a
 // caption clause (trendLabel itself returns lowercase, sentence-case text).
@@ -21,16 +15,24 @@ function cap(s) {
 function buildSpotlightList(idMap, diseases) {
   const find = (id) => idMap[id];
   const d = (id) => diseases[idMap[id]];
+  // "#1 killer globally" is a ranking claim, so it is only printed while the
+  // file itself ranks heart disease first. On the shipped data the largest
+  // mortality figure belongs to another row, so the clause stands down and a
+  // derived count takes its place.
+  const topKiller = diseases.reduce((a, b) => (b.mortality > a.mortality ? b : a));
+  const heartClause = topKiller.id === 'heart-disease'
+    ? '#1 killer globally'
+    : `${fmtFull(d('heart-disease').papers)} papers`;
   const list = [
     // Most researched
     { id: find('breast-cancer'), caption: `Breast Cancer · ${fmtFull(d('breast-cancer').papers)} papers · Most researched cancer` },
-    { id: find('heart-disease'), caption: `Heart Disease · ${fmtWord(d('heart-disease').mortality)} deaths/yr · #1 killer globally` },
+    { id: find('heart-disease'), caption: `Heart Disease · ${fmtWord(d('heart-disease').mortality)} deaths/yr · ${heartClause}` },
     { id: find('type-2-diabetes'), caption: `Type 2 Diabetes · ${fmtFull(d('type-2-diabetes').papers)} papers · ${fmtWord(d('type-2-diabetes').mortality)} deaths/yr` },
     { id: find('hiv-aids'), caption: `HIV/AIDS · ${fmtFull(d('hiv-aids').papers)} papers · Reshaped modern medicine` },
     { id: find('lung-cancer'), caption: `Lung Cancer · ${fmtWord(d('lung-cancer').mortality)} deaths/yr · Deadliest cancer` },
     // Most deadly
     { id: find('sepsis'), caption: `Sepsis · ${fmtWord(d('sepsis').mortality)} deaths/yr but only ${fmtFull(d('sepsis').papers)} papers · ${ratioStr(deathsPerPaper(d('sepsis')))} deaths per paper` },
-    { id: find('stroke'), caption: `Stroke · ${fmtWord(d('stroke').mortality)} deaths/yr · Every 3 seconds someone has one` },
+    { id: find('stroke'), caption: `Stroke · ${fmtWord(d('stroke').mortality)} deaths/yr · ${ratioStr(deathsPerPaper(d('stroke')))} deaths per paper` },
     { id: find('copd'), caption: `COPD · ${fmtWord(d('copd').mortality)} deaths/yr · ${ratioStr(deathsPerPaper(d('copd')))} deaths per paper published` },
     { id: find('pneumonia'), caption: `Pneumonia · ${fmtWord(d('pneumonia').mortality)} deaths/yr · Leading killer of children` },
     { id: find('alzheimers-disease'), caption: `Alzheimer's · ${fmtWord(d('alzheimers-disease').mortality)} deaths/yr · ${cap(trendLabel(d('alzheimers-disease').trend))}` },
@@ -41,20 +43,20 @@ function buildSpotlightList(idMap, diseases) {
     { id: find('hepatitis-b'), caption: `Hepatitis B · ${fmtWord(d('hepatitis-b').mortality)} deaths/yr · ${ratioStr(deathsPerPaper(d('hepatitis-b')))} deaths for every paper` },
     // Most researched per death
     { id: find('cystic-fibrosis'), caption: `Cystic Fibrosis · ${ratioStr(ppd(d('cystic-fibrosis')))} papers per death · Most researched per capita` },
-    { id: find('ebola'), caption: `Ebola · ${ratioStr(ppd(d('ebola')))} papers per death · Fear drives funding` },
+    { id: find('ebola'), caption: `Ebola · ${ratioStr(ppd(d('ebola')))} papers per death · ${fmtFull(d('ebola').papers)} papers` },
     { id: find('west-nile-virus'), caption: `West Nile Virus · ${ratioStr(ppd(d('west-nile-virus')))} papers per death · Heavily studied, rarely fatal` },
     // Trending
     { id: find('nafld'), caption: `Fatty Liver Disease · ${cap(trendLabel(d('nafld').trend))} · Fastest growing liver disease` },
     { id: find('myocarditis'), caption: `Myocarditis · ${cap(trendLabel(d('myocarditis').trend))} · Heart inflammation gaining attention` },
-    { id: find('dengue'), caption: `Dengue · ${cap(trendLabel(d('dengue').trend))} · Half the world at risk` },
+    { id: find('dengue'), caption: `Dengue · ${cap(trendLabel(d('dengue').trend))} · ${fmtFull(d('dengue').papers)} papers` },
     // Declining research
     { id: find('covid-19'), caption: `COVID-19 · ${fmtFull(d('covid-19').papers)} papers · ${cap(trendLabel(d('covid-19').trend))} when the pandemic began` },
     { id: find('rotavirus'), caption: `Rotavirus · ${fmtFull(d('rotavirus').mortality)} child deaths/yr · ${cap(trendLabel(d('rotavirus').trend))} despite mortality` },
     // Zero mortality, high impact
     { id: find('depression'), caption: `Depression · ${fmtFull(d('depression').papers)} papers · Zero mortality metric, massive burden` },
-    { id: find('obesity'), caption: `Obesity · ${fmtFull(d('obesity').papers)} papers · Affects 1 billion people worldwide` },
+    { id: find('obesity'), caption: `Obesity · ${fmtFull(d('obesity').papers)} papers · no global deaths figure; deaths are counted under the diseases it causes` },
     // Unique story
-    { id: find('malaria'), caption: `Malaria · ${fmtWord(d('malaria').mortality)} deaths/yr · 94% of deaths in Africa` },
+    { id: find('malaria'), caption: `Malaria · ${fmtWord(d('malaria').mortality)} deaths/yr · ${ratioStr(ppd(d('malaria')))} papers per death` },
   ].filter((s) => s.id !== undefined);
 
   // Shuffle

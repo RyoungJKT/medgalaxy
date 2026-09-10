@@ -201,13 +201,21 @@ describe('data invariants', () => {
     // The defect class the audit was run to kill: 30 rows cited "WHO GHE 2021"
     // for a cause line the GHE workbook does not contain. Their source strings
     // now say so, and the sidebar reads "no global estimate" off that wording.
+    // The two rows whose source says the figure is national registry data are
+    // the exception the sidebar draws: they name their provenance rather than
+    // claim an authority, so isNoGlobalEstimate is false for them by design.
     const flagged = Object.entries(audit).filter(([, m]) => m.action === 'flag').map(([id]) => id);
     expect(flagged.length).toBe(30);
     const byId = Object.fromEntries(diseases.map(d => [d.id, d]));
+    const registryRows = ['cystic-fibrosis', 'duchenne-muscular-dystrophy'];
     for (const id of flagged) {
       expect(byId[id].mortalitySource, id).not.toMatch(/^WHO Global Health Estimates/);
       expect(byId[id].mortalitySource, id).not.toMatch(/^IHME GBD/);
-      expect(isNoGlobalEstimate(byId[id].mortalitySource), id).toBe(true);
+      expect(isNoGlobalEstimate(byId[id].mortalitySource), id).toBe(!registryRows.includes(id));
+    }
+    // Nothing outside those two rows claims registry provenance.
+    for (const d of diseases) {
+      if (/registr/i.test(d.mortalitySource || '')) expect(registryRows, d.id).toContain(d.id);
     }
   });
   it('yearlyPapers is backfilled to 1990 for every disease', () => {

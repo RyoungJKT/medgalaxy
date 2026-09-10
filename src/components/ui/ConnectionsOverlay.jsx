@@ -91,12 +91,12 @@ export default function ConnectionsOverlay() {
         }}>&#x2715; Close</button>
         <div style={{ fontSize: mob ? 14 : 18, fontWeight: 600, color: '#e2e8f0', marginBottom: 4 }}>Connection Clusters</div>
         <div style={{ fontSize: mob ? 9 : 12, color: '#64748b', marginBottom: mob ? 16 : 24 }}>
-          Diseases that appear together in published medical research, suggesting shared biology, risk factors, or clinical overlap — revealing comorbidities, shared biology, and research overlap
+          Diseases that appear together in published medical research, suggesting shared biology, risk factors, or clinical overlap
         </div>
         <div style={{ display: 'flex', flexDirection: mob ? 'column' : 'row', gap: mob ? 20 : 36 }}>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 10, color: '#3399ff', fontWeight: 600, marginBottom: 4, textTransform: 'uppercase', letterSpacing: 1 }}>Hub Diseases</div>
-            <div style={{ fontSize: 8, color: '#475569', marginBottom: 12 }}>Most connected — tap to explore</div>
+            <div style={{ fontSize: 8, color: '#475569', marginBottom: 12 }}>Most connected. Tap to explore</div>
             {connData.hubs.map((d, i) => (
               <div
                 key={d.id}

@@ -6,6 +6,7 @@ import Sparkline from './Sparkline';
 import insights from '../../../data/disease-insights.json';
 import { pubmedTermFor } from '../../utils/pubmedTerms';
 import { deathsStatLabel } from '../../utils/mortalityLabel';
+import { ratioStr } from '../../utils/captions';
 import { DUR, EASE } from '../../utils/motion';
 
 // Select (DIRECTION section 4): "sidebar slides in 280ms expo.out with a
@@ -102,15 +103,14 @@ export default function Sidebar() {
   const trendSurged = Math.abs(t) >= 999;
   const ar = t > 0 ? '\u2191' : t < 0 ? '\u2193' : '\u2192';
   const tc = t > 0 ? '#22c55e' : t < 0 ? '#ef4444' : '#94a3b8';
-  const gc = { high: '#ef4444', medium: '#eab308', low: '#22c55e' };
-  const ppd = disease.mortality > 0 ? disease.papers / disease.mortality : null;
-  const ppdStr = ppd === null ? 'N/A' : ppd >= 10 ? String(Math.round(ppd)) : ppd >= 1 ? ppd.toFixed(1) : ppd >= 0.01 ? ppd.toFixed(2) : ppd.toFixed(3);
+  const ppdVal = disease.mortality > 0 ? disease.papers / disease.mortality : null;
+  const ppdStr = ratioStr(ppdVal);
 
   const conns = displayEdges
     .filter(e => e.si === idx || e.ti === idx)
     .map(e => {
       const oi = e.si === idx ? e.ti : e.si;
-      return { d: diseases[oi], sp: e.sharedPapers, oi };
+      return { d: diseases[oi], sp: e.sharedPapers, oi, termOverlap: e.termOverlap };
     })
     .sort((a, b) => b.sp - a.sp);
 
@@ -159,7 +159,8 @@ export default function Sidebar() {
           <SB l="Publications" v={fmt(disease.papers)} s={trendSurged ? <span style={{ color: '#22c55e' }}>new</span> : <span style={{ color: tc }}>{ar}{Math.abs(t)}%</span>} />
           <SB l="Connections" v={cc} />
           <SB span l={deathsLabel} v={disease.mortality > 0 ? fmt(disease.mortality) : 'N/A'} />
-          <SB l="Funding Gap" v={disease.fundingGap.toUpperCase()} vc={gc[disease.fundingGap]} />
+          {/* The authored funding-gap label is kept in the data file but no
+              longer shown: unlike every other tile here it names no source. */}
           <SB l="Papers/Death" v={ppdStr} />
         </div>
         {/* Sparkline */}
@@ -198,6 +199,11 @@ export default function Sidebar() {
                   <span style={{ width: 6, height: 6, borderRadius: '50%', background: cc2, flexShrink: 0 }} />
                   <span style={{ flex: 1, color: '#cbd5e1' }}>{cn.d.label}</span>
                   <span style={{ color: '#94a3b8', fontSize: 12 }}>{fmt(cn.sp)}</span>
+                  {/* One term contains the other, so this count is the smaller
+                      term's whole count rather than a measured overlap. It
+                      stays in the list because it is the honest result of the
+                      stated query, but the reader is told what it is. */}
+                  {cn.termOverlap && <span style={{ color: '#64748b', fontSize: 9 }}>term overlap</span>}
                 </div>
               );
             })}

@@ -204,11 +204,14 @@ describe('cinematic year-scaling (addendum 1 section 2.4)', () => {
     // ratio by shrinking both ends into a pair of specks.
     expect(r0).toBeGreaterThanOrEqual(4.00);
     expect(r1).toBeGreaterThanOrEqual(10.50);
-    // The measured table, for the record: 4.22 -> 11.10, 2.63x, travel 6.87.
-    expect(r0).toBeCloseTo(4.22, 2);
-    expect(r1).toBeCloseTo(11.10, 2);
+    // The measured table, for the record: 4.18 -> 11.09, 2.65x, travel 6.91.
+    // Re-measured after the 2026-09-11 refresh (was 4.22 -> 11.10, 2.63x): HIV's
+    // own series is frozen at both endpoints, so the shift is the shared radius
+    // curve moving under it, not HIV moving. See the mover-ring test below.
+    expect(r0).toBeCloseTo(4.18, 2);
+    expect(r1).toBeCloseTo(11.09, 2);
     // And the tour's own first HIV pause is already well along the climb.
-    expect(R(1996, hivIdx)).toBeCloseTo(7.34, 2);
+    expect(R(1996, hivIdx)).toBeCloseTo(7.27, 2);
   });
 
   // 2
@@ -220,9 +223,10 @@ describe('cinematic year-scaling (addendum 1 section 2.4)', () => {
     expect(row[0].i).toBe(covidIdx);
     expect(row[0].r / row[1].r).toBeGreaterThanOrEqual(1.09);
     expect(row[0].r - row[1].r).toBeGreaterThanOrEqual(1.80);
-    // Measured: 1.102x and 1.92 units clear of pneumonia. The ratio lead moved
-    // 1.111 -> 1.102 and the absolute lead 1.42 -> 1.92, which is the trade.
-    expect(row[0].r - row[1].r).toBeCloseTo(1.92, 2);
+    // Measured: 1.102x and 1.93 units clear of pneumonia. The ratio lead moved
+    // 1.111 -> 1.102 and the absolute lead 1.42 -> 1.92, which is the trade;
+    // the 2026-09-11 refresh took the absolute lead to 1.9267.
+    expect(row[0].r - row[1].r).toBeCloseTo(1.93, 2);
     expect(diseases[row[1].i].id).toBe('pneumonia');
 
     let bestDelta = { v: -Infinity };
@@ -253,10 +257,10 @@ describe('cinematic year-scaling (addendum 1 section 2.4)', () => {
       if (r > hi) hi = r;
     }
     expect((hi - lo) / MXY).toBeLessThanOrEqual(0.030);
-    // Measured 0.44 to 1.10: a span of 0.66, 2.5 percent of the ceiling, which
+    // Measured 0.44 to 1.09: a span of 0.65, 2.5 percent of the ceiling, which
     // is proportionally flatter than the 3.1 percent it shipped at.
     expect(lo).toBeCloseTo(0.44, 2);
-    expect(hi).toBeCloseTo(1.10, 2);
+    expect(hi).toBeCloseTo(1.09, 2);
   });
 
   // 4
@@ -310,24 +314,32 @@ describe('cinematic year-scaling (addendum 1 section 2.4)', () => {
     for (const s of perStep) total += s.deltas.filter((d) => d >= 0.15).length;
     const mean = total / perStep.length;
     expect(mean).toBeGreaterThanOrEqual(45);
-    expect(mean).toBeCloseTo(48.7, 1); // measured, against 33.8 shipped
+    expect(mean).toBeCloseTo(48.5, 1); // measured, against 33.8 shipped
   });
 
   // 8 (7 is the settle curve, in tests/motion.test.js)
   it('fires the mover ring on exactly the outbreak years the data selects', () => {
     expect(ACCENT_RING_DELTA).toBe(1.50);
     const fired = perStep.filter((s) => s.top >= ACCENT_RING_DELTA).map((s) => s.year);
-    // Nobody authored this list; the data did. Every single one of them lands
-    // on an outbreak or its aftermath: swine flu, Ebola, Zika, and COVID-19's
-    // rise and decay. Do not tune the threshold away from it.
-    expect(fired).toEqual([2009, 2010, 2014, 2016, 2020, 2021, 2023, 2024]);
-    // The addendum's ledger predicted a ninth, 2004 (obesity). It measures
-    // 1.498 against a 1.50 gate: the prediction was right about the year and
-    // 0.002 radius units wrong about the threshold. Pinned rather than tuned,
-    // so a future data refresh that moves it either way is visible here.
-    const y2004 = perStep.find((s) => s.year === 2004);
-    expect(y2004.top).toBeGreaterThan(1.49);
-    expect(y2004.top).toBeLessThan(ACCENT_RING_DELTA);
+    // Nobody authored this list; the data did, and the threshold is never tuned
+    // to reshape it. The 2026-09-11 refresh moved three years across the gate,
+    // which is exactly what this assertion exists to make visible:
+    //  - 2004 (obesity, 1.498 -> 1.582) crossed. The addendum's ledger had
+    //    predicted this year all along and was 0.002 radius units short.
+    //  - 2014 (Ebola, 1.51 -> 1.487) fell just under, and is pinned below.
+    //  - 2015 (colorectal cancer, 2.27) entered, and it is an artifact rather
+    //    than a year: PubMed's automatic term mapping for "Colorectal Cancer"
+    //    changed between snapshots (the all-time count went 180,574 to 351,932,
+    //    verified live), so the step from 2014's frozen backfill value to 2015's
+    //    freshly queried one measures a query change, not a publishing surge.
+    // Both of the last two also moved the shared radius curve under every other
+    // node, which is why the measured figures above shifted with them.
+    expect(fired).toEqual([2004, 2009, 2010, 2015, 2016, 2020, 2021, 2023, 2024]);
+    // Pinned just under the gate, the way 2004 used to be, so a refresh that
+    // moves Ebola's 2014 step back over it is visible here rather than silent.
+    const y2014 = perStep.find((s) => s.year === 2014);
+    expect(y2014.top).toBeGreaterThan(1.48);
+    expect(y2014.top).toBeLessThan(ACCENT_RING_DELTA);
   });
 
   it('meets the top-3 accent gate on every one of the 34 steps', () => {

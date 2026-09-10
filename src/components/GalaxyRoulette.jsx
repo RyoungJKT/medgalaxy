@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import useStore from '../store';
 import { TIER } from '../utils/tiers';
 import { nR, isMob } from '../utils/helpers';
-import { fmtFull, ppd } from '../utils/captions';
+import { fmtFull, ppd, ratioStr } from '../utils/captions';
 import { igniteWeights } from '../utils/igniteWeights';
 
 // ── Module-level scratch objects (zero per-frame allocations) ──
@@ -49,10 +49,7 @@ function buildCaption(idx, diseases) {
   if (d.papers) parts.push(`${fmtFull(d.papers)} papers`);
   if (d.mortality) parts.push(`${fmtFull(d.mortality)} deaths/yr`);
   const papersPerDeath = ppd(d);
-  if (papersPerDeath !== null) {
-    const val = papersPerDeath < 1 ? papersPerDeath.toFixed(2) : String(Math.round(papersPerDeath));
-    parts.push(`${val} papers per death`);
-  }
+  if (papersPerDeath !== null) parts.push(`${ratioStr(papersPerDeath)} papers per death`);
   return parts.join(' \u00b7 ');
 }
 

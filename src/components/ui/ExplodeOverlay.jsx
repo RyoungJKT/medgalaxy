@@ -16,7 +16,10 @@ export default function ExplodeOverlay() {
       .filter(d => d.mortality > 0)
       .map(d => ({ ...d, ppd: d.papers / d.mortality }));
     const sorted = [...withRatio].sort((a, b) => b.ppd - a.ppd);
-    return { highest: sorted.slice(0, 10), lowest: sorted.slice(-10).reverse() };
+    // counted: how many diseases the ranking is drawn from. The two column
+    // sub-captions say so rather than restating their own headings, and the
+    // number is derived here so it cannot drift from the list beneath it.
+    return { highest: sorted.slice(0, 10), lowest: sorted.slice(-10).reverse(), counted: withRatio.length };
   }, [diseases]);
 
   const show = activeMode === 'explode';
@@ -46,12 +49,12 @@ export default function ExplodeOverlay() {
         }}>&#x2715; Close</button>
         <div style={{ fontSize: mob ? 14 : 18, fontWeight: 600, color: '#e2e8f0', marginBottom: 4 }}>Research Intensity</div>
         <div style={{ fontSize: mob ? 9 : 12, color: '#64748b', marginBottom: mob ? 16 : 24 }}>
-          Papers published per reported death — revealing where research attention doesn't match disease burden
+          Papers published per reported death, showing where research attention and disease burden diverge
         </div>
         <div style={{ display: 'flex', flexDirection: mob ? 'column' : 'row', gap: mob ? 20 : 36 }}>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 10, color: '#22c55e', fontWeight: 600, marginBottom: 4, textTransform: 'uppercase', letterSpacing: 1 }}>Most Over-Researched</div>
-            <div style={{ fontSize: 8, color: '#475569', marginBottom: 12 }}>Highest papers per death</div>
+            <div style={{ fontSize: 10, color: '#22c55e', fontWeight: 600, marginBottom: 4, textTransform: 'uppercase', letterSpacing: 1 }}>Most papers per death</div>
+            <div style={{ fontSize: 8, color: '#475569', marginBottom: 12 }}>{`Top ${ppdData.highest.length} of the ${ppdData.counted} diseases with a reported deaths figure`}</div>
             {ppdData.highest.map((d, i) => (
               <div key={d.id} style={{ marginBottom: 8, opacity: 0, animation: `fadeIn 0.3s ease ${0.5 + i * 0.05}s forwards` }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 3 }}>
@@ -66,8 +69,8 @@ export default function ExplodeOverlay() {
           </div>
           <div style={{ width: 1, background: 'rgba(255,255,255,0.06)', display: mob ? 'none' : 'block' }} />
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 10, color: '#ef4444', fontWeight: 600, marginBottom: 4, textTransform: 'uppercase', letterSpacing: 1 }}>Most Under-Researched</div>
-            <div style={{ fontSize: 8, color: '#475569', marginBottom: 12 }}>Fewest papers per death</div>
+            <div style={{ fontSize: 10, color: '#ef4444', fontWeight: 600, marginBottom: 4, textTransform: 'uppercase', letterSpacing: 1 }}>Fewest papers per death</div>
+            <div style={{ fontSize: 8, color: '#475569', marginBottom: 12 }}>{`Bottom ${ppdData.lowest.length} of the same ${ppdData.counted}`}</div>
             {ppdData.lowest.map((d, i) => (
               <div key={d.id} style={{ marginBottom: 8, opacity: 0, animation: `fadeIn 0.3s ease ${0.5 + i * 0.05}s forwards` }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 3 }}>

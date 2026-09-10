@@ -1,13 +1,7 @@
 import { useEffect, useRef } from 'react';
 import useStore from '../store';
-import { fmtFull, fmtWord, ppd, trendLabel } from '../utils/captions';
+import { fmtFull, fmtWord, ppd, trendLabel, ratioStr as ppdStr } from '../utils/captions';
 import { storyProvenance } from '../utils/storyProvenance';
-
-// Papers-per-death display rule: 2 decimals below 1, whole numbers at/above 1.
-function ppdStr(val) {
-  if (val == null) return 'N/A';
-  return val < 1 ? val.toFixed(2) : String(Math.round(val));
-}
 
 // ─── Story sequences keyed by chipId ─────────────────────────────────────────
 // Every numeral below is derived at render time from live disease data

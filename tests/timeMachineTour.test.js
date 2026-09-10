@@ -564,13 +564,13 @@ describe('buildTourCaptions', () => {
   });
 
   it('derives the detonation and the peak from covid own series', () => {
-    expect(caps.detonation.data).toBe('COVID-19: 289 papers in 2019, 94,633 in 2020.');
-    expect(at(covid, 2021)).toBe(141958);
-    expect(caps.peak.data).toBe('141,958 COVID-19 papers in 2021 alone.');
+    expect(caps.detonation.data).toBe('COVID-19: 289 papers in 2019, 94,604 in 2020.');
+    expect(at(covid, 2021)).toBe(141953);
+    expect(caps.peak.data).toBe('141,953 COVID-19 papers in 2021 alone.');
   });
 
   it('derives the cooling line from the last year in the file', () => {
-    expect(caps.cooling.lines[0]).toBe('The surge cools: 59,634 papers in 2024.');
+    expect(caps.cooling.lines[0]).toBe('The surge cools: 59,650 papers in 2024.');
   });
 
   it('derives the flatline from rheumatic heart disease best year and toll', () => {
@@ -582,8 +582,16 @@ describe('buildTourCaptions', () => {
     const sum = rhd.yearlyPapers.reduce((a, b) => a + b, 0);
     expect(sum).toBe(9905);
     expect(caps.flatline.micro).toBe(
-      'COVID-19 drew more papers in 2020 than rheumatic heart disease drew in all 35 years combined (94,633 versus 9,905).'
+      'COVID-19 drew more papers in 2020 than rheumatic heart disease drew across 1990 to 2024 combined (94,604 versus 9,905).'
     );
+  });
+
+  it('states the HIV fade as the series supports it: a peak, then a decline', () => {
+    expect(caps.hivFade.lines[0]).toBe('Attention peaked in 2014 and has fallen since.');
+  });
+
+  it('gives the finale micro-line its year range beside the summed series', () => {
+    expect(caps.flatline.micro).toContain('across 1990 to 2024');
   });
 
   it('keeps every caption free of em dashes and section signs', () => {

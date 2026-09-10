@@ -32,10 +32,20 @@ const NO_ESTIMATE = [
   /no (WHO|GHE|GBD|IHME|global)[^.;]*cause line/i,
 ];
 
+const REGISTRIES = 'registries, not a global estimate';
+
 // [matcher, prefix, suffix] -> `${prefix} ${year}${suffix}`, year omitted when
 // the row has none. Ordered: named sources first, so a source that names a body
 // and then adds "no global estimate exists" (West Nile) keeps its attribution.
 const RULES = [
+  // A figure assembled from national patient registries (cystic fibrosis,
+  // Duchenne muscular dystrophy): a real count, not a global estimate, and the
+  // tile says exactly that instead of the blanket "no global estimate" those
+  // two rows used to share with rows that publish nothing at all. Matched on
+  // the source's claim that the figure IS registry data, not on the word
+  // "registry" alone, so a named body whose title happens to contain the word
+  // still keeps its own name through the rules below or the fallback.
+  [/registr(y|ies)[^.;]* data\b/i, REGISTRIES, ''],
   [/^WHO Global Health Estimates/, 'GHE', ''],
   [/^IARC GLOBOCAN/, 'GLOBOCAN', ''],
   [/^IHME GBD 2021 \(lower respiratory/, 'GBD', ', all LRI'],
@@ -73,7 +83,14 @@ function classify(mortalitySource, mortalityYear) {
   const y = mortalityYear ? ` ${mortalityYear}` : '';
 
   for (const [re, prefix, suffix] of RULES) {
-    if (re.test(mortalitySource)) return { named: true, short: `${prefix}${y}${suffix}` };
+    if (re.test(mortalitySource)) {
+      // The registries label is a sentence about the figure's provenance, not
+      // a source token, so it takes no year: "registries 2021" would read as a
+      // body named "registries" publishing a 2021 estimate, which is the exact
+      // claim the row is denying.
+      if (prefix === REGISTRIES) return { named: true, short: prefix };
+      return { named: true, short: `${prefix}${y}${suffix}` };
+    }
   }
   const author = mortalitySource.match(AUTHOR);
   if (author) return { named: true, short: `modelled, ${author[1]}${y}` };
@@ -84,6 +101,14 @@ function classify(mortalitySource, mortalityYear) {
   // Fallback: first clause of the source string, plus the year it describes.
   const head = mortalitySource.split(/[,;(:]/)[0].trim();
   return { named: true, short: `${head}${y}` };
+}
+
+// True for the rows whose figure is assembled from national patient
+// registries. The methodology panel counts them as their own bucket, because
+// they are neither a global estimate nor a row with nothing published at all.
+export function isRegistryFigure(mortalitySource) {
+  const c = classify(mortalitySource, null);
+  return !!c && c.short === REGISTRIES;
 }
 
 export function isNoGlobalEstimate(mortalitySource) {

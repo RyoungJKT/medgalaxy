@@ -8,6 +8,7 @@ export default function Legend() {
   const uiRevealed = useStore(s => s.uiRevealed);
   const diseases = useStore(s => s.diseases);
   const displayEdges = useStore(s => s.displayEdges);
+  const setMethodologyOpen = useStore(s => s.setMethodologyOpen);
   const mob = isMob();
 
   return (
@@ -35,6 +36,16 @@ export default function Legend() {
           counts, so it is scoped out here rather than duplicated. */}
       {!mob && (
         <span>{diseases.length} diseases &middot; {displayEdges.length} connections</span>
+      )}
+      {/* The Methodology panel is otherwise reachable only from the header's
+          own button; desktop readers who scroll to the credit line for the
+          sourcing get a route straight into it from here. The legend root is
+          pointerEvents: none, so the span re-enables it for itself. */}
+      {!mob && (
+        <span
+          onClick={() => setMethodologyOpen(true)}
+          style={{ pointerEvents: 'auto', cursor: 'pointer', color: '#94a3b8', textDecoration: 'underline', textUnderlineOffset: 2 }}
+        >Methodology</span>
       )}
       {/* The full desktop credit line (with the refresh date, both source
           names and the author credit) is well over 100 characters — even

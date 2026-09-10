@@ -36,6 +36,17 @@ export function deathsPerPaper(d) {
   return d.mortality / d.papers;
 }
 
+// One rounding rule for papers per death and deaths per paper, everywhere a
+// ratio is printed (sidebar, spotlight, roulette, stories). Spotlight used to
+// say "7 papers per death" for a row the sidebar printed as 6.6.
+export function ratioStr(val) {
+  if (val == null || !Number.isFinite(val)) return 'N/A';
+  if (val >= 10) return String(Math.round(val));
+  if (val >= 1) return val.toFixed(1);
+  if (val >= 0.01) return val.toFixed(2);
+  return val.toFixed(3);
+}
+
 // Sentence-fragment trend descriptor. t is a decade-growth percentage;
 // 999 is the sentinel the data pipeline uses for "grew from ~zero" (division
 // by a near-zero baseline), rendered as "surged from zero" instead of a

@@ -38,7 +38,8 @@ describe('mortalitySourceLabel', () => {
 
   it('says so plainly where no authority publishes a global estimate', () => {
     expect(mortalitySourceLabel('No global cause-of-death line; heart failure deaths are assigned to underlying causes', 2021)).toBe('no global estimate');
-    expect(mortalitySourceLabel('No citable global figure; national registry data only', 2021)).toBe('no global estimate');
+    // The two rows whose source says the figure IS registry data are the one
+    // exception, and they get their own caption; see the registry-only block.
     expect(mortalitySourceLabel('Not a cause-of-death category in any global source; 0 is a modeling boundary', 2021)).toBe('no global estimate');
     expect(mortalitySourceLabel('Share of combined IBD line; not published per disease', 2021)).toBe('no global estimate');
     expect(mortalitySourceLabel('US-only vital statistics (~1,000/yr underlying cause, CDC 1999-2016); no global figure', 2021)).toBe('no global estimate');
@@ -80,9 +81,15 @@ describe('deathsStatLabel over the real dataset', () => {
       const label = deathsStatLabel(d.mortality, d.mortalitySource, d.mortalityYear);
       if (d.mortality > 0) {
         expect(label, d.id).toMatch(/^Deaths\/yr · .+/);
-        // The tile spans the sidebar's full 301px content width; at 11px mono
-        // this keeps every label on one line.
-        expect(label.length, `${d.id}: ${label}`).toBeLessThanOrEqual(40);
+        // The tile spans the sidebar's full content width (measured 278px of
+        // text at 1440x900 in headless Chrome); at 11px IBM Plex Mono that is
+        // about 42 characters, so 40 keeps every label on one line. The two
+        // registry rows are the deliberate exception: their caption is a
+        // sentence about provenance rather than a source token, and at 45
+        // characters it wraps to a second line inside the tile (measured: the
+        // tile grows from 61px to 77px, no overflow, nothing clipped).
+        const cap = label.endsWith('registries, not a global estimate') ? 45 : 40;
+        expect(label.length, `${d.id}: ${label}`).toBeLessThanOrEqual(cap);
       } else {
         // A zero from a source that publishes zero needs no caption; a zero that
         // exists only because nobody publishes anything says exactly that.
@@ -107,13 +114,32 @@ describe('deathsStatLabel over the real dataset', () => {
     const byId = Object.fromEntries(diseases.map(d => [d.id, d]));
     const flagged = Object.entries(audit).filter(([, m]) => m.action === 'flag').map(([id]) => id);
     expect(flagged.length).toBe(30);
+    // Two of the flagged rows do have a real count, assembled from national
+    // patient registries, and say so instead of the blanket caption. They are
+    // still flagged rows: what they deny is a global estimate, not a figure.
+    const registryRows = ['cystic-fibrosis', 'duchenne-muscular-dystrophy'];
     for (const id of flagged) {
       const d = byId[id];
       expect(deathsStatLabel(d.mortality, d.mortalitySource, d.mortalityYear), id)
-        .toBe('Deaths/yr · no global estimate');
+        .toBe(registryRows.includes(id)
+          ? 'Deaths/yr · registries, not a global estimate'
+          : 'Deaths/yr · no global estimate');
+    }
+    for (const id of registryRows) {
+      expect(flagged, id).toContain(id);
+      expect(byId[id].mortality, id).toBeGreaterThan(0);
     }
     // Including the ones that still carry a region-only number.
     expect(byId['traumatic-brain-injury'].mortality).toBeGreaterThan(0);
     expect(byId['buruli-ulcer'].mortality).toBe(0);
+  });
+});
+
+describe('registry-only rows (Task 5, 2026-09-10 plan)', () => {
+  it('labels a registry-only figure as such and still prints it', () => {
+    const cf = diseases.find((d) => d.id === 'cystic-fibrosis');
+    expect(mortalitySourceLabel(cf.mortalitySource, cf.mortalityYear)).toBe('registries, not a global estimate');
+    expect(isNoGlobalEstimate(cf.mortalitySource)).toBe(false);
+    expect(deathsStatLabel(cf.mortality, cf.mortalitySource, cf.mortalityYear)).toBe('Deaths/yr · registries, not a global estimate');
   });
 });

@@ -161,7 +161,11 @@ export default function CompareCards() {
     }
 
     // Block 3: Strongest Research Links — top shared publications
+    // A pair whose one search term contains the other is never called a
+    // strongest link: its count is the smaller term's whole count, not a
+    // measured overlap (processData, src/utils/helpers.js).
     const conns = displayEdges
+      .filter(e => !e.termOverlap)
       .filter(e => e.si === idx || e.ti === idx)
       .map(e => ({ oi: e.si === idx ? e.ti : e.si, sp: e.sharedPapers }))
       .sort((a, b) => b.sp - a.sp)

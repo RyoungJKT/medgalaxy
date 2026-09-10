@@ -6,7 +6,7 @@ import { nonDefaultMortalitySources, timeMachineMapping } from '../src/component
 import {
   buildTimeMachineData, KNEE_PCT, KNEE_SHARE, BULK_EXP, MXY, MIN_RY, nRY,
 } from '../src/utils/timeMachineData';
-import { isNoGlobalEstimate } from '../src/utils/mortalityLabel';
+import { isNoGlobalEstimate, isRegistryFigure } from '../src/utils/mortalityLabel';
 import { pubmedTermFor } from '../src/utils/pubmedTerms';
 
 describe('methodology non-default mortality source table', () => {
@@ -44,14 +44,31 @@ describe('methodology non-default mortality source table', () => {
   it('the no-global-estimate count the panel states is derived from the data it shows', () => {
     // The panel computes this with the same predicate the sidebar tile uses, so
     // the sentence cannot claim a count the source column contradicts.
+    // 44, not 46: the two rows whose figure is national registry data now say
+    // that instead, and the panel counts them in their own bucket below.
     const derived = diseases.filter(d => isNoGlobalEstimate(d.mortalitySource)).length;
-    expect(derived).toBe(46);
+    expect(derived).toBe(44);
     expect(derived).toBeLessThan(diseases.length);
     // Every one of them is an exception row, never the shared default source.
     for (const d of diseases) {
       if (!isNoGlobalEstimate(d.mortalitySource)) continue;
       expect(d.mortalitySource, d.id).not.toBe(meta.mortalityDefaultSource);
       expect(ids, d.id).toContain(d.id);
+    }
+  });
+
+  it('counts the registry rows in their own bucket, disjoint from the no-estimate rows', () => {
+    // The panel's source paragraph subtracts every named bucket from the total
+    // to size the "programme report, fact sheet or single modelling study"
+    // remainder, so a row counted in two buckets, or in none, silently moves a
+    // number the paragraph states. These two are registry counts: real figures,
+    // not global estimates, and not rows with nothing published at all.
+    const registry = diseases.filter(d => isRegistryFigure(d.mortalitySource));
+    expect(registry.map(d => d.id).sort()).toEqual(['cystic-fibrosis', 'duchenne-muscular-dystrophy']);
+    for (const d of registry) {
+      expect(isNoGlobalEstimate(d.mortalitySource), d.id).toBe(false);
+      expect(ids, d.id).toContain(d.id);
+      expect(d.mortality, d.id).toBeGreaterThan(0);
     }
   });
 });

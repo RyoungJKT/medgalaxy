@@ -567,7 +567,11 @@ export function buildTourCaptions(diseases, idMap, data) {
     // window. Pairing the peak against the latest year on file instead is the
     // honest, stronger comparison the same series actually supports.
     caps.hivFade = {
-      lines: ['Attention faded long before the epidemic did.'],
+      // The line states only what the series shows: a peak year and a decline
+      // since. "Faded long before the epidemic did" asserted that the epidemic
+      // had not faded, which this file cannot show and an epidemiologist would
+      // dispute; the data line beside it already carries the annual toll.
+      lines: [`Attention peaked in ${pk.year} and has fallen since.`],
       data: `${hiv.label} papers peaked at ${fmtFull(pk.value)} in ${pk.year}. ${fmtWord(hiv.mortality)} people still die of it every year.`,
       // Carry-over C (direction, deferred from Task 13): the in-world sparkline
       // this pause draws beneath the node it's about (DIRECTION section 3,
@@ -616,7 +620,10 @@ export function buildTourCaptions(diseases, idMap, data) {
       // summed here rather than transcribed. Never a cross-disease total.
       const series = Array.isArray(rhd.yearlyPapers) ? rhd.yearlyPapers : [];
       const total = series.reduce((a, b) => a + (Number.isFinite(b) ? b : 0), 0);
-      flat.micro = `${covid.label} drew more papers in 2020 than ${midSentence(rhd.label)} drew in all ${data.nYears} years combined (${fmtFull(valueAt(covid, 2020))} versus ${fmtFull(total)}).`;
+      // The span is named rather than counted: "all 35 years" leaves the reader
+      // to work out which 35, beside a sum that only means anything with its
+      // range attached.
+      flat.micro = `${covid.label} drew more papers in 2020 than ${midSentence(rhd.label)} drew across ${first} to ${last} combined (${fmtFull(valueAt(covid, 2020))} versus ${fmtFull(total)}).`;
     }
     caps.flatline = flat;
   }

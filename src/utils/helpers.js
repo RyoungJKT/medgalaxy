@@ -39,7 +39,15 @@ export function neglectColor(ppd){
 
 export function processData(diseases, connections) {
   const idMap={};diseases.forEach((d,i)=>{idMap[d.id]=i;});
-  const edges=connections.map(c=>{const si=idMap[c.source],ti=idMap[c.target];return{...c,si,ti,score:c.sharedPapers/Math.sqrt(diseases[si].papers*diseases[ti].papers)};});
+  const edges=connections.map(c=>{const si=idMap[c.source],ti=idMap[c.target];
+    const a=diseases[si].label.toLowerCase(),b=diseases[ti].label.toLowerCase();
+    // One search term contains the other ("Heart Disease" inside "Rheumatic
+    // Heart Disease"): PubMed's AND count is then the smaller term's whole
+    // count, a substring artifact, not a measured link. Kept in the data and
+    // in the sidebar list (it is the true result of the stated query) but
+    // never ranked as a strongest link.
+    const termOverlap=a!==b&&(a.includes(b)||b.includes(a));
+    return{...c,si,ti,termOverlap,score:c.sharedPapers/Math.sqrt(diseases[si].papers*diseases[ti].papers)};});
   const neb=new Map();diseases.forEach((_,i)=>neb.set(i,[]));
   edges.forEach((e,ei)=>{neb.get(e.si).push({ei,score:e.score});neb.get(e.ti).push({ei,score:e.score});});
   const ls=new Set();neb.forEach(arr=>{arr.sort((a,b)=>b.score-a.score);arr.slice(0,7).forEach(({ei})=>ls.add(ei));});
