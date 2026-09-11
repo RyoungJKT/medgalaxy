@@ -2,9 +2,13 @@ uniform float time;
 uniform vec3 fogColor;
 uniform float fogNear;
 uniform float fogFar;
+uniform float igniteAmount;   // overture beat 2 stage two: 0 = cold, 1 = full burn
+uniform float desatAmount;    // overture beat 2 stage one: 0 = category color, 1 = graphite
+uniform float emberAmount;    // beat 3 onward: standing scar on the overlooked decile
+uniform float igniteContrast; // exponent on each node's own ignite weight (1 = raw weights)
 
 varying vec3 vNormal, vWorldPos, vColor, vViewPos, vWorldNormal;
-varying float vPhase, vFogDepth, vCatId;
+varying float vPhase, vFogDepth, vCatId, vIgnite, vEmber, vFlight;
 
 // ── Tuning constants (matched to plasma shader) ──
 const vec3  KEY_DIR    = normalize(vec3(0.6, 0.8, 0.5));
@@ -66,6 +70,56 @@ void main(){
   alpha = mix(alpha, 0.1, fogFactor * 0.5);
 
   col = min(col, vColor * 1.15);
+
+  // ── 7. Overture grade: suppression → ignite → ember (identical to plasma.frag) ──
+  // Everything below the clamp on purpose: only the ignite ramp is allowed to
+  // exceed the bloom threshold (1.0), so glow always means divergence.
+
+  // Palette suppression (overture beat 2 stage one): drain to graphite
+  float lum = dot(col, vec3(0.299, 0.587, 0.114));
+  col = mix(col, vec3(lum) * vec3(0.72, 0.78, 0.92), desatAmount * 0.85);
+
+  // Black-body ignite: dark rim to white-hot core, HDR (exceeds bloom threshold)
+  // igniteContrast pulls the field away from the hero without touching it: the
+  // hero's weight is exactly 1.0 (pow(1, k) == 1), every other node's is below
+  // it, so raising the exponent damps the competitors only (review gate F4,
+  // beat-2 ignition ambiguity). Outside the film igniteAmount is 0 and this
+  // whole block is skipped, so the curve is a film-only statement.
+  float ig = pow(vIgnite, igniteContrast) * igniteAmount;
+  if (ig > 0.001) {
+    float core = pow(NdotV, 2.2);                       // radial: rim 0, core 1
+    // Temperature is radial position TIMES divergence weight (see plasma.frag).
+    float temp = core * ig;
+    vec3 ramp = mix(vec3(0.17, 0.03, 0.02),             // smolder #2b0806
+                mix(vec3(0.79, 0.08, 0.03),             // ignition #c92a0d
+                    vec3(1.0, 0.95, 0.88), temp * temp * temp), // white-hot core #fff3e0
+                temp);
+    col = mix(col, ramp * (1.0 + 5.0 * temp * ig), ig);
+
+    // Hero exclusivity through the hero hold, identical to plasma.frag: only
+    // the exact 1.0-weight hero may cross the composer's bloom threshold while
+    // igniteContrast is up (review gate round 2, P3 #11). A scale, not a clip,
+    // so the damped node keeps its hue on its way under the line.
+    float notHero = 1.0 - step(0.999, vIgnite);
+    float heroOnly = clamp((igniteContrast - 1.0) * 0.5, 0.0, 1.0);
+    float outLum = dot(col, vec3(0.2126, 0.7152, 0.0722));
+    float underBloom = outLum > 0.95 ? 0.95 / outLum : 1.0;
+    col *= mix(1.0, underBloom, notHero * heroOnly);
+  }
+
+  // Persistent ember rim on the overlooked decile (post-release standing scar)
+  float rim = pow(1.0 - NdotV, 3.0);
+  col += vec3(1.0, 0.23, 0.08) * rim * vEmber * emberAmount
+         * (0.30 + 0.05 * sin(time * 3.14159 + vPhase));
+
+  // ── Beat 0 fly-in brightness (ADDENDUM 1 section 3) ──
+  // 0.35 at launch to 1.00 at landing, plus the 180 ms 1.30x landing pip. It
+  // is the last thing applied and it is exactly 1.0 for every node outside
+  // beat 0, so nothing else in the piece can see this channel. The pip is
+  // allowed above 1.0 on purpose: it is the one frame a node's arrival is
+  // announced, and at 1.30x on a monochrome field it stays well under the
+  // composer's bloom threshold, which remains reserved for the ignite ramp.
+  col *= vFlight;
 
   gl_FragColor = vec4(col, alpha);
 }

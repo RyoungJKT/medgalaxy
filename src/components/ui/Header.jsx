@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import useStore from '../../store';
 import { isMob } from '../../utils/helpers';
-import SearchDropdown from './SearchDropdown';
+import SearchDropdown, { searchMatches } from './SearchDropdown';
+import { TM_EXIT, exitDelay, DUR, EASE } from '../../utils/motion';
 
 function SizeToggle() {
   const sizeMode = useStore(s => s.sizeMode);
@@ -46,18 +47,18 @@ function SizeToggle() {
         }}>
           {sizeMode === 'papers'
             ? 'Node size scaled by total publications on PubMed'
-            : 'Node size scaled by annual deaths reported by WHO'}
+            : 'Node size scaled by annual deaths, per-disease sources shown in each sidebar'}
         </div>
       )}
     </div>
   );
 }
 
-function ShaderToggle() {
+function ShaderToggle({ dim }) {
   const shaderMode = useStore(s => s.shaderMode);
   const setShaderMode = useStore(s => s.setShaderMode);
   return (
-    <div style={{ position: 'relative', pointerEvents: 'auto' }}>
+    <div style={{ position: 'relative', pointerEvents: 'auto', ...dim }}>
       <div style={{ display: 'flex', borderRadius: 6, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)' }}>
         {['plasma', 'pulse'].map(m => (
           <button
@@ -74,6 +75,67 @@ function ShaderToggle() {
         ))}
       </div>
     </div>
+  );
+}
+
+// The exit's micro-line: 9px #64748b under the Time Machine button, up 2.6 s
+// then a 200 ms fade (ADDENDUM 1 section 1, exit table t = 1.75).
+function ExitMicroLine({ delay }) {
+  return (
+    <div
+      style={{
+        position: 'absolute', top: '100%',
+        // Centred under the button. The phone has no button in the row to
+        // centre under, so it gets ExitTmChip below instead of this line.
+        left: '50%', transform: 'translateX(-50%)',
+        // Cleared past the filter bar, which sits directly under the control
+        // row and paints over anything the header tries to put in that gap.
+        // Still unmistakably the button's own line: same column, nothing else
+        // in the band, and it arrives on the same frame as the pulse.
+        marginTop: 34, fontSize: 9, color: '#64748b', whiteSpace: 'nowrap',
+        background: 'rgba(6,8,13,0.92)', padding: '2px 6px', borderRadius: 4,
+        zIndex: 60, pointerEvents: 'none', opacity: 0,
+        animation: `tmHdrLine ${TM_EXIT.header.line + TM_EXIT.header.lineOut}ms linear ${delay}ms both`,
+      }}
+    >
+      the decades live here
+    </div>
+  );
+}
+
+// The phone's version of the same cue (round-5 gate, clarity). On desktop the
+// exit pulses the Time Machine button itself and hangs "the decades live here"
+// under it, and the sentence points at something. On a phone the control row is
+// collapsed into the Menu drawer, so the pulse had nothing visible to land on
+// and the micro-line floated under a button that says Menu: the piece's last
+// sentence pointed at nothing, which is the one thing the ending restage was
+// for. So the phone gets the instrument itself, once, as a real control — a
+// tappable chip that pulses on the same 1.4 s channel, carries the same
+// micro-line, opens the Time Machine on tap, and leaves with the cue. The Menu
+// button keeps its pulse underneath: two hints at one moment, one of which can
+// be acted on without hunting.
+function ExitTmChip({ delay, reduced, onOpen }) {
+  const life = TM_EXIT.header.line + TM_EXIT.header.lineOut;
+  const cue = reduced
+    ? `tmBtnRing ${TM_EXIT.header.line}ms step-end ${delay}ms forwards`
+    : `tmBtnPulse ${TM_EXIT.header.dur}ms ease ${delay}ms forwards`;
+  return (
+    <button
+      data-mg-tm-chip
+      onClick={onOpen}
+      style={{
+        position: 'absolute', top: '100%', right: 0, marginTop: 30,
+        display: 'flex', alignItems: 'center', gap: 8, minHeight: 44,
+        padding: '8px 12px', background: 'rgba(6,8,13,0.94)',
+        border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8,
+        color: '#e2e8f0', fontSize: 11, fontFamily: 'inherit', whiteSpace: 'nowrap',
+        cursor: 'pointer', pointerEvents: 'auto', zIndex: 60, opacity: 0,
+        animation: `tmHdrLine ${life}ms linear ${delay}ms both, ${cue}`,
+      }}
+    >
+      Time Machine
+      <span style={{ color: '#64748b', fontSize: 9 }}>the decades live here</span>
+    </button>
   );
 }
 
@@ -100,7 +162,49 @@ export default function Header() {
   const setShaderMode = useStore(s => s.setShaderMode);
   const selectDisease = useStore(s => s.selectDisease);
   const idMap = useStore(s => s.idMap);
-  const introStarted = useStore(s => s.introStarted);
+  const uiRevealed = useStore(s => s.uiRevealed);
+  const tmPhase = useStore(s => s.tmPhase);
+  const startTimeMachine = useStore(s => s.startTimeMachine);
+  const stopTimeMachine = useStore(s => s.stopTimeMachine);
+  const setMethodologyOpen = useStore(s => s.setMethodologyOpen);
+  const tmTourSeen = useStore(s => s.tmTourSeen);
+  const tmActive = tmPhase !== 'idle';
+  const storyActive = useStore(s => s.storyActive);
+  // A story owns the frame while it runs (Task 3, 2026-09-10 plan): the chrome
+  // dims rather than hides, so the viewer still sees where every control went.
+  const dim = { opacity: storyActive ? 0.3 : 1, transition: `opacity ${DUR.ui}ms ${EASE.ui}` };
+  // First press owes the viewer the story (review gate F1c): if no narrated
+  // tour has run yet in this session — the film's auto-tour preempted, the
+  // hint chip never taken — this button is the only way the decade story can
+  // still be delivered, so it starts the tour rather than a bare scrubber.
+  // Once any tour has been seen, the button is the plain instrument it was.
+  const toggleTimeMachine = () => { if (tmActive) stopTimeMachine(); else startTimeMachine(!tmTourSeen); };
+
+  // ── The exit's header channel (ADDENDUM 1 section 1, t = 1.75) ──
+  // One-shot Time Machine button pulse, 1.4 s: two cycles of scale 1.000 to
+  // 1.060 and border opacity 0.35 to 0.90. Under it a 9px micro-line, "the
+  // decades live here", up 2.6 s then a 200 ms fade. This is the whole of what
+  // tells a viewer, on the home screen the film just landed them on, where the
+  // instrument they watched went. Reduced motion gets a static ring instead.
+  const tmExitAt = useStore(s => s.tmExitAt);
+  const tmExitMode = useStore(s => s.tmExitMode);
+  const [exitCue, setExitCue] = useState(0);
+  useEffect(() => {
+    if (!tmExitAt || tmExitMode === 'fast') { setExitCue(0); return undefined; }
+    setExitCue(tmExitAt);
+    const life = exitDelay(tmExitAt, TM_EXIT.header.at) + TM_EXIT.header.line + TM_EXIT.header.lineOut;
+    const timer = setTimeout(() => setExitCue(0), life);
+    return () => clearTimeout(timer);
+  }, [tmExitAt, tmExitMode]);
+  const cueDelay = exitCue ? exitDelay(exitCue, TM_EXIT.header.at) : 0;
+  const cueReduced = tmExitMode === 'reduced';
+  const pulseStyle = !exitCue ? null : cueReduced
+    // No pulse under reduced motion: a static ring, held for the same 2.6 s.
+    // `forwards`, never `both`: a backwards fill would apply the pulse's 0%
+    // keyframe through the whole 1.75 s delay, lighting the button up before
+    // its moment.
+    ? { animation: `tmBtnRing ${TM_EXIT.header.line}ms step-end ${cueDelay}ms forwards` }
+    : { animation: `tmBtnPulse ${TM_EXIT.header.dur}ms ease ${cueDelay}ms forwards` };
 
   const mob = isMob();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -122,22 +226,67 @@ export default function Header() {
     setSearchQuery('');
   };
 
+  // Task 4 (2026-09-10 plan): Enter selects the highlighted match, arrows move
+  // the highlight, Escape clears the query. Blurring on select is what gives
+  // the rail its arrow keys back (TimeRail.jsx's keyboard effect bails while
+  // an input has focus).
+  const onSearchKey = (e) => {
+    const s = useStore.getState();
+    const list = searchMatches(s.diseases, s.searchQuery);
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      if (!list.length) return;
+      e.preventDefault();
+      const n = list.length;
+      const cur = s.searchHighlight;
+      s.setSearchHighlight(e.key === 'ArrowDown' ? (cur + 1) % n : (cur - 1 + n) % n);
+      return;
+    }
+    if (e.key === 'Enter') {
+      if (!list.length) return;
+      e.preventDefault();
+      const pick = list[Math.min(s.searchHighlight, list.length - 1)];
+      handleSearchSelect(pick);
+      e.currentTarget.blur();
+      return;
+    }
+    if (e.key === 'Escape') {
+      s.setSearchQuery('');
+      // Round 2 review finding: the mobile input's onBlur handler closes over
+      // searchQuery from its own render, so the blur() call below fires with
+      // the pre-clear (non-empty) searchQuery still in that closure and skips
+      // setSearchOpen(false). Closing the panel directly here does not rely
+      // on that stale closure; harmless on desktop, where searchOpen is
+      // unused.
+      setSearchOpen(false);
+      e.currentTarget.blur();
+      e.stopPropagation();
+    }
+  };
+
   return (
     <div style={{
       position: 'absolute', top: 0, left: 0, right: 0, zIndex: 40,
       padding: mob ? '10px 12px' : '14px 20px', display: 'flex', alignItems: 'center',
       gap: mob ? 8 : 14, fontFamily: 'IBM Plex Mono,monospace', fontSize: 12,
       color: '#e2e8f0', background: 'linear-gradient(180deg,rgba(6,8,13,0.9) 0%,rgba(6,8,13,0) 100%)',
-      pointerEvents: 'none', transform: 'translateY(-100%)', animation: introStarted ? 'slideDown 0.6s ease 3.0s forwards' : 'none',
+      pointerEvents: 'none', transform: 'translateY(-100%)', animation: uiRevealed ? 'slideDown 0.6s ease forwards' : 'none',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, pointerEvents: 'auto' }}>
         <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 6px #22c55e', animation: 'pulse 2s infinite' }} />
         <span style={{ fontWeight: 600, fontSize: mob ? 13 : 15 }}>MedGalaxy</span>
         {!mob && (
           <>
-            <span style={{ color: '#94a3b8', fontSize: 11 }}>3D visualization of global disease research</span>
-            <span style={{ color: '#94a3b8', fontSize: 11 }}>&middot;</span>
-            <span style={{ color: '#94a3b8', fontSize: 11 }}>{diseases.length} diseases &middot; {displayEdges.length} connections</span>
+            {/* The tagline is the first thing to go as the row tightens: below
+                1500px it would otherwise push the controls into a second line,
+                which lands on top of the filter bar. The counts follow at
+                1360px, and the wordmark alone survives anything narrower. */}
+            <span className="mg-hdr-tagline" style={{ color: '#94a3b8', fontSize: 11, whiteSpace: 'nowrap', ...dim }}>
+              3D visualization of global disease research
+            </span>
+            <span className="mg-hdr-tagline" style={{ color: '#94a3b8', fontSize: 11, ...dim }}>&middot;</span>
+            <span className="mg-hdr-counts" style={{ color: '#94a3b8', fontSize: 11, whiteSpace: 'nowrap', ...dim }}>
+              {diseases.length} diseases &middot; {displayEdges.length} connections
+            </span>
           </>
         )}
       </div>
@@ -149,6 +298,7 @@ export default function Header() {
               <input
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
+                onKeyDown={onSearchKey}
                 placeholder="Search diseases..."
                 autoFocus
                 onBlur={() => { if (!searchQuery) setSearchOpen(false); }}
@@ -166,10 +316,22 @@ export default function Header() {
           <div ref={menuRef} style={{ position: 'relative', pointerEvents: 'auto' }}>
             <button
               onClick={() => { setMenuOpen(!menuOpen); setSearchOpen(false); }}
-              style={{ background: 'none', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, padding: '8px 14px', color: '#e2e8f0', fontSize: 16, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 500 }}
+              style={{ background: 'none', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, padding: '8px 14px', color: '#e2e8f0', fontSize: 16, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 500, ...pulseStyle, ...dim }}
             >
               Menu
             </button>
+            {/* Mobile collapses the control row into this menu, so the Time
+                Machine button the exit means to point at is two taps deep. The
+                Menu button keeps the pulse (the instrument lives up here) and
+                the chip below carries the instrument itself, so the cue points
+                at a control the viewer can actually see and press. */}
+            {exitCue > 0 && !menuOpen && (
+              <ExitTmChip
+                delay={cueDelay}
+                reduced={cueReduced}
+                onOpen={() => { setMenuOpen(false); toggleTimeMachine(); }}
+              />
+            )}
             {menuOpen && (
               <div style={{
                 position: 'absolute', top: '100%', right: 0, marginTop: 4,
@@ -203,12 +365,19 @@ export default function Header() {
                 <button onClick={() => { setActiveMode('velocity'); setMenuOpen(false); }}
                   style={{ padding: '6px 10px', fontSize: 10, fontFamily: 'inherit', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, cursor: 'pointer', background: 'transparent', color: '#e2e8f0', width: '100%', textAlign: 'left' }}
                 >Trends</button>
+                <button onClick={() => { toggleTimeMachine(); setMenuOpen(false); }}
+                  style={{ padding: '8px 10px', minHeight: 44, fontSize: 10, fontFamily: 'inherit', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, cursor: 'pointer', background: tmActive ? 'rgba(255,255,255,0.12)' : 'transparent', color: tmActive ? '#f59e0b' : '#e2e8f0', width: '100%', textAlign: 'left' }}
+                >{tmActive ? '✕ Time Machine' : 'Time Machine'}</button>
                 <button onClick={() => { setNeglectMode(!neglectMode); setMenuOpen(false); }}
                   style={{ padding: '6px 10px', fontSize: 10, fontFamily: 'inherit', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, cursor: 'pointer', background: neglectMode ? 'rgba(255,255,255,0.12)' : 'transparent', color: neglectMode ? '#ef4444' : '#e2e8f0', width: '100%', textAlign: 'left' }}
                 >{neglectMode ? '✕ Attention Map' : 'Attention Map'}</button>
                 <button onClick={() => { setSpotlightActive(!spotlightActive); setMenuOpen(false); }}
                   style={{ padding: '6px 10px', fontSize: 10, fontFamily: 'inherit', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, cursor: 'pointer', background: spotlightActive ? 'rgba(255,255,255,0.12)' : 'transparent', color: spotlightActive ? '#f59e0b' : '#e2e8f0', width: '100%', textAlign: 'left' }}
                 >{spotlightActive ? '✕ Spotlight' : 'Spotlight'}</button>
+                <div style={{ color: '#64748b', fontSize: 9, padding: '4px 4px 0' }}>About</div>
+                <button onClick={() => { setMethodologyOpen(true); setMenuOpen(false); }}
+                  style={{ padding: '8px 10px', minHeight: 44, fontSize: 10, fontFamily: 'inherit', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, cursor: 'pointer', background: 'transparent', color: '#e2e8f0', width: '100%', textAlign: 'left' }}
+                >Methodology</button>
               </div>
             )}
           </div>
@@ -217,7 +386,7 @@ export default function Header() {
         <>
           <div style={{ position: 'relative', pointerEvents: 'auto' }}>
             <button onClick={() => setNeglectMode(!neglectMode)}
-              style={{ ...btnStyle, background: neglectMode ? 'rgba(255,255,255,0.12)' : 'transparent', color: neglectMode ? '#ef4444' : '#e2e8f0' }}
+              style={{ ...btnStyle, background: neglectMode ? 'rgba(255,255,255,0.12)' : 'transparent', color: neglectMode ? '#ef4444' : '#e2e8f0', ...dim }}
             >{neglectMode ? '✕ Attention Map' : 'Attention Map'}</button>
             {neglectMode && (
               <div style={{
@@ -231,17 +400,38 @@ export default function Header() {
             )}
           </div>
           <SizeToggle />
-          <ShaderToggle />
-          <button onClick={() => setActiveMode('explode')} style={btnStyle}>Research Gap</button>
-          <button onClick={() => { useStore.getState().setConnFocusIdx(-1); setActiveMode('connections'); }} style={btnStyle}>Connections</button>
-          <button onClick={() => setActiveMode('velocity')} style={btnStyle}>Trends</button>
-          <button onClick={() => setSpotlightActive(!spotlightActive)}
-            style={{ ...btnStyle, background: spotlightActive ? 'rgba(255,255,255,0.12)' : 'transparent', color: spotlightActive ? '#f59e0b' : '#e2e8f0' }}
-          >{spotlightActive ? '✕ Spotlight' : 'Spotlight'}</button>
+          <ShaderToggle dim={dim} />
+          <button onClick={() => setActiveMode('explode')} style={{ ...btnStyle, ...dim }}>Research Gap</button>
+          <button onClick={() => { useStore.getState().setConnFocusIdx(-1); setActiveMode('connections'); }} style={{ ...btnStyle, ...dim }}>Connections</button>
+          <button onClick={() => setActiveMode('velocity')} style={{ ...btnStyle, ...dim }}>Trends</button>
           <div style={{ position: 'relative', pointerEvents: 'auto' }}>
+            <button onClick={toggleTimeMachine}
+              style={{
+                ...btnStyle,
+                background: tmActive ? 'rgba(255,255,255,0.12)' : 'transparent',
+                color: tmActive ? '#f59e0b' : '#e2e8f0',
+                ...pulseStyle,
+                ...dim,
+              }}
+            >{tmActive ? '✕ Time Machine' : 'Time Machine'}</button>
+            {exitCue > 0 && <ExitMicroLine delay={cueDelay} />}
+          </div>
+          <button onClick={() => setSpotlightActive(!spotlightActive)}
+            style={{ ...btnStyle, background: spotlightActive ? 'rgba(255,255,255,0.12)' : 'transparent', color: spotlightActive ? '#f59e0b' : '#e2e8f0', ...dim }}
+          >{spotlightActive ? '✕ Spotlight' : 'Spotlight'}</button>
+          {/* The sound pill was removed at the user's request (2026-08-28)
+              along with the store's soundOn flag: nothing can enable the
+              synth engine, so every window.__mgAudio call site is a no-op
+              and the app is silent. */}
+          {/* The round "?" methodology button is hidden at the user's request
+              (2026-08-28). The panel itself stays wired: the mobile menu's
+              Methodology row still opens it, as does
+              setMethodologyOpen(true) from the store or the verify harness. */}
+          <div style={{ position: 'relative', pointerEvents: 'auto', ...dim }}>
             <input
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
+              onKeyDown={onSearchKey}
               placeholder="Search diseases..."
               style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 6, padding: '7px 12px', color: '#e2e8f0', fontSize: 12, fontFamily: 'inherit', width: 200, outline: 'none' }}
             />
@@ -249,6 +439,32 @@ export default function Header() {
           </div>
         </>
       )}
+      {/* Measured, not guessed: the control row needs 1527px on its own, the
+          counts add 212 and the tagline 310. Each is dropped exactly where it
+          would otherwise wrap the header into the filter bar underneath. */}
+      <style>{`
+        @media (max-width: 1839px) { .mg-hdr-tagline { display: none; } }
+        @media (max-width: 1539px) { .mg-hdr-counts  { display: none; } }
+        /* Two cycles across 1.4 s, ending on the button's own resting border so
+           the animation can be removed without a second state change. */
+        @keyframes tmBtnPulse {
+          0%   { transform: scale(1);    border-color: rgba(255,255,255,0.35); }
+          25%  { transform: scale(1.06); border-color: rgba(255,255,255,0.90); }
+          50%  { transform: scale(1);    border-color: rgba(255,255,255,0.35); }
+          75%  { transform: scale(1.06); border-color: rgba(255,255,255,0.90); }
+          100% { transform: scale(1);    border-color: rgba(255,255,255,0.08); }
+        }
+        @keyframes tmBtnRing {
+          0%   { border-color: rgba(255,255,255,0.90); }
+          100% { border-color: rgba(255,255,255,0.08); }
+        }
+        @keyframes tmHdrLine {
+          0%      { opacity: 0; }
+          7.14%   { opacity: 1; }
+          92.86%  { opacity: 1; }
+          100%    { opacity: 0; }
+        }
+      `}</style>
     </div>
   );
 }

@@ -3,8 +3,10 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import useStore from '../store';
 import { TIER } from '../utils/tiers';
-import { nR } from '../utils/helpers';
+import { nR, neglectColor } from '../utils/helpers';
 import { CC } from '../utils/constants';
+import { ppd } from '../utils/captions';
+import { igniteWeights } from '../utils/igniteWeights';
 
 const PARTICLE_COUNT = TIER === 'HIGH' ? 200 : TIER === 'MEDIUM' ? 100 : 0;
 const ORBIT_SCALE = 4.0; // orbit radius as multiple of node radius (scales with node size)
@@ -27,6 +29,18 @@ function makeParticleTexture() {
 export default function SupernovaDust() {
   const pointsRef = useRef();
   const opacityRef = useRef(0);
+  const diseases = useStore(s => s.diseases);
+
+  // Bottom-decile-of-papers-per-death membership (DIRECTION section 4:
+  // "dust particles tint by the revealed disease's papers-per-death color on
+  // the Attention Map scale, so a roulette landing on an overlooked disease
+  // throws ember-red dust" — the same rule applies to the supernova reveal).
+  const ember = useMemo(() => igniteWeights(diseases).ember, [diseases]);
+
+  // Fix (review): the tint string (neglectColor(ppd(...)) or the category
+  // color) only changes when the target disease changes, not every frame —
+  // cached here instead of rebuilt on every one of PARTICLE_COUNT's frames.
+  const tintCacheRef = useRef({ idx: -1, str: null });
 
   const { geo, seeds, tex } = useMemo(() => {
     if (PARTICLE_COUNT === 0) return { geo: null, seeds: null, tex: null };
@@ -109,9 +123,16 @@ export default function SupernovaDust() {
     }
     positions.needsUpdate = true;
 
-    // Update color to match target disease category
+    // Update color: category by default, ember-red neglect tint when this
+    // node sits in the overlooked decile. Recomputed only when the target
+    // index changes, not every frame.
     if (diseases[idx]) {
-      pointsRef.current.material.color.set(CC[diseases[idx].category]);
+      const tc = tintCacheRef.current;
+      if (tc.idx !== idx) {
+        tc.idx = idx;
+        tc.str = ember[idx] === 1 ? neglectColor(ppd(diseases[idx])) : CC[diseases[idx].category];
+      }
+      pointsRef.current.material.color.set(tc.str);
     }
   });
 

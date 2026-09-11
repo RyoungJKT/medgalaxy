@@ -24,6 +24,11 @@ export default function RouletteCaption() {
         background: 'rgba(10,16,30,0.95)', backdropFilter: 'blur(16px)',
         border: '1px solid rgba(245,158,11,0.4)', borderRadius: 12,
         padding: mob ? '14px 20px' : '18px 32px',
+        // Same shrink-to-fit width bug as HintChips/OvertureCaption/TimeRail
+        // (Task 17 report section 2) — see StoryCaption.jsx for the full
+        // explanation. max-content sizes the card to its content; the inner
+        // line's own maxWidth still caps genuinely long captions.
+        width: 'max-content',
         fontFamily: 'IBM Plex Mono,monospace', textAlign: 'center',
         cursor: 'pointer', opacity: 0,
         animation: 'fadeIn 0.6s ease forwards',

@@ -12,9 +12,17 @@ import RouletteCaption from './ui/RouletteCaption';
 import ExplodeOverlay from './ui/ExplodeOverlay';
 import ConnectionsOverlay from './ui/ConnectionsOverlay';
 import VelocityOverlay from './ui/VelocityOverlay';
+import MethodologyPanel from './ui/MethodologyPanel';
 import LandingOverlay from './ui/LandingOverlay';
 import CompareCards from './ui/CompareCards';
 import SupernovaOverlay from './ui/SupernovaOverlay';
+import OvertureCaption from './ui/OvertureCaption';
+import OvertureMicroLabels from './ui/OvertureMicroLabels';
+import SkipPill from './ui/SkipPill';
+import HintChips from './ui/HintChips';
+import TimeRail from './ui/TimeRail';
+import TourSparkline from './ui/TourSparkline';
+import MoverLabel from './ui/MoverLabel';
 
 export default function HtmlOverlay() {
   return (
@@ -38,8 +46,16 @@ export default function HtmlOverlay() {
       <ExplodeOverlay />
       <ConnectionsOverlay />
       <VelocityOverlay />
+      <MethodologyPanel />
       <LandingOverlay />
       <SupernovaOverlay />
+      <OvertureMicroLabels />
+      <OvertureCaption />
+      <SkipPill />
+      <HintChips />
+      <TimeRail />
+      <MoverLabel />
+      <TourSparkline />
       <style>{`
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
         @keyframes slideDown{to{transform:translateY(0)}}

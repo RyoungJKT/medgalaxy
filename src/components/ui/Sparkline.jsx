@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function Sparkline({ data, color, w = 260, h = 50 }) {
+export default function Sparkline({ data, color, w = 260, h = 50, yearStart = 2015, yearEnd = 2024 }) {
   if (!data || !data.length) return null;
 
   const mx = Math.max(...data);
@@ -24,10 +24,10 @@ export default function Sparkline({ data, color, w = 260, h = 50 }) {
       <polygon points={`0,${h} ${pts} ${w},${h}`} fill={`url(#${gid})`} />
       <polyline points={pts} fill="none" stroke={color} strokeWidth="1.5" />
       <text x="0" y={h - 1} fill="#475569" fontSize="8" fontFamily="IBM Plex Mono">
-        2014
+        {yearStart}
       </text>
       <text x={w} y={h - 1} fill="#475569" fontSize="8" fontFamily="IBM Plex Mono" textAnchor="end">
-        2024
+        {yearEnd}
       </text>
     </svg>
   );

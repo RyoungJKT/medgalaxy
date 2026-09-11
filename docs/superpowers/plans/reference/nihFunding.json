@@ -1,0 +1,30 @@
+{
+  "coveragePercent": 46.4,
+  "recommendation": "cut",
+  "details": "Strict name-level mapping of the 153 diseases in /Users/darwin/Documents/Claude/medgalaxy-next/data/diseases.json (note: the field is \"label\", not \"name\") against the 332 NIH RCDC categories yields 71 clean matches, 46.4 percent. Whole blocks miss: 19 of 20 tropical/NTD entries (only Malaria maps; Dengue, Chagas, Leishmaniasis etc. have no category), most cardiovascular subtypes (Heart Failure, Arrhythmia, Cardiomyopathy have no category; only Heart Disease, Stroke, Hypertension, Atherosclerosis map), Type 1/Type 2 Diabetes (only parent \"Diabetes\" exists), COVID-19 (only parent \"Coronaviruses\"), Melanoma (only parent \"Skin Cancer\"), and most rare-genetic and minor-infectious entries. Counting parent-category fallbacks would still only reach roughly 52 percent, below the 60 percent bar, so the recommendation is cut, or adopt only as an optional per-disease annotation where a match exists rather than a full visualization dimension.\n\nThe data itself is excellent and trivially fetchable: the categorical-spending page (report.nih.gov/funding/categorical-spending) is a Vue app backed by an unauthenticated JSON API at https://report.nih.gov/reportweb/api/CategoricalSpendings returning all 332 categories with funding for FY2005 through FY2025 (latest actual year; keys \"Y2005\"..\"Y2025\", amounts in millions of USD, e.g. Breast Cancer Y2025 = 757 = $757M; FY2026/27 estimates are currently withheld). A config endpoint exists at /reportweb/api/CategoricalSpendingConfig and an export at /reportweb/api/categoricalspendingexport. Mandatory caveat: NIH RCDC figures are US federal (NIH-only) research spending, not global research investment, so low NIH dollars for tropical diseases reflect one funder's portfolio, not world funding. Also note RCDC categories overlap (a grant can count in multiple categories), so values must never be summed across diseases.",
+  "dataPath": "https://report.nih.gov/reportweb/api/CategoricalSpendings",
+  "mappable": [
+    "Breast Cancer",
+    "Lung Cancer",
+    "Alzheimer's Disease",
+    "Parkinson's Disease",
+    "Malaria",
+    "Tuberculosis",
+    "HIV/AIDS",
+    "Sickle Cell Disease",
+    "Cystic Fibrosis",
+    "Depression"
+  ],
+  "unmappable": [
+    "Dengue",
+    "Chagas Disease",
+    "Leishmaniasis",
+    "Melanoma",
+    "Heart Failure",
+    "Type 2 Diabetes",
+    "COVID-19",
+    "Ebola",
+    "Measles",
+    "Thyroid Cancer"
+  ]
+}

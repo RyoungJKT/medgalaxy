@@ -4,6 +4,8 @@ import * as THREE from 'three';
 import useStore from '../store';
 import { CC } from '../utils/constants';
 import { sceneRefs } from '../sceneRefs';
+import { TIER } from '../utils/tiers';
+import { AMBIENT, edgeBreathe } from '../utils/motion';
 import edgeVert from '../shaders/edge.vert.glsl?raw';
 import edgeFrag from '../shaders/edge.frag.glsl?raw';
 
@@ -145,7 +147,17 @@ export default function EdgeNetwork() {
 
   const mat = useMemo(() => {
     return new THREE.ShaderMaterial({
-      uniforms: { time: { value: 0 } },
+      uniforms: {
+        time: { value: 0 },
+        // ADDENDUM 1 section 4 item 5. uR0 is set from the layout's own extent
+        // on the first frame that has positions; until then the wave is simply
+        // one wavelength long, which is what it looks like at rest anyway.
+        uR0: { value: 600 },
+        uFilmAlpha: { value: 0 },
+        uWave: { value: TIER === 'LOW' ? 0 : 1 },
+        uWaveSpeed: { value: AMBIENT.edge.waveSpeed },
+        uWaveLength: { value: AMBIENT.edge.waveLength },
+      },
       vertexShader: edgeVert,
       fragmentShader: edgeFrag,
       transparent: true,
@@ -174,10 +186,27 @@ export default function EdgeNetwork() {
   const _ctrl = [0, 0, 0];
 
   const edgeOpacityRef = useRef(0);
+  // How much of the film's shimmer is live, 0..1, eased rather than switched so
+  // beat 2's arrival takes the net down with the palette instead of cutting it.
+  const filmRef = useRef(0);
+  const r0Ref = useRef(0);
+
+  // Dev hook: the shimmer's live channel, for the wave-4 harness.
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    window.__edges = {
+      get film() { return filmRef.current; },
+      get alpha() { return mat.uniforms.uFilmAlpha.value; },
+      get wave() { return mat.uniforms.uWave.value; },
+      get r0() { return mat.uniforms.uR0.value; },
+    };
+    return () => { delete window.__edges; };
+  }, [mat]);
 
   useFrame((state) => {
     if (!meshRef.current) return;
-    const { curPos, introPhase } = useStore.getState();
+    const store = useStore.getState();
+    const { curPos, introPhase } = store;
 
     // Intro gating: hidden until phase 4, then fade in
     const targetOpacity = introPhase >= 4 ? 1.0 : 0;
@@ -185,7 +214,29 @@ export default function EdgeNetwork() {
     meshRef.current.visible = edgeOpacityRef.current > 0.01;
     mat.opacity = edgeOpacityRef.current;
 
-    mat.uniforms.time.value = state.clock.getElapsedTime();
+    const now = state.clock.getElapsedTime();
+    mat.uniforms.time.value = now;
+
+    // ── The film's edge shimmer (ADDENDUM 1 section 4 item 5) ───────────────
+    // "A luminance wave travelling the layout edges outward from the galactic
+    // centre during beats 0 and 1, so the filaments the nodes arrive along stay
+    // alive after the nodes land." Film only: the moment beat 2 drains the
+    // palette this channel goes with it, and at rest it is exactly 0, which is
+    // what keeps the instrument's own hover neighborhood the only lit edges a
+    // viewer ever sees outside the opening.
+    const filmTarget = store.overtureActive && store.overtureBeat <= 1 ? 1 : 0;
+    filmRef.current += (filmTarget - filmRef.current) * 0.06;
+    if (filmRef.current < 0.002) filmRef.current = 0;
+    mat.uniforms.uFilmAlpha.value = edgeBreathe(now, filmRef.current * edgeOpacityRef.current);
+    if (!r0Ref.current && curPos && curPos.length) {
+      let m = 0;
+      for (let i = 0; i < curPos.length; i++) {
+        const p = curPos[i];
+        const d = Math.hypot(p[0], p[1], p[2]);
+        if (d > m) m = d;
+      }
+      if (m > 1) { r0Ref.current = m; mat.uniforms.uR0.value = m; }
+    }
 
     for (let ei = 0; ei < eC; ei++) {
       const e = displayEdges[ei];

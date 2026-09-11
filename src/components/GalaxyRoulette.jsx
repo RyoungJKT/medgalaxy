@@ -5,14 +5,17 @@ import * as THREE from 'three';
 import useStore from '../store';
 import { TIER } from '../utils/tiers';
 import { nR, isMob } from '../utils/helpers';
+import { fmtFull, ppd, ratioStr } from '../utils/captions';
+import { igniteWeights } from '../utils/igniteWeights';
 
 // ── Module-level scratch objects (zero per-frame allocations) ──
 const _v3 = new THREE.Vector3();
 
-// ── Tier-based constants ──
-const MAX_PER_RING = TIER === 'LOW' ? 10 : TIER === 'MID' ? 16 : 20;
+// ── Tier-based constants (tiers are HIGH/MEDIUM/LOW — 'MID' was always false
+// here, so MEDIUM silently fell through to the HIGH ring size and speed) ──
+const MAX_PER_RING = TIER === 'LOW' ? 10 : TIER === 'MEDIUM' ? 16 : 20;
 const TOTAL_CAP = MAX_PER_RING * 3;
-const MAX_SPEEDS = TIER === 'LOW' ? [9.0, 5.5, 3.5] : TIER === 'MID' ? [13.0, 8.5, 5.5] : [16.0, 11.0, 7.0];
+const MAX_SPEEDS = TIER === 'LOW' ? [9.0, 5.5, 3.5] : TIER === 'MEDIUM' ? [13.0, 8.5, 5.5] : [16.0, 11.0, 7.0];
 const ASSEMBLE_DUR = TIER === 'LOW' ? 0.8 : 1.2;
 const RAMP_DUR = TIER === 'LOW' ? 1.4 : 2.2;
 const SUSTAIN_DUR = TIER === 'LOW' ? 1.8 : 3.0;
@@ -43,19 +46,11 @@ function computeRingPos(ringIdx, baseTheta, angle, radius, out) {
 function buildCaption(idx, diseases) {
   const d = diseases[idx];
   const parts = [d.label];
-  if (d.papers) parts.push(`${fmt(d.papers)} papers`);
-  if (d.mortality) parts.push(`${fmt(d.mortality)} deaths/yr`);
-  if (d.mortality > 0) {
-    const ppd = (d.papers / d.mortality).toFixed(2);
-    parts.push(`${ppd} papers per death`);
-  }
+  if (d.papers) parts.push(`${fmtFull(d.papers)} papers`);
+  if (d.mortality) parts.push(`${fmtFull(d.mortality)} deaths/yr`);
+  const papersPerDeath = ppd(d);
+  if (papersPerDeath !== null) parts.push(`${ratioStr(papersPerDeath)} papers per death`);
   return parts.join(' \u00b7 ');
-}
-
-function fmt(n) {
-  if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
-  if (n >= 1e3) return (n / 1e3).toFixed(0) + 'K';
-  return String(n);
 }
 
 // ── Fisher-Yates shuffle ──
@@ -78,6 +73,7 @@ export default function GalaxyRoulette() {
     winnerIdx: -1,
     tweens: [],
     didSelect: false,       // true after selectDisease called in reveal
+    ember: null,            // lazy igniteWeights().ember cache, for the reveal sound motif
   });
 
   useFrame((state, delta) => {
@@ -230,7 +226,7 @@ function onEnterSpinup(sr) {
 }
 
 function onEnterReveal(sr, store) {
-  const { curPos } = store;
+  const { curPos, diseases } = store;
 
   // Kill all tweens before starting reveal
   sr.tweens.forEach(t => t.kill());
@@ -246,6 +242,12 @@ function onEnterReveal(sr, store) {
         ease: 'power3.inOut',
       })
     );
+    // Reveal motif (DIRECTION section 5, moment 5): the same rising fifth
+    // supernova uses, nudged down a minor third for the overlooked decile.
+    if (!sr.ember) sr.ember = igniteWeights(diseases).ember;
+    if (typeof window !== 'undefined') {
+      window.__mgAudio?.play?.('reveal', { overlooked: sr.ember[sr.winnerIdx] === 1 });
+    }
   }
 }
 

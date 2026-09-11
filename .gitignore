@@ -3,3 +3,8 @@ dist/
 .DS_Store
 *.local
 .vercel
+.superpowers/
+docs/verify/
+__pycache__/
+*.pyc
+scripts/.connections_progress.json

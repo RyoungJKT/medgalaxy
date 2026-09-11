@@ -5,6 +5,8 @@ import { TIER, CFG } from './utils/tiers';
 import { isMob } from './utils/helpers';
 import useStore from './store';
 import DiseaseNodes from './components/DiseaseNodes';
+import StageGround from './components/StageGround';
+import TimeMachine from './components/TimeMachine';
 import EdgeNetwork from './components/EdgeNetwork';
 import GlowSprites from './components/GlowSprites';
 import CameraRig from './components/CameraRig';
@@ -16,11 +18,13 @@ import StoryEngine from './components/StoryEngine';
 import ExplodeView from './components/ExplodeView';
 import ConnectionsView from './components/ConnectionsView';
 import VelocityMap from './components/VelocityMap';
-import AttentionMap from './components/AttentionMap';
 import Spotlight from './components/Spotlight';
-import SelectionDOF from './components/SelectionDOF';
+import PostFX from './components/PostFX';
 import SelectionRipple from './components/SelectionRipple';
+import GhostShells from './components/GhostShells';
 import IntroSequence from './components/IntroSequence';
+import AssemblyFlight from './components/AssemblyFlight';
+import OvertureSequence from './components/OvertureSequence';
 import AdaptiveDpr from './components/AdaptiveDpr';
 import GravityLens from './components/GravityLens';
 import GalaxyRoulette from './components/GalaxyRoulette';
@@ -45,6 +49,7 @@ export default function App() {
     // Only left click
     if (e.button !== 0) return;
     const s = useStore.getState();
+    if (s.overtureActive) return;
     if (s.roulettePhase !== 'idle') return;
     if (s.activeMode === 'connections') {
       s.setConnFocusIdx(-1);
@@ -62,7 +67,9 @@ export default function App() {
       storyActive, setStoryActive,
       setStoryCaption, setStoryStep, setStoryVisible,
       setNeglectMode, neglectMode, setConnFocusIdx,
-      roulettePhase, stopRoulette } = useStore.getState();
+      roulettePhase, stopRoulette, overtureActive } = useStore.getState();
+    // The film owns the scene; a double-click there is a skip, nothing else
+    if (overtureActive) return;
     // Cancel roulette if active
     if (roulettePhase !== 'idle') { deselect(); stopRoulette(); return; }
     // Stop spotlight
@@ -79,11 +86,34 @@ export default function App() {
     deselect();
   }, []);
 
+  // Any input during the film asks to skip. Capture phase so it fires before
+  // anything else can consume the event; never preventDefault, the gesture
+  // still belongs to the page (and to OrbitControls).
+  useEffect(() => {
+    const ask = () => {
+      const s = useStore.getState();
+      if (s.overtureActive) s.skipOverture();
+    };
+    const opts = { capture: true, passive: true };
+    window.addEventListener('pointerdown', ask, opts);
+    window.addEventListener('keydown', ask, opts);
+    window.addEventListener('wheel', ask, opts);
+    window.addEventListener('touchstart', ask, opts);
+    return () => {
+      window.removeEventListener('pointerdown', ask, opts);
+      window.removeEventListener('keydown', ask, opts);
+      window.removeEventListener('wheel', ask, opts);
+      window.removeEventListener('touchstart', ask, opts);
+    };
+  }, []);
+
   // Escape key to exit focus view, close overlays, stop tours
   useEffect(() => {
     const onKeyDown = (e) => {
       if (e.key !== 'Escape') return;
       const s = useStore.getState();
+      // Escape during the film asks to leave; it still gets the thesis
+      if (s.overtureActive) { s.skipOverture(); return; }
       // Cancel supernova
       if (s.supernovaPhase !== 'idle' && s.supernovaPhase !== 'complete') {
         s.cancelSupernova();
@@ -128,7 +158,23 @@ export default function App() {
         camera={{
           fov: 60,
           near: 1,
-          far: camDist * 4,
+          // 8 R0, not 4 (ADDENDUM 1 section 3). Beat 0's spawn shell reaches
+          // 4.3 R0 from the origin with the camera 2.9 R0 out behind it, so at
+          // 4 R0 fifty-two of the 153 instances began the assembly beyond the
+          // far plane: hard-clipped, then popping into existence as they
+          // crossed it, which is precisely what "nothing appears from nothing"
+          // forbids. It also un-clips the background star shell, which lives at
+          // 4.0 to 5.2 R0 from the origin and had always been partly cut.
+          //
+          // 9.6 R0, not 8 (ADDENDUM 1 section 4 item 2). The star field is now
+          // three shells and the outermost reaches 6.57 R0 from the origin, so
+          // from beat 0's 2.9 R0 seat its far hemisphere needs 9.47 R0 of
+          // depth; at 8 R0 thirty-odd of its hundred points were cut, and a
+          // backdrop with a hole in it during the assembly is the one frame
+          // where the eye has nothing else to look at. Near stays 1, so the
+          // depth ratio moves 12,000:1 to 14,400:1 — no measurable change to
+          // the precision the nodes (all inside 2 R0) actually use.
+          far: camDist * 9.6,
           position: [0, 0, camDist],
         }}
         gl={{
@@ -137,7 +183,7 @@ export default function App() {
           toneMapping: THREE.ACESFilmicToneMapping,
           toneMappingExposure: mob ? 1.4 : 1.1,
         }}
-        style={{ background: '#000000' }}
+        style={{ background: '#06080d' }}
         onCreated={({ gl }) => { sceneRefs.canvasElement = gl.domElement; }}
         onPointerMissed={handlePointerMissed}
       >
@@ -157,6 +203,13 @@ export default function App() {
         )}
 
         <Suspense fallback={null}>
+          <StageGround />
+          <TimeMachine camDist={camDist} />
+          {/* Beat 0's flight driver mounts before DiseaseNodes on purpose: its
+              effect publishes sceneRefs.assembly, which DiseaseNodes' own init
+              effect reads to place all 153 instances at their spawns on the
+              very first frame (ADDENDUM 1 section 3, first-frame integrity). */}
+          <AssemblyFlight camDist={camDist} />
           <DiseaseNodes />
           <EdgeNetwork />
           <GlowSprites />
@@ -169,11 +222,12 @@ export default function App() {
           <ExplodeView />
           <ConnectionsView />
           <VelocityMap />
-          <AttentionMap />
           <Spotlight />
-          <SelectionDOF />
+          <PostFX />
           <SelectionRipple />
+          <GhostShells />
           <IntroSequence />
+          <OvertureSequence camDist={camDist} />
           <AdaptiveDpr />
           <GalaxyRoulette />
           <RouletteDust />

@@ -2,14 +2,20 @@ import React from 'react';
 import useStore from '../../store';
 import { CC, CL, CATS } from '../../utils/constants';
 import { isMob } from '../../utils/helpers';
+import { DUR, EASE } from '../../utils/motion';
 
 export default function FilterBar() {
   const activeCats = useStore(s => s.activeCats);
   const toggleCat = useStore(s => s.toggleCat);
   const neglectMode = useStore(s => s.neglectMode);
-  const introStarted = useStore(s => s.introStarted);
+  const uiRevealed = useStore(s => s.uiRevealed);
+  const storyActive = useStore(s => s.storyActive);
 
   if (isMob()) return null;
+
+  // A story owns the frame while it runs (Task 3, 2026-09-10 plan): the bar
+  // dims rather than hides, matching the header's own controls.
+  const dim = { opacity: storyActive ? 0.3 : 1, transition: `opacity ${DUR.ui}ms ${EASE.ui}` };
 
   if (neglectMode) {
     return (
@@ -17,7 +23,19 @@ export default function FilterBar() {
         position: 'absolute', top: 50, left: 0, right: 0, zIndex: 40,
         padding: '0 20px', display: 'flex', alignItems: 'center', gap: 10,
         fontFamily: 'IBM Plex Mono,monospace', fontSize: 10, pointerEvents: 'none',
-        opacity: 0, animation: 'fadeIn 0.4s ease forwards',
+        // A still-attached forwards-filling animation keeps owning this
+        // property in the cascade even after it finishes, which otherwise
+        // beats dim's own opacity below once a story starts (Task 3 review
+        // finding). Naming no animation at all while a story is active lets
+        // dim be the sole ongoing opacity authority.
+        opacity: 0, animation: storyActive ? 'none' : 'fadeIn 0.4s ease forwards',
+        // dim is only spread in while a story is active. Spreading it
+        // unconditionally used to overwrite the literal opacity:0 above with
+        // dim.opacity (1 outside a story), leaving the fadeIn keyframe
+        // (`to{opacity:1}`) nothing to animate from, since its implicit 0%
+        // keyframe takes the element's own non-animated cascaded opacity as
+        // its underlying value (Task 3 round 2 review finding).
+        ...(storyActive ? { opacity: 0.3, transition: dim.transition } : {}),
       }}>
         <span style={{ color: '#ef4444', fontWeight: 600 }}>OVERLOOKED</span>
         <div style={{ width: 180, height: 8, borderRadius: 4, background: 'linear-gradient(90deg,#ef4444,#f59e0b,#eab308,#22c55e)' }} />
@@ -35,7 +53,8 @@ export default function FilterBar() {
       position: 'absolute', top: 50, left: 0, right: 0, zIndex: 40,
       padding: '0 20px', display: 'flex', flexWrap: 'wrap', gap: 5,
       fontFamily: 'IBM Plex Mono,monospace', fontSize: 11, pointerEvents: 'none',
-      transform: 'translateY(-60px)', animation: introStarted ? 'slideDown 0.5s ease 3.15s forwards' : 'none',
+      transform: 'translateY(-120px)', animation: uiRevealed ? 'slideDown 0.5s ease 0.15s forwards' : 'none',
+      ...dim,
     }}>
       <button
         onClick={() => toggleCat('ALL')}

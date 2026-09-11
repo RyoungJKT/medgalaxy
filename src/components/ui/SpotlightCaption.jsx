@@ -17,6 +17,11 @@ export default function SpotlightCaption() {
         zIndex: 46, background: 'rgba(10,16,30,0.95)', backdropFilter: 'blur(16px)',
         border: '1px solid rgba(255,255,255,0.15)', borderRadius: 12,
         padding: mob ? '12px 18px' : '16px 28px',
+        // Same shrink-to-fit width bug as HintChips/OvertureCaption/TimeRail
+        // (Task 17 report section 2) — see StoryCaption.jsx for the full
+        // explanation. max-content sizes the card to its content; the inner
+        // line's own maxWidth still caps genuinely long captions.
+        width: 'max-content',
         fontFamily: 'IBM Plex Mono,monospace', textAlign: 'center',
         opacity: 0, animation: 'fadeIn 0.4s ease forwards',
         boxShadow: '0 8px 32px rgba(0,0,0,0.5)',

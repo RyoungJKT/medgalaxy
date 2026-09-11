@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import useStore from '../../store';
 import { CC } from '../../utils/constants';
-import { fmt, isMob } from '../../utils/helpers';
+import { fmt, isMob, decadeGrowth } from '../../utils/helpers';
 
 function fG(v) { return v >= 10 ? String(Math.round(v)) + '\u00d7' : v >= 1 ? v.toFixed(1) + '\u00d7' : v.toFixed(2) + '\u00d7'; }
 function fP(v) { return v >= 0 ? '+' + Math.round(v) + '%' : Math.round(v) + '%'; }
@@ -15,11 +15,7 @@ export default function VelocityOverlay() {
     const items = diseases
       .filter(d => d.yearlyPapers && d.yearlyPapers.length >= 6)
       .map(d => {
-        const yp = d.yearlyPapers;
-        const early = yp.slice(0, 3).reduce((a, b) => a + b, 0) / 3;
-        const late = yp.slice(-3).reduce((a, b) => a + b, 0) / 3;
-        const growth = early > 0 ? late / early : 0;
-        const pctChange = early > 0 ? ((late / early) - 1) * 100 : 0;
+        const { growth, pctChange, early, late } = decadeGrowth(d.yearlyPapers);
         return { ...d, growth, pctChange, early, late };
       });
     const nonCovid = items.filter(d => d.id !== 'covid-19');
@@ -55,7 +51,7 @@ export default function VelocityOverlay() {
         }}>&#x2715; Close</button>
         <div style={{ fontSize: mob ? 14 : 18, fontWeight: 600, color: '#e2e8f0', marginBottom: 4 }}>Research Trends</div>
         <div style={{ fontSize: mob ? 9 : 12, color: '#64748b', marginBottom: mob ? 16 : 24 }}>
-          Publication growth rate over the last decade — which diseases are surging and which are fading
+          Publication growth rate over the last decade: which diseases are surging and which are fading
         </div>
         <div style={{ display: 'flex', flexDirection: mob ? 'column' : 'row', gap: mob ? 20 : 36 }}>
           <div style={{ flex: 1 }}>

@@ -4,15 +4,27 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
     <title>MedGalaxy — Interactive 3D Disease Research Visualization by Russell James Young</title>
-    <meta name="description" content="MedGalaxy is an interactive 3D visualization of global disease research, mapping 153 diseases by publication volume, mortality, and funding gaps. A data science project by Russell J. Young, British School Jakarta." />
+    <meta name="description" content="MedGalaxy is an interactive 3D visualization of global disease research. A cinematic opening reveals which diseases are overlooked relative to their toll, and a Time Machine lets you scrub 35 years of the same data year by year. 153 diseases mapped by publication volume, mortality, and funding gaps. A data science project by Russell J. Young, British School Jakarta." />
     <meta name="keywords" content="Russell Young, Russell J. Young, Russell James Young, Russell Young Jakarta, Russell Young Indonesia, Russell Young British School Jakarta, BSJ, MedGalaxy, disease research visualization, global health data, PubMed, WHO mortality, 3D data visualization, medical research, neglected diseases" />
     <meta name="author" content="Russell J. Young" />
     <link rel="canonical" href="https://www.medgalaxy.org" />
+    <!-- One galaxy node on the app's own background: the same white-hot core
+         and #22c55e corona the pre-React shell's brand dot uses. Declared
+         because every load without it logged a 404 for /favicon.ico and showed
+         the browser's default tab icon (review gate round 2, P3 #13). -->
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/favicon.png" />
+    <!-- Round 3: browsers request /favicon.ico directly regardless of the
+         icon link above (a hardcoded fallback, not something this markup
+         controls), which kept logging its own 404 even after P3 #13 fixed
+         the PNG one. public/favicon.ico is the same icon, sips-converted to
+         a real ICO resource. -->
+    <link rel="shortcut icon" href="/favicon.ico" />
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
     <meta property="og:title" content="MedGalaxy — Interactive 3D Disease Research Visualization" />
-    <meta property="og:description" content="Explore 153 diseases in an interactive 3D galaxy. See which diseases get the most research, which are neglected, and where funding gaps exist. By Russell J. Young, British School Jakarta." />
+    <meta property="og:description" content="Watch a cinematic opening reveal which diseases the world researches versus which ones actually kill, then scrub 35 years of the same data with the Time Machine. An interactive 3D galaxy of 153 diseases, research attention, and funding gaps. By Russell J. Young, British School Jakarta." />
     <meta property="og:url" content="https://www.medgalaxy.org" />
     <meta property="og:site_name" content="MedGalaxy" />
     <meta property="og:image" content="https://www.medgalaxy.org/og-image.jpg" />
@@ -23,7 +35,7 @@
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="MedGalaxy — 3D Disease Research Visualization" />
-    <meta name="twitter:description" content="Interactive 3D visualization mapping global disease research by Russell J. Young. Explore publication volumes, mortality data, and research gaps." />
+    <meta name="twitter:description" content="An interactive 3D galaxy of 153 diseases. A cinematic opening exposes the gap between research attention and mortality, and the Time Machine lets you scrub 35 years of data. By Russell J. Young." />
     <meta name="twitter:image" content="https://www.medgalaxy.org/og-image.jpg" />
 
     <!-- Structured Data -->
@@ -50,7 +62,16 @@
     }
     </script>
 
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <!-- Non-blocking font load: the stylesheet fetch to a third-party origin
+         would otherwise gate first paint of everything below, including the
+         pre-React shell. media="print" keeps it out of the render-blocking
+         set; the onload swap applies it once it lands. display=swap (and the
+         monospace fallback in the font-family stack) means the shell paints
+         instantly in fallback monospace and swaps in place, no invisible text. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" /></noscript>
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
       html, body, #root {
@@ -62,10 +83,45 @@
         overscroll-behavior: none;
       }
       body { padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); background: linear-gradient(180deg, #06080d 0%, #0a1019 50%, #0d0f18 100%); }
+
+      /* Instant pre-React shell: pure HTML/CSS, paints before any JS runs.
+         React's createRoot().render() replaces #root's children on mount,
+         so this markup is only ever visible during the cold-load window. */
+      .mg-preshell {
+        position: absolute; inset: 0;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        gap: 10px;
+        background: #06080d;
+      }
+      .mg-preshell-brand {
+        display: flex; align-items: center; gap: 8px;
+      }
+      .mg-preshell-dot {
+        width: 8px; height: 8px; border-radius: 50%;
+        background: #22c55e; box-shadow: 0 0 6px #22c55e;
+        animation: mgPreshellPulse 2s ease-in-out infinite;
+      }
+      .mg-preshell-name {
+        font-weight: 600; font-size: 15px; color: #e2e8f0;
+      }
+      .mg-preshell-status {
+        font-size: 11px; color: #64748b; letter-spacing: 0.04em;
+        animation: mgPreshellPulse 2s ease-in-out infinite;
+      }
+      @keyframes mgPreshellPulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.4; }
+      }
     </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"><div class="mg-preshell">
+      <div class="mg-preshell-brand">
+        <span class="mg-preshell-dot"></span>
+        <span class="mg-preshell-name">MedGalaxy</span>
+      </div>
+      <span class="mg-preshell-status">loading the galaxy...</span>
+    </div></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

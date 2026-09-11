@@ -1,9 +1,42 @@
 import { MN, MX, MAX_PAPERS, MAX_MORT } from './constants';
 
-export function nR(p){return MN+Math.pow(Math.min(p,MAX_PAPERS)/MAX_PAPERS,0.6)*(MX-MN);}
-export function nRM(m){if(m<=0)return MN*0.2;return MN+Math.pow(Math.min(m,MAX_MORT)/MAX_MORT,0.6)*(MX-MN);}
+export function nR(p){return MN+Math.pow(Math.min(p,MAX_PAPERS)/MAX_PAPERS,0.5)*(MX-MN);}
+export function nRM(m){if(m<=0)return MN*0.2;return MN+Math.pow(Math.min(m,MAX_MORT)/MAX_MORT,0.5)*(MX-MN);}
 export function fmt(n){if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=10000)return Math.round(n/1000)+'K';if(n>=1000)return(n/1000).toFixed(1)+'K';return String(n);}
 export function isMob(){return typeof window!=='undefined'&&(matchMedia('(pointer:coarse)').matches||window.innerWidth<768);}
+
+// A disease matches a search query on its canonical label or on any lay-term
+// alias it carries (e.g. colon-cancer's "Colon Cancer" alongside its
+// "Colorectal Cancer" label). sq must already be lower-cased; empty/falsy sq
+// matches everything. Every place the app filters or highlights by search
+// query goes through this so the alias list only has to be honored once.
+export function matchesSearch(d, sq){
+  if(!sq)return true;
+  if(d.label.toLowerCase().includes(sq))return true;
+  return!!d.aliases&&d.aliases.some(a=>a.toLowerCase().includes(sq));
+}
+
+// The all-time total and the year-by-year series are separate PubMed queries,
+// so a handful of rows sum slightly above their headline total (a record
+// carrying both an electronic and a print date is counted in each year it
+// names). Two surfaces say so: the sidebar prints a note under that row's
+// sparkline, and the methodology panel counts how many rows there are. One
+// predicate for both, so the panel can never claim a count the sidebar's note
+// then contradicts on screen.
+export function seriesExceedsTotal(d){
+  if(!d||!d.yearlyPapers)return false;
+  return d.yearlyPapers.reduce((a,b)=>a+b,0)>d.papers;
+}
+
+export function decadeGrowth(yearlyPapers){
+  // Always window onto the most recent 10 entries, regardless of how far
+  // back yearlyPapers starts (yearStart) — keeps "last decade" meaning the
+  // last decade even after a historical backfill extends the array.
+  const yp=yearlyPapers.slice(-10);
+  const early=yp.slice(0,3).reduce((a,b)=>a+b,0)/3;
+  const late=yp.slice(-3).reduce((a,b)=>a+b,0)/3;
+  return{growth:early>0?late/early:0,pctChange:early>0?((late/early)-1)*100:0,early,late};
+}
 
 export function neglectColor(ppd){
   // ppd: papers per death. High = well-researched (green), low = neglected (red)
@@ -18,7 +51,15 @@ export function neglectColor(ppd){
 
 export function processData(diseases, connections) {
   const idMap={};diseases.forEach((d,i)=>{idMap[d.id]=i;});
-  const edges=connections.map(c=>{const si=idMap[c.source],ti=idMap[c.target];return{...c,si,ti,score:c.sharedPapers/Math.sqrt(diseases[si].papers*diseases[ti].papers)};});
+  const edges=connections.map(c=>{const si=idMap[c.source],ti=idMap[c.target];
+    const a=diseases[si].label.toLowerCase(),b=diseases[ti].label.toLowerCase();
+    // One search term contains the other ("Heart Disease" inside "Rheumatic
+    // Heart Disease"): PubMed's AND count is then the smaller term's whole
+    // count, a substring artifact, not a measured link. Kept in the data and
+    // in the sidebar list (it is the true result of the stated query) but
+    // never ranked as a strongest link.
+    const termOverlap=a!==b&&(a.includes(b)||b.includes(a));
+    return{...c,si,ti,termOverlap,score:c.sharedPapers/Math.sqrt(diseases[si].papers*diseases[ti].papers)};});
   const neb=new Map();diseases.forEach((_,i)=>neb.set(i,[]));
   edges.forEach((e,ei)=>{neb.get(e.si).push({ei,score:e.score});neb.get(e.ti).push({ei,score:e.score});});
   const ls=new Set();neb.forEach(arr=>{arr.sort((a,b)=>b.score-a.score);arr.slice(0,7).forEach(({ei})=>ls.add(ei));});

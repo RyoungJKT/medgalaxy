@@ -1,13 +1,28 @@
 import React, { useRef, useState, useCallback } from 'react';
 import useStore from '../../store';
 import { CC, CL } from '../../utils/constants';
-import { fmt, isMob } from '../../utils/helpers';
+import { fmt, isMob, seriesExceedsTotal } from '../../utils/helpers';
 import Sparkline from './Sparkline';
 import insights from '../../../data/disease-insights.json';
+import { pubmedTermFor } from '../../utils/pubmedTerms';
+import { deathsStatLabel } from '../../utils/mortalityLabel';
+import { ratioStr } from '../../utils/captions';
+import { DUR, EASE } from '../../utils/motion';
 
-function SB({ l, v, s, vc }) {
+// Select (DIRECTION section 4): "sidebar slides in 280ms expo.out with a
+// 40ms per-section content stagger." 280/40 are the paragraph's own explicit
+// values, not the general sanctioned-constant list, so they stay local here
+// rather than joining DUR — EASE.ui is still the shared curve.
+const ENTRANCE_MS = 280;
+const SECTION_STAGGER_MS = 40;
+const sectionAnim = (i) => ({
+  animation: `sidebarSectionIn ${DUR.ui}ms ${EASE.ui} both`,
+  animationDelay: `${i * SECTION_STAGGER_MS}ms`,
+});
+
+function SB({ l, v, s, vc, span }) {
   return (
-    <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 6, padding: '8px 10px', border: '1px solid rgba(255,255,255,0.04)' }}>
+    <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 6, padding: '8px 10px', border: '1px solid rgba(255,255,255,0.04)', ...(span ? { gridColumn: '1 / -1' } : null) }}>
       <div style={{ color: '#94a3b8', fontSize: 11, marginBottom: 2 }}>{l}</div>
       <div style={{ fontSize: 16, fontWeight: 600, color: vc || '#e2e8f0' }}>{v} {s && <span style={{ fontSize: 12, fontWeight: 400 }}>{s}</span>}</div>
     </div>
@@ -25,6 +40,7 @@ export default function Sidebar() {
   const connCounts = useStore(s => s.connCounts);
   const deselect = useStore(s => s.deselect);
   const selectDisease = useStore(s => s.selectDisease);
+  const storyActive = useStore(s => s.storyActive);
 
   const mob = isMob();
   const panelRef = useRef(null);
@@ -77,25 +93,36 @@ export default function Sidebar() {
 
   if (!selectedNode) return null;
   if (mob) return null;
+  if (storyActive) return null;
 
   const disease = selectedNode.disease;
   const idx = selectedNode.index;
   const c = CC[disease.category];
   const cc = connCounts.get(idx);
   const t = disease.trend;
+  const trendSurged = Math.abs(t) >= 999;
   const ar = t > 0 ? '\u2191' : t < 0 ? '\u2193' : '\u2192';
   const tc = t > 0 ? '#22c55e' : t < 0 ? '#ef4444' : '#94a3b8';
-  const gc = { high: '#ef4444', medium: '#eab308', low: '#22c55e' };
-  const ppd = disease.mortality > 0 ? disease.papers / disease.mortality : null;
-  const ppdStr = ppd === null ? 'N/A' : ppd >= 10 ? String(Math.round(ppd)) : ppd >= 1 ? ppd.toFixed(1) : ppd >= 0.01 ? ppd.toFixed(2) : ppd.toFixed(3);
+  const ppdVal = disease.mortality > 0 ? disease.papers / disease.mortality : null;
+  const ppdStr = ratioStr(ppdVal);
 
   const conns = displayEdges
     .filter(e => e.si === idx || e.ti === idx)
     .map(e => {
       const oi = e.si === idx ? e.ti : e.si;
-      return { d: diseases[oi], sp: e.sharedPapers, t: e.trend, oi };
+      return { d: diseases[oi], sp: e.sharedPapers, oi, termOverlap: e.termOverlap };
     })
     .sort((a, b) => b.sp - a.sp);
+
+  const deathsLabel = deathsStatLabel(disease.mortality, disease.mortalitySource, disease.mortalityYear);
+
+  // The 1990-2024 series and the all-time total are separate PubMed queries,
+  // so for a handful of diseases the windowed series sums slightly above the
+  // headline total. Say so where it happens rather than let a reader find it.
+  // The predicate lives in helpers because the methodology panel counts these
+  // rows in prose, and the two must not be able to disagree.
+  const windowSum = disease.yearlyPapers.reduce((a, b) => a + b, 0);
+  const windowExceedsTotal = seriesExceedsTotal(disease);
 
 
 
@@ -106,7 +133,11 @@ export default function Sidebar() {
   return (
     <>
       {mob && <div onClick={onClose} style={{ position: 'absolute', inset: 0, zIndex: 49, background: 'rgba(0,0,0,0.4)', pointerEvents: 'auto' }} />}
-      <div ref={panelRef} style={{ ...panelStyle, pointerEvents: 'auto' }}>
+      <div
+        key={disease.id}
+        ref={panelRef}
+        style={{ ...panelStyle, pointerEvents: 'auto', animation: `sidebarSlideIn ${ENTRANCE_MS}ms ${EASE.ui} both` }}
+      >
         {mob && (
           <div onTouchStart={onSwipeStart} onTouchMove={onSwipeMove} onTouchEnd={onSwipeEnd}
             style={{ display: 'flex', justifyContent: 'center', padding: '18px 0 14px', cursor: 'grab', touchAction: 'none', minHeight: 48 }}>
@@ -114,7 +145,7 @@ export default function Sidebar() {
           </div>
         )}
         {/* Header */}
-        <div style={{ padding: '16px 16px 8px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <div style={{ padding: '16px 16px 8px', borderBottom: '1px solid rgba(255,255,255,0.06)', ...sectionAnim(0) }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
               <div style={{ fontSize: 17, fontWeight: 600, marginBottom: 4 }}>{disease.label}</div>
@@ -124,36 +155,41 @@ export default function Sidebar() {
           </div>
         </div>
         {/* Description */}
-        <div style={{ padding: '10px 16px', color: '#94a3b8', lineHeight: 1.5, fontSize: 13 }}>{disease.description}</div>
+        <div style={{ padding: '10px 16px', color: '#94a3b8', lineHeight: 1.5, fontSize: 13, ...sectionAnim(1) }}>{disease.description}</div>
         {/* Stats */}
-        <div style={{ padding: '0 16px 12px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-          <SB l="Publications" v={fmt(disease.papers)} s={<span style={{ color: tc }}>{ar}{Math.abs(t)}%</span>} />
+        <div style={{ padding: '0 16px 12px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, ...sectionAnim(2) }}>
+          <SB l="Publications" v={fmt(disease.papers)} s={trendSurged ? <span style={{ color: '#22c55e' }}>new</span> : <span style={{ color: tc }}>{ar}{Math.abs(t)}%</span>} />
           <SB l="Connections" v={cc} />
-          <SB l="WHO Deaths/yr" v={disease.mortality > 0 ? fmt(disease.mortality) : 'N/A'} />
-          <SB l="Funding Gap" v={disease.fundingGap.toUpperCase()} vc={gc[disease.fundingGap]} />
+          <SB span l={deathsLabel} v={disease.mortality > 0 ? fmt(disease.mortality) : 'N/A'} />
+          {/* The authored funding-gap label is kept in the data file but no
+              longer shown: unlike every other tile here it names no source. */}
           <SB l="Papers/Death" v={ppdStr} />
         </div>
         {/* Sparkline */}
-        <div style={{ padding: '0 16px 12px' }}>
-          <div style={{ color: '#94a3b8', fontSize: 11, marginBottom: 4 }}>Publication Trend (2014–2024)</div>
-          <Sparkline data={disease.yearlyPapers} color={c} />
+        <div style={{ padding: '0 16px 12px', ...sectionAnim(3) }}>
+          <div style={{ color: '#94a3b8', fontSize: 11, marginBottom: 4 }}>{`Publication Trend (${disease.yearStart ?? 2015}-2024)`}</div>
+          <Sparkline data={disease.yearlyPapers} color={c} yearStart={disease.yearStart ?? 2015} yearEnd={2024} />
+          {windowExceedsTotal && (
+            <div style={{ color: '#64748b', fontSize: 10, lineHeight: 1.45, marginTop: 5 }}>
+              This series sums to {fmt(windowSum)}, above the {fmt(disease.papers)} total above. The two are separate PubMed queries, and a record carrying more than one publication date is counted in each year it names.
+            </div>
+          )}
         </div>
         {/* PubMed link */}
-        <div style={{ padding: '0 16px 12px' }}>
+        <div style={{ padding: '0 16px 12px', ...sectionAnim(4) }}>
           <a
-            href={`https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(disease.label)}&sort=date`}
+            href={`https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(pubmedTermFor(disease.id, disease.label))}&sort=date`}
             target="_blank" rel="noopener noreferrer"
             style={{ display: 'block', textAlign: 'center', padding: '8px 0', borderRadius: 6, background: c + '22', color: c, textDecoration: 'none', fontSize: 13, fontWeight: 500 }}
           >View on PubMed &rarr;</a>
         </div>
         {/* Connections */}
-        <div style={{ padding: '0 16px 16px' }}>
+        <div style={{ padding: '0 16px 16px', ...sectionAnim(5) }}>
           <div style={{ color: '#94a3b8', fontSize: 11, marginBottom: 2 }}>Connections ({conns.length})</div>
-          <div style={{ color: '#64748b', fontSize: 11, marginBottom: 6 }}>Diseases that appear together in published medical research, suggesting shared biology, risk factors, or clinical overlap</div>
+          <div style={{ color: '#64748b', fontSize: 11, marginBottom: 6 }}>Diseases that appear together in published medical research, suggesting shared biology, risk factors, or clinical overlap. The count beside each is PubMed's own all-time result count for the two disease terms searched together.</div>
           <div style={{ maxHeight: 240, overflowY: 'auto' }}>
             {conns.map((cn, i) => {
               const cc2 = CC[cn.d.category];
-              const ta = cn.t === 'up' ? '\u2191' : cn.t === 'down' ? '\u2193' : '\u2192';
               return (
                 <div
                   key={i}
@@ -165,7 +201,11 @@ export default function Sidebar() {
                   <span style={{ width: 6, height: 6, borderRadius: '50%', background: cc2, flexShrink: 0 }} />
                   <span style={{ flex: 1, color: '#cbd5e1' }}>{cn.d.label}</span>
                   <span style={{ color: '#94a3b8', fontSize: 12 }}>{fmt(cn.sp)}</span>
-                  <span style={{ color: cn.t === 'up' ? '#22c55e' : cn.t === 'down' ? '#ef4444' : '#64748b', fontSize: 12 }}>{ta}</span>
+                  {/* One term contains the other, so this count is the smaller
+                      term's whole count rather than a measured overlap. It
+                      stays in the list because it is the honest result of the
+                      stated query, but the reader is told what it is. */}
+                  {cn.termOverlap && <span style={{ color: '#64748b', fontSize: 9 }}>term overlap</span>}
                 </div>
               );
             })}
@@ -176,7 +216,7 @@ export default function Sidebar() {
           const ins = insights[disease.id];
           if (!ins) return null;
           return (
-            <>
+            <div style={sectionAnim(6)}>
               <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', margin: '4px 0 0' }} />
               <div style={{ ...SD, paddingTop: 12 }}>
                 <div style={SH}>What It Is</div>
@@ -219,9 +259,13 @@ export default function Sidebar() {
                 <div style={{ fontSize: 11, color: '#3399ff', fontWeight: 600, marginBottom: 4 }}>Could related disease research accelerate progress here?</div>
                 <div style={{ fontSize: 12, color: '#94a3b8', lineHeight: 1.5 }}>{ins.accelerateAnswer}</div>
               </div>
-            </>
+            </div>
           );
         })()}
+        <style>{`
+          @keyframes sidebarSlideIn { from { opacity: 0; transform: translateX(16px); } to { opacity: 1; transform: translateX(0); } }
+          @keyframes sidebarSectionIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+        `}</style>
       </div>
     </>
   );

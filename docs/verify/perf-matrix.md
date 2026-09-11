@@ -1,0 +1,504 @@
+# Performance gate — measured matrix
+
+Task 19. Measured against commit `d94a762` (branch `next/showcase`).
+Machine: Apple M2 Max, 12 cores, macOS 26.6.2. Chrome (headless `new`,
+`--use-gl=angle`) via puppeteer-core 24.43.1.
+
+**Headless-Chrome caveat (applies to every FPS number below):** headless
+Chrome's `requestAnimationFrame` is not locked to a real compositor the way
+an on-screen tab is, so these are *approximate* readings, not a substitute
+for on-device profiling. Every prior verification task in this branch's
+history that logged an `--fps` number under this harness reads at or near
+this machine's apparent ceiling (108/111/120 in tasks 2, 7, 8) regardless of
+scene complexity — this run reproduces that same ceiling (120 throughout).
+Treat these numbers as a *relative* signal (did this change make frames more
+expensive, yes/no) and a floor check (comfortably above gate), not as an
+absolute FPS a viewer will see. No on-screen/real-display measurement was
+available in this environment.
+
+## 1. FPS matrix
+
+Harness: one-off runner built on the same primitives as `tools/verify.mjs`
+(`page.evaluate` rAF-counting loop, 5 s window). Driven through the app's own
+dev hooks (`window.__overture`, `window.__tour`, and `roulettePhase` polling)
+rather than real clicks, so the timeline state at the start of each 5 s
+window is exact and reproducible — see "Drive method" per row.
+
+| Tier | Viewport | Scenario | Drive method | FPS | Gate | Result |
+|---|---|---|---|---:|---:|---|
+| HIGH | 1440×900 | At rest (post-film) | `skipIntro()` → `finishOverture()`, settle 30 frames | 120 | ≥55 | PASS |
+| HIGH | 1440×900 | Beat 2 (the morph) | `__overture.seek(6.0)` → `resume()`, measure 5 s (window 6.0–11.0s of the 5.0–12.0s beat-2 span; covers the suppress ramp at 6.2s through ignite landing at 9.6s) | 120 | ≥55 | PASS |
+| HIGH | 1440×900 | Time Machine tour, year-transition | `__tour.seek(0.97)` → `resume()`, measure 5 s (window t=4.21→9.21s; landed mid-rewind-hold at t=4.21, ~3.9s of the window is the capped 6-step travel leg from 1990→1996, landing in the hivSurge hold at t=8.2s) | 120 | ≥55 | PASS |
+| HIGH | 1440×900 | Roulette spinup | `startRoulette()` from rest, poll `roulettePhase==='spinup'`, measure 5 s (spinup itself runs `RAMP_DUR+SUSTAIN_DUR`=5.2s on HIGH, so the window sits inside it) | 120 | ≥55 | PASS |
+| MEDIUM | 1100×800 (fresh page load) | At rest | same as HIGH rest | 120 | ≥50 | PASS |
+| MEDIUM | 1100×800 (fresh page load) | Beat 2 (the morph) | same as HIGH beat 2 | 120 | ≥50 | PASS |
+| LOW | 375×812 (`isMobile`+`hasTouch`) | At rest | same as HIGH rest | 120 | ≥40 | PASS |
+| LOW | 375×812 (`isMobile`+`hasTouch`) | Beat 2 (the morph, instanceColor ignite path) | same as HIGH beat 2 | 120 | ≥40 | PASS |
+
+All 8 scenarios hit the same 120 fps ceiling this machine shows at idle, so
+none of them registered as a bottleneck relative to each other on this
+hardware — every gate clears with wide margin. **No tuning knobs were
+applied** (step 3 of the brief); nothing here needed it.
+
+Tier confirmation: `src/utils/tiers.js` `detectTier()` reads
+`window.innerWidth` at first import, which happens before first paint since
+`page.setViewport` runs before `page.goto` in every run above — 1440px →
+HIGH, 1100px → MEDIUM (<1200), 375px → LOW (<768, and this task's runner
+also sets `isMobile`/`hasTouch` as `tools/verify.mjs --mobile` does).
+
+## 2. Cold load
+
+Measured against the **production build** (`npx vite build` → `dist/`,
+served by `vite preview` on `:5281`), not the `:5280` dev server — the dev
+server serves ~1,300 unbundled ES module requests per load, which would make
+a network-throttled measurement meaningless (it doesn't correspond to what a
+production visitor's browser fetches). This is the one place in this task
+that intentionally departs from `tools/verify.mjs`'s `:5280` convention.
+
+**Setup:** `page.emulateCPUThrottling(4)`, `page.emulateNetworkConditions(puppeteer.PredefinedNetworkConditions['Fast 3G'])`
+(180000 B/s down, 84375 B/s up, 562.5 ms latency — puppeteer-core's built-in
+Fast 3G preset, the same numbers Chrome DevTools/Lighthouse use), viewport
+375×812 mobile emulation (the brief's "mid-tier phone bar"), and
+**`page.setCacheEnabled(false)`** — without this a same-browser-instance
+second load hits the HTTP cache and the numbers stop meaning "cold load"
+(confirmed by A/B: cache enabled read 1.8s combined on a warmed instance vs.
+~5.0s on a genuinely fresh one; every number below is cache-disabled).
+
+**Metric definitions:**
+- *Landing overlay paint* = wall-clock time from `page.goto()` navigation
+  start to the landing overlay's title text (`"...Cartography..."`) being
+  present in `document.body.innerText` (i.e. React has mounted and committed
+  `LandingOverlay`). Polled every 50 ms.
+- *First galaxy frame* = wall-clock time from an auto-click on the landing
+  overlay's center to `window._store.getState().introPhase` advancing off
+  its initial value. The brief's suggested "canvas non-black" signal was
+  attempted first (draw the WebGL canvas into a small offscreen 2D canvas
+  and sample pixels) but **never fired within a 20 s timeout** — the app's
+  `<Canvas gl={{...}}>` (`src/App.jsx`) does not set `preserveDrawingBuffer`,
+  so it defaults to `false` and an out-of-band read (from Node, not the
+  render loop itself) reliably samples an already-cleared buffer. `introPhase`
+  is therefore the metric actually used, per the brief's own "or" framing.
+  Reported at both thresholds: `introPhase>=1` ("hero", first frame the
+  scene shows anything after the black hold) and `introPhase>=3` ("galaxy",
+  the store's own name for that phase, `src/store.js`) for the stricter read.
+
+| Metric | Measured | Gate | Result |
+|---|---:|---:|---|
+| Landing overlay paint (nav start → overlay text committed) | 5.03–5.08 s (5 runs: 5078, 5063, 5026, 5048, 5051 ms) | < 2 s | **FAIL** |
+| First galaxy frame, `introPhase>=1` ("hero"), after click | 564–576 ms | < 3 s | PASS |
+| First galaxy frame, `introPhase>=3` ("galaxy"), after click | 1.45 s | < 3 s | PASS |
+
+**Root cause of the overlay-paint failure:** the production build ships as a
+single JS chunk — `dist/assets/index-C0Rm7z17.js`, 2,040.87 kB raw / 580.92 kB
+gzip (Vite serves it gzip'd; `vite preview`'s compression middleware
+confirmed via `Content-Encoding: gzip`) — and nothing paints until it has
+downloaded, parsed, and executed enough to mount React. Isolating the two
+throttles (cache disabled throughout) on the same build:
+
+| Throttle | Overlay paint |
+|---|---:|
+| None (baseline) | 0.36 s |
+| CPU 4× only | 0.70 s |
+| Fast 3G only | 4.64 s |
+| CPU 4× + Fast 3G | 5.03 s |
+
+Network is almost the entire cost (4.64 s of the 5.03 s): at Fast 3G's
+180000 B/s, the 580.92 kB gzip payload alone is ~3.2 s, plus the ~562.5 ms
+RTT paid on the connection/HTML/subsequent-request round trips.
+
+**No fix applied.** None of this task's sanctioned knobs (bloom levels, DoF
+resolution scale, fbm octaves, sphere segments — all runtime-rendering
+levers) touch initial bundle size or loading strategy, and the brief's step 3
+is explicit: apply the listed knobs in order, "do NOT touch anything else."
+Code-splitting the entry bundle (e.g. dynamic `import()` for
+`@react-three/postprocessing`, `gsap`, the Time Machine/roulette modules
+that aren't needed for first paint) is the change that would actually move
+this number, but it is out of this task's scope and is flagged here for a
+follow-up task instead of attempted ad hoc.
+
+## 3. Bundle sanity
+
+`npx vite build` output:
+
+```
+dist/index.html                     4.38 kB │ gzip:   1.59 kB
+dist/assets/index-CeAT17un.css     14.42 kB │ gzip:   3.33 kB
+dist/assets/index-C0Rm7z17.js   2,040.87 kB │ gzip: 580.92 kB
+
+(!) Some chunks are larger than 500 kB after minification.
+```
+
+Main chunk: **2,040.87 kB raw** — under the 2.2 MB flag threshold, and the
+`>500 kB` warning is the pre-existing, already-known one (per the brief).
+Not flagged. (It is, however, the direct cause of the cold-load failure
+above — the two findings are the same fact read two ways.)
+
+## Summary
+
+- FPS matrix: 8/8 scenarios pass, all at this environment's apparent 120 fps
+  ceiling. No knobs applied.
+- Cold load: first-galaxy-frame-after-click passes at both thresholds tried.
+  Landing-overlay-paint fails its <2s gate (measured ~5.0s) due to the
+  unsplit ~581 kB gzip entry bundle under Fast 3G; no in-scope knob
+  addresses this, flagged for follow-up (bundle code-splitting).
+- Bundle sanity: main chunk 2,040.87 kB raw, under the 2.2 MB flag line.
+
+## 4. Task 20 fix: instant pre-React shell + vendor chunk splitting
+
+Fixes the one failing gate above (landing-overlay-paint <2s). Full writeup
+in `.superpowers/sdd/task-19-report.md`'s appended fix section; this section
+records the re-measured numbers using the same harness/setup as section 2
+above (production build, `vite preview`, CPU 4x + Fast 3G, cache disabled,
+375x812 mobile viewport).
+
+**What changed:**
+1. `index.html` now ships static pre-React markup inside `#root` (brand row
+   + pulsing dot + "loading the galaxy..." line, inline CSS, no JS) that
+   paints from the raw HTML response itself. React's `createRoot().render()`
+   replaces it on mount, same as before. The Google Fonts `<link>` was also
+   switched to a non-render-blocking load (`media="print"` + `onload` swap,
+   `<noscript>` fallback) so it can no longer gate first paint of anything.
+2. `vite.config.js` adds `build.rollupOptions.output.manualChunks`, splitting
+   `three` and a combined `vendor-anim` (react/react-dom + gsap +
+   @react-three/fiber + @react-three/drei + @react-three/postprocessing +
+   postprocessing) out of the entry chunk. A standalone `vendor-react` group
+   was tried first per the brief but produced an empty 0 kB chunk (Rollup
+   folded react into `vendor-anim` anyway because @react-three/fiber/drei
+   import it synchronously, forming a chunk cycle) — merged into
+   `vendor-anim` instead, per the brief's "adjust groupings if the build
+   warns about circular imports" allowance.
+
+**New bundle chunk table** (`npx vite build`):
+
+| Chunk | Raw | Gzip |
+|---|---:|---:|
+| `dist/index.html` | 6.68 kB | 2.37 kB |
+| `assets/index-*.css` | 14.42 kB | 3.33 kB |
+| `assets/vendor-anim-*.js` | 451.81 kB | 142.55 kB |
+| `assets/three-*.js` | 724.72 kB | 187.57 kB |
+| `assets/index-*.js` (entry) | 860.82 kB | 248.63 kB |
+
+Entry chunk: **860.82 kB raw / 248.63 kB gzip**, down from the single
+2,040.87 kB raw / 580.92 kB gzip chunk (58% smaller gzip). The `>500 kB`
+chunk-size warning persists (now on `three` and the entry chunk individually)
+— expected, unchanged concern, not newly flagged. Vite auto-emits
+`modulepreload` links for `three`/`vendor-anim` so the browser fetches all
+three chunks in parallel rather than discovering them serially at runtime.
+
+**Re-measured cold load** (5 runs each unless noted):
+
+| Metric | Measured | Gate | Result |
+|---|---:|---:|---|
+| (a) Shell paint (nav start -> static "loading the galaxy" text present, pure HTML/CSS, no JS) | 633-643 ms | < 2 s | **PASS** |
+| (b) React landing (nav start -> real `LandingOverlay` "Cartography" text committed) | 5.15-5.18 s | — (reported only; superseded by (a) as the meaningful-paint gate) | informational |
+| (c) First galaxy frame after click, `introPhase>=1` ("hero") | 550-571 ms | — | informational |
+| (c) First galaxy frame after click, `introPhase>=3` ("galaxy") | 1.95-1.96 s (3 runs) | < 3 s | **PASS** |
+
+Metric (b) did not meaningfully improve (still ~5.15s, essentially flat vs.
+the pre-fix ~5.0-5.1s) because none of App.jsx's ~30 component imports are
+dynamic — the whole module graph, split across 3 chunks or not, must still
+download and evaluate before React's first render, and total bytes shipped
+is about the same, just reorganized. That is expected and is why the fix
+targets (a) rather than (b): the brief's actual finding was "the page is
+blank white" until React mounts; the pre-React shell means the page is never
+blank, painting the branded loading state at 633-643 ms regardless of how
+long full interactivity takes. (c) stayed comfortably under its <3s gate
+(1.95s vs. the original 1.45s for the same `introPhase>=3` threshold — a
+bit higher, plausibly split-chunk request overhead sharing Fast 3G's fixed
+throughput, but still well inside the gate).
+
+**FPS regression spot-check:** HIGH tier, at rest (post-film), same drive
+method as section 1 row 1 (`skipIntro()` -> `finishOverture()`, settle 30
+frames, 5s window), dev server, 1440x900: **120 fps** (unchanged from the
+original matrix, gate >=55, PASS). No regression.
+
+**Dev mode:** `:5280` dev server loads clean, no console errors, no
+`manualChunks`-related breakage (Vite's dev server serves native ESM and
+does not apply `build.rollupOptions` at all, so this is expected but was
+verified rather than assumed).
+
+## 5. On-display (headed) FPS evidence — review gate, round 1
+
+Every FPS number above was measured in headless Chrome, whose
+`requestAnimationFrame` is not driven by a real compositor (see the caveat at
+the top of this file). `tools/verify.mjs` now takes a `--headed` flag
+(`headless: false`), which runs the same harness in a real Chrome window on
+this machine's actual display, so the numbers below are vsync-bound rather
+than headless-bound.
+
+Machine/display: Apple M2 Max, macOS 26.6.2, built-in display reporting
+`2304 x 1296 @ 120.00Hz` (`system_profiler SPDisplaysDataType`). The vsync
+ceiling for an on-screen tab here is therefore 120 fps, not 60.
+
+Harness: `node tools/verify.mjs --headed --eval "<drive>" --fps 5` against the
+`:5280` dev server, 1440x900 (HIGH tier), one run each.
+
+| Tier | Scenario | Drive method (`--eval`) | FPS | Gate | Result |
+|---|---|---|---:|---:|---|
+| HIGH | At rest (post-film) | `skipIntro()` then `finishOverture()` | 120 | >=55 | PASS |
+| HIGH | Beat 2 (the morph) | `__overture.seek(6.0)` then `resume()`, 5 s window (6.0-11.0 s: the suppress ramp at 6.2 s through the ignite landing at 9.6 s) | 120 | >=55 | PASS |
+
+Both scenarios hold the display's full 120 Hz refresh on the real compositor,
+with no dropped-frame margin visible at this sampling resolution (the rAF
+counter cannot distinguish 120 from "vsync-locked at 120"). This is the
+on-display evidence the headless matrix above could not supply; it confirms
+the headless readings were not hiding a real-compositor regression, and it
+does not supersede those rows (headless remains the reproducible harness for
+the full matrix).
+
+### 5b. LOW tier, on-display, 375x812: review gate, round 2 (P2 #9)
+
+The round-2 synthesis scored performance 8.5 with one named evidence hole:
+every LOW-tier/mobile row above is a headless-ceiling reading the matrix
+itself says cannot detect a regression, and the headed rows were HIGH tier
+only, with no Time Machine scenario. This section closes it. No code changed
+for it; the flag already existed.
+
+Harness: `node tools/verify.mjs --headed --mobile --eval "<drive>" --fps N`
+against the `:5280` dev server. `--mobile` sets a 375x812 viewport with
+`isMobile`/`hasTouch`, which is what `detectTier()` and `isMob()` read, so
+this is the LOW tier and the mobile UI branch (confirmed in-run:
+`window.innerWidth` 375, `matchMedia('(pointer:coarse)')` true). Same machine
+and display as section 5 (Apple M2 Max, built-in panel at 120.00Hz), so the
+vsync ceiling for an on-screen tab is again 120 fps. One run each.
+
+| Tier | Scenario | Drive method (`--eval`) | Window | FPS | Gate | Result |
+|---|---|---|---|---:|---:|---|
+| LOW | At rest (post-film) | `skipIntro()` then `finishOverture()`, settle 30 frames | 5 s | 120 | >=55 | PASS |
+| LOW | Beat 2 (the morph) | `__overture.seek(6.0)` then `resume()` | 5 s | 120 | >=55 | PASS |
+| LOW | Time Machine travel leg | `__tour.seek(1)` then `resume()`, wait out the 3.5 s pause hold so the window covers the 1996 -> 2019 leg (6 year-steps, 3.9 s) | 4 s | 120 | >=55 | PASS |
+
+The travel-leg run was re-run with `--shot fix4-mob-tm-leg`: the frame at the
+end of the FPS window reads 2019 on the rail, so the window did span the leg
+rather than a hold.
+
+All three hold the display's full refresh on the real compositor, which is the
+same result the HIGH-tier headed rows got and the same caveat applies: a rAF
+counter cannot distinguish 120 from "vsync-locked at 120", so this is a
+ceiling reading, not a headroom measurement. What it does establish, and what
+the headless LOW rows could not, is that the tier most likely to be a first
+touchpoint hits vsync on a real compositor in all three of the film's heaviest
+states, including the Time Machine, which had no headed coverage at all
+before. It is still this machine's GPU, not a phone's; a real-device run
+remains the only way to measure phone-class headroom.
+
+## 1b. Retina rows (Task 1, 2026-09-10)
+
+Harness: `node tools/verify-dpr.mjs --headed --fps` against the `:5280` dev
+server, 1440x900 at `deviceScaleFactor: 2` (the Retina path the rest of this
+file's HIGH-tier rows never exercise, since none of them pass `--dsf`/a scale
+factor above 1). Machine/display: same Apple M2 Max, built-in panel at
+120.00Hz.
+
+| Tier | Viewport | Scenario | FPS | Gate | Result |
+|---|---|---|---|---:|---|
+| HIGH | 1440x900 @2x | At rest, DPR 1.5, breathing + autoRotate | 120 | >=55 | PASS |
+| HIGH | 1440x900 @2x | Beat 2 (the morph), DPR 1 | 120 | >=55 | PASS |
+| HIGH | 1440x900 @2x | Time Machine leg, DPR 1 | 120 | >=55 | PASS |
+
+Measured headed at deviceScaleFactor 2 on the same machine; the at-rest row is
+the first on-display number in this file that includes DPR 1.5, breathing and
+the depth of field at once. Gate stays 55 fps for HIGH. All three hold the
+120Hz ceiling with no dropped-frame margin visible at this sampling
+resolution; the at-rest row clears the gate with wide margin, so `REST_DPR`
+stays `Math.min(devicePixelRatio, CFG.dprCap)` as specified, no fallback to
+1.25 needed.
+
+That row is one machine. `REST_DPR` 1.5 reaches every Retina viewer in the HIGH
+tier (width >= 1200, and `src/utils/tiers.js` carries no GPU heuristic), while
+the certified build silently rendered everyone at DPR 1 at rest, and no second
+device is available to measure. The field guard that stands in for that second
+reading is the rest DPR governor, `src/utils/dprGovernor.js`, wired into
+`AdaptiveDpr.jsx`: it averages frame time over one-second windows counted only
+while the buffer is actually sitting at the resting value and nothing wants it
+low, ignores any frame longer than 250 ms as a hitch rather than evidence, and
+after three consecutive windows whose mean exceeds the 1000/55 ms budget steps
+the resting value down by 0.25 (1.5 to 1.25 to 1, floor 1). A window inside
+budget clears the strikes; a buffer switch throws the half-built window and the
+strikes away, since the switch frame is a reallocation and not the resting cost
+and the machine starts its case again at the new size; and the
+value never steps back up within a session, so nobody watches the buffer hunt.
+`sceneRefs.dprState.governor` publishes `{ rest, strikes, lastMeanMs }` and
+`tools/verify-dpr.mjs` prints it: on this machine every run reads rest 1.5 with
+zero strikes, which is the governor confirming the row above rather than
+overriding it.
+
+## 1c. Settle-window fix round (Task 1 review, 2026-09-10)
+
+The first pass above shipped `AdaptiveDpr.jsx`'s settle window as a flat 2 s
+(`SETTLE_SEC = 2`), a 12x extension of the brief's own `SETTLE_FRAMES = 10`
+(about 80-170 ms), to also survive the roughly 1.5 s pause between the film
+handing over and the home screen's auto-tour claiming the camera
+(`TimeMachine.jsx`'s `TOUR_ARM_DELAY`). Review found the fix correct for that
+one gap but unmeasured on every other return to rest, including the ordinary
+selection path (select a node, look around, deselect), where the field is
+never busy so the tour never re-arms and the 2 s cost pure latency: after the
+depth of field's own 480 ms rack, the viewer would additionally watch the
+whole image sharpen roughly 1.5 to 1.8 s later.
+
+Fix: the settle window default is back to the brief's short value (`0.2 s`,
+the frame-count settle's time equivalent, frame-rate independent). The one
+real long gap, the auto-tour's arming pause, is bridged separately:
+`sceneRefs.tourArmPending`, published by `TimeMachine.jsx` only while that
+specific timer is pending, holds the DPR buffer low for exactly that known
+window instead of lengthening the default for every path.
+
+`tools/verify-dpr.mjs` gained two assertions this round:
+
+- a real drag (`page.mouse.down`/`move`/`up`) reads `cameraOwner` as `'user'`
+  throughout, including the `drag.quiet<30` tail right after `onEnd`, a
+  branch this task added but no prior run of the harness exercised;
+- after a selection is cleared, the DPR buffer returns to rest within a 2 s
+  budget (the ~1.2 s default fly back to home plus the short settle, with
+  margin), which the flat 2 s value alone would already miss before the fly
+  back even lands.
+
+Measured (`node tools/verify-dpr.mjs`, headless, `:5280` dev server,
+1440x900 @2x):
+
+```
+home rest: {"buffer":[2160,1350],"dpr":1.5,"restDpr":1.5,"switches":1,"owner":"ambient"}
+drag ownership: during=user right-after-onEnd=user
+bokeh 2.63 after 1564 ms
+DPR back to rest 0 ms after deselect (fly back + settle)
+PASS
+```
+
+"0 ms" is not a bug in the harness: by the time the bokeh loop above finishes
+polling (roughly 1.56 s after the selection), the short settle has already
+returned the buffer to rest on its own (the selection's own fly lands at
+about 1.2 s, and 0.2 s of ambient afterward clears it before the DOF even
+finishes racking in), so there is nothing left to wait for by the time
+`deselect()` is called. The 2000 ms budget stayed as a regression gate rather
+than being removed, and it was proven live: temporarily reverting
+`SETTLE_SEC` to `2` and rerunning measured `3282 ms` (fails the gate as
+expected), and temporarily removing the `tourArmPending` clause with
+`SETTLE_SEC` left at `0.2` measured `3` DPR switches across the opening and
+tour (fails the separate `<= 2` gate), which is the exact regression
+deviation 2 originally worked around. Both were reverted immediately after.
+
+Headed, with `--fps` (same viewport and machine as section 1b): all three
+rows held the 120 Hz ceiling again (116-120 fps), unchanged from 1b within
+the sampling resolution.
+
+## 1d. Drag/onEnd assertion fix round (Task 1 review, 2026-09-10)
+
+Review found the drag assertion added in 1c could not fail for the reason it
+claimed. It read `cameraOwner` immediately after `page.mouse.up()` with no
+wait and asserted `'user'`, but that reads `'user'` whether `onEnd` fires or
+not: with `onEnd` wired, `drag.quiet` is `0` (inside the `<30` tail); with
+`onEnd` missing, `drag.active` never clears, so it also reads `'user'`. The
+branch the assertion named in its own log line, the `quiet<30` tail, was
+never the thing distinguishing pass from fail.
+
+Fix, entirely inside `tools/verify-dpr.mjs`: added a wait comfortably under
+30 frames (100 ms) before the `rightAfterEnd` read, so it samples the tail
+rather than the pre-mouseup frame, and added a new read after the existing
+1000 ms wait (which already existed in 1c but asserted nothing) that fails
+unless `cameraOwner` has released to `'ambient'`. A broken or missing `onEnd`
+leaves `drag.active` stuck `true` forever, so `cameraOwner` never releases
+and only this read catches it.
+
+RED, confirming the new assertion actually catches a broken `onEnd` (the
+prior assertion could not): temporarily removed `onEnd={onEnd}` from
+`CameraRig.jsx`'s `<OrbitControls>` and reran.
+
+```
+$ node tools/verify-dpr.mjs
+home rest: {"buffer":[2160,1350],"dpr":1.5,"restDpr":1.5,"switches":1,"owner":"ambient"}
+drag ownership: during=user right-after-onEnd=user
+drag ownership after settle: user
+bokeh 0.00 after 2546 ms
+DPR back to rest 4012 ms after deselect (fly back + settle)
+FAIL
+  cameraOwner never released to 'ambient' after the drag ended (was 'user'); onEnd may not be clearing drag.active
+  DOF never racked in (bokeh 0.00)
+  DPR never returned to rest after deselect (4000 ms budget)
+```
+
+(The DOF and deselect-settle failures above are downstream of the same
+missing `onEnd`: with `drag.active` stuck `true`, `cameraOwner` never leaves
+`'user'`, so the depth of field stays suppressed and the DPR buffer never
+settles. That is expected collateral of the injected fault, not a separate
+bug.)
+
+`CameraRig.jsx` was reverted immediately after (`git diff --stat` confirmed
+no net change to that file). GREEN, the shipped state:
+
+```
+$ node tools/verify-dpr.mjs
+home rest: {"buffer":[2160,1350],"dpr":1.5,"restDpr":1.5,"switches":1,"owner":"ambient"}
+drag ownership: during=user right-after-onEnd=user
+drag ownership after settle: ambient
+bokeh 2.59 after 1544 ms
+DPR back to rest 0 ms after deselect (fly back + settle)
+PASS
+```
+
+```
+$ node tools/verify-dpr.mjs --headed --fps
+...
+| HIGH | 1440x900 @2x | At rest, DPR 1.5, breathing + autoRotate | 120 |
+| HIGH | 1440x900 @2x | Beat 2 (the morph), DPR 1 | 120 |
+| HIGH | 1440x900 @2x | Time Machine leg, DPR 1 | 120 |
+PASS
+```
+
+```
+$ npx vitest run
+ Test Files  18 passed (18)
+      Tests  333 passed (333)
+```
+
+333/333, unchanged.
+
+## 1e. The drag block is timing-sensitive (whole-branch review, 2026-09-11)
+
+Read this before treating a single run of `tools/verify-dpr.mjs` as evidence
+either way. The whole-branch review ran the harness four times: one run went
+red, reading `cameraOwner` as `'tween'` 1.15 s after mouse-up, and the failure
+message said "onEnd may not be clearing drag.active", which is exactly the
+branch that reading rules out. `'user'` is the drag (`drag.active`, or the
+`quiet<30` damping tail), so a stuck `'user'` is an `onEnd` fault; `'tween'`
+means the drag DID release and either a gsap tween on `camera.position` or one
+of the cinematic flags owned that frame. Three further runs passed, releasing
+at about 516 ms, and the reviewer could not attribute the tween, so the gate
+that Task 7 certified on a single PASS sample was mislabelling a one-in-four
+flake as a Task 1 regression.
+
+The block was rewritten rather than re-run:
+
+- ownership is sampled every 100 ms after mouse-up instead of read once at a
+  fixed 1000 ms, so the release time is a number in the log and a late release
+  reads as late rather than as stuck. Budget `RELEASE_MS = 1500`;
+- every ownership failure prints the owner's sub-terms (`tmPhase`, `tmExitAt`,
+  `tm.active`, `overtureActive`, `introPhase`, `handover.speed`/`cancelled`,
+  `selectedNode`, `flyTarget`). gsap's tween state is not reachable from the
+  page, so it is reported by elimination: `'tween'` with no cinematic flag set
+  is a camera tween, which on this path means a fly-to, which means the drag
+  landed as a click on a node;
+- `'user'` and `'tween'` failures now carry different messages;
+- the whole block retries once before failing, and says so.
+
+Four consecutive runs of the rewritten harness, headless, `:5280` dev server,
+1440x900 at `deviceScaleFactor: 2`, same M2 Max:
+
+```
+run 1  drag ownership after settle: ambient at 407 ms  (0ms:user 102ms:user 204ms:user 305ms:user 407ms:ambient)
+run 2  drag ownership after settle: ambient at 1123 ms (1ms:user 104ms:user 206ms:user 308ms:user 410ms:tween 511ms:tween 612ms:tween 713ms:tween 815ms:tween 917ms:tween 1021ms:tween 1123ms:ambient)
+run 3  drag ownership after settle: ambient at 408 ms  (1ms:user 103ms:user 205ms:user 306ms:user 408ms:ambient)
+run 4  drag ownership after settle: ambient at 409 ms  (1ms:user 103ms:user 205ms:user 307ms:user 409ms:ambient)
+```
+
+All four PASS, and run 2 is the flake caught in the act: the drag released on
+schedule at about 410 ms and a tween then held the camera for roughly 700 ms
+before rest. Under the old fixed 1000 ms read that run would have been red,
+with the wrong diagnosis. Its sub-terms were not captured (the line that prints
+them on a passing run was added after that run), so what the tween was is still
+open; runs 3 and 4 did not reproduce it.
+
+What this means for a reader of a future run: one red on this block is a reason
+to run it again and read the timeline, not a reason to revert a camera change,
+and one green is a sample, not a proof. The rest of the harness (rest DPR and
+buffer, the switch count, the DOF rack, the deselect settle) was steady across
+all four runs.

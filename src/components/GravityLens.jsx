@@ -109,11 +109,12 @@ export default function GravityLens() {
     const {
       hoveredNode, selectedNode, curPos, displayEdges, diseases,
       activeMode, roulettePhase, introPhase, spotlightActive, supernovaPhase,
+      overtureActive,
     } = useStore.getState();
 
     const dt = Math.min(delta, 0.05) * 1000; // ms
 
-    const guarded = activeMode || roulettePhase !== 'idle' || introPhase < 5 || spotlightActive || supernovaPhase !== 'idle';
+    const guarded = activeMode || roulettePhase !== 'idle' || introPhase < 5 || spotlightActive || supernovaPhase !== 'idle' || overtureActive;
     const hIdx = (!guarded && hoveredNode) ? hoveredNode.index : -1;
 
     // Hover changed or became guarded
